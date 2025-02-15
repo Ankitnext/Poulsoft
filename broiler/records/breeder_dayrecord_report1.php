@@ -123,8 +123,11 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
     <head>
         <title>Poulsoft Solutions</title>
         <link href="../datepicker/jquery-ui.css" rel="stylesheet">
+        <link href="breeder_class_colors.css" rel="stylesheet">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <?php if($excel_type == "print"){ include "headerstyle_wprint.php"; } else{ include "headerstyle_woprint.php"; } ?>
+        
+        <link rel="stylesheet" href="breeder_class_colors.css">
     </head>
     <body align="center">
         <table class="tbl" align="center">
@@ -411,7 +414,7 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                             $mact_bwht = $mbody_weight[$key1];
 
                             $html .= '<tr>';
-                            $html .= '<td>'.$slno.'</td>';
+                            $html .= '<td class="mksno">'.$slno.'</td>';
                             $html .= '<td>'.$flk_name.'</td>';
                             $html .= '<td style="text-align:center;">'.$bird_wage.'</td>';
                             //Female Details
@@ -422,10 +425,10 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                             $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($ftrout_birds,5))).'</td>';
                             $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($fflk_cbirds,5))).'</td>';
                             $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($ffeed_cqty,5))).'</td>';
-                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($fstd_fbird,5))).'</td>';
-                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($fact_fbird,5))).'</td>';
-                            $html .= '<td style="text-align:right;">'.decimal_adjustments($fstd_bwht,2).'</td>';
-                            $html .= '<td style="text-align:right;">'.decimal_adjustments($fact_bwht,2).'</td>';
+                            $html .= '<td style="text-align:right;" class="f_std">'.str_replace(".00","",number_format_ind(round($fstd_fbird,5))).'</td>';
+                            $html .= '<td style="text-align:right;" class="f_act">'.str_replace(".00","",number_format_ind(round($fact_fbird,5))).'</td>';
+                            $html .= '<td style="text-align:right;" class="f_std">'.decimal_adjustments($fstd_bwht,2).'</td>';
+                            $html .= '<td style="text-align:right;" class="f_act">'.decimal_adjustments($fact_bwht,2).'</td>';
 
                             //Male Details
                             $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mopn_birds,5))).'</td>';
@@ -435,10 +438,10 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                             $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mtrout_birds,5))).'</td>';
                             $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mflk_cbirds,5))).'</td>';
                             $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mfeed_cqty,5))).'</td>';
-                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mstd_fbird,5))).'</td>';
-                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mact_fbird,5))).'</td>';
-                            $html .= '<td style="text-align:right;">'.decimal_adjustments($mstd_bwht,2).'</td>';
-                            $html .= '<td style="text-align:right;">'.decimal_adjustments($mact_bwht,2).'</td>';
+                            $html .= '<td style="text-align:right;" class="m_std">'.str_replace(".00","",number_format_ind(round($mstd_fbird,5))).'</td>';
+                            $html .= '<td style="text-align:right;" class="m_act">'.str_replace(".00","",number_format_ind(round($mact_fbird,5))).'</td>';
+                            $html .= '<td style="text-align:right;" class="m_std">'.decimal_adjustments($mstd_bwht,2).'</td>';
+                            $html .= '<td style="text-align:right;" class="m_act">'.decimal_adjustments($mact_bwht,2).'</td>';
                             
                             $egg_rqty = $hegg_rqty = 0;
                             foreach($egg_code as $eggs){
@@ -454,15 +457,15 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                             $std_egg_pper = $hd_per[$key1];
                             $act_egg_pper = 0; if((float)$fopn_birds != 0){ $act_egg_pper = round((((float)$egg_rqty / (float)$fopn_birds) * 100),2); }
                             $dif_egg_pper = 0; round(((float)$act_egg_pper - (float)$std_egg_pper),2);
-                            $html .= '<td style="text-align:right;">'.number_format_ind($std_egg_pper).'</td>';
-                            $html .= '<td style="text-align:right;">'.number_format_ind($act_egg_pper).'</td>';
+                            $html .= '<td style="text-align:right;" class="std">'.number_format_ind($std_egg_pper).'</td>';
+                            $html .= '<td style="text-align:right;" >'.number_format_ind($act_egg_pper).'</td>';
                             $html .= '<td style="text-align:right;">'.number_format_ind($dif_egg_pper).'</td>';
 
                             $std_hep = $std_he_per[$key1];
                             $act_hep = 0; if((float)$egg_rqty != 0){ $act_hep = round((((float)$hegg_rqty / (float)$egg_rqty) * 100),2); }
                             $dif_hep = 0; round(((float)$act_hep - (float)$std_hep),2);
-                            $html .= '<td style="text-align:right;">'.number_format_ind($std_hep).'</td>';
-                            $html .= '<td style="text-align:right;">'.number_format_ind($act_hep).'</td>';
+                            $html .= '<td style="text-align:right;" class="std">'.number_format_ind($std_hep).'</td>';
+                            $html .= '<td style="text-align:right;" >'.number_format_ind($act_hep).'</td>';
                             $html .= '<td style="text-align:right;">'.number_format_ind($dif_hep).'</td>';
         
                             $egg_wht = $egg_weight[$key1];

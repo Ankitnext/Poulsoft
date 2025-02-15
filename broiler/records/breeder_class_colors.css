@@ -1,0 +1,31 @@
+/*
+breeder_class_colors.php
+Breeder Class colors
+*/
+.mksno{
+    color: red !important;;
+}
+
+.f_act {
+    color: rgb(245, 25, 194) !important;
+}
+
+.m_act{
+    color: blue !important;
+}
+
+.f_std{
+    color: red !important;
+}
+
+.m_std{
+    color: red !important;
+}
+
+.std{
+    color: red !important;
+}
+
+.act{
+    color: blue !important;
+}
