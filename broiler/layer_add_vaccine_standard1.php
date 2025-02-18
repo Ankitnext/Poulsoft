@@ -1,5 +1,5 @@
 <?php
-//breeder_add_vaccine_standard1.php
+//layer_add_vaccine_standard1.php
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['vaccine_standard1'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
@@ -24,7 +24,7 @@ if($link_active_flag > 0){
         }
     }
     if($acount == 1){
-        $sql = "SELECT * FROM `breeder_breed_details` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+        $sql = "SELECT * FROM `layer_breed_details` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $bbreed_code = $bbreed_name = array();
         while($row = mysqli_fetch_assoc($query)){ $bbreed_code[$row['code']] = $row['code']; $bbreed_name[$row['code']] = $row['description']; }
 
@@ -63,7 +63,7 @@ if($link_active_flag > 0){
                         </div>
                         <div class="card-body">
                             <div class="col-md-12">
-                                <form action="breeder_save_vaccine_standard1.php" method="post" role="form" onsubmit="return checkval()">
+                                <form action="layer_save_vaccine_standard1.php" method="post" role="form" onsubmit="return checkval()">
                                     <div class="row justify-content-center align-items-center">
                                         <table class="table1" style="width:auto;">
                                             <thead>
@@ -180,7 +180,7 @@ if($link_active_flag > 0){
 			}
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
-                window.location.href = 'breeder_display_vaccine_standard1.php?ccid='+ccid;
+                window.location.href = 'layer_display_vaccine_standard1.php?ccid='+ccid;
             }
 			function create_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -212,7 +212,7 @@ if($link_active_flag > 0){
 				if(age != "" && medvac_code != "select"){
 					var oldqty = new XMLHttpRequest();
 					var method = "GET";
-					var url = "breeder_fetch_vaccine_std_duplicates.php?age="+age+"&medvac_code="+medvac_code+"&type="+type+"&row_count="+d;
+					var url = "layer_fetch_vaccine_std_duplicates.php?age="+age+"&medvac_code="+medvac_code+"&type="+type+"&row_count="+d;
                     //window.open(url);
 					var asynchronous = true;
 					oldqty.open(method, url, asynchronous);

@@ -1,5 +1,5 @@
 <?php
-//breeder_display_vaccine_standard1.php
+//layer_display_vaccine_standard1.php
 include "newConfig.php";
 include "number_format_ind.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
@@ -38,7 +38,7 @@ if($link_active_flag > 0){
             /*Check for Table Availability*/
             $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
             $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("breeder_farms", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_farms LIKE poulso6_admin_broiler_broilermaster.breeder_farms;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_farms", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_farms LIKE poulso6_admin_broiler_broilermaster.layer_farms;"; mysqli_query($conn,$sql1); }
             
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
@@ -89,7 +89,7 @@ if($link_active_flag > 0){
                                 </thead>
                                 <tbody>
                                     <?php
-                                        $sql = "SELECT * FROM `breeder_breed_details` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+                                        $sql = "SELECT * FROM `layer_breed_details` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $bbreed_code = $bbreed_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $bbreed_code[$row['code']] = $row['code']; $bbreed_name[$row['code']] = $row['description']; }
 
@@ -98,7 +98,7 @@ if($link_active_flag > 0){
                                         while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; }
 
                                         $delete_url = $delete_link."?utype=delete&id=";
-                                        $sql = "SELECT * FROM `breeder_medvac_schedule` WHERE `dflag` = '0' AND `trtype` = 'vaccine_standard1' AND `trlink` = 'breeder_display_vaccine_standard1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $sql = "SELECT * FROM `layer_medvac_schedule` WHERE `dflag` = '0' AND `trtype` = 'vaccine_standard1' AND `trlink` = 'layer_display_vaccine_standard1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['id'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;
@@ -165,7 +165,7 @@ if($link_active_flag > 0){
                 if(id != ""){
                     var inv_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "breeder_check_vaccine_standard1.php?id="+id+"&breed="+breed+"&age="+age+"&vname="+vname;
+                    var url = "layer_check_vaccine_standard1.php?id="+id+"&breed="+breed+"&age="+age+"&vname="+vname;
                     //window.open(url);
                     var asynchronous = true;
                     inv_items.open(method, url, asynchronous);
