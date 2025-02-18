@@ -1,5 +1,5 @@
 <?php
-//breeder_modify_shed1.php
+//layer_modify_shed1.php
 session_start(); include "newConfig.php";
 $addedemp = $_SESSION['userid'];
 date_default_timezone_set("Asia/Kolkata");
@@ -17,10 +17,10 @@ $nof_emps = $_POST['nof_emps']; if($nof_emps == ""){ $nof_emps = 0; }
 
 $id = $_POST['idvalue'];
 
-$sql = "UPDATE `breeder_sheds` SET `farm_code` = '$farm_code',`unit_code` = '$unit_code',`shed_code` = '$shed_code',`description` = '$description',`shed_type` = '$shed_type',`shed_sqft` = '$shed_sqft',`bird_capacity` = '$bird_capacity',`nof_emps` = '$nof_emps',`updatedemp` = '$addedemp',`updatedtime` = '$addedtime' WHERE `id` = '$id'";
+$sql = "UPDATE `layer_sheds` SET `farm_code` = '$farm_code',`unit_code` = '$unit_code',`shed_code` = '$shed_code',`description` = '$description',`shed_type` = '$shed_type',`shed_sqft` = '$shed_sqft',`bird_capacity` = '$bird_capacity',`nof_emps` = '$nof_emps',`updatedemp` = '$addedemp',`updatedtime` = '$addedtime' WHERE `id` = '$id'";
 if(!mysqli_query($conn,$sql)){ die("Error 1:-".mysqli_error($conn)); } else { }
 ?>
 <script>
     var a = '<?php echo $ccid; ?>';
-    window.location.href = "breeder_display_shed1.php?ccid="+a;
+    window.location.href = "layer_display_shed1.php?ccid="+a;
 </script>

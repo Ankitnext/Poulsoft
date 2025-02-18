@@ -1,9 +1,9 @@
 <?php
-//breeder_display_shedallocate1.php
+//layer_display_batch1.php
 include "newConfig.php";
 include "number_format_ind.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
-if($cid != ""){ $_SESSION['shedallocate1'] = $cid; } else{ $cid = $_SESSION['shedallocate1']; }
+if($cid != ""){ $_SESSION['batch1'] = $cid; } else{ $cid = $_SESSION['batch1']; }
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
 $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
@@ -38,17 +38,11 @@ if($link_active_flag > 0){
             /*Check for Table Availability*/
             $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
             $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("breeder_farms", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_farms LIKE poulso6_admin_broiler_broilermaster.breeder_farms;"; mysqli_query($conn,$sql1); }
-            if(in_array("breeder_units", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_units LIKE poulso6_admin_broiler_broilermaster.breeder_units;"; mysqli_query($conn,$sql1); }
-            if(in_array("breeder_sheds", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_sheds LIKE poulso6_admin_broiler_broilermaster.breeder_sheds;"; mysqli_query($conn,$sql1); }
-            if(in_array("breeder_batch", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_batch LIKE poulso6_admin_broiler_broilermaster.breeder_batch;"; mysqli_query($conn,$sql1); }
-            if(in_array("breeder_shed_allocation", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_shed_allocation LIKE poulso6_admin_broiler_broilermaster.breeder_shed_allocation;"; mysqli_query($conn,$sql1); }
-                        
-            /*Check for Column Availability*/
-            $sql='SHOW COLUMNS FROM account_summary'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
-            while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
-            if(in_array("flock_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE account_summary ADD `flock_code` VARCHAR(300) NULL DEFAULT NULL COMMENT 'Breeder Flock Code' AFTER `batch`"; mysqli_query($conn,$sql); }
-
+            if(in_array("layer_farms", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_farms LIKE poulso6_admin_broiler_broilermaster.layer_farms;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_units", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_units LIKE poulso6_admin_broiler_broilermaster.layer_units;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_sheds", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_sheds LIKE poulso6_admin_broiler_broilermaster.layer_sheds;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_batch", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_batch LIKE poulso6_admin_broiler_broilermaster.layer_batch;"; mysqli_query($conn,$sql1); }
+            
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
@@ -69,17 +63,6 @@ if($link_active_flag > 0){
             if(!empty($pnt_acc[$gp_id."P"])){ $print_flag = 1; $print_link = $gp_link[$gp_id."P"]; } else { $print_link = ""; $print_flag = 0; }
             if(!empty($upd_acc[$gp_id."U"])){ $update_flag = 1; $update_link = $gp_link[$gp_id."U"]; } else { $update_link = ""; $update_flag = 0; }
 
-
-            $sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
-            $query = mysqli_query($conn,$sql); $un_code = $un_name = $un_ccode = array();
-            while($row = mysqli_fetch_assoc($query)){ $un_code[$row['code']] = $row['code']; $un_name[$row['code']] = $row['description']; $un_ccode[$row['code']] = $row['farm_code']; }
-
-            $unitss = "all"; //$excel_type = "display";
-            if(isset($_POST['submit_report']) == true){
-                $unitss = $_POST['unitss'];
-                // $excel_type = $_POST['export'];
-            }
-
         ?>
         <div class="m-0 p-0 wrapper">
             <section class="m-0 p-0 content">
@@ -98,68 +81,23 @@ if($link_active_flag > 0){
                             </form>
                         </div>
                         <div class="card-body">
-                            <div class="container d-flex justify-content-center align-items-center" >
-                                <form action="" method="post" class="d-flex flex-column align-items-center">
-                                    <thead>
-                                        <tr>
-                                            <th colspan="21">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="m-2 form-group" style="width:230px;">
-                                                        <label for="unitss">Unit</label>
-                                                        <select name="unitss" id="unitss" class="form-control select2" style="width:220px;">
-                                                            <option value="all" <?php if($unitss == "all"){ echo "selected"; } ?>>-All-</option>
-                                                            <?php foreach($un_code as $ucode){ if($un_name[$ucode] != ""){ ?>
-                                                            <option value="<?php echo $ucode; ?>" <?php if($unitss == $ucode){ echo "selected"; } ?>><?php echo $un_name[$ucode]; ?></option>
-                                                            <?php } } ?>
-                                                        </select>
-                                                    </div> 
-                                                    <div style="padding-top:10%">
-                                                        <div class="m-1 form-group">
-                                                            <button type="submit" name="submit_report" id="submit_report" class="btn btn-sm btn-success">Submit</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                </form>
-                            </div>
                             <table id="example1" class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Flock Name</th>
-                                        <th>Farm Name</th>
-                                        <th>Unit Name</th>
-										<th>Shed Name</th>
+										<th>Batch Code</th>
 										<th>Batch Name</th>
-										<th>Start Date</th>
-										<th>Age</th>
-										<th>Female</th>
-										<th>Male</th>
+										<th>Farm Name</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                        $sql = "SELECT * FROM `breeder_farms` WHERE `dflag` = '0' ORDER BY `description` ASC";
+                                        $sql = "SELECT * FROM `layer_farms` WHERE `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $bfarm_code = $bfarm_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $bfarm_code[$row['code']] = $row['code']; $bfarm_name[$row['code']] = $row['description']; }
-                                             
-                                        $sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
-                                        $query = mysqli_query($conn,$sql); $bunit_code = $bunit_name = array();
-                                        while($row = mysqli_fetch_assoc($query)){ $bunit_code[$row['code']] = $row['code']; $bunit_name[$row['code']] = $row['description']; }
-                                                
-                                        $sql = "SELECT * FROM `breeder_sheds` WHERE `dflag` = '0' ORDER BY `description` ASC";
-                                        $query = mysqli_query($conn,$sql); $bshed_code = $bshed_name = array();
-                                        while($row = mysqli_fetch_assoc($query)){ $bshed_code[$row['code']] = $row['code']; $bshed_name[$row['code']] = $row['description']; }
-                                                   
-                                        $sql = "SELECT * FROM `breeder_batch` WHERE `dflag` = '0' ORDER BY `description` ASC";
-                                        $query = mysqli_query($conn,$sql); $bbatch_code = $bbatch_name = array();
-                                        while($row = mysqli_fetch_assoc($query)){ $bbatch_code[$row['code']] = $row['code']; $bbatch_name[$row['code']] = $row['description']; }
-                                                
+                                        
                                         $delete_url = $delete_link."?utype=delete&id=";
-                                        $unt_fltr = ""; if($unitss != "all"){ $unt_fltr = " AND `unit_code` = '$unitss'"; }
-                                        $sql = "SELECT * FROM `breeder_shed_allocation` WHERE `dflag` = '0'".$unt_fltr." AND `trtype` = 'shedallocate1' AND `trlink` = 'breeder_display_shedallocate1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $sql = "SELECT * FROM `layer_batch` WHERE `dflag` = '0' AND `trtype` = 'batch1' AND `trlink` = 'layer_display_batch1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['id'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;
@@ -171,18 +109,12 @@ if($link_active_flag > 0){
                                             else{
                                                 $update_url = $update_link."?utype=activate&id=".$id;
                                             }
-                                            $val = ""; $val = $row['id']."@".$row['shed_code']."@".$bshed_name[$row['shed_code']]."@".$row['batch_code']."@".$bbatch_name[$row['batch_code']];
+                                            $val = ""; $val = $row['id']."@".$row['code']."@".$row['description'];
                                     ?>
                                     <tr>
+										<td><?php echo $row['batch_code']; ?></td>
 										<td><?php echo $row['description']; ?></td>
 										<td><?php echo $bfarm_name[$row['farm_code']]; ?></td>
-										<td><?php echo $bunit_name[$row['unit_code']]; ?></td>
-										<td><?php echo $bshed_name[$row['shed_code']]; ?></td>
-										<td><?php echo $bbatch_name[$row['batch_code']]; ?></td>
-										<td><?php echo $row['start_date']; ?></td>
-										<td style="text-align:right;"><?php echo $row['start_age']; ?></td>
-										<td style="text-align:right;"><?php echo $row['opn_fbirds']; ?></td>
-										<td style="text-align:right;"><?php echo $row['opn_mbirds']; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
@@ -226,14 +158,12 @@ if($link_active_flag > 0){
 			function checkdelete(x){
                 var val1 = x.split("@");
                 var id = val1[0];
-                var shed_code = val1[1];
-                var shed_name = val1[2];
-                var batch_code = val1[3];
-                var batch_name = val1[4];
+                var code = val1[1];
+                var name = val1[2];
                 if(id != ""){
                     var inv_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "breeder_check_shedallocate1.php?id="+id+"&shed_code="+shed_code+"&batch_code="+batch_code;
+                    var url = "layer_check_batch1.php?id="+id+"&code="+code;
                     //window.open(url);
                     var asynchronous = true;
                     inv_items.open(method, url, asynchronous);
@@ -242,11 +172,11 @@ if($link_active_flag > 0){
                         if(this.readyState == 4 && this.status == 200){
                             var count = this.responseText;
                             if(parseFloat(count) > 0){
-                                alert("You can't delete the Shed Allocation with Shed: "+shed_name+" & Batch: "+batch_name+" as Shed Allocation is already in use!");
+                                alert("You can't delete the Batch: "+name+", as Batch is already in use!");
                             }
                             else{
                                 var b = "<?php echo $delete_url; ?>"+id;
-                                var c = confirm("are you sure you want to delete the Shed Allocation with Shed: "+shed_name+" & Batch: "+batch_name+"?");
+                                var c = confirm("are you sure you want to delete the Batch: "+name+"?");
                                 if(c == true){
                                     window.location.href = b;
                                 }

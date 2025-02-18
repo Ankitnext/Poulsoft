@@ -1,5 +1,5 @@
 <?php
-//breeder_display_shedallocate1.php
+//layer_display_shedallocate1.php
 include "newConfig.php";
 include "number_format_ind.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
@@ -38,16 +38,16 @@ if($link_active_flag > 0){
             /*Check for Table Availability*/
             $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
             $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("breeder_farms", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_farms LIKE poulso6_admin_broiler_broilermaster.breeder_farms;"; mysqli_query($conn,$sql1); }
-            if(in_array("breeder_units", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_units LIKE poulso6_admin_broiler_broilermaster.breeder_units;"; mysqli_query($conn,$sql1); }
-            if(in_array("breeder_sheds", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_sheds LIKE poulso6_admin_broiler_broilermaster.breeder_sheds;"; mysqli_query($conn,$sql1); }
-            if(in_array("breeder_batch", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_batch LIKE poulso6_admin_broiler_broilermaster.breeder_batch;"; mysqli_query($conn,$sql1); }
-            if(in_array("breeder_shed_allocation", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_shed_allocation LIKE poulso6_admin_broiler_broilermaster.breeder_shed_allocation;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_farms", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_farms LIKE poulso6_admin_broiler_broilermaster.layer_farms;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_units", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_units LIKE poulso6_admin_broiler_broilermaster.layer_units;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_sheds", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_sheds LIKE poulso6_admin_broiler_broilermaster.layer_sheds;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_batch", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_batch LIKE poulso6_admin_broiler_broilermaster.layer_batch;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_shed_allocation", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_shed_allocation LIKE poulso6_admin_broiler_broilermaster.layer_shed_allocation;"; mysqli_query($conn,$sql1); }
                         
             /*Check for Column Availability*/
             $sql='SHOW COLUMNS FROM account_summary'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
-            if(in_array("flock_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE account_summary ADD `flock_code` VARCHAR(300) NULL DEFAULT NULL COMMENT 'Breeder Flock Code' AFTER `batch`"; mysqli_query($conn,$sql); }
+            if(in_array("flock_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE account_summary ADD `flock_code` VARCHAR(300) NULL DEFAULT NULL COMMENT 'layer Flock Code' AFTER `batch`"; mysqli_query($conn,$sql); }
 
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
@@ -70,7 +70,7 @@ if($link_active_flag > 0){
             if(!empty($upd_acc[$gp_id."U"])){ $update_flag = 1; $update_link = $gp_link[$gp_id."U"]; } else { $update_link = ""; $update_flag = 0; }
 
 
-            $sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
+            $sql = "SELECT * FROM `layer_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
             $query = mysqli_query($conn,$sql); $un_code = $un_name = $un_ccode = array();
             while($row = mysqli_fetch_assoc($query)){ $un_code[$row['code']] = $row['code']; $un_name[$row['code']] = $row['description']; $un_ccode[$row['code']] = $row['farm_code']; }
 
@@ -114,7 +114,7 @@ if($link_active_flag > 0){
                                                         </select>
                                                     </div> 
                                                     <div style="padding-top:10%">
-                                                        <div class="m-1 form-group">
+                                                         <div class="m-1 form-group">
                                                             <button type="submit" name="submit_report" id="submit_report" class="btn btn-sm btn-success">Submit</button>
                                                         </div>
                                                     </div>
@@ -141,25 +141,25 @@ if($link_active_flag > 0){
                                 </thead>
                                 <tbody>
                                     <?php
-                                        $sql = "SELECT * FROM `breeder_farms` WHERE `dflag` = '0' ORDER BY `description` ASC";
+                                        $sql = "SELECT * FROM `layer_farms` WHERE `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $bfarm_code = $bfarm_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $bfarm_code[$row['code']] = $row['code']; $bfarm_name[$row['code']] = $row['description']; }
                                              
-                                        $sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
+                                        $sql = "SELECT * FROM `layer_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $bunit_code = $bunit_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $bunit_code[$row['code']] = $row['code']; $bunit_name[$row['code']] = $row['description']; }
                                                 
-                                        $sql = "SELECT * FROM `breeder_sheds` WHERE `dflag` = '0' ORDER BY `description` ASC";
+                                        $sql = "SELECT * FROM `layer_sheds` WHERE `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $bshed_code = $bshed_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $bshed_code[$row['code']] = $row['code']; $bshed_name[$row['code']] = $row['description']; }
                                                    
-                                        $sql = "SELECT * FROM `breeder_batch` WHERE `dflag` = '0' ORDER BY `description` ASC";
+                                        $sql = "SELECT * FROM `layer_batch` WHERE `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $bbatch_code = $bbatch_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $bbatch_code[$row['code']] = $row['code']; $bbatch_name[$row['code']] = $row['description']; }
                                                 
                                         $delete_url = $delete_link."?utype=delete&id=";
                                         $unt_fltr = ""; if($unitss != "all"){ $unt_fltr = " AND `unit_code` = '$unitss'"; }
-                                        $sql = "SELECT * FROM `breeder_shed_allocation` WHERE `dflag` = '0'".$unt_fltr." AND `trtype` = 'shedallocate1' AND `trlink` = 'breeder_display_shedallocate1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $sql = "SELECT * FROM `layer_shed_allocation` WHERE `dflag` = '0'".$unt_fltr." AND `trtype` = 'shedallocate1' AND `trlink` = 'layer_display_shedallocate1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['id'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;
@@ -233,7 +233,7 @@ if($link_active_flag > 0){
                 if(id != ""){
                     var inv_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "breeder_check_shedallocate1.php?id="+id+"&shed_code="+shed_code+"&batch_code="+batch_code;
+                    var url = "layer_check_shedallocate1.php?id="+id+"&shed_code="+shed_code+"&batch_code="+batch_code;
                     //window.open(url);
                     var asynchronous = true;
                     inv_items.open(method, url, asynchronous);

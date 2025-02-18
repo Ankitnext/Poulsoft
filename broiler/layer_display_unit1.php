@@ -1,9 +1,9 @@
 <?php
-//breeder_display_breedname1.php
+//layer_display_unit1.php
 include "newConfig.php";
 include "number_format_ind.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
-if($cid != ""){ $_SESSION['breedname1'] = $cid; } else{ $cid = $_SESSION['breedname1']; }
+if($cid != ""){ $_SESSION['unit1'] = $cid; } else{ $cid = $_SESSION['unit1']; }
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
 $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
@@ -38,7 +38,8 @@ if($link_active_flag > 0){
             /*Check for Table Availability*/
             $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
             $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("breeder_breed_details", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_breed_details LIKE poulso6_admin_broiler_broilermaster.breeder_breed_details;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_farms", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_farms LIKE poulso6_admin_broiler_broilermaster.layer_farms;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_units", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_units LIKE poulso6_admin_broiler_broilermaster.layer_units;"; mysqli_query($conn,$sql1); }
             
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
@@ -81,16 +82,22 @@ if($link_active_flag > 0){
                             <table id="example1" class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
-										<th>Code</th>
-										<th>Description</th>
+										<th>Unit Code</th>
+										<th>Unit Name</th>
+										<th>Farm Name</th>
+										<th>Location</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
+                                        $sql = "SELECT * FROM `layer_farms` WHERE `dflag` = '0' ORDER BY `description` ASC";
+                                        $query = mysqli_query($conn,$sql); $bfarm_code = $bfarm_name = array();
+                                        while($row = mysqli_fetch_assoc($query)){ $bfarm_code[$row['code']] = $row['code']; $bfarm_name[$row['code']] = $row['description']; }
+                                                
                                         $delete_url = $delete_link."?utype=delete&id=";
-                                        $sql = "SELECT * FROM `breeder_breed_details` WHERE `dflag` = '0' AND `trtype` = 'breedname1' AND `trlink` = 'breeder_display_breedname1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
-                                        while($row = mysqli_fetch_assoc(result: $query)){
+                                        $sql = "SELECT * FROM `layer_units` WHERE `dflag` = '0' AND `trtype` = 'unit1' AND `trlink` = 'layer_display_unit1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['id'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;
                                             $print_url = $print_link."?utype=print&id=".$id;
@@ -104,8 +111,10 @@ if($link_active_flag > 0){
                                             $val = ""; $val = $row['id']."@".$row['code']."@".$row['description'];
                                     ?>
                                     <tr>
-										<td><?php echo $row['code']; ?></td>
+										<td><?php echo $row['unit_code']; ?></td>
 										<td><?php echo $row['description']; ?></td>
+										<td><?php echo $bfarm_name[$row['farm_code']]; ?></td>
+										<td><?php echo $row['location']; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
@@ -154,7 +163,7 @@ if($link_active_flag > 0){
                 if(id != ""){
                     var inv_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "breeder_check_breedname1.php?id="+id+"&code="+code;
+                    var url = "layer_check_unit1.php?id="+id+"&code="+code;
                     //window.open(url);
                     var asynchronous = true;
                     inv_items.open(method, url, asynchronous);
@@ -163,11 +172,11 @@ if($link_active_flag > 0){
                         if(this.readyState == 4 && this.status == 200){
                             var count = this.responseText;
                             if(parseFloat(count) > 0){
-                                alert("You can't delete the Breed Name: "+name+", as Breed Name is already in use!");
+                                alert("You can't delete the Unit: "+name+", as Unit is already in use!");
                             }
                             else{
                                 var b = "<?php echo $delete_url; ?>"+id;
-                                var c = confirm("are you sure you want to delete the Breed Name: "+name+"?");
+                                var c = confirm("are you sure you want to delete the Unit: "+name+"?");
                                 if(c == true){
                                     window.location.href = b;
                                 }
