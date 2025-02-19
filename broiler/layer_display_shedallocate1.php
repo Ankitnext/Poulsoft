@@ -134,8 +134,7 @@ if($link_active_flag > 0){
 										<th>Batch Name</th>
 										<th>Start Date</th>
 										<th>Age</th>
-										<th>Female</th>
-										<th>Male</th>
+										<th>Opening Birds</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
@@ -181,8 +180,7 @@ if($link_active_flag > 0){
 										<td><?php echo $bbatch_name[$row['batch_code']]; ?></td>
 										<td><?php echo $row['start_date']; ?></td>
 										<td style="text-align:right;"><?php echo $row['start_age']; ?></td>
-										<td style="text-align:right;"><?php echo $row['opn_fbirds']; ?></td>
-										<td style="text-align:right;"><?php echo $row['opn_mbirds']; ?></td>
+										<td style="text-align:right;"><?php echo $row['opn_birds']; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){

@@ -41,8 +41,8 @@ $description = $_POST['description'];
 $start_date = date("Y-m-d",strtotime($_POST['start_date']));
 $start_age = $_POST['start_age']; if($start_age == ""){ $start_age = 0; }
 $age_weeks = $_POST['age_weeks']; if($age_weeks == ""){ $age_weeks = 0; }
-$opn_fbirds = $_POST['opn_birds']; if($opn_fbirds == ""){ $opn_fbirds = 0; }
-$opn_frate = $_POST['opn_rate']; if($opn_frate == ""){ $opn_frate = 0; }
+$opn_birds = $_POST['opn_birds']; if($opn_birds == ""){ $opn_birds = 0; }
+$opn_rate = $_POST['opn_rate']; if($opn_rate == ""){ $opn_rate = 0; }
 
 $sql = "SELECT * FROM `layer_shed_allocation` WHERE `id` = '$ids' AND `dflag` = '0'";
 $query = mysqli_query($conn, $sql); $code = "";

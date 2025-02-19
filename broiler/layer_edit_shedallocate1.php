@@ -71,10 +71,8 @@ if($link_active_flag > 0){
             $start_date = date("d.m.Y",strtotime($row['start_date']));
             $start_age = round($row['start_age'],5);
             $age_weeks = round($row['age_weeks'],5);
-            $opn_fbirds = round($row['opn_fbirds'],5);
-            $opn_frate = round($row['opn_frate'],5);
-            $opn_mbirds = round($row['opn_mbirds'],5);
-            $opn_mrate = round($row['opn_mrate'],5);
+            $opn_birds = round($row['opn_birds'],5);
+            $opn_rate = round($row['opn_rate'],5);
         }
         if($code != ""){
             $sql = "SELECT * FROM `account_summary` WHERE `flock_code` = '$code' AND `dflag` = '0'";
@@ -201,16 +199,10 @@ if($link_active_flag > 0){
                                                     <td><input type="text" name="age_weeks" id="age_weeks" class="form-control text-right" value="<?php echo $age_weeks; ?>" style="width:125px;" readonly /></td>
                                                 </tr>
                                                 <tr>
-                                                    <th><label for="opn_fbirds">Female Opening</label></th>
-                                                    <td><input type="text" name="opn_fbirds" id="opn_fbirds" class="form-control text-right" value="<?php echo $opn_fbirds; ?>" style="width:125px;" onkeyup="validate_count(this.id);" onchange="validate_count(this.id);" /></td>
-                                                    <th><label for="opn_mbirds">Male Opening</label></th>
-                                                    <td><input type="text" name="opn_mbirds" id="opn_mbirds" class="form-control text-right" value="<?php echo $opn_mbirds; ?>" style="width:125px;" onkeyup="validate_count(this.id);" onchange="validate_count(this.id);" /></td>
-                                                </tr>
-                                                <tr>
-                                                    <th><label for="opn_frate">Rate</label></th>
-                                                    <td><input type="text" name="opn_frate" id="opn_frate" class="form-control text-right" value="<?php echo $opn_frate; ?>" style="width:125px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                    <th><label for="opn_mrate">Rate</label></th>
-                                                    <td><input type="text" name="opn_mrate" id="opn_mrate" class="form-control text-right" value="<?php echo $opn_mrate; ?>" style="width:125px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
+                                                    <th><label for="opn_birds">Opening Birds</label></th>
+                                                    <td><input type="text" name="opn_birds" id="opn_birds" class="form-control text-right" value="<?php echo $opn_birds; ?>" style="width:125px;" onkeyup="validate_count(this.id);" onchange="validate_count(this.id);" /></td>
+                                                    <th><label for="opn_rate">Rate</label></th>
+                                                    <td><input type="text" name="opn_rate" id="opn_rate" class="form-control text-right" value="<?php echo $opn_rate; ?>" style="width:125px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 </tr>
                                             </tbody>
                                         </table>

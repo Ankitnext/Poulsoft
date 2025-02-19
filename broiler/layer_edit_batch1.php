@@ -135,13 +135,9 @@ if($link_active_flag > 0){
                                                     <td colspan="3">
                                                         <select name="vs_code" id="vs_code" class="form-control select2" style="width:390px;">
                                                             <option value="select">-select-</option>
-                                                            <?php if($bird_source == "own_hatchery"){ ?>
-                                                            <?php foreach($hsec_code as $ucode){ ?>
-                                                                <option value="<?php echo $ucode; ?>" <?php if($ucode == $vs_code){ echo "selected"; } ?>><?php echo $hsec_name[$ucode]; ?></option>
-                                                            <?php } } else if($bird_source == "purchase"){ ?>
-                                                            <?php foreach($ven_code as $ucode){ ?>
-                                                                <option value="<?php echo $ucode; ?>" <?php if($ucode == $vs_code){ echo "selected"; } ?>><?php echo $ven_name[$ucode]; ?></option>
-                                                            <?php } } ?>
+                                                            <?php foreach($ven_code as $vcode){ ?>
+                                                                <option value="<?php echo $vcode; ?>" <?php if($vcode == $vs_code){ echo "selected"; } ?>><?php echo $ven_name[$vcode]; ?></option>
+                                                            <?php }  ?>
                                                         </select>
                                                     </td>
                                                 </tr>
