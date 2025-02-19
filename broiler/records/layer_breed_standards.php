@@ -103,21 +103,12 @@ if(isset($_POST['submit_report']) == true){
             $fhtml .= '<tr style="text-align:center;" align="center">';
 
             $nhtml .= '<th>Age (In Weeks)</th>'; $fhtml .= '<th id="order_num">Age (In Weeks)</th>';
+            $nhtml .= '<th>% Hen Day Produced</th>'; $fhtml .= '<th id="order_num">% Hen Day Produced</th>';
             $nhtml .= '<th>Livability</th>'; $fhtml .= '<th id="order_num">Livability</th>';
-            $nhtml .= '<th>F.Feed/Bird (gms)</th>'; $fhtml .= '<th id="order_num">F.Feed/Bird (gms)</th>';
-            $nhtml .= '<th>M.Feed/Bird (gms)</th>'; $fhtml .= '<th id="order_num">M.Feed/Bird (gms)</th>';
-            $nhtml .= '<th>HD%</th>'; $fhtml .= '<th id="order_num">HD%</th>';
-            $nhtml .= '<th>HE%</th>'; $fhtml .= '<th id="order_num">HE%</th>';
-            $nhtml .= '<th>HHP/Week</th>'; $fhtml .= '<th id="order_num">HHP/Week</th>';
-            $nhtml .= '<th>C.HHP/Week</th>'; $fhtml .= '<th id="order_num">C.HHP/Week</th>';
-            $nhtml .= '<th>HHE/Week</th>'; $fhtml .= '<th id="order_num">HHE/Week</th>';
-            $nhtml .= '<th>C.HHE/Week</th>'; $fhtml .= '<th id="order_num">C.HHE/Week</th>';
-            $nhtml .= '<th>Hatch %</th>'; $fhtml .= '<th id="order_num">Hatch %</th>';
-            $nhtml .= '<th>Chicks/week</th>'; $fhtml .= '<th id="order_num">Chicks/week</th>';
-            $nhtml .= '<th>C.Chicks/ week</th>'; $fhtml .= '<th id="order_num">C.Chicks/ week</th>';
-            $nhtml .= '<th>Egg Weight</th>'; $fhtml .= '<th id="order_num">Egg Weight</th>';
-            $nhtml .= '<th>F.B.Wt(gms)</th>'; $fhtml .= '<th id="order_num">F.B.Wt(gms)</th>';
-            $nhtml .= '<th>M.B.Wt(gms)</th>'; $fhtml .= '<th id="order_num">M.B.Wt(gms)</th>';
+            $nhtml .= '<th>Cumulative Eggs/Hen Housed</th>'; $fhtml .= '<th id="order_num">Cumulative Eggs/Hen Housed</th>';
+            $nhtml .= '<th>Avg Egg Weight</th>'; $fhtml .= '<th id="order_num">Avg Egg Weight</th>';
+            $nhtml .= '<th>Feed intake/Bird (gms)</th>'; $fhtml .= '<th id="order_num">Feed intake/Bird (gms)</th>';
+            $nhtml .= '<th>Body Weight (gms)</th>'; $fhtml .= '<th id="order_num">Body Weight (gms)</th>';
             
             $nhtml .= '</tr>';
             $fhtml .= '</tr>';
@@ -133,42 +124,21 @@ if(isset($_POST['submit_report']) == true){
                  
                     $breed_age = $row['breed_age'];
                     $livability = $row['livability'];
-                    $ffeed_pbird = $row['ffeed_pbird'];
-                    $mfeed_pbird = $row['mfeed_pbird'];
+                    $feed_pbird = $row['feed_pbird'];
                     $hd_per = $row['hd_per'];
-                    $he_per = $row['he_per'];
-                    $hhp_pweek = $row['hhp_pweek'];
                     $chhp_pweek = $row['chhp_pweek'];
-                    $hhe_pweek = $row['hhe_pweek'];
-                    $chhe_pweek = $row['chhe_pweek'];
-                    $hatch_per = $row['hatch_per'];
-                    $chicks_pweek = $row['chicks_pweek'];
-                    $cchicks_pweek = $row['cchicks_pweek'];
                     $egg_weight = $row['egg_weight'];
-                    $fbird_bweight = $row['fbird_bweight'];
-                    $mbird_bweight = $row['mbird_bweight'];
+                    $bird_bweight = $row['bird_bweight'];
                    
                     $html .= '<tr>';
                     $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($breed_age,5))).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($livability,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($ffeed_pbird,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($mfeed_pbird,5)).'</td>';
                     $html .= '<td style="text-align:right;">'.number_format_ind(round($hd_per,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($he_per,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($hhp_pweek,5)).'</td>';
+                    $html .= '<td style="text-align:right;">'.number_format_ind(round($livability,5)).'</td>';
                     $html .= '<td style="text-align:right;">'.number_format_ind(round($chhp_pweek,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($hhe_pweek,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($chhe_pweek,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($hatch_per,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($chicks_pweek,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($cchicks_pweek,5)).'</td>';
                     $html .= '<td style="text-align:right;">'.number_format_ind(round($egg_weight,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($fbird_bweight,5)).'</td>';
-                    $html .= '<td style="text-align:right;">'.number_format_ind(round($mbird_bweight,5)).'</td>';
-                   
+                    $html .= '<td style="text-align:right;">'.number_format_ind(round($feed_pbird,5)).'</td>';
+                    $html .= '<td style="text-align:right;">'.number_format_ind(round($bird_bweight,5)).'</td>';        
                     $html .= '</tr>';
-
-                  
                 }
                 $html .= '</tbody>';
                 $html .= '<tfoot class="thead3">';

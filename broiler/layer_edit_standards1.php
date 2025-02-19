@@ -1,5 +1,5 @@
 <?php
-//breeder_edit_standards1.php
+//layer_edit_standards1.php
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['standards1'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
@@ -25,7 +25,7 @@ if($link_active_flag > 0){
     }
     if($acount == 1){
 
-        $sql = "SELECT * FROM `breeder_breed_details` WHERE `dflag` = '0' ORDER BY `description` ASC";
+        $sql = "SELECT * FROM `layer_breed_details` WHERE `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $br_code = $br_name = array();
         while($row = mysqli_fetch_assoc($query)){ $br_code[$row['code']] = $row['code']; $br_name[$row['code']] = $row['description']; }
 ?>
@@ -47,26 +47,17 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition">
         <?php
         $ids = $_GET['id'];
-        $sql = "SELECT * FROM `breeder_breed_standards` WHERE `id` = '$ids' AND `dflag` = '0' AND `trlink` = 'breeder_display_standards1.php'";
+        $sql = "SELECT * FROM `layer_breed_standards` WHERE `id` = '$ids' AND `dflag` = '0' AND `trlink` = 'layer_display_standards1.php'";
         $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){
             $breed_code = $row['breed_code'];
             $breed_age = round($row['breed_age'],5);
             $livability = round($row['livability'],5);
-            $ffeed_pbird = round($row['ffeed_pbird'],5);
-            $mfeed_pbird = round($row['mfeed_pbird'],5);
+            $feed_pbird = round($row['feed_pbird'],5);
             $hd_per = round($row['hd_per'],5);
-            $he_per = round($row['he_per'],5);
-            $hhp_pweek = round($row['hhp_pweek'],5);
             $chhp_pweek = round($row['chhp_pweek'],5);
-            $hhe_pweek = round($row['hhe_pweek'],5);
-            $chhe_pweek = round($row['chhe_pweek'],5);
-            $hatch_per = round($row['hatch_per'],5);
-            $chicks_pweek = round($row['chicks_pweek'],5);
-            $cchicks_pweek = round($row['cchicks_pweek'],5);
             $egg_weight = round($row['egg_weight'],5);
-            $fbird_bweight = round($row['fbird_bweight'],5);
-            $egg_weight = round($row['egg_weight'],5);
+            $bird_bweight = round($row['bird_bweight'],5);
         }
         ?>
         <div class="m-0 p-0 wrapper">
@@ -77,28 +68,19 @@ if($link_active_flag > 0){
                             <div class="float-left"><h3 class="card-title">Edit Breed Standards</h3></div>
                         </div>
                         <div class="p-1 card-body">
-                            <form action="breeder_modify_standards1.php" method="post" role="form" onsubmit="return checkval()">
+                            <form action="layer_modify_standards1.php" method="post" role="form" onsubmit="return checkval()">
                                 <div class="p-1 row row_body2" style="margin-bottom:3px;">
                                     <table class="p-1">
                                         <thead>
                                             <tr>
                                                 <th><label>Breed<b style="color:red;">&nbsp;*</b></label></th>
                                                 <th style="text-align:center;"><label>Age (In Weeks)<b style="color:red;">*</b></label></th>
+                                                <th style="text-align:center;"><label>% Hen Day Produced</label></th>
                                                 <th style="text-align:center;"><label>Livability</label></th>
-                                                <th style="text-align:center;"><label>F.Feed/Bird (gms)</label></th>
-                                                <th style="text-align:center;"><label>M.Feed/Bird (gms)</label></th>
-                                                <th style="text-align:center;"><label>HD%</label></th>
-                                                <th style="text-align:center;"><label>HE%</label></th>
-                                                <th style="text-align:center;"><label>HHP/Week</label></th>
-                                                <th style="text-align:center;"><label>C.HHP/Week</label></th>
-                                                <th style="text-align:center;"><label>HHE/Week</label></th>
-                                                <th style="text-align:center;"><label>C.HHE/Week</label></th>
-                                                <th style="text-align:center;"><label>Hatch %</label></th>
-                                                <th style="text-align:center;"><label>Chicks/week</label></th>
-                                                <th style="text-align:center;"><label>C.Chicks/ week</label></th>
-                                                <th style="text-align:center;"><label>Egg Weight</label></th>
-                                                <th style="text-align:center;"><label>F.B.Wt(gms)</label></th>
-                                                <th style="text-align:center;"><label>M.B.Wt(gms)</label></th>
+                                                <th style="text-align:center;"><label>Cumulative Eggs/Hen Housed</label></th>
+                                                <th style="text-align:center;"><label>Avg Egg Weight</label></th>
+                                                <th style="text-align:center;"><label>Feed intake/Bird (gms)</label></th>
+                                                <th style="text-align:center;"><label>Body Weight (gms)</label></th>
                                                 <th style="visibility:hidden;"></th>
                                             </tr>
                                         </thead>
@@ -111,22 +93,13 @@ if($link_active_flag > 0){
                                                   <?php  } ?>
                                                 </select></td>
                                                 <td><input type="text" name="breed_age" id="breed_age" class="form-control" value="<?php echo $breed_age; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="livability" id="livability" class="form-control text-right" value="<?php echo $livability; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="ffeed_pbird" id="ffeed_pbird" class="form-control text-right" value="<?php echo $ffeed_pbird; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="mfeed_pbird" id="mfeed_pbird" class="form-control text-right" value="<?php echo $mfeed_pbird; ?>" style="width:90px;" /></td>
                                                 <td><input type="text" name="hd_per" id="hd_per" class="form-control text-right" value="<?php echo $hd_per; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="he_per" id="he_per" class="form-control text-right" value="<?php echo $he_per; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="hhp_pweek" id="hhp_pweek" class="form-control text-right" value="<?php echo $hhp_pweek; ?>" style="width:90px;" /></td>
+                                                <td><input type="text" name="livability" id="livability" class="form-control text-right" value="<?php echo $livability; ?>" style="width:90px;" /></td>
                                                 <td><input type="text" name="chhp_pweek" id="chhp_pweek" class="form-control text-right" value="<?php echo $chhp_pweek; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="hhe_pweek" id="hhe_pweek" class="form-control text-right" value="<?php echo $hhe_pweek; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="chhe_pweek" id="chhe_pweek" class="form-control text-right" value="<?php echo $chhe_pweek; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="hatch_per" id="hatch_per" class="form-control text-right" value="<?php echo $hatch_per; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="chicks_pweek" id="chicks_pweek" class="form-control text-right" value="<?php echo $chicks_pweek; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="cchicks_pweeks" id="cchicks_pweeks" class="form-control text-right" value="<?php echo $cchicks_pweek; ?>" style="width:90px;" /></td>
                                                 <td><input type="text" name="egg_weight" id="egg_weight" class="form-control text-right" value="<?php echo $egg_weight; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="fbird_bweight" id="fbird_bweight" class="form-control text-right" value="<?php echo $fbird_bweight; ?>" style="width:90px;" /></td>
-                                                <td><input type="text" name="mbird_bweight" id="mbird_bweight" class="form-control text-right" value="<?php echo $mbird_bweight; ?>" style="width:90px;" /></td>
-                                            </tr>
+                                                <td><input type="text" name="feed_pbird" id="feed_pbird" class="form-control text-right" value="<?php echo $feed_pbird; ?>" style="width:90px;" /></td>
+                                                <td><input type="text" name="bird_bweight" id="bird_bweight" class="form-control text-right" value="<?php echo $bird_bweight; ?>" style="width:90px;" /></td>
+                                               </tr>
                                         </tbody>
                                     </table>
                                 </div><br/>
@@ -183,7 +156,7 @@ if($link_active_flag > 0){
 			}
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
-                window.location.href = 'breeder_display_standards1.php?ccid='+ccid;
+                window.location.href = 'layer_display_standards1.php?ccid='+ccid;
             }
 			function check_duplicate(){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -193,7 +166,7 @@ if($link_active_flag > 0){
 				if(breed_age != ""){
 					var oldqty = new XMLHttpRequest();
 					var method = "GET";
-					var url = "breeder_fetch_standards1_duplicates.php?breed_age="+breed_age+"&id="+id+"&type="+type;
+					var url = "layer_fetch_standards1_duplicates.php?breed_age="+breed_age+"&id="+id+"&type="+type;
                     //window.open(url);
 					var asynchronous = true;
 					oldqty.open(method, url, asynchronous);

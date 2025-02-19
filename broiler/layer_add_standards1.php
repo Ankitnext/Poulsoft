@@ -1,5 +1,5 @@
 <?php
-//breeder_add_standards1.php
+//layer_add_standards1.php
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['standards1'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
@@ -25,7 +25,7 @@ if($link_active_flag > 0){
     }
     if($acount == 1){
 
-        $sql = "SELECT * FROM `breeder_breed_details` WHERE `dflag` = '0' ORDER BY `description` ASC";
+        $sql = "SELECT * FROM `layer_breed_details` WHERE `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $br_code = $br_name = array();
         while($row = mysqli_fetch_assoc($query)){ $br_code[$row['code']] = $row['code']; $br_name[$row['code']] = $row['description']; }
 ?>
@@ -53,7 +53,7 @@ if($link_active_flag > 0){
                             <div class="float-left"><h3 class="card-title">Add Breed Standards</h3></div>
                         </div>
                         <div class="p-1 card-body">
-                            <form action="breeder_save_standards1.php" method="post" role="form" onsubmit="return checkval()">
+                            <form action="layer_save_standards1.php" method="post" role="form" onsubmit="return checkval()">
                                 <div class="row">  
                                     <div class="form-group p-1">
                                         <label>Breed<b style="color:red;">&nbsp;*</b></label>
@@ -74,21 +74,12 @@ if($link_active_flag > 0){
                                         <thead>
                                             <tr>
                                                 <th style="text-align:center;"><label>Age (In Weeks)<b style="color:red;">*</b></label></th>
-                                                <th style="text-align:center;"><label>Livability</label></th>
-                                                <th style="text-align:center;"><label>F.Feed/Bird (gms)</label></th>
-                                                <th style="text-align:center;"><label>M.Feed/Bird (gms)</label></th>
-                                                <th style="text-align:center;"><label>HD%</label></th>
-                                                <th style="text-align:center;"><label>HE%</label></th>
-                                                <th style="text-align:center;"><label>HHP/Week</label></th>
-                                                <th style="text-align:center;"><label>C.HHP/Week</label></th>
-                                                <th style="text-align:center;"><label>HHE/Week</label></th>
-                                                <th style="text-align:center;"><label>C.HHE/Week</label></th>
-                                                <th style="text-align:center;"><label>Hatch %</label></th>
-                                                <th style="text-align:center;"><label>Chicks/week</label></th>
-                                                <th style="text-align:center;"><label>C.Chicks/ week</label></th>
-                                                <th style="text-align:center;"><label>Egg Weight</label></th>
-                                                <th style="text-align:center;"><label>F.B.Wt(gms)</label></th>
-                                                <th style="text-align:center;"><label>M.B.Wt(gms)</label></th>
+                                                <th style="text-align:center;"><label>% Hen Day Produced</label></th>
+                                                <th style="text-align:center;"><label>% Livability</label></th>
+                                                <th style="text-align:center;"><label>Cumulative Eggs/Hen Housed</label></th>
+                                                <th style="text-align:center;"><label>Avg Egg Weight</label></th>
+                                                <th style="text-align:center;"><label>Feed intake/Bird (gms)</label></th>
+                                                <th style="text-align:center;"><label>Body Weight (gms)</label></th>
                                                 <th style="text-align:center;"><label>Action</label></th>
                                                 <th style="visibility:hidden;"></th>
                                             </tr>
@@ -96,22 +87,12 @@ if($link_active_flag > 0){
                                         <tbody id="tbody">
                                             <tr>
                                                 <td><input type="text" name="breed_age[]" id="breed_age[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_count(this.id);" onchange="check_duplicate(this.id);" /></td>
-                                                <td><input type="text" name="livability[]" id="livability[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="ffeed_pbird[]" id="ffeed_pbird[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="mfeed_pbird[]" id="mfeed_pbird[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="hd_per[]" id="hd_per[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="he_per[]" id="he_per[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="hhp_pweek[]" id="hhp_pweek[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
+                                                <td><input type="text" name="livability[]" id="livability[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="chhp_pweek[]" id="chhp_pweek[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="hhe_pweek[]" id="hhe_pweek[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="chhe_pweek[]" id="chhe_pweek[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="hatch_per[]" id="hatch_per[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="chicks_pweek[]" id="chicks_pweek[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="cchicks_pweeks[]" id="cchicks_pweeks[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="egg_weight[]" id="egg_weight[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="fbird_bweight[]" id="fbird_bweight[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><input type="text" name="mbird_bweight[]" id="mbird_bweight[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                    
+                                                <td><input type="text" name="feed_pbird[]" id="feed_pbird[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
+                                                <td><input type="text" name="bird_bweight[]" id="bird_bweight[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td id="action[0]"><a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
                                                 <td style="visibility:hidden;"><input type="text" name="dupflag[0]" id="dupflag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
                                             </tr>
@@ -204,7 +185,7 @@ if($link_active_flag > 0){
            
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
-                window.location.href = 'breeder_display_standards1.php?ccid='+ccid;
+                window.location.href = 'layer_display_standards1.php?ccid='+ccid;
             }
 			function create_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -214,22 +195,13 @@ if($link_active_flag > 0){
                 document.getElementById("incr").value = d;
                 html += '<tr id="row_no['+d+']">';
                 html += '<td><input type="text" name="breed_age[]" id="breed_age['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_count(this.id);" onchange="check_duplicate(this.id);" /></td>';
-                html += '<td><input type="text" name="livability[]" id="livability['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="ffeed_pbird[]" id="ffeed_pbird['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="mfeed_pbird[]" id="mfeed_pbird['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><input type="text" name="hd_per[]" id="hd_per['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="he_per[]" id="he_per['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="hhp_pweek[]" id="hhp_pweek['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
+                html += '<td><input type="text" name="livability[]" id="livability['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><input type="text" name="chhp_pweek[]" id="chhp_pweek['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="hhe_pweek[]" id="hhe_pweek['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="chhe_pweek[]" id="chhe_pweek['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="hatch_per[]" id="hatch_per['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="chicks_pweek[]" id="chicks_pweek['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="cchicks_pweek[]" id="cchicks_pweek['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><input type="text" name="egg_weight[]" id="egg_weight['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="fbird_bweight[]" id="fbird_bweight['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-                html += '<td><input type="text" name="mbird_bweight[]" id="mbird_bweight['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
-               
+                html += '<td><input type="text" name="feed_pbird[]" id="feed_pbird['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
+                html += '<td><input type="text" name="bird_bweight[]" id="bird_bweight['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
+
                 html += '<td id="action['+d+']"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
                 html += '<td style="visibility:hidden;"><input type="text" name="dupflag['+d+']" id="dupflag['+d+']" class="form-control text-right" value="0" style="width:20px;" /></td>';
 				html += '</tr>';
@@ -250,7 +222,7 @@ if($link_active_flag > 0){
 				if(breed_age != ""){
 					var oldqty = new XMLHttpRequest();
 					var method = "GET";
-					var url = "breeder_fetch_standards1_duplicates.php?breed_age="+breed_age+"&type="+type+"&row_count="+d;
+					var url = "layer_fetch_standards1_duplicates.php?breed_age="+breed_age+"&type="+type+"&row_count="+d;
                     //window.open(url);
 					var asynchronous = true;
 					oldqty.open(method, url, asynchronous);

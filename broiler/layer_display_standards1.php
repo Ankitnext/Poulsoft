@@ -38,7 +38,7 @@ if($link_active_flag > 0){
             /*Check for Table Availability*/
             $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
             $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("breeder_breed_standards", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_breed_standards LIKE poulso6_admin_broiler_broilermaster.breeder_breed_standards;"; mysqli_query($conn,$sql1); }
+            if(in_array("layer_breed_standards", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_breed_standards LIKE poulso6_admin_broiler_broilermaster.layer_breed_standards;"; mysqli_query($conn,$sql1); }
             
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
@@ -84,32 +84,23 @@ if($link_active_flag > 0){
                                         <th>Breed</th>
                                         <th>Age</th>
                                         <th>Livability</th>
-                                        <th>F.Feed/Bird<br/>(gms)</th>
-                                        <th>M.Feed/Bird<br/>(gms)</th>
-                                        <th>HD%</th>
-                                        <th>HE%</th>
-                                        <th>HHP /Week</th>
+                                        <th>Feed intake/Bird<br/>(gms)</th>
+                                        <th>% Hen Day Produced</th>
                                         <th>C.HHP /Week</th>
-                                        <th>HHE /Week</th>
-                                        <th>C.HHE /Week</th>
-                                        <th>Hatch %</th>
-                                        <th>Chicks /week</th>
-                                        <th>C.Chicks /week</th>
-                                        <th>Egg Weight</th>
-                                        <th>F.B.Wt<br/>(gms)</th>
-                                        <th>M.B.Wt<br/>(gms)</th>
+                                        <th>Avg Egg Weight</th>
+                                        <th>Body Weight<br/>(gms)</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
 
-                                        $sql = "SELECT * FROM `breeder_breed_details` WHERE `dflag` = '0' ORDER BY `description` ASC";
+                                        $sql = "SELECT * FROM `layer_breed_details` WHERE `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $br_code = $br_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $br_code[$row['code']] = $row['code']; $br_name[$row['code']] = $row['description']; }
 
                                         $delete_url = $delete_link."?utype=delete&id=";
-                                        $sql = "SELECT * FROM `breeder_breed_standards` WHERE `dflag` = '0' AND `trtype` = 'standards1' AND `trlink` = 'breeder_display_standards1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $sql = "SELECT * FROM `layer_breed_standards` WHERE `dflag` = '0' AND `trtype` = 'standards1' AND `trlink` = 'layer_display_standards1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['id'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;
@@ -127,20 +118,11 @@ if($link_active_flag > 0){
                                         <td><?php echo $br_name[$row['breed_code']] ?></td>
                                         <td><?php echo round($row['breed_age'],5); ?></td>
                                         <td><?php echo round($row['livability'],5); ?></td>
-                                        <td><?php echo round($row['ffeed_pbird'],5); ?></td>
-                                        <td><?php echo round($row['mfeed_pbird'],5); ?></td>
+                                        <td><?php echo round($row['feed_pbird'],5); ?></td>
                                         <td><?php echo round($row['hd_per'],5); ?></td>
-                                        <td><?php echo round($row['he_per'],5); ?></td>
-                                        <td><?php echo round($row['hhp_pweek'],5); ?></td>
                                         <td><?php echo round($row['chhp_pweek'],5); ?></td>
-                                        <td><?php echo round($row['hhe_pweek'],5); ?></td>
-                                        <td><?php echo round($row['chhe_pweek'],5); ?></td>
-                                        <td><?php echo round($row['hatch_per'],5); ?></td>
-                                        <td><?php echo round($row['chicks_pweek'],5); ?></td>
-                                        <td><?php echo round($row['cchicks_pweek'],5); ?></td>
                                         <td><?php echo round($row['egg_weight'],5); ?></td>
-                                        <td><?php echo round($row['fbird_bweight'],5); ?></td>
-                                        <td><?php echo round($row['mbird_bweight'],5); ?></td>
+                                        <td><?php echo round($row['bird_bweight'],5); ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
@@ -189,7 +171,7 @@ if($link_active_flag > 0){
                 if(id != ""){
                     var inv_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "breeder_check_standards1.php?id="+id+"&code="+code;
+                    var url = "layer_check_standards1.php?id="+id+"&code="+code;
                     //window.open(url);
                     var asynchronous = true;
                     inv_items.open(method, url, asynchronous);
