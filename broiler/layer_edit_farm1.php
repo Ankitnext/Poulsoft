@@ -83,10 +83,10 @@ if($link_active_flag > 0){
                                             <tbody id="tbody">
                                                 <tr>
                                                     <td style="text-align:center;visibility:hidden;"><input type="text" name="code" id="code" class="form-control" value="<?php echo $code; ?>" style="width:20px;" readonly /></td>
-                                                    <td><input type="text" name="farm_code" id="farm_code" class="form-control" value="<?php echo $farm_code; ?>" style="width:210px;" onkeyup="validatename(this.id);" onchange="validatename(this.id);" /></td>
-                                                    <td><input type="text" name="description" id="description" class="form-control" value="<?php echo $description; ?>" style="width:210px;" onkeyup="validatename(this.id);check_duplicate();" onchange="validatename(this.id);check_duplicate();" /></td>
+                                                    <td><input type="text" name="farm_code" id="farm_code" class="form-control" value="<?php echo $farm_code; ?>" style="width:210px;" onkeyup="validatename(this.id); check_duplicate1();" /></td>
+                                                    <td><input type="text" name="description" id="description" class="form-control" value="<?php echo $description; ?>" style="width:210px;" onkeyup="validatename(this.id);check_duplicate();" /></td>
                                                     <td><input type="text" name="farm_capacity" id="farm_capacity" class="form-control text-right" value="<?php echo $farm_capacity; ?>" style="width:100px;" onkeyup="validatenum(this.id);" onchange="validatenum(this.id);" /></td>
-                                                   <td style="visibility:hidden;"><input type="text" name="dupflag[0]" id="dupflag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
+                                                   <td style="visibility:hidden;"><input type="text" name="dupflag" id="dupflag" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -155,7 +155,6 @@ if($link_active_flag > 0){
                 window.location.href = 'layer_display_farm1.php?ccid='+ccid;
             }
 			function check_duplicate(){
-                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
 				var description = document.getElementById("description").value;
                 var id = '<?php echo $ids; ?>';
 				var type = "edit";
@@ -176,7 +175,7 @@ if($link_active_flag > 0){
 								document.getElementById("dupflag"). value = 0;
 							}
 							else {
-								alert("Farm Name already exist.\n Kindly change the name");
+								alert("Farm Name already exist.\n Kindly change the Farm Name");
 								document.getElementById("dupflag"). value = 1;
 							}
 						}
@@ -184,6 +183,35 @@ if($link_active_flag > 0){
 				}
 				else { }
 			}
+            function check_duplicate1(a){
+				var farm_code = document.getElementById("farm_code").value;
+				var type = "edit";
+				if(farm_code != ""){
+					var oldqty = new XMLHttpRequest();
+					var method = "GET";
+					var url = "layer_fetch_farm1_duplicates2.php?farm_code="+farm_code+"&type="+type;
+                    //window.open(url);
+					var asynchronous = true;
+					oldqty.open(method, url, asynchronous);
+					oldqty.send();
+					oldqty.onreadystatechange = function(){
+						if(this.readyState == 4 && this.status == 200){
+							var dup_dt = this.responseText;
+                            var dup_info = dup_dt.split("@");
+                            var row = dup_info[1];
+							if(parseInt(dup_info[0]) == 0){
+								document.getElementById("dupflag["+row+"]"). value = 0;
+							}
+							else {
+								alert("Farm Code already exist.\n Kindly change the Farm Code");
+								document.getElementById("dupflag["+row+"]"). value = 1;
+							}
+						}
+					}
+				}
+				else { }
+			}
+
             document.addEventListener("keydown", (e) => { if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function (){ $('#submit').click(); }); } } else{ } });
             function validatename(x) { expr = /^[a-zA-Z0-9 (.&)_-]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, ''); } document.getElementById(x).value = a; }
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }

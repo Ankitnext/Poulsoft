@@ -71,8 +71,8 @@ if($link_active_flag > 0){
                                             <tbody id="tbody">
                                                 <tr>
                                                     <td style="text-align:center;visibility:hidden;"><input type="text" name="code" id="code" class="form-control" value="<?php echo $code; ?>" style="width:20px;" readonly /></td>
-                                                    <td><input type="text" name="description" id="description" class="form-control" value="<?php echo $description; ?>" style="width:210px;" onkeyup="validatename(this.id);check_duplicate();" onchange="validatename(this.id);check_duplicate();" /></td>
-                                                    <td style="visibility:hidden;"><input type="text" name="dupflag[0]" id="dupflag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
+                                                    <td><input type="text" name="description" id="description" class="form-control" value="<?php echo $description; ?>" style="width:210px;" onkeyup="validatename(this.id);check_duplicate();" /></td>
+                                                    <td style="visibility:hidden;"><input type="text" name="dupflag" id="dupflag" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
                                                 </tr>
                                             </tbody>
                                         </table>

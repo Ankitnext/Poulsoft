@@ -10,7 +10,7 @@ $utype = $_GET['utype'];
 $id = $_GET['id'];
 if($utype == "delete"){
     $sql = "UPDATE `layer_batch` SET `dflag` = '1',`active` = '0',`updatedtime` = '$addedtime',`updatedemp` = '$addedemp' WHERE `id` = '$id'";
-    if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { header('location:breeder_display_batch1.php?ccid='.$ccid); }
+    if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { header('location:layer_display_batch1.php?ccid='.$ccid); }
 }
 
  ?>

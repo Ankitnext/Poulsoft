@@ -69,29 +69,33 @@ if($link_active_flag > 0){
                         </div>
                         <div class="p-1 card-body">
                             <form action="layer_modify_standards1.php" method="post" role="form" onsubmit="return checkval()">
+                            <div class="row">  
+                                    <div class="form-group p-1">
+                                        <label>Breed<b style="color:red;">&nbsp;*</b></label>
+                                        <select name="breed_code" id="breed_code" class="form-control select2" style="width:200px;">
+                                                    <option value="select">-select-</option>
+                                                    <?php foreach($br_code as $b_code){ ?>
+                                                        <option value="<?php echo $b_code ?>" <?php if($breed_code == $b_code) { echo 'selected'; } ?>><?php echo $br_name[$b_code] ?></option>          
+                                                  <?php  } ?>
+                                        </select>
+                                    </div>                                          
+                                </div>
                                 <div class="p-1 row row_body2" style="margin-bottom:3px;">
                                     <table class="p-1">
                                         <thead>
                                             <tr>
-                                                <th><label>Breed<b style="color:red;">&nbsp;*</b></label></th>
-                                                <th style="text-align:center;"><label>Age (In Weeks)<b style="color:red;">*</b></label></th>
-                                                <th style="text-align:center;"><label>% Hen Day Produced</label></th>
-                                                <th style="text-align:center;"><label>Livability</label></th>
-                                                <th style="text-align:center;"><label>Cumulative Eggs/Hen Housed</label></th>
-                                                <th style="text-align:center;"><label>Avg Egg Weight</label></th>
-                                                <th style="text-align:center;"><label>Feed intake/Bird (gms)</label></th>
-                                                <th style="text-align:center;"><label>Body Weight (gms)</label></th>
+                                                <th style="text-align:center;"><label>Age<br>(In Weeks)<b style="color:red;">*</b></label></th>
+                                                <th style="text-align:center;"><label>% Hen Day<br> Prod.</label></th>
+                                                <th style="text-align:center;"><label>% Livability</label></th>
+                                                <th style="text-align:center;"><label>Cumulative<br>Eggs/HH</label></th>
+                                                <th style="text-align:center;"><label>Avg Egg<br> Weight</label></th>
+                                                <th style="text-align:center;"><label>Feed intake<br>/Bird (gms)</label></th>
+                                                <th style="text-align:center;"><label>Body Wt<br> (gms)</label></th>
                                                 <th style="visibility:hidden;"></th>
                                             </tr>
                                         </thead>
                                         <tbody id="tbody">
                                             <tr>
-                                                <td><select name="breed_code" id="breed_code" class="form-control select2" style="width:200px;">
-                                                    <option value="select">-select-</option>
-                                                    <?php foreach($br_code as $b_code){ ?>
-                                                        <option value="<?php echo $b_code ?>" <?php if($breed_code == $b_code) { echo 'selected'; } ?>><?php echo $br_name[$b_code] ?></option>          
-                                                  <?php  } ?>
-                                                </select></td>
                                                 <td><input type="text" name="breed_age" id="breed_age" class="form-control" value="<?php echo $breed_age; ?>" style="width:90px;" /></td>
                                                 <td><input type="text" name="hd_per" id="hd_per" class="form-control text-right" value="<?php echo $hd_per; ?>" style="width:90px;" /></td>
                                                 <td><input type="text" name="livability" id="livability" class="form-control text-right" value="<?php echo $livability; ?>" style="width:90px;" /></td>

@@ -73,13 +73,13 @@ if($link_active_flag > 0){
                                     <table class="p-1">
                                         <thead>
                                             <tr>
-                                                <th style="text-align:center;"><label>Age (In Weeks)<b style="color:red;">*</b></label></th>
-                                                <th style="text-align:center;"><label>% Hen Day Produced</label></th>
+                                                <th style="text-align:center;"><label>Age</br>(In Weeks)<b style="color:red;">*</b></label></th>
+                                                <th style="text-align:center;"><label>% Hen Day<br> Prod.</label></th>
                                                 <th style="text-align:center;"><label>% Livability</label></th>
-                                                <th style="text-align:center;"><label>Cumulative Eggs/Hen Housed</label></th>
-                                                <th style="text-align:center;"><label>Avg Egg Weight</label></th>
-                                                <th style="text-align:center;"><label>Feed intake/Bird (gms)</label></th>
-                                                <th style="text-align:center;"><label>Body Weight (gms)</label></th>
+                                                <th style="text-align:center;"><label>Cumulative<br>Eggs/HH</label></th>
+                                                <th style="text-align:center;"><label>Avg Egg<br>Weight</label></th>
+                                                <th style="text-align:center;"><label>Feed intake<br>/Bird(gms)</label></th>
+                                                <th style="text-align:center;"><label>Body Wt.<br>(gms)</label></th>
                                                 <th style="text-align:center;"><label>Action</label></th>
                                                 <th style="visibility:hidden;"></th>
                                             </tr>

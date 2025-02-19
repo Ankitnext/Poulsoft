@@ -63,8 +63,8 @@ if($link_active_flag > 0){
                                             </thead>
                                             <tbody id="tbody">
                                                 <tr>
-                                                    <td><input type="text" name="farm_code[]" id="farm_code[0]" class="form-control" style="width:110px;" onkeyup="validatename(this.id);check_duplicate(this.id);" onchange="validatename(this.id);check_duplicate(this.id);" /></td>
-                                                    <td><input type="text" name="description[]" id="description[0]" class="form-control" style="width:210px;" onkeyup="validatename(this.id);check_duplicate(this.id);" onchange="validatename(this.id);check_duplicate(this.id);" /></td>
+                                                    <td><input type="text" name="farm_code[]" id="farm_code[0]" class="form-control" style="width:110px;" onkeyup="validatename(this.id);check_duplicate1(this.id);" /></td>
+                                                    <td><input type="text" name="description[]" id="description[0]" class="form-control" style="width:210px;" onkeyup="validatename(this.id);check_duplicate(this.id);" /></td>
                                                     <td><input type="text" name="farm_capacity[]" id="farm_capacity[0]" class="form-control text-right" style="width:100px;" onkeyup="validatenum(this.id);" onchange="validatenum(this.id);" /></td>
                                                     <td id="action[0]" style="width:80px;"><a href="javascript:void(0);" id="addrow[0]" onClick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
                                                     <td style="visibility:hidden;"><input type="text" name="dupflag[0]" id="dupflag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
@@ -164,7 +164,7 @@ if($link_active_flag > 0){
                 var slno = d + 1;
                 document.getElementById("incr").value = d;
                 html += '<tr id="row_no['+d+']">';
-                html += '<td><input type="text" name="farm_code[]" id="farm_code['+d+']" class="form-control" style="width:110px;" onkeyup="validatename(this.id);check_duplicate(this.id);" onchange="validatename(this.id);check_duplicate(this.id);" /></td>';
+                html += '<td><input type="text" name="farm_code[]" id="farm_code['+d+']" class="form-control" style="width:110px;" onkeyup="validatename(this.id);check_duplicate1(this.id);" onchange="validatename(this.id);check_duplicate1(this.id);" /></td>';
                 html += '<td><input type="text" name="description[]" id="description['+d+']" class="form-control" style="width:210px;" onkeyup="validatename(this.id);check_duplicate(this.id);" onchange="validatename(this.id);check_duplicate(this.id);" /></td>';
                 html += '<td><input type="text" name="farm_capacity[]" id="farm_capacity['+d+']" class="form-control text-right" style="width:100px;" onkeyup="validatenum(this.id);" onchange="validatenum(this.id);" /></td>';
                 html += '<td id="action['+d+']" style="padding-top: 5px;width:80px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
@@ -209,6 +209,36 @@ if($link_active_flag > 0){
 				}
 				else { }
 			}
+            function check_duplicate1(a){
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+				var farm_code = document.getElementById("farm_code["+d+"]").value;
+				var type = "add";
+				if(farm_code != ""){
+					var oldqty = new XMLHttpRequest();
+					var method = "GET";
+					var url = "layer_fetch_farm1_duplicates2.php?farm_code="+farm_code+"&type="+type+"&row_count="+d;
+                    //window.open(url);
+					var asynchronous = true;
+					oldqty.open(method, url, asynchronous);
+					oldqty.send();
+					oldqty.onreadystatechange = function(){
+						if(this.readyState == 4 && this.status == 200){
+							var dup_dt = this.responseText;
+                            var dup_info = dup_dt.split("@");
+                            var row = dup_info[1];
+							if(parseInt(dup_info[0]) == 0){
+								document.getElementById("dupflag["+row+"]"). value = 0;
+							}
+							else {
+								alert("Farm Code already exist.\n Kindly change the Farm Code");
+								document.getElementById("dupflag["+row+"]"). value = 1;
+							}
+						}
+					}
+				}
+				else { }
+			}
+
             document.addEventListener("keydown", (e) => { if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function (){ $('#submit').click(); }); } } else{ } });
             function validatename(x) { expr = /^[a-zA-Z0-9 (.&)_-]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, ''); } document.getElementById(x).value = a; }
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }

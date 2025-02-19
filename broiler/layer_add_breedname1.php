@@ -64,7 +64,7 @@ if($link_active_flag > 0){
                                             </thead>
                                             <tbody id="tbody">
                                                 <tr>
-                                                    <td><input type="text" name="description[]" id="description[0]" class="form-control" style="width:210px;" onkeyup="validatename(this.id);check_duplicate(this.id);" onchange="validatename(this.id);check_duplicate(this.id);" /></td>
+                                                    <td><input type="text" name="description[]" id="description[0]" class="form-control" style="width:210px;" onkeyup="validatename(this.id);check_duplicate(this.id);" /></td>
                                                     <td id="action[0]" style="width:80px;"><a href="javascript:void(0);" id="addrow[0]" onClick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
                                                     <td style="visibility:hidden;"><input type="text" name="dupflag[0]" id="dupflag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
                                                 </tr>
