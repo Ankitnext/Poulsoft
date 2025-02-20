@@ -25,7 +25,6 @@ if($link_active_flag > 0){
     }
     if($acount == 1){
         $date = date("Y-m-d");
-
         //layer Medicine/Vaccine Details
         $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND `bmv_flag` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $icat_alist = array();
