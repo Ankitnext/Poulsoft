@@ -28,14 +28,17 @@ if($link_active_flag > 0){
         $query = mysqli_query($conn,$sql); $bfarm_code = $bfarm_name = array();
         while($row = mysqli_fetch_assoc($query)){ $bfarm_code[$row['code']] = $row['code']; $bfarm_name[$row['code']] = $row['description']; }
 
-        $sql = "SELECT * FROM `breeder_shed_type` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+        $sql = "SELECT * FROM `layer_shed_type` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $bs_code = $bs_name = array();
         while($row = mysqli_fetch_assoc($query)){ $bs_code[$row['code']] = $row['code']; $bs_name[$row['code']] = $row['description'];}
-        
 
         $sql = "SELECT * FROM `broiler_employee` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
         $query = mysqli_query($conn,$sql); $bemp_code = $bemp_name = array();
         while($row = mysqli_fetch_assoc($query)){ $bemp_code[$row['code']] = $row['code']; $bemp_name[$row['code']] = $row['name']; }
+
+        $sql = "SELECT * FROM `layer_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
+        $query = mysqli_query($conn,$sql); $bunit_code = $bunit_name = array();
+        while($row = mysqli_fetch_assoc($query)){ $bunit_code[$row['code']] = $row['code']; $bunit_name[$row['code']] = $row['description']; $bunit_farm[$row['code']] = $row['farm_code']; }
 ?>
 <html lang="en">
     <head>
@@ -71,7 +74,18 @@ if($link_active_flag > 0){
                                                 </tr>
                                                 <tr>
                                                     <th><label for="unit_code">Unit<b style="color:red;">&nbsp;*</b></label></th>
-                                                    <td colspan="3"><select name="unit_code" id="unit_code" class="form-control select2" style="width:390px;"><option value="select">-select-</option></select></td>
+                                                    <td colspan="3"><select name="unit_code" id="unit_code" class="form-control select2" style="width:390px;">
+                                                            <option value="select">-select-</option>
+                                                            <?php
+                                                            foreach($bunit_code as $ucode){
+                                                                if($bunit_farm[$ucode] == $farm_code){
+                                                            ?>
+                                                            <option value="<?php echo $ucode; ?>" <?php if($ucode == $unit_code){ echo "selected"; } ?>><?php echo $bunit_name[$ucode]; ?></option>
+                                                            <?php
+                                                                }
+                                                            }
+                                                            ?>
+                                                        </select></td>
                                                 </tr>
                                                 <tr>
                                                     <th><label for="shed_code">Shed Code<b style="color:red;">&nbsp;*</b></label></th>

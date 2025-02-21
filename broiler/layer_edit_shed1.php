@@ -65,7 +65,7 @@ if($link_active_flag > 0){
             $description = $row['description'];
             $farm_code = $row['farm_code'];
             $unit_code = $row['unit_code'];
-            $shed_type = $row['shed_type'];
+            $sheds_type = $row['shed_type'];
             $shed_sqft = round($row['shed_sqft'],5);
             $nof_emps = round($row['nof_emps'],5);
             $bird_capacity = round($row['bird_capacity'],5);
@@ -116,7 +116,7 @@ if($link_active_flag > 0){
                                                     <td><select name="bs_code" id="bs_code" class="form-control select2" style="width:300px;">
                                                         <option value="select">-select-</option>
                                                         <?php foreach($bs_code as $b_code) { ?>
-                                                            <option value="<?php echo $b_code ?>" <?php if($b_code == $shed_type) { echo "selected"; } ?>><?php echo $bs_name[$b_code]; ?></option>
+                                                            <option value="<?php echo $b_code ?>" <?php if($b_code == $sheds_type) { echo "selected"; } ?>><?php echo $bs_name[$b_code]; ?></option>
                                                       <?php  } ?>
                                                     </select></td>                                                    <th><label for="shed_sqft">Shed (Sqft)</label></th>
                                                     <td><input type="text" name="shed_sqft" id="shed_sqft" class="form-control text-right" value="<?php echo $shed_sqft; ?>" style="width:110px;" onkeyup="validatenum(this.id);" onchange="validatenum(this.id);" /></td>
