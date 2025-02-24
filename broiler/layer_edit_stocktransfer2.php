@@ -1,7 +1,7 @@
 <?php
-//layer_edit_stocktransfer1.php
+//layer_edit_stocktransfer2.php
 include "newConfig.php";
-$user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['stocktransfer1'];
+$user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['stocktransfer2'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
 $sql = "SELECT * FROM `main_linkdetails` WHERE `href` LIKE '$href' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
 $link_active_flag = mysqli_num_rows($query);
@@ -62,7 +62,7 @@ if($link_active_flag > 0){
             while($brow = mysqli_fetch_assoc($bquery)){ $sector_code[$brow['code']] = $brow['code']; $sector_name[$brow['code']] = $brow['description']; }
         }
         //layer Feed Details
-        $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND (`lfeed_flag` = '1' OR `lmv_flag` = '1') AND `dflag` = '0' ORDER BY `description` ASC";
+        $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND (`bffeed_flag` = '1' OR `bmfeed_flag` = '1' OR `bmv_flag` = '1') AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $icat_alist = array();
         while($row = mysqli_fetch_assoc($query)){ $icat_alist[$row['code']] = $row['code']; }
         $icat_list = implode("','", $icat_alist);
@@ -96,7 +96,7 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition">
         <?php
         $ids = $_GET['trnum'];
-        $sql = "SELECT * FROM `item_stocktransfers` WHERE `trnum` = '$ids' AND `dflag` = '0' AND `trlink` = 'layer_display_stocktransfer1.php'";
+        $sql = "SELECT * FROM `item_stocktransfers` WHERE `trnum` = '$ids' AND `dflag` = '0' AND `trlink` = 'layer_display_stocktransfer2.php'";
         $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){
             $date = date("d.m.Y",strtotime($row['date']));
@@ -117,7 +117,7 @@ if($link_active_flag > 0){
                             <div class="float-left"><h3 class="card-title">Edit Stock Transfer</h3></div>
                         </div>
                         <div class="pl-2 card-body">
-                            <form action="layer_modify_stocktransfer1.php" method="post" role="form" onsubmit="return checkval()">
+                            <form action="layer_modify_stocktransfer2.php" method="post" role="form" onsubmit="return checkval()">
                                 <div class="row row_body2">
                                     <table class="p-1 table1" style="width:auto;">
                                         <thead>
@@ -235,7 +235,7 @@ if($link_active_flag > 0){
 			}
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
-                window.location.href = 'layer_display_stocktransfer1.php?ccid='+ccid;
+                window.location.href = 'layer_display_stocktransfer2.php?ccid='+ccid;
             }
             function fetch_stock_qty(){
                 update_ebtn_status(1);

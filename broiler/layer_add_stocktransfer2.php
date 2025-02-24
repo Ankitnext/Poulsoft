@@ -1,7 +1,7 @@
 <?php
-//layer_add_stocktransfer1.php
+//layer_add_stocktransfer2.php
 include "newConfig.php";
-$user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['stocktransfer1'];
+$user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['stocktransfer2'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
 $sql = "SELECT * FROM `main_linkdetails` WHERE `href` LIKE '$href' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
 $link_active_flag = mysqli_num_rows($query);
@@ -63,7 +63,7 @@ if($link_active_flag > 0){
             while($brow = mysqli_fetch_assoc($bquery)){ $sector_code[$brow['code']] = $brow['code']; $sector_name[$brow['code']] = $brow['description']; }
         }
         //layer Feed Details
-        $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND (`lfeed_flag` = '1' OR `lmv_flag` = '1') AND `dflag` = '0' ORDER BY `description` ASC";
+        $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND (`bffeed_flag` = '1' OR `bmfeed_flag` = '1' OR `bmv_flag` = '1') AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $icat_alist = array();
         while($row = mysqli_fetch_assoc($query)){ $icat_alist[$row['code']] = $row['code']; }
         $icat_list = implode("','", $icat_alist);
@@ -103,14 +103,23 @@ if($link_active_flag > 0){
                             <div class="float-left"><h3 class="card-title">Add Stock Transfer</h3></div>
                         </div>
                         <div class="pl-2 card-body">
-                            <form action="layer_save_stocktransfer1.php" method="post" role="form" onsubmit="return checkval()">
+                            <form action="layer_save_stocktransfer2.php" method="post" role="form" onsubmit="return checkval()">
                                 <div class="row row_body2">
                                     <table class="p-1 table1" style="width:auto;">
                                         <thead>
                                             <tr>
+                                                <th colspan="10">
+                                                    <div class="pl-3 row">
+                                                        <div class="form-group" style="width:200px;">
+                                                            <label for="fromwarehouse">From Location<b style="color:red;">&nbsp;*</b></label>
+                                                            <select name="fromwarehouse" id="fromwarehouse" class="form-control select2" style="width:190px;" onchange="fetch_stock_qty(this.id);"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select>
+                                                        </div>
+                                                    </div>
+                                                </th>
+                                            </tr>
+                                            <tr>
                                                 <th style="text-align:center;"><label>Date<b style="color:red;">&nbsp;*</b></label></th>
                                                 <th style="text-align:center;"><label>Dc No.</label></th>
-                                                <th style="text-align:center;"><label>From Location<b style="color:red;">&nbsp;*</b></label></th>
                                                 <th style="text-align:center;"><label>Item<b style="color:red;">&nbsp;*</b></label></th>
                                                 <th style="text-align:center;"><label>Quantity<b style="color:red;">&nbsp;*</b></label></th>
                                                 <th style="text-align:center;"><label>Price</label></th>
@@ -125,7 +134,6 @@ if($link_active_flag > 0){
                                             <tr>
                                                 <td><input type="text" name="date[]" id="date[0]" class="form-control datepicker" value="<?php echo $date; ?>" style="width:110px;" readonly /></td>
                                                 <td><input type="text" name="dcno[]" id="dcno[0]" class="form-control" style="width:60px;" onkeyup="validatename(this.id);" /></td>
-                                                <td><select name="fromwarehouse[]" id="fromwarehouse[0]" class="form-control select2" style="width:190px;" onchange="fetch_stock_qty(this.id);"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>
                                                 <td><select name="code[]" id="code[0]" class="form-control select2" style="width:190px;" onchange="fetch_stock_qty(this.id);"><option value="select">-select-</option><?php foreach($bitem_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $bitem_name[$ucode]; ?></option><?php } ?></select></td>
                                                 <td><input type="text" name="quantity[]" id="quantity[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);cal_stk_qty(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="price[]" id="price[0]" class="form-control text-right" style="width:90px;" readonly /></td>
@@ -171,54 +179,56 @@ if($link_active_flag > 0){
                 var incr = document.getElementById("incr").value;
                 var date = fromwarehouse = code = towarehouse = ""; var e = quantity = price = item_sqty = 0;
                 var bstk_cflag = '<?php echo $bstk_cflag; ?>'; if(bstk_cflag == ""){ bstk_cflag = 0; }
-
-                for(var d = 0;d <= incr;d++){
-                    if(l == true){
-                        e = d + 1;
-                        date = document.getElementById("date["+d+"]").value;
-                        fromwarehouse = document.getElementById("fromwarehouse["+d+"]").value;
-                        code = document.getElementById("code["+d+"]").value;
-                        quantity = document.getElementById("quantity["+d+"]").value; if(quantity == ""){ quantity = 0; }
-                        price = document.getElementById("price["+d+"]").value; if(price == ""){ price = 0; }
-                        towarehouse = document.getElementById("towarehouse["+d+"]").value;
-                        item_sqty = document.getElementById("item_sqty["+d+"]").value; if(item_sqty == ""){ item_sqty = 0; }
-                        
-                        if(date == ""){
-                            alert("Please select Date in row: "+e);
-                            document.getElementById("date["+d+"]").focus();
-                            l = false;
+                var fromwarehouse = document.getElementById("fromwarehouse").value;
+                if(fromwarehouse == "" || fromwarehouse == "select"){
+                    alert("Please select From Location");
+                    document.getElementById("fromwarehouse").focus();
+                    l = false;
+                }
+                else{
+                    for(var d = 0;d <= incr;d++){
+                        if(l == true){
+                            e = d + 1;
+                            date = document.getElementById("date["+d+"]").value;
+                            
+                            code = document.getElementById("code["+d+"]").value;
+                            quantity = document.getElementById("quantity["+d+"]").value; if(quantity == ""){ quantity = 0; }
+                            price = document.getElementById("price["+d+"]").value; if(price == ""){ price = 0; }
+                            towarehouse = document.getElementById("towarehouse["+d+"]").value;
+                            item_sqty = document.getElementById("item_sqty["+d+"]").value; if(item_sqty == ""){ item_sqty = 0; }
+                            
+                            if(date == ""){
+                                alert("Please select Date in row: "+e);
+                                document.getElementById("date["+d+"]").focus();
+                                l = false;
+                            }
+                            else if(code == "" || code == "select"){
+                                alert("Please select item in row: "+e);
+                                document.getElementById("code["+d+"]").focus();
+                                l = false;
+                            }
+                            else if(parseFloat(quantity) == 0){
+                                alert("Please enter Quantity in row: "+e);
+                                document.getElementById("quantity["+d+"]").focus();
+                                l = false;
+                            }
+                            else if(towarehouse == "" || towarehouse == "select"){
+                                alert("Please select To Location in row: "+e);
+                                document.getElementById("towarehouse["+d+"]").focus();
+                                l = false;
+                            }
+                            else if(parseInt(bstk_cflag) == 1 && parseFloat(quantity) > parseFloat(item_sqty)){
+                                alert("Stock not available in row: "+e);
+                                document.getElementById("quantity["+d+"]").focus();
+                                l = false;
+                            }
+                            else if(fromwarehouse == towarehouse){
+                                alert("From Location and To Location are same in row: "+e);
+                                document.getElementById("towarehouse["+d+"]").focus();
+                                l = false;
+                            }
+                            else{ }
                         }
-                        else if(fromwarehouse == "" || fromwarehouse == "select"){
-                            alert("Please select From Location in row: "+e);
-                            document.getElementById("fromwarehouse["+d+"]").focus();
-                            l = false;
-                        }
-                        else if(code == "" || code == "select"){
-                            alert("Please select item in row: "+e);
-                            document.getElementById("code["+d+"]").focus();
-                            l = false;
-                        }
-                        else if(parseFloat(quantity) == 0){
-                            alert("Please enter Quantity in row: "+e);
-                            document.getElementById("quantity["+d+"]").focus();
-                            l = false;
-                        }
-                        else if(towarehouse == "" || towarehouse == "select"){
-                            alert("Please select To Location in row: "+e);
-                            document.getElementById("towarehouse["+d+"]").focus();
-                            l = false;
-                        }
-                        else if(parseInt(bstk_cflag) == 1 && parseFloat(quantity) > parseFloat(item_sqty)){
-                            alert("Stock not available in row: "+e);
-                            document.getElementById("quantity["+d+"]").focus();
-                            l = false;
-                        }
-                        else if(fromwarehouse == towarehouse){
-                            alert("From Location and To Location are same in row: "+e);
-                            document.getElementById("towarehouse["+d+"]").focus();
-                            l = false;
-                        }
-                        else{ }
                     }
                 }
                 if(l == true){
@@ -231,7 +241,7 @@ if($link_active_flag > 0){
 			}
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
-                window.location.href = 'layer_display_stocktransfer1.php?ccid='+ccid;
+                window.location.href = 'layer_display_stocktransfer2.php?ccid='+ccid;
             }
 			function create_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -242,13 +252,35 @@ if($link_active_flag > 0){
                 html += '<tr id="row_no['+d+']">';
                 html += '<td><input type="text" name="date[]" id="date['+d+']" class="form-control datepicker" value="<?php echo $date; ?>" style="width:110px;" readonly /></td>';
                 html += '<td><input type="text" name="dcno[]" id="dcno['+d+']" class="form-control" style="width:60px;" onkeyup="validatename(this.id);" /></td>';
-                html += '<td><select name="fromwarehouse[]" id="fromwarehouse['+d+']" class="form-control select2" style="width:190px;" onchange="fetch_stock_qty(this.id);"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>';
                 html += '<td><select name="code[]" id="code['+d+']" class="form-control select2" style="width:190px;" onchange="fetch_stock_qty(this.id);"><option value="select">-select-</option><?php foreach($bitem_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $bitem_name[$ucode]; ?></option><?php } ?></select></td>';
                 html += '<td><input type="text" name="quantity[]" id="quantity['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);cal_stk_qty(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><input type="text" name="price[]" id="price['+d+']" class="form-control text-right" style="width:90px;" readonly /></td>';
                 html += '<td><select name="towarehouse[]" id="towarehouse['+d+']" class="form-control select2" style="width:190px;"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>';
                 html += '<td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="padding:0;width:150px;height:28px;" onkeyup="validatename(this.id);"></textarea></td>';
                 html += '<td id="action['+d+']" style="padding-top: 5px;width:80px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
+
+                html += '<td style="visibility:hidden;"><input type="text" name="item_sqty[]" id="item_sqty['+d+']" class="form-control text-right" value="0" style="padding:0;width:30px;" readonly /></td>';
+                html += '<td style="visibility:hidden;"><input type="text" name="item_sprc[]" id="item_sprc['+d+']" class="form-control text-right" value="0" style="padding:0;width:30px;" readonly /></td>';
+                html += '</tr>';
+                $('#tbody').append(html);
+                $('.select2').select2();
+                var today = '<?php echo date("d.m.Y"); ?>';
+                $( ".datepicker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", maxDate: today, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+            }
+			function clear_data(){
+                var html = ''; var d = 0;
+                document.getElementById("tbody").innerHTML = "";
+                document.getElementById("incr").value = 0;
+                
+                html += '<tr id="row_no['+d+']">';
+                html += '<td><input type="text" name="date[]" id="date['+d+']" class="form-control datepicker" value="<?php echo $date; ?>" style="width:110px;" readonly /></td>';
+                html += '<td><input type="text" name="dcno[]" id="dcno['+d+']" class="form-control" style="width:60px;" onkeyup="validatename(this.id);" /></td>';
+                html += '<td><select name="code[]" id="code['+d+']" class="form-control select2" style="width:190px;" onchange="fetch_stock_qty(this.id);"><option value="select">-select-</option><?php foreach($bitem_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $bitem_name[$ucode]; ?></option><?php } ?></select></td>';
+                html += '<td><input type="text" name="quantity[]" id="quantity['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);cal_stk_qty(this.id);" onchange="validateamount(this.id);" /></td>';
+                html += '<td><input type="text" name="price[]" id="price['+d+']" class="form-control text-right" style="width:90px;" readonly /></td>';
+                html += '<td><select name="towarehouse[]" id="towarehouse['+d+']" class="form-control select2" style="width:190px;"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>';
+                html += '<td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="padding:0;width:150px;height:28px;" onkeyup="validatename(this.id);"></textarea></td>';
+                html += '<td id="action['+d+']" style="width:80px;"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>';
 
                 html += '<td style="visibility:hidden;"><input type="text" name="item_sqty[]" id="item_sqty['+d+']" class="form-control text-right" value="0" style="padding:0;width:30px;" readonly /></td>';
                 html += '<td style="visibility:hidden;"><input type="text" name="item_sprc[]" id="item_sprc['+d+']" class="form-control text-right" value="0" style="padding:0;width:30px;" readonly /></td>';
@@ -266,49 +298,54 @@ if($link_active_flag > 0){
                 document.getElementById("action["+d+"]").style.visibility = "visible";
             }
             function fetch_stock_qty(a){
-                update_ebtn_status(1);
-                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
-                var date = document.getElementById("date["+d+"]").value;
-                var fsector = document.getElementById("fromwarehouse["+d+"]").value;
-                var code = document.getElementById("code["+d+"]").value;
-                document.getElementById("price["+d+"]").value = 0;
-                document.getElementById("item_sqty["+d+"]").value = 0;
-                document.getElementById("item_sprc["+d+"]").value = 0;
-
-                if(date == "" || fsector == "" || fsector == "select" || code == "" || code == "select"){ update_ebtn_status(0); }
+                if(a == "fromwarehouse"){
+                    clear_data();
+                }
                 else{
-                    var oldqty = new XMLHttpRequest();
-                    var method = "GET";
-                    var url = "layer_fetch_avlstock_quantity.php?date="+date+"&fsector="+fsector+"&item_code="+code+"&rows="+d+"&ftype=stk_transfer&ttype=add";
-                    //window.open(url);
-                    var asynchronous = true;
-                    oldqty.open(method, url, asynchronous);
-                    oldqty.send();
-                    oldqty.onreadystatechange = function(){
-                        if(this.readyState == 4 && this.status == 200){
-                            var item_sdt1 = this.responseText;
-                            var item_sdt2 = item_sdt1.split("[@$&]");
-                            var err_flag = item_sdt2[0];
-                            var err_msg = item_sdt2[1];
-                            var rows = item_sdt2[2];
-                            var item_qty = item_sdt2[3];
-                            var item_prc = item_sdt2[4];
+                    update_ebtn_status(1);
+                    var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                    var date = document.getElementById("date["+d+"]").value;
+                    var fsector = document.getElementById("fromwarehouse").value;
+                    var code = document.getElementById("code["+d+"]").value;
+                    document.getElementById("price["+d+"]").value = 0;
+                    document.getElementById("item_sqty["+d+"]").value = 0;
+                    document.getElementById("item_sprc["+d+"]").value = 0;
+
+                    if(date == "" || fsector == "" || fsector == "select" || code == "" || code == "select"){ update_ebtn_status(0); }
+                    else{
+                        var oldqty = new XMLHttpRequest();
+                        var method = "GET";
+                        var url = "layer_fetch_avlstock_quantity.php?date="+date+"&fsector="+fsector+"&item_code="+code+"&rows="+d+"&ftype=stk_transfer&ttype=add";
+                        //window.open(url);
+                        var asynchronous = true;
+                        oldqty.open(method, url, asynchronous);
+                        oldqty.send();
+                        oldqty.onreadystatechange = function(){
+                            if(this.readyState == 4 && this.status == 200){
+                                var item_sdt1 = this.responseText;
+                                var item_sdt2 = item_sdt1.split("[@$&]");
+                                var err_flag = item_sdt2[0];
+                                var err_msg = item_sdt2[1];
+                                var rows = item_sdt2[2];
+                                var item_qty = item_sdt2[3];
+                                var item_prc = item_sdt2[4];
 
 
-                            if(parseInt(err_flag) == 1){ alert(err_msg); }
-                            else{
-                                var incr = document.getElementById("incr").value;
-                                var rcode = ""; var rqty = 0;
-                                for(var d = 0;d <= incr;d++){
-                                    rcode = document.getElementById("code["+d+"]").value;
-                                    rqty = document.getElementById("quantity["+d+"]").value; if(rqty == ""){ rqty = 0; }
-                                    if(code == rcode){ item_qty = parseFloat(item_qty) - parseFloat(rqty); }
+                                if(parseInt(err_flag) == 1){ alert(err_msg); }
+                                else{
+                                    var incr = document.getElementById("incr").value;
+                                    var rcode = ""; var rqty = 0;
+                                    for(var d = 0;d <= incr;d++){
+                                        rcode = document.getElementById("code["+d+"]").value;
+                                        rqty = document.getElementById("quantity["+d+"]").value; if(rqty == ""){ rqty = 0; }
+                                        if(code == rcode){ item_qty = parseFloat(item_qty) - parseFloat(rqty); }
+                                    }
+                                    document.getElementById("item_sqty["+rows+"]").value = parseFloat(item_qty).toFixed(2);
+                                    document.getElementById("price["+rows+"]").value = parseFloat(item_prc).toFixed(5);
+                                    document.getElementById("item_sprc["+rows+"]").value = parseFloat(item_prc).toFixed(5);
                                 }
-                                document.getElementById("item_sqty["+rows+"]").value = parseFloat(item_qty).toFixed(2);
-                                document.getElementById("price["+rows+"]").value = parseFloat(item_prc).toFixed(5);
-                                document.getElementById("item_sprc["+rows+"]").value = parseFloat(item_prc).toFixed(5);
+                                update_ebtn_status(0);
                             }
-                            update_ebtn_status(0);
                         }
                     }
                 }
