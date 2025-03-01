@@ -33,7 +33,7 @@ if($link_active_flag > 0){
         $sql = "SELECT * FROM `layer_extra_access` WHERE `field_name` = 'layer Daily Entry' AND `field_function` = 'Feed Stock in Bags' AND `user_access` = 'all' AND `flag` = '1'";
         $query = mysqli_query($conn,$sql); $lstk_bags = mysqli_num_rows($query);
         $sql = "SELECT * FROM `layer_extra_access` WHERE `field_name` = 'layer Module' AND `field_function` = 'Maintain Feed Stock in FARM/UNIT/SHED/BATCH/FLOCK' AND `user_access` = 'all' AND `flag` = '1'";
-        $query = mysqli_query($conn,$sql); $bfeed_stkon = ""; while($row = mysqli_fetch_assoc($query)){ $bfeed_stkon = $row['field_value']; } if($bfeed_stkon == ""){ $bfeed_stkon = "FLOCK"; }
+        $query = mysqli_query($conn,$sql); $lfeed_stkon = ""; while($row = mysqli_fetch_assoc($query)){ $lfeed_stkon = $row['field_value']; } if($lfeed_stkon == ""){ $lfeed_stkon = "FLOCK"; }
         
         $sql = "SELECT * FROM `layer_sheds` WHERE `active` = '1' AND `dflag` = '0' AND `cls_flag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $bshed_code = $bshed_name = array();
@@ -43,26 +43,27 @@ if($link_active_flag > 0){
         while($row = mysqli_fetch_assoc($query)){ $bflk_code[$row['code']] = $row['code']; $bflk_name[$row['code']] = $row['description']; $bflk_batch[$row['code']] = $row['batch_code']; }
         $sql = "SELECT * FROM `layer_batch` WHERE `active` = '1' AND `dflag` = '0' AND `cls_flag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $bflk_pflag = array();
-        while($row = mysqli_fetch_assoc($query)){ $bflk_pflag[$row['code']] = $row['beps_flag']; }
+        while($row = mysqli_fetch_assoc($query)){ $bflk_pflag[$row['code']] = $row['leps_flag']; }
 
         //layer Feed Details
         if((int)$feed_aflag == 0){
-            $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND (`bfeed_flag` = '1'  AND `dflag` = '0' ORDER BY `description` ASC";
+            $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND (`lfeed_flag` = '1'  AND `dflag` = '0' ORDER BY `description` ASC";
             $query = mysqli_query($conn,$sql); $icat_alist = $ibf_flag = array();
-            while($row = mysqli_fetch_assoc($query)){ $icat_alist[$row['code']] = $row['code']; $ib_flag[$row['code']] = $row['bfeed_flag'];  }
+            while($row = mysqli_fetch_assoc($query)){ $icat_alist[$row['code']] = $row['code']; $ib_flag[$row['code']] = $row['lfeed_flag'];  }
             $icat_list = implode("','", $icat_alist);
             $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$icat_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
-            $query = mysqli_query($conn,$sql); $bfeed_code = $bfeed_name = array();
+            $query = mysqli_query($conn,$sql); $lfeed_code = $lfeed_name = array();
             while($row = mysqli_fetch_assoc($query)){
-                if($ib_flag[$row['code']] == 1){ $bfeed_code[$row['code']] = $row['code']; $bfeed_name[$row['code']] = $row['description']; }
+                if($ib_flag[$row['code']] == 1){ $lfeed_code[$row['code']] = $row['code']; $lfeed_name[$row['code']] = $row['description']; }
                 
             }
         }
         //layer Egg Details
-        $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND `begg_flag` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+        $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND `legg_flag` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $icat_alist = array();
         while($row = mysqli_fetch_assoc($query)){ $icat_alist[$row['code']] = $row['code']; }
         $icat_list = implode("','", $icat_alist);
+
         $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$icat_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $begg_code = $begg_name = array();
         while($row = mysqli_fetch_assoc($query)){ $begg_code[$row['code']] = $row['code']; $begg_name[$row['code']] = $row['description']; }
@@ -151,8 +152,8 @@ if($link_active_flag > 0){
                                                             </select>
                                                         </div>
                                                         <div class="form-group" style="width:70px;visibility:hidden;">
-                                                            <label for="beps_flag">P.Flag</label>
-                                                            <input type="text" name="beps_flag" id="beps_flag" class="form-control text-right" value="<?php echo $bflk_pflag[$bflk_batch[$flock_code]]; ?>" style="width:60px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" readonly />
+                                                            <label for="leps_flag">P.Flag</label>
+                                                            <input type="text" name="leps_flag" id="leps_flag" class="form-control text-right" value="<?php echo $bflk_pflag[$bflk_batch[$flock_code]]; ?>" style="width:60px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" readonly />
                                                         </div>
                                                     </div>
                                                 </th>
@@ -168,8 +169,8 @@ if($link_active_flag > 0){
                                                             </select>
                                                         </div>
                                                         <div class="form-group" style="width:70px;visibility:hidden;">
-                                                            <label for="beps_flag">P.Flag</label>
-                                                            <input type="text" name="beps_flag" id="beps_flag" class="form-control text-right" value="<?php echo $bflk_pflag[$bflk_batch[$flock_code]]; ?>" style="width:60px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" readonly />
+                                                            <label for="leps_flag">P.Flag</label>
+                                                            <input type="text" name="leps_flag" id="leps_flag" class="form-control text-right" value="<?php echo $bflk_pflag[$bflk_batch[$flock_code]]; ?>" style="width:60px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" readonly />
                                                         </div>
                                                     </div>
                                                 </th>
@@ -229,10 +230,10 @@ if($link_active_flag > 0){
                                                 <td><input type="text" name="mort_qty" id="mort_qty" class="form-control f-info text-right" value="<?php echo $fmort_qty; ?>" style="width:60px;" onkeyup="validate_count(this.id);" /></td>
                                                 <td><input type="text" name="cull_qty" id="cull_qty" class="form-control f-info text-right" value="<?php echo $fcull_qty; ?>" style="width:60px;" onkeyup="validate_count(this.id);" /></td>
                                                 <td><input type="text" name="body_weight" id="body_weight" class="form-control f-info text-right" value="<?php echo $fbody_weight; ?>" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
-                                                <td><select name="feed_code1" id="feed_code1" class="form-control select2 f-info" style="width:190px;" onchange="fetch_feedstock_qty(this.id);"><option value="select">-select-</option><?php foreach($bfeed_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($ucode == $feed_code1){ echo "selected"; } ?>><?php echo $lfeed_name[$ucode]; ?></option><?php } ?></select></td>
+                                                <td><select name="feed_code1" id="feed_code1" class="form-control select2 f-info" style="width:190px;" onchange="fetch_feedstock_qty(this.id);"><option value="select">-select-</option><?php foreach($lfeed_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($ucode == $feed_code1){ echo "selected"; } ?>><?php echo $lfeed_name[$ucode]; ?></option><?php } ?></select></td>
                                                 <td><input type="text" name="feed_qty1" id="feed_qty1" class="form-control f-info text-right" value="<?php echo $feed_qty1; ?>" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <?php if((int)$feed_2flag == 1){ ?>
-                                                <td><select name="feed_code2" id="feed_code2" class="form-control f-info select2" style="width:190px;" onchange="fetch_feedstock_qty(this.id);"><option value="select">-select-</option><?php foreach($lfeed_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($ucode == $feed_code2){ echo "selected"; } ?>><?php echo $bfeed_name[$ucode]; ?></option><?php } ?></select></td>
+                                                <td><select name="feed_code2" id="feed_code2" class="form-control f-info select2" style="width:190px;" onchange="fetch_feedstock_qty(this.id);"><option value="select">-select-</option><?php foreach($lfeed_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($ucode == $feed_code2){ echo "selected"; } ?>><?php echo $lfeed_name[$ucode]; ?></option><?php } ?></select></td>
                                                 <td><input type="text" name="feed_qty2" id="feed_qty2" class="form-control f-info text-right" value="<?php echo $feed_qty2; ?>" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <?php } ?>
 
@@ -343,10 +344,10 @@ if($link_active_flag > 0){
                 window.location.href = 'layer_display_dailyentry1.php?ccid='+ccid;
             }
             function update_eggprod_fields(){
-                var beps_flag = document.getElementById("beps_flag").value; if(beps_flag == ""){ beps_flag = 0; }
+                var leps_flag = document.getElementById("leps_flag").value; if(leps_flag == ""){ leps_flag = 0; }
                 var egg_list = document.getElementsByClassName("egg_list");
                 for(let i = 0;i < egg_list.length;i++) {
-                    if(parseInt(beps_flag) == 1){
+                    if(parseInt(leps_flag) == 1){
                         egg_list[i].style.width = "90px";
                         egg_list[i].style.visibility = "visible";
                     }
@@ -381,12 +382,12 @@ if($link_active_flag > 0){
                         oldqty.send();
                         oldqty.onreadystatechange = function(){
                             if(this.readyState == 4 && this.status == 200){
-                                var bfeed_dt1 = this.responseText;
-                                var bfeed_dt2 = bfeed_dt1.split("[@$&]");
-                                var err_flag = bfeed_dt2[0];
-                                var err_msg = bfeed_dt2[1];
-                                var rows = bfeed_dt2[2];
-                                var feed_opt = bfeed_dt2[3];
+                                var lfeed_dt1 = this.responseText;
+                                var lfeed_dt2 = lfeed_dt1.split("[@$&]");
+                                var err_flag = lfeed_dt2[0];
+                                var err_msg = lfeed_dt2[1];
+                                var rows = lfeed_dt2[2];
+                                var feed_opt = lfeed_dt2[3];
                                 if(parseInt(err_flag) == 1){ alert(err_msg); }
                                 else{ }
                                 $('#feed_code1').append(feed_opt);

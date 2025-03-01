@@ -23,32 +23,32 @@ if($itype == "feed"){
 
     //Fetch Feed Stock on FARM/UNIT/SHED/BATCH
     $sql = "SELECT * FROM `layer_extra_access` WHERE `field_name` = 'layer Module' AND `field_function` = 'Maintain Feed Stock in FARM/UNIT/SHED/BATCH/FLOCK' AND `user_access` = 'all' AND `flag` = '1'";
-    $query = mysqli_query($conn,$sql); $bfeed_stkon = ""; while($row = mysqli_fetch_assoc($query)){ $bfeed_stkon = $row['field_value']; } if($bfeed_stkon == ""){ $bfeed_stkon = "FLOCK"; }
+    $query = mysqli_query($conn,$sql); $lfeed_stkon = ""; while($row = mysqli_fetch_assoc($query)){ $lfeed_stkon = $row['field_value']; } if($lfeed_stkon == ""){ $lfeed_stkon = "FLOCK"; }
 
     //Get Filters based on Feed Stock for Summary
     $sql = "SELECT * FROM `layer_shed_allocation` WHERE `code` = '$flock_code'".$shed_fltr." AND `active` = '1' AND `dflag` = '0'";
     $query = mysqli_query($conn,$sql); $fdstk_fltr = "";
     while($row = mysqli_fetch_assoc($query)){
-        if($bfeed_stkon == "FARM"){ $farm_code = $row['farm_code']; $fdstk_fltr = " AND `location` IN ('$farm_code')"; }
-        else if($bfeed_stkon == "UNIT"){ $unit_code = $row['unit_code']; $fdstk_fltr = " AND `location` IN ('$unit_code')"; }
-        else if($bfeed_stkon == "SHED"){ $shed_code = $row['shed_code']; $fdstk_fltr = " AND `location` IN ('$shed_code')"; }
-        else if($bfeed_stkon == "BATCH"){ $batch_code = $row['batch_code']; $fdstk_fltr = " AND `location` IN ('$batch_code')"; }
-        else if($bfeed_stkon == "FLOCK"){ $flock_code = $row['code']; $fdstk_fltr = " AND `flock_code` IN ('$flock_code')"; }
+        if($lfeed_stkon == "FARM"){ $farm_code = $row['farm_code']; $fdstk_fltr = " AND `location` IN ('$farm_code')"; }
+        else if($lfeed_stkon == "UNIT"){ $unit_code = $row['unit_code']; $fdstk_fltr = " AND `location` IN ('$unit_code')"; }
+        else if($lfeed_stkon == "SHED"){ $shed_code = $row['shed_code']; $fdstk_fltr = " AND `location` IN ('$shed_code')"; }
+        else if($lfeed_stkon == "BATCH"){ $batch_code = $row['batch_code']; $fdstk_fltr = " AND `location` IN ('$batch_code')"; }
+        else if($lfeed_stkon == "FLOCK"){ $flock_code = $row['code']; $fdstk_fltr = " AND `flock_code` IN ('$flock_code')"; }
         else{ }
     }
     if($fdstk_fltr == ""){ $fdstk_fltr = " AND `flock_code` IN ('$flock_code')"; }
 
     //layer Feed Details
-    $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND (`bffeed_flag` = '1' OR `bmfeed_flag` = '1') AND `dflag` = '0' ORDER BY `description` ASC";
-    $query = mysqli_query($conn,$sql); $icat_alist = $icat_iac = $ibf_flag = $ibm_flag = array();
-    while($row = mysqli_fetch_assoc($query)){ $icat_alist[$row['code']] = $row['code']; $icat_iac[$row['iac']] = $row['iac']; $ibf_flag[$row['code']] = $row['bffeed_flag']; $ibm_flag[$row['code']] = $row['bmfeed_flag']; }
+    $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND (`lfeed_flag` = '1') AND `dflag` = '0' ORDER BY `description` ASC";
+    $query = mysqli_query($conn,$sql); $icat_alist = $icat_iac = $il_flag = array();
+    while($row = mysqli_fetch_assoc($query)){ $icat_alist[$row['code']] = $row['code']; $icat_iac[$row['iac']] = $row['iac']; $il_flag[$row['code']] = $row['lfeed_flag']; }
     $icat_list = implode("','", $icat_alist);
     $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$icat_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
-    $query = mysqli_query($conn,$sql); $bfeed_alist = array();
-    while($row = mysqli_fetch_assoc($query)){ $bfeed_alist[$row['code']] = $row['code']; }
+    $query = mysqli_query($conn,$sql); $lfeed_alist = array();
+    while($row = mysqli_fetch_assoc($query)){ $lfeed_alist[$row['code']] = $row['code']; }
 
     //Calculate and check stocks
-    $icoa_list = implode("','", $icat_iac); $item_list = implode("','", $bfeed_alist);
+    $icoa_list = implode("','", $icat_iac); $item_list = implode("','", $lfeed_alist);
     $sql = "SELECT * FROM `account_summary` WHERE `date` <= '$today' AND `coa_code` IN ('$icoa_list') AND `item_code` IN ('$item_list')".$fdstk_fltr."".$trno_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `date` ASC,`crdr` DESC";
     $query = mysqli_query($conn,$sql); $stk_qty = $stk_prc = $stk_amt = $stk_oqty = $stk_oprc = $stk_oamt = $stk_cqty = $stk_cprc = $stk_camt = $stk_adate = array();
     while($row = mysqli_fetch_array($query)){
@@ -78,12 +78,12 @@ if($itype == "feed"){
     //Check for available stock and fetch Item list
     $avl_ilist = array();
     if(strtotime($date) == strtotime($today)){
-        foreach($bfeed_alist as $icode){
+        foreach($lfeed_alist as $icode){
             if(!empty($stk_oqty[$icode]) && (float)$stk_oqty[$icode] > 0){ $avl_ilist[$icode] = $icode; }
         }
     }
     else{
-        foreach($bfeed_alist as $icode){
+        foreach($lfeed_alist as $icode){
             if(!empty($stk_adate[$icode]) && strtotime($stk_adate[$icode]) <= strtotime($date)){
                 if(!empty($stk_oqty[$icode]) && (float)$stk_oqty[$icode] > 0){ $avl_ilist[$icode] = $icode; }
             }
@@ -93,24 +93,22 @@ if($itype == "feed"){
         }
     }
 
-    $bffeed_opt = $bmfeed_opt = $err_msg = ""; $err_flag = 0;
-    $bffeed_opt = '<option value="select">-select-</option>';
-    $bmfeed_opt = '<option value="select">-select-</option>';
+    $lfeed_opt = $err_msg = ""; $err_flag = 0;
+    $lfeed_opt = '<option value="select">-select-</option>';
     if(sizeof($avl_ilist) > 0){
         $item_list = implode("','", $avl_ilist);
         $sql = "SELECT * FROM `item_details` WHERE `code` IN ('$item_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){
             $code = $row['code']; $name = $row['description'];
-            $ibf_flag[$row['code']] = $row['bffeed_flag']; $ibm_flag[$row['code']] = $row['bmfeed_flag'];
-            if($ibf_flag[$row['category']] == 1){ $bffeed_opt .= '<option value="'.$code.'">'.$name.'</option>'; }
-            if($ibm_flag[$row['category']] == 1){ $bmfeed_opt .= '<option value="'.$code.'">'.$name.'</option>'; }
+            $il_flag[$row['code']] = $row['lfeed_flag'];
+            if($ibf_flag[$row['category']] == 1){ $lfeed_opt .= '<option value="'.$code.'">'.$name.'</option>'; }
             
         }
     }
     else{
         $err_flag = 1; $err_msg = "Feed Stock not available for selected Flock.,\nPlease check and try again.";
     }
-    echo $err_flag."[@$&]".$err_msg."[@$&]".$rows."[@$&]".$bffeed_opt."[@$&]".$bmfeed_opt;
+    echo $err_flag."[@$&]".$err_msg."[@$&]".$rows."[@$&]".$lfeed_opt."[@$&]";
 }
 ?>

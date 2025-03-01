@@ -182,13 +182,12 @@ if($ftype == "stk_transfer"){
 }
 if($ftype == "bird_transfer"){
     $date = date("Y-m-d",strtotime($_GET['date']));
-    $fflock = $_GET['fflock'];
+    $flock = $_GET['flock'];
     //layer Feed Details
-    $sql = "SELECT * FROM `item_details` WHERE `description` IN ('Female birds','Male birds') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
-    $query = mysqli_query($conn,$sql); $fbird_code = $mbird_code = ""; $icat_code = array();
+    $sql = "SELECT * FROM `item_details` WHERE `description` IN ('Layer Birds') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+    $query = mysqli_query($conn,$sql); $lbird_code = ""; $icat_code = array();
     while($row = mysqli_fetch_assoc($query)){
-        if($row['description'] == "Female birds"){ $fbird_code = $row['code']; }
-        else if($row['description'] == "Male birds"){ $mbird_code = $row['code']; }
+        if($row['description'] == "layer birds"){ $lbird_code = $row['code']; }
         else{ }
         $icat_code[$row['category']] = $row['category'];
     }
@@ -199,7 +198,7 @@ if($ftype == "bird_transfer"){
     $icat_coa = implode("','", $icat_iac);
 
     //Calculate and check stocks
-    $sql = "SELECT * FROM `account_summary` WHERE `date` <= '$today' AND `coa_code` IN ('$icat_coa') AND `item_code` IN ('$fbird_code','$mbird_code') AND `flock_code` = '$fflock'".$trno_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `date` ASC,`crdr` DESC";
+    $sql = "SELECT * FROM `account_summary` WHERE `date` <= '$today' AND `coa_code` IN ('$icat_coa') AND `item_code` IN ('$lbird_code') AND `flock_code` = '$flock'".$trno_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `date` ASC,`crdr` DESC";
     $query = mysqli_query($conn,$sql); $stk_qty = $stk_prc = $stk_amt = $stk_oqty = $stk_oprc = $stk_oamt = $stk_cqty = $stk_cprc = $stk_camt = $stk_adate = $item_alist = array(); $fsdate = "";
     while($row = mysqli_fetch_array($query)){
         $key1 = $row['item_code'];
@@ -229,12 +228,12 @@ if($ftype == "bird_transfer"){
         if($stk_adate[$key1] == "" || strtotime($stk_adate[$key1]) <= strtotime($row['date'])){ $stk_adate[$key1] = $row['date']; }
         $item_alist[$key1] = $key1;
 
-        if($key1 == $fbird_code){
+        if($key1 == $lbird_code){
             if($fsdate == "" || strtotime($fsdate) >= strtotime($row["date"])){ $fsdate = $row['date']; }
         }
     }
     //Check for available stock and fetch Item list
-    $stk_aqty = $stk_aprc = $stk_aamt = $err_flag = $fbird_sqty = $fbird_sprc = $mbird_sqty = $mbird_sprc = 0; $err_msg = "";
+    $stk_aqty = $stk_aprc = $stk_aamt = $err_flag = $lbird_sqty = $lbird_sprc = 0; $err_msg = "";
     foreach($item_alist as $key1){
         $stk_aqty = $stk_aprc = $stk_aamt = 0;
         if(strtotime($date) == strtotime($today)){
@@ -251,12 +250,11 @@ if($ftype == "bird_transfer"){
         }
         if((float)$stk_aqty != 0){ $stk_aprc = round(((float)$stk_aamt / (float)$stk_aqty),5); }
 
-        if($key1 == $fbird_code){ $fbird_sqty = (float)$stk_aqty; $fbird_sprc = (float)$stk_aprc; }
-        else if($key1 == $mbird_code){ $mbird_sqty = (float)$stk_aqty; $mbird_sprc = (float)$stk_aprc; }
+        if($key1 == $lbird_code){ $lbird_sqty = (float)$stk_aqty; $lbird_sprc = (float)$stk_aprc; }
         else{ }
     }
     //check and calculate Flock Age
-    $sql = "SELECT * FROM `layer_shed_allocation` WHERE `code` = '$fflock' AND `active` = '1' AND `dflag` = '0'";
+    $sql = "SELECT * FROM `layer_shed_allocation` WHERE `code` = '$flock' AND `active` = '1' AND `dflag` = '0'";
     $query = mysqli_query($conn,$sql); $sdate = ""; $s_cnt = mysqli_num_rows($query); $sage = 0;
     if((int)$s_cnt > 0){
         while($row = mysqli_fetch_array($query)){
@@ -281,6 +279,6 @@ if($ftype == "bird_transfer"){
         $bird_age = (INT)((strtotime($date) - strtotime($fsdate)) / 60 / 60 / 24) + (int)$sage;
     }
     else{ }
-    echo $err_flag."[@$&]".$err_msg."[@$&]".$rows."[@$&]".$fbird_sqty."[@$&]".$fbird_sprc."[@$&]".$mbird_sqty."[@$&]".$mbird_sprc."[@$&]".$bird_age;
+    echo $err_flag."[@$&]".$err_msg."[@$&]".$rows."[@$&]".$lbird_sqty."[@$&]".$lbird_sprc."[@$&]".$bird_age;
 }
 ?>
