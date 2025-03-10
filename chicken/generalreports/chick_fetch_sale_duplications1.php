@@ -1,5 +1,5 @@
 <?php
-//chicken_retail_shopwise_itemsales.php
+//chick_fetch_sale_duplications1.php
 $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 $requested_data = json_decode(file_get_contents('php://input'),true);
 session_start();
@@ -10,17 +10,29 @@ if($db == ''){
     $dbname = $_SESSION['dbase'];
     $users_code = $_SESSION['userid'];
 
-    $form_reload_page = "chicken_retail_shopwise_itemsales.php";
+    $form_reload_page = "chick_fetch_sale_duplications1.php";
 }
 else{
     include "APIconfig.php";
     $dbname = $db;
     $users_code = $_GET['emp_code'];
-    $form_reload_page = "chicken_retail_shopwise_itemsales.php?db=".$db;
+    $form_reload_page = "chick_fetch_sale_duplications1.php?db=".$db;
 }
 include "number_format_ind.php";
-include "decimal_adjustments.php";
-$file_name = "Day Wise Item Sales";
+
+function decimal_adjustments($a,$b){
+    if($a == ""){ $a = 0; }
+    $a = round($a,$b);
+    $c = explode(".",$a);
+    $ed = "";
+    $iv = 0;
+    if($c[1] == ""){ $iv = 1; }
+    else{ $iv = strlen($c[1]); }
+    if($iv == 0){ $iv = 1; }
+    for($d = $iv;$d < $b;$d++){ if($ed == ""){ $ed = "0"; } else{ $ed .= "0"; } }
+    return $a."".$ed;
+}
+$file_name = "Cash hand Over Report";
 
 /*Check for Column Availability*/
 $sql='SHOW COLUMNS FROM `main_contactdetails`'; $query = mysqli_query($conn,$sql); $ecn_val = array(); $i = 0;
@@ -76,10 +88,10 @@ for($i = 0;$i <= 30;$i++){ $font_sizes[$i."px"] = $i."px"; }
 
 $fdate = $tdate = date("Y-m-d"); $sectors = $users = "all"; $fstyles = $fsizes = "default"; $exports = "display";
 if(isset($_POST['submit']) == true){
-    $fdate = date("Y-m-d",strtotime($_POST['fdate']));
-    $tdate = date("Y-m-d",strtotime($_POST['tdate']));
-    $sectors = $_POST['sectors'];
-    $users = $_POST['users'];
+    // $fdate = date("Y-m-d",strtotime($_POST['fdate']));
+    // $tdate = date("Y-m-d",strtotime($_POST['tdate']));
+    // $sectors = $_POST['sectors'];
+    // $users = $_POST['users'];
     $fstyles = $_POST['fstyles'];
     $fsizes = $_POST['fsizes'];
     $exports = $_POST['exports'];
@@ -116,15 +128,15 @@ if(isset($_POST['submit']) == true){
 							<tr>
 								<td colspan="19" class="p-1">
                                     <div class="m-1 p-1 row">
-                                        <div class="form-group" style="width:110px;">
+                                        <!-- <div class="form-group" style="width:110px;">
                                             <label for="fdate">From Date</label>
                                             <input type="text" name="fdate" id="fdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
                                         </div>
                                         <div class="form-group" style="width:110px;">
                                             <label for="tdate">To Date</label>
                                             <input type="text" name="tdate" id="tdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
-                                        </div>
-                                        <div class="form-group" style="width:190px;">
+                                        </div> -->
+                                        <!-- <div class="form-group" style="width:190px;">
                                             <label for="users">user</label>
                                             <select name="users" id="users" class="form-control select2" style="width:180px;">
                                                 <option value="all" <?php if($users == "all"){ echo "selected"; } ?>>-All-</option>
@@ -137,7 +149,7 @@ if(isset($_POST['submit']) == true){
                                                 <option value="all" <?php if($sectors == "all"){ echo "selected"; } ?>>-All-</option>
 											    <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($sectors == $scode){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
                                             </select>
-                                        </div>
+                                        </div> -->
                                         <?php if((int)$font_fflag == 1){ ?>
                                         <div class="form-group" style="width:190px;">
                                             <label for="fstyles">Font-Family</label>
@@ -180,67 +192,72 @@ if(isset($_POST['submit']) == true){
 						<?php
                         }
                         if(isset($_POST['submit']) == true){
-                            $sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users' AND `active` = '1'";
-                            $query = mysqli_query($conn,$sql); $cash_coa = $bank_coa = "";
-                            while($row = mysqli_fetch_assoc($query)){ $cash_coa = $row['cash_coa']; $bank_coa = $row['bank_coa']; }
-                            
+                          
                             $html = '';
-                            //Sales
+                        
                             $html .= '<tr class="thead2">';
+                            $html .= '<th style="text-align:center;">Sl.No.</th>';
                             $html .= '<th style="text-align:center;">Date</th>';
-                            $html .= '<th style="text-align:center;">Item Name.</th>';
-                            $html .= '<th style="text-align:center;">Units</th>';
-                            $html .= '<th style="text-align:center;">Total Qty</th>';
-                            $html .= '<th style="text-align:center;">Item Price</th>';
-                            $html .= '<th style="text-align:center;">Total Gst</th>';
-                            $html .= '<th style="text-align:center;">Total Discount</th>';
-                            $html .= '<th style="text-align:center;">Total Amount</th>';
+                            $html .= '<th style="text-align:center;">Transaction No.</th>';
+                            $html .= '<th style="text-align:center;">Customer</th>';
+                            $html .= '<th style="text-align:center;">Item</th>';
+                            $html .= '<th style="text-align:center;">Quantity</th>';
+                            $html .= '<th style="text-align:center;">User</th>';
+                            $html .= '<th style="text-align:center;">Added Time</th>';
+                            $html .= '<th style="text-align:center;">User</th>';
+                            $html .= '<th style="text-align:center;">Updated Time</th>';
                             $html .= '</tr>';
 
-                            $usr_fltr = ""; if($users != "all"){ $usr_fltr = " AND `addedemp` = '$users'"; }
-                            $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; }
+                            // $grp_list = implode("','",$cgrp_code);
+                            $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' ORDER BY `name` ASC";
+                            $query = mysqli_query($conn,$sql); $cus_code = $cus_name = $cus_group = array();
+                            while($row = mysqli_fetch_assoc($query)){ $cus_code[$row['code']] = $row['code']; $cus_name[$row['code']] = $row['name']; }
 
-                            $sql = "SELECT * FROM `retail_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$usr_fltr."".$sec_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `trnum` ASC";
-                            $query = mysqli_query($conn, $sql); $isale_qty = $isale_amt = array();
+
+                            $sql = "SELECT  date,invoice,link_trnum,customercode,itemcode,netweight,addedemp,addedtime,updatedemp,updated FROM  `customer_sales` WHERE `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' AND  (customercode, itemcode, netweight, date) IN ( SELECT  customercode,itemcode,netweight,date FROM  `customer_sales` WHERE `active` = '1' AND `tdflag` = '0' AND pdflag = 0 GROUP BY customercode,itemcode,netweight,date HAVING COUNT(*) > 1 ) ORDER BY customercode, itemcode,date,invoice";
+                            $query = mysqli_query($conn,$sql); 
                             while($row = mysqli_fetch_assoc($query)){
-                                $key = $row['date']."@".$row['icode'];
-                                $isale_qty[$key] += (float)$row['quantity'];
-                                $isale_amt[$key] += (float)$row['item_amt'];
-                            }
+                                $data1 = $row['date'];
+                                $invoice = $row['invoice'];
+                                $customercode = $row['customercode'];
+                                $itemcode = $row['itemcode'];
+                                $netweight = $row['netweight'];
+                                $addedemp = $row['addedemp'];
+                                $addedtime = $row['addedtime'];
+                                $updatedemp = $row['updatedemp'];
+                                $updated = $row['updated'];
+                                // $font_id[$row['code']] = $row['id'];
+                            //  }
 
                             $tsale_amt = 0;
-                            for($cdate = strtotime($fdate);$cdate <= strtotime($tdate);$cdate += (86400)){
-                                $adate = date('Y-m-d', $cdate);
-                                foreach($item_code as $icode){
-                                    $key = $adate."@".$icode;
-                                    if(empty($isale_qty[$key]) || $isale_qty[$key] == "" || (float)$isale_qty[$key] == 0){ }
-                                    else{
-                                        
-                                        $price = 0; if((float)$isale_qty[$key] != 0){ $price = (float)$isale_amt[$key] / (float)$isale_qty[$key]; }
-                                        $html .= '<tr>';
-                                        $html .= '<td>'.date("d.m.Y",strtotime($adate)).'</td>';
-                                        $html .= '<td>'.$item_name[$icode].'</td>';
-                                        $html .= '<td>'.$item_cunits[$icode].'</td>';
-                                        $html .= '<td style="text-align:right;">'.number_format_ind(round($isale_qty[$key],2)).'</td>';
-                                        $html .= '<td style="text-align:right;">'.number_format_ind(round($price,2)).'</td>';
-                                        $html .= '<td style="text-align:right;">'.number_format_ind(0).'</td>';
-                                        $html .= '<td style="text-align:right;">'.number_format_ind(0).'</td>';
-                                        $html .= '<td style="text-align:right;">'.number_format_ind(round($isale_amt[$key],2)).'</td>';
-                                        $html .= '</tr>';
+                            // foreach($item_code as $key){
+                                // if(empty($isale_qty[$key]) || $isale_qty[$key] == "" || (float)$isale_qty[$key] == 0){ }
+                                // else{
+                                    $slno++;
+                                    $html .= '<tr>';
+                                    $html .= '<td>'.$slno.'</td>';
+                                    $html .= '<td>'.date("d.m.Y",strtotime($data1)).'</td>';
+                                    $html .= '<td>'.$invoice.'</td>';
+                                    $html .= '<td>'.$cus_name[$customercode].'</td>';
+                                    $html .= '<td>'.$item_name[$itemcode].'</td>';
+                                    $html .= '<td style="text-align:right;">'.number_format_ind(round($netweight,2)).'</td>';
+                                    $html .= '<td>'.$usr_name[$addedemp].'</td>';
+                                    $html .= '<td>'.date("d.m.Y",strtotime($addedtime)).'</td>';
+                                    $html .= '<td>'.$usr_name[$updatedemp].'</td>';
+                                    $html .= '<td>'.date("d.m.Y",strtotime($updated)).'</td>';
+                                    $html .= '</tr>';
 
-                                        $tsale_qty += (float)$isale_qty[$key];
-                                        $tsale_amt += (float)$isale_amt[$key];
-                                    }
-                                }
-                            }
+                                    $tsale_qty += (float)$netweight;
+                                } 
+                            // }
                             $html .= '<tr class="thead2">';
-                            $html .= '<th colspan="3">Total</th>';
+                            $html .= '<th colspan="5">Total</th>';
                             $html .= '<th style="text-align:right;">'.number_format_ind(round($tsale_qty,2)).'</th>';
-                            $html .= '<th style="text-align:right;" colspan="4">'.number_format_ind(round($tsale_amt,2)).'</th>';
+                            $html .= '<th style="text-align:right;" colspan="4"></th>';
                             $html .= '</tr>';
 
                             echo $html;
-                        }
+                         }
                         ?>
 					</table>
 				</form>

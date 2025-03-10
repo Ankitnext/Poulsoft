@@ -1,8 +1,8 @@
 <?php
-//broiler_display_office.php
+//broiler_display_customer.php
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
-if($cid != ""){ $_SESSION['office'] = $cid; } else{ $cid = $_SESSION['office']; }
+if($cid != ""){ $_SESSION['customer'] = $cid; } else{ $cid = $_SESSION['customer']; }
 $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
 if($link_active_flag > 0){
@@ -33,17 +33,10 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition sidebar-mini">
         <?php
         if($acount == 1){
-            /*Check for Table Availability*/
-            $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
-            $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("breeder_extra_access", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_extra_access LIKE poulso6_admin_broiler_broilermaster.breeder_extra_access;"; mysqli_query($conn,$sql1); }
-            if(in_array("layer_extra_access", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_extra_access LIKE poulso6_admin_broiler_broilermaster.layer_extra_access;"; mysqli_query($conn,$sql1); }
-            
-            /*Check for Column Availability*/
-            $sql='SHOW COLUMNS FROM `inv_sectors`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+            $sql='SHOW COLUMNS FROM `main_contactdetails`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
-            if(in_array("brd_sflag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `inv_sectors` ADD `brd_sflag` INT(100) NOT NULL DEFAULT '0' COMMENT 'Breeder Sectors' AFTER `dflag`"; mysqli_query($conn,$sql); }
-            if(in_array("lyr_sflag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `inv_sectors` ADD `lyr_sflag` INT(100) NOT NULL DEFAULT '0' COMMENT 'Layer Sectors' AFTER `brd_sflag`"; mysqli_query($conn,$sql); }
+            if(in_array("processing_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `processing_flag` INT(100) NOT NULL DEFAULT '0' COMMENT 'Plant Access Flag' AFTER `dflag`"; mysqli_query($conn,$sql); }
+            if(in_array("cus_ccode", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `cus_ccode` VARCHAR(100) NOT NULL DEFAULT NULL COMMENT 'Customer Code' AFTER `code`"; mysqli_query($conn,$sql); }
             
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
@@ -70,7 +63,7 @@ if($link_active_flag > 0){
                 <div class="m-0 p-0 container-fluid">
                     <div class="m-0 p-0 card">
                         <div class="card-header">
-                           <div class="float-left"><h3 class="card-title">Office</h3></div>
+                           <div class="float-left"><h3 class="card-title">Customer</h3></div>
                             <div class="float-right">
                             <?php if($add_flag == 1){ ?>
                                 <button type="button" class="btn bg-purple" id="addpage" value="<?php echo $add_link; ?>" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> ADD</button>
@@ -82,23 +75,26 @@ if($link_active_flag > 0){
                                 <thead>
                                     <tr>
                                         <th>Code</th>
-										<th>Description</th>
+										<th>Name</th>
+										<th>Phone/Mobile</th>
 										<th>Type</th>
-										<th>Location</th>
+										<th>Group</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                       $sql = "SELECT * FROM `main_officetypes` ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql);
-                                       while($row = mysqli_fetch_assoc($query)){ $description[$row['code']] = $row['description']; }
-                                        
-                                       $delete_url = $delete_link."?utype=delete&id=";
-                                       $sql = "SELECT * FROM `inv_sectors` WHERE `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Customer Master' AND `field_function` LIKE 'Upload documents' AND `user_access` LIKE 'all' AND `flag` = '1'";
+                                        $query = mysqli_query($conn,$sql); $updoc_flag = mysqli_num_rows($query);
+
+                                        $sql = "SELECT * FROM `main_groups` ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql);
+                                        while($row = mysqli_fetch_assoc($query)){ $group_name[$row['code']] = $row['description']; }
+                                       
+                                        $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['id'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;
-                                            //$delete_url = $delete_link."?utype=delete&id=".$id;
+                                            $delete_url = $delete_link."?utype=delete&id=".$id;
                                             $print_url = $print_link."?utype=print&id=".$id;
                                             $authorize_url = $update_link."?utype=authorize&id=".$id;
                                             if($row['active'] == 1){
@@ -107,13 +103,25 @@ if($link_active_flag > 0){
                                             else{
                                                 $update_url = $update_link."?utype=activate&id=".$id;
                                             }
-                                            $val = ""; $val = $row['id']."@".$row['description'];
+
+                                            $id1 = $row['id']."@".$row['name'];
+                                            
+                                            //Check for document Asscess
+                                            $upd_links = "";
+                                            if((int)$updoc_flag == 1){
+                                                if($row['vdoc_path1'] != ""){ $upd_links .= '<a href="'.$row["vdoc_path1"].'" title="Document-1" target="_BLANK"><i class="fa-solid fa-file" style="font-size:15px;color:#00d7a3;"></i></a>&ensp;'; }
+                                                if($row['vdoc_path2'] != ""){ $upd_links .= '<a href="'.$row["vdoc_path2"].'" title="Document-2" target="_BLANK"><i class="fa-solid fa-file" style="font-size:15px;color:#00d7a3;"></i></a>&ensp;'; }
+                                                if($row['vdoc_path3'] != ""){ $upd_links .= '<a href="'.$row["vdoc_path3"].'" title="Document-3" target="_BLANK"><i class="fa-solid fa-file" style="font-size:15px;color:#00d7a3;"></i></a>&ensp;'; }
+                                                if($row['vdoc_path4'] != ""){ $upd_links .= '<a href="'.$row["vdoc_path4"].'" title="Document-4" target="_BLANK"><i class="fa-solid fa-file" style="font-size:15px;color:#00d7a3;"></i></a>&ensp;'; }
+                                                if($row['vdoc_path5'] != ""){ $upd_links .= '<a href="'.$row["vdoc_path5"].'" title="Document-5" target="_BLANK"><i class="fa-solid fa-file" style="font-size:15px;color:#00d7a3;"></i></a>&ensp;'; }
+                                            }
                                     ?>
                                     <tr>
                                         <td><?php echo $row['code']; ?></td>
-										<td><?php echo $row['description']; ?></td>
-										<td><?php echo $description[$row['type']]; ?></td>
-										<td><?php echo $row['location']; ?></td>
+										<td><?php echo $row['name']; ?></td>
+										<td><?php echo $row['mobile1']; ?></td>
+										<td><?php echo $row['contacttype']; ?></td>
+										<td><?php echo $group_name[$row['groupcode']]; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
@@ -124,11 +132,10 @@ if($link_active_flag > 0){
                                                     echo "<a href='".$edit_url."'><i class='fa fa-pen' style='color:brown;' title='Edit'></i></a>&ensp;&ensp;";
                                                 }
                                                 if($delete_flag == 1){
-                                                    ?>
-                                                    <a href='javascript:void(0)' id='<?php echo $val; ?>' value='<?php echo $val; ?>' onclick='checkdelete(this.id)'>
-                                                    <i class='fa fa-trash' style='color:red;' title='delete'></i>
-                                                    </a>&ensp;&ensp;
-                                                <?php
+                                                    //cho "<a href='".$delete_url."'><i class='fa fa-trash' style='color:red;' title='delete'></i></a>&ensp;&ensp;";
+                                                    ?> <a href='javascript:void(0)' id='<?php echo $id1; ?>' value='<?php echo $id1; ?>' onclick='checkdelete(this.id)'><i class='fa fa-trash' style='color:red;' title='delete'></i></a> <?php
+
+
                                                 }
                                                 if($print_flag == 1){
                                                     echo "<a href='".$print_url."'><i class='fa fa-print' style='color:black;' title='Print'></i></a>&ensp;&ensp;";
@@ -142,7 +149,7 @@ if($link_active_flag > 0){
                                                     }
                                                     echo "<a href='".$authorize_url."'><i class='fa fa-lock-open' style='color:orange;' title='Authorize'></i></a>&ensp;&ensp;";
                                                 }
-                                                
+                                                if((int)$updoc_flag == 1){ echo "&ensp;".$upd_links; }
                                             }
                                         ?>
                                         </td>
@@ -157,36 +164,7 @@ if($link_active_flag > 0){
                 </div>
             </section>
         </div>
-        <script>
-			function checkdelete(x){
-                var val1 = x.split("@"); var a = val1[0]; var val = val1[1];
-                if(a != ""){
-                    var inv_items = new XMLHttpRequest();
-                    var method = "GET";
-                    var url = "broiler_check_sectors.php?id="+a;
-                    //window.open(url);
-                    var asynchronous = true;
-                    inv_items.open(method, url, asynchronous);
-                    inv_items.send();
-                    inv_items.onreadystatechange = function(){
-                        if(this.readyState == 4 && this.status == 200){
-                            var count = this.responseText;
-                            if(parseFloat(count) > 0){
-                                alert("You can't delete the Sector/Office: "+val+", as sector/Office is already in use!");
-                            }
-                            else{
-                                var b = "<?php echo $delete_url; ?>"+a;
-                                var c = confirm("are you sure you want to delete the Sector/Office: "+val+"?");
-                                if(c == true){
-                                    window.location.href = b;
-                                }
-                                else{ }
-                            }
-                        }
-                    }
-                }
-			}
-        </script>
+
         <?php
             }
             else{
@@ -205,6 +183,23 @@ if($link_active_flag > 0){
         ?>
         <script>
 			function add_page(a){ var b = document.getElementById(a).value; window.location.href = b; }
+            function checkdelete(a){
+
+var a1 = a.split("@");
+
+var b = "<?php echo  $delete_link.'?utype=delete&id='; ?>"+a1[0];
+
+var c = confirm("are you sure you want to delete the Customer: "+a1[1]+" ?");
+
+if(c == true){
+
+    window.location.href = b;
+
+}
+
+else{ }
+
+}
 		</script>
     <?php include "header_foot.php"; ?>
     </body>

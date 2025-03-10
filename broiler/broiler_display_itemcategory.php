@@ -1,8 +1,8 @@
 <?php
-//broiler_display_office.php
+//broiler_display_itemcategory.php
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
-if($cid != ""){ $_SESSION['office'] = $cid; } else{ $cid = $_SESSION['office']; }
+if($cid != ""){ $_SESSION['itemcategory'] = $cid; } else{ $cid = $_SESSION['itemcategory']; }
 $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
 if($link_active_flag > 0){
@@ -36,14 +36,22 @@ if($link_active_flag > 0){
             /*Check for Table Availability*/
             $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
             $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+            if(in_array("main_item_category", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.main_item_category LIKE poulso6_admin_broiler_broilermaster.main_item_category;"; mysqli_query($conn,$sql1); }
             if(in_array("breeder_extra_access", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_extra_access LIKE poulso6_admin_broiler_broilermaster.breeder_extra_access;"; mysqli_query($conn,$sql1); }
-            if(in_array("layer_extra_access", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.layer_extra_access LIKE poulso6_admin_broiler_broilermaster.layer_extra_access;"; mysqli_query($conn,$sql1); }
             
             /*Check for Column Availability*/
-            $sql='SHOW COLUMNS FROM `inv_sectors`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+            $sql='SHOW COLUMNS FROM `item_category`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
-            if(in_array("brd_sflag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `inv_sectors` ADD `brd_sflag` INT(100) NOT NULL DEFAULT '0' COMMENT 'Breeder Sectors' AFTER `dflag`"; mysqli_query($conn,$sql); }
-            if(in_array("lyr_sflag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `inv_sectors` ADD `lyr_sflag` INT(100) NOT NULL DEFAULT '0' COMMENT 'Layer Sectors' AFTER `brd_sflag`"; mysqli_query($conn,$sql); }
+            if(in_array("main_category", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `main_category` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `description`"; mysqli_query($conn,$sql); }
+            if(in_array("bffeed_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `bffeed_flag` INT(100) NOT NULL DEFAULT '0' AFTER `main_category`"; mysqli_query($conn,$sql); }
+            if(in_array("bmfeed_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `bmfeed_flag` INT(100) NOT NULL DEFAULT '0' AFTER `bffeed_flag`"; mysqli_query($conn,$sql); }
+            if(in_array("begg_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `begg_flag` INT(100) NOT NULL DEFAULT '0' AFTER `bmfeed_flag`"; mysqli_query($conn,$sql); }
+            if(in_array("bmv_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `bmv_flag` INT(100) NOT NULL DEFAULT '0' AFTER `begg_flag`"; mysqli_query($conn,$sql); }
+            if(in_array("lfeed_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `lfeed_flag` INT(100) NOT NULL DEFAULT '0' AFTER `bmv_flag`"; mysqli_query($conn,$sql); }
+            if(in_array("legg_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `legg_flag` INT(100) NOT NULL DEFAULT '0' AFTER `lfeed_flag`"; mysqli_query($conn,$sql); }
+            if(in_array("lmv_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `lmv_flag` INT(100) NOT NULL DEFAULT '0' AFTER `legg_flag`"; mysqli_query($conn,$sql); }
+            if(in_array("fgoods_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `fgoods_flag` INT(100) NOT NULL DEFAULT '0' AFTER `lmv_flag`"; mysqli_query($conn,$sql); }
+            if(in_array("rawing_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `rawing_flag` INT(100) NOT NULL DEFAULT '0' AFTER `fgoods_flag`"; mysqli_query($conn,$sql); }
             
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
@@ -70,7 +78,7 @@ if($link_active_flag > 0){
                 <div class="m-0 p-0 container-fluid">
                     <div class="m-0 p-0 card">
                         <div class="card-header">
-                           <div class="float-left"><h3 class="card-title">Office</h3></div>
+                           <div class="float-left"><h3 class="card-title">Item Category</h3></div>
                             <div class="float-right">
                             <?php if($add_flag == 1){ ?>
                                 <button type="button" class="btn bg-purple" id="addpage" value="<?php echo $add_link; ?>" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> ADD</button>
@@ -83,18 +91,13 @@ if($link_active_flag > 0){
                                     <tr>
                                         <th>Code</th>
 										<th>Description</th>
-										<th>Type</th>
-										<th>Location</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                       $sql = "SELECT * FROM `main_officetypes` ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql);
-                                       while($row = mysqli_fetch_assoc($query)){ $description[$row['code']] = $row['description']; }
-                                        
-                                       $delete_url = $delete_link."?utype=delete&id=";
-                                       $sql = "SELECT * FROM `inv_sectors` WHERE `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $delete_url = $delete_link."?utype=delete&id=";
+                                        $sql = "SELECT * FROM `item_category` WHERE `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['id'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;
@@ -112,8 +115,6 @@ if($link_active_flag > 0){
                                     <tr>
                                         <td><?php echo $row['code']; ?></td>
 										<td><?php echo $row['description']; ?></td>
-										<td><?php echo $description[$row['type']]; ?></td>
-										<td><?php echo $row['location']; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
@@ -163,7 +164,7 @@ if($link_active_flag > 0){
                 if(a != ""){
                     var inv_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "broiler_check_sectors.php?id="+a;
+                    var url = "broiler_check_itmcategory.php?id="+a;
                     //window.open(url);
                     var asynchronous = true;
                     inv_items.open(method, url, asynchronous);
@@ -172,11 +173,11 @@ if($link_active_flag > 0){
                         if(this.readyState == 4 && this.status == 200){
                             var count = this.responseText;
                             if(parseFloat(count) > 0){
-                                alert("You can't delete the Sector/Office: "+val+", as sector/Office is already in use!");
+                                alert("You can't delete the Item Category: "+val+", as Item Category is already in use!");
                             }
                             else{
                                 var b = "<?php echo $delete_url; ?>"+a;
-                                var c = confirm("are you sure you want to delete the Sector/Office: "+val+"?");
+                                var c = confirm("are you sure you want to delete the Item Category: "+val+"?");
                                 if(c == true){
                                     window.location.href = b;
                                 }

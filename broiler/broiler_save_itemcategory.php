@@ -39,6 +39,8 @@ if($_POST['bmv_flag'] == "on" || $_POST['bmv_flag'] == true || $_POST['bmv_flag'
 if($_POST['lfeed_flag'] == "on" || $_POST['lfeed_flag'] == true || $_POST['lfeed_flag'] == 1){ $lfeed_flag = 1; } else{ $lfeed_flag = 0; }
 if($_POST['legg_flag'] == "on" || $_POST['legg_flag'] == true || $_POST['legg_flag'] == 1){ $legg_flag = 1; } else{ $legg_flag = 0; }
 if($_POST['lmv_flag'] == "on" || $_POST['lmv_flag'] == true || $_POST['lmv_flag'] == 1){ $lmv_flag = 1; } else{ $lmv_flag = 0; }
+if($_POST['fgoods_flag'] == "on" || $_POST['fgoods_flag'] == true || $_POST['fgoods_flag'] == 1){ $fgoods_flag = 1; } else{ $fgoods_flag = 0; }
+if($_POST['rawing_flag'] == "on" || $_POST['rawing_flag'] == true || $_POST['rawing_flag'] == 1){ $rawing_flag = 1; } else{ $rawing_flag = 0; }
 
 
 if($new_a == "new_acc"){
@@ -106,8 +108,8 @@ else {
 	
 	$code = "IMS-".$incrs;
 	
-	$sql = "INSERT INTO `item_category` (incr,prefix,code,description,main_category,bird_plant,chicken_plant,plant_portioning,feedsale_flag,bffeed_flag,bmfeed_flag,lfeed_flag,begg_flag,legg_flag,bmv_flag,lmv_flag,iac,cogsac,wpac,sac,srac,addedemp,addedtime) VALUES 
-	('$incrs','$prefix','$code','$cdesc','$main_category','$bird_plant','$chicken_plant','$plant_portioning','$feedsale_flag','$bffeed_flag','$bmfeed_flag','$lfeed_flag','$begg_flag','$legg_flag','$bmv_flag','$lmv_flag','$iac','$icogs','$iwpac','$isalesac','$israc','$addedemp','$addedtime')";
+	$sql = "INSERT INTO `item_category` (incr,prefix,code,description,main_category,bird_plant,chicken_plant,plant_portioning,feedsale_flag,bffeed_flag,bmfeed_flag,lfeed_flag,begg_flag,legg_flag,bmv_flag,lmv_flag,fgoods_flag,rawing_flag,iac,cogsac,wpac,sac,srac,addedemp,addedtime) VALUES 
+	('$incrs','$prefix','$code','$cdesc','$main_category','$bird_plant','$chicken_plant','$plant_portioning','$feedsale_flag','$bffeed_flag','$bmfeed_flag','$lfeed_flag','$begg_flag','$legg_flag','$bmv_flag','$lmv_flag','$fgoods_flag','$rawing_flag','$iac','$icogs','$iwpac','$isalesac','$israc','$addedemp','$addedtime')";
 	
 	if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { header('location:broiler_display_itemcategory.php?ccid='.$ccid); }
 }

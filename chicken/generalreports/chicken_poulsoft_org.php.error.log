@@ -1,0 +1,31 @@
+[08-Mar-2025 11:07:35 UTC] PHP Warning:  Undefined array key "type" in /home/poulso6/public_html/chicken/AndroidApp_API/cus_fetchoutstandingbalAPI.php on line 22
+[08-Mar-2025 11:07:36 UTC] PHP Warning:  Undefined array key "type" in /home/poulso6/public_html/chicken/AndroidApp_API/cus_fetchoutstandingbalAPI_prev_day.php on line 22
+[08-Mar-2025 11:07:42 UTC] PHP Warning:  Undefined array key "db" in /home/poulso6/public_html/chicken/generalreports/chicken_check_trnodetails1.php on line 7
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "trnum" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 20
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "warehouse" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 31
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "c10" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 59
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "c20" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 60
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "c50" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 61
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "c100" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 62
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "c200" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 63
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "c500" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 64
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "c2000" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 65
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined array key "coins" in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 66
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/poulso6/public_html/chicken/AndroidApp_API/cus_outbalfunctionAPI.php on line 4
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined variable $oinv in /home/poulso6/public_html/chicken/AndroidApp_API/cus_outbalfunctionAPI.php on line 60
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined variable $ocdn in /home/poulso6/public_html/chicken/AndroidApp_API/cus_outbalfunctionAPI.php on line 73
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined variable $omortality in /home/poulso6/public_html/chicken/AndroidApp_API/cus_outbalfunctionAPI.php on line 75
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined variable $oreturns in /home/poulso6/public_html/chicken/AndroidApp_API/cus_outbalfunctionAPI.php on line 75
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined variable $occn in /home/poulso6/public_html/chicken/AndroidApp_API/cus_outbalfunctionAPI.php on line 75
+[08-Mar-2025 16:37:52 Asia/Kolkata] PHP Warning:  Undefined variable $allareanames in /home/poulso6/public_html/chicken/AndroidApp_API/SaveReceiptAPI_sms.php on line 593
+[08-Mar-2025 11:07:52 UTC] PHP Warning:  Undefined array key "groupcode" in /home/poulso6/public_html/chicken/AndroidApp_API/DisplayRecieptAPI.php on line 19
+[08-Mar-2025 11:07:52 UTC] PHP Warning:  Undefined array key "page" in /home/poulso6/public_html/chicken/AndroidApp_API/DisplayRecieptAPI.php on line 26
+[08-Mar-2025 11:07:52 UTC] PHP Warning:  Undefined variable $cond1 in /home/poulso6/public_html/chicken/AndroidApp_API/DisplayRecieptAPI.php on line 32
+[08-Mar-2025 11:07:55 UTC] PHP Warning:  Undefined array key "db" in /home/poulso6/public_html/chicken/generalreports/chicken_customerledger_masterreport1.php on line 7
+[08-Mar-2025 11:07:58 UTC] PHP Warning:  Undefined array key "device" in /home/poulso6/public_html/chicken/AndroidApp_API/LoginAPINew_v2.1.php on line 21
+[08-Mar-2025 11:07:58 UTC] PHP Warning:  Trying to access array offset on value of type null in /home/poulso6/public_html/chicken/AndroidApp_API/GetNewVersion.php on line 17
+[08-Mar-2025 11:07:58 UTC] PHP Warning:  Trying to access array offset on value of type null in /home/poulso6/public_html/chicken/AndroidApp_API/GetNewVersion.php on line 19
+[08-Mar-2025 11:07:58 UTC] PHP Deprecated:  strtotime(): Passing null to parameter #1 ($datetime) of type string is deprecated in /home/poulso6/public_html/chicken/AndroidApp_API/GetNewVersion.php on line 19
+[08-Mar-2025 11:07:58 UTC] PHP Warning:  Trying to access array offset on value of type null in /home/poulso6/public_html/chicken/AndroidApp_API/GetNewVersion.php on line 20
+[08-Mar-2025 11:07:58 UTC] PHP Warning:  Trying to access array offset on value of type null in /home/poulso6/public_html/chicken/AndroidApp_API/GetNewVersion.php on line 21
+[08-Mar-2025 11:07:58 UTC] PHP Warning:  Undefined variable $allareanames in /home/poulso6/public_html/chicken/AndroidApp_API/GetNewVersion.php on line 54

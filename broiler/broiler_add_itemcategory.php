@@ -33,6 +33,12 @@ if($link_active_flag > 0){
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Feed Sale' AND `field_function` LIKE 'Item selection checkbox' AND `user_access` LIKE 'all'";
         $query = mysqli_query($conn,$sql); $fs_count = mysqli_num_rows($query); if($fs_count > 0){ while($row = mysqli_fetch_assoc($query)){ $fs_flag = $row['flag']; } } else{ $fs_flag = 0; } if($fs_flag == ""){ $fs_flag = 0; }
 
+        $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Item Category Master' AND `field_function` LIKE 'Finished Goods Checkbox' AND `user_access` LIKE 'all' AND `flag` = '1'";
+        $query = mysqli_query($conn,$sql); $fgoods_cbox = mysqli_num_rows($query);
+
+        $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Item Category Master' AND `field_function` LIKE 'Raw Ingredient Checkbox' AND `user_access` LIKE 'all' AND `flag` = '1'";
+        $query = mysqli_query($conn,$sql); $rawing_cbox = mysqli_num_rows($query);
+
         $sql = "SELECT * FROM `main_item_category` WHERE `plant_portioning` = '1' AND `active` = '1' AND `dflag` = '0' ORDER BY `plant_sort_order`,`description` ASC;";
         $query = mysqli_query($conn,$sql); $micat_code = $micat_name = array();
         while($row = mysqli_fetch_assoc($query)){ $micat_code[$row['code']] = $row['code']; $micat_name[$row['code']] = $row['description']; }
@@ -171,6 +177,16 @@ if($link_active_flag > 0){
                                         <?php if($lmvc_cflag > 0){ ?>
                                         <div class="form-group">
                                             <div class="form-group" style="width: 200px;"><label><input type="checkbox" name="lmv_flag" id="lmv_flag" />&nbsp;layer Med/Vac</label></div>
+                                        </div>
+                                        <?php } ?>
+                                        <?php if($rawing_cbox > 0){ ?>
+                                        <div class="form-group">
+                                            <div class="form-group" style="width: 200px;"><label><input type="checkbox" name="rawing_flag" id="rawing_flag" />&nbsp;Raw Ingredient</label></div>
+                                        </div>
+                                        <?php } ?>
+                                        <?php if($fgoods_cbox > 0){ ?>
+                                        <div class="form-group">
+                                            <div class="form-group" style="width: 200px;"><label><input type="checkbox" name="fgoods_flag" id="fgoods_flag" />&nbsp;Finished Goods</label></div>
                                         </div>
                                         <?php } ?>
                                     </div>

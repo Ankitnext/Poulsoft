@@ -1,0 +1,5 @@
+[05-Mar-2025 19:17:11 Asia/Kolkata] PHP Fatal error:  Uncaught mysqli_sql_exception: Incorrect integer value: '' for column `poulso6_admin_broiler_broilermaster`.`broiler_sales`.`incr` at row 1 in /home/poulso6/public_html/broiler/broiler_modify_generalsales5.php:202
+Stack trace:
+#0 /home/poulso6/public_html/broiler/broiler_modify_generalsales5.php(202): mysqli_query(Object(mysqli), 'INSERT INTO `br...')
+#1 {main}
+  thrown in /home/poulso6/public_html/broiler/broiler_modify_generalsales5.php on line 202
