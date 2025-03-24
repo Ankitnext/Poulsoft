@@ -10,6 +10,18 @@ include $num_format_file;
 include "header_head.php";
 $user_code = $_SESSION['userid'];
 
+   /*Check for Table Availability*/
+$database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
+$sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.breeder_cus_lines LIKE poulso6_admin_broiler_broilermaster.breeder_cus_lines;"; mysqli_query($conn,$sql1); }
+
+
+
+$sql='SHOW COLUMNS FROM `main_contactdetails`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+if(in_array("cline_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `cline_code` VARCHAR(100) NULL DEFAULT NULL AFTER `aadhar_no`"; mysqli_query($conn,$sql); }
+      
+
 
 $sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $branch_access_code = $row['branch_code']; $line_access_code = $row['line_code']; $farm_access_code = $row['farm_code']; $sector_access_code = $row['loc_access']; }
@@ -22,6 +34,20 @@ else{ $farm_access_list = implode("','", explode(",",$farm_access_code)); $farm_
 if($sector_access_code == "all"){ $sector_access_filter1 = ""; }
 else{ $sector_access_list = implode("','", explode(",",$sector_access_code)); $sector_access_filter1 = " AND `code` IN ('$sector_access_list')"; }
 
+/*Check for Table Availability*/
+$database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
+$sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.breeder_cus_lines LIKE poulso6_admin_broiler_broilermaster.breeder_cus_lines;"; mysqli_query($conn,$sql1); }
+// if(in_array("broiler_item_brands", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_item_brands LIKE poulso6_admin_broiler_broilermaster.broiler_item_brands;"; mysqli_query($conn,$sql1); }
+// if(in_array("broiler_hatchentry", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_hatchentry LIKE poulso6_admin_broiler_broilermaster.broiler_hatchentry;"; mysqli_query($conn,$sql1); }
+// if(in_array("broiler_bird_transferout", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_bird_transferout LIKE poulso6_admin_broiler_broilermaster.broiler_bird_transferout;"; mysqli_query($conn,$sql1); }
+
+
+$sql = "SELECT * FROM `main_access` "; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $emp_db_code[$row['empcode']] = $row['db_emp_code']; }
+
+$sql = "SELECT * FROM `broiler_employee`"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $user_name[$row['code']] = $row['name']; }
 
 $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ".$sector_access_filter1." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
@@ -47,9 +73,12 @@ $sql = "SELECT * FROM `main_groups` WHERE `gtype` LIKE '%C%' AND `dflag` = '0' O
 $query = mysqli_query($conn,$sql); $grp_code = $grp_name = array();
 while($row = mysqli_fetch_assoc($query)){ $grp_code[$row['code']] = $row['code']; $grp_name[$row['code']] = $row['description']; }
 
+$sql = "SELECT * FROM `breeder_cus_lines` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code']; $cline_name[$row['code']] = $row['description']; }
+
 //$sql = "SELECT * FROM `extra_access` WHERE `field_name` IN ('Decimal','Purchase Qty') AND `user_access` LIKE '%$user_code%' OR `field_name` IN ('Decimal','Purchase Qty') AND `user_access` LIKE 'all'"; $query = mysqli_query($conn,$sql);
 //while($row = mysqli_fetch_assoc($query)){ if($row['field_name'] == "Decimal"){ $decimal_no = $row['flag']; } if($row['field_name'] == "Purchase Qty"){ $qty_on_sqty_flag = $row['flag']; } }
-$fdate = $tdate = date("Y-m-d"); $groups = $vendors = $sectors = $methods = "all"; $excel_type = "display"; $url = "";
+$fdate = $tdate = date("Y-m-d"); $groups = $vendors = $sectors = $methods = $clines = "all"; $excel_type = "display"; $url = "";
 if(isset($_POST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
     $tdate = date("Y-m-d",strtotime($_POST['tdate']));
@@ -57,16 +86,30 @@ if(isset($_POST['submit_report']) == true){
     $vendors = $_POST['vendors'];
     $sectors = $_POST['sectors'];
     $methods = $_POST['methods'];
+    $clines = $_POST['cline'];
 
-    if($vendors != "all"){ $vcodes = " AND `ccode` = '$vendors'"; }
+    if($vendors != "all"){ $vcodes = " AND `code` = '$vendors'"; }
     else if($groups != "all"){
         $cus_list = "";
         foreach($vendor_code as $vcode){
             if(!empty($vendor_group[$vcode]) && $vendor_group[$vcode] == $groups){ if($cus_list == ""){ $cus_list = $vcode; } else{ $cus_list = $cus_list."','".$vcode; } }
         }
-        $vcodes = " AND `ccode` IN ('$cus_list')";
+        $vcodes = " AND `code` IN ('$cus_list')";
     }
     else{ $vcodes = ""; }
+
+    $cline_fltr = "";
+    if($clines != "all"){ $cline_fltr = " AND `cline_code` IN ('$clines')"; }
+
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$vcodes."".$cline_fltr." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
+    while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_ccode[$row['code']] = $row['cus_ccode'];$vendor_name[$row['code']] = $row['name'];$cus_alist[$row['code']] = $row['code']; }
+    $cus_list = implode("','",$cus_alist);
+    $customer_filter = " AND `ccode` IN ('$cus_list')";
+    // echo $customer_filter;
+    //   die();
+
+
+
     if($sectors != "all"){ $wcodes = " AND `warehouse` = '$sectors'"; } else{ $wcodes = ""; }
     if($methods != "all"){ $method_fltr = " AND `method` = '$methods'"; } else{ $method_fltr = ""; }
 	$excel_type = $_POST['export'];
@@ -194,6 +237,15 @@ if(isset($_POST['submit_report']) == true){
                                         <?php } } ?>
                                     </select>
                                 </div>
+                                 <div class="m-2 form-group">
+                                    <label>Customer Line</label>
+                                    <select name="cline" id="cline" class="form-control select2">
+                                        <option value="all" <?php if($clines == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($cline_code as $bcode){ if($cline_name[$bcode] != ""){ ?>
+                                        <option value="<?php echo $bcode; ?>" <?php if($clines == $bcode){ echo "selected"; } ?>><?php echo $cline_name[$bcode]; ?></option>
+                                        <?php } } ?>
+                                    </select>
+                                </div>
                                 <div class="m-2 form-group">
                                     <label>Export</label>
                                     <select name="export" id="export" class="form-control select2">
@@ -223,6 +275,7 @@ if(isset($_POST['submit_report']) == true){
                     <th id='order_num'>Amount</th>
                     <th id='order'>Farm/Warehouse</th>
                     <th id='order'>Remarks</th>
+                    <th id='order'>Added Emp.</th>
                 </tr>
             </thead>
             <?php
@@ -230,7 +283,7 @@ if(isset($_POST['submit_report']) == true){
             ?>
             <tbody class="tbody1">
                 <?php
-                $sql_record = "SELECT * FROM `broiler_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$vcodes."".$wcodes."".$method_fltr." AND `vtype` IN ('Customer') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                $sql_record = "SELECT * FROM `broiler_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$customer_filter."".$wcodes."".$method_fltr." AND `vtype` IN ('Customer') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                 $query = mysqli_query($conn,$sql_record); $tot_bds = $tot_qty = $tot_amt = 0;
                 while($row = mysqli_fetch_assoc($query)){
                 ?>
@@ -245,6 +298,7 @@ if(isset($_POST['submit_report']) == true){
                     <td title="Total Amount" style="text-align:right;"><?php echo number_format_ind($row['amount']); ?></td>
                     <td title="Farm/Warehouse"><?php echo $sector_name[$row['warehouse']]; ?></td>
                     <td title="Remarks"><?php echo $row['remarks']; ?></td>
+                    <td title="Remarks"><?php echo $user_name[$emp_db_code[$row['addedemp']]]; ?></td>
                 </tr>
                 <?php
                     $tot_amt = $tot_amt + $row['amount'];
@@ -255,7 +309,7 @@ if(isset($_POST['submit_report']) == true){
             <tr class="thead4">
                 <th colspan="7" style="text-align:center;">Total</th>
                 <th style="text-align:right;"><?php echo number_format_ind(round($tot_amt,2)); ?></th>
-                <th colspan="2" style="text-align:right;"></th>
+                <th colspan="3" style="text-align:right;"></th>
             </tr>
             </tfoot>
         <?php

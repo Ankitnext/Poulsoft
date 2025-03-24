@@ -131,6 +131,10 @@ if($link_active_flag > 0){
                                                 <input type="text" name="cgstin" id="cgstin" class="form-control" placeholder="Enter GSTIN..." onkeyup="validatename(this.id)" onchange="validate_company()">
                                             </div>
                                         </div>
+
+
+
+
                                         <?php if((int)$brap_flag == 1){ ?>
                                         <div class="col-md-2">
                                             <div class="form-group">
@@ -139,6 +143,23 @@ if($link_active_flag > 0){
                                             </div>
                                         </div>
                                         <?php } ?>
+
+                                         <div class="form-group">
+                                                <label>Customer Line</label>
+                                                <select name="cline_code" id="cline_code" class="form-control select2" style="width: 100%;">
+                                                    <option value="select">select</option>
+                                                    <?php
+                                                    $sql = "SELECT * FROM `breeder_cus_lines` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+                                                    while($row = mysqli_fetch_assoc($query)){
+                                                    ?>
+                                                    <option value="<?php echo $row['code']; ?>"><?php echo $row['description']; ?></option>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        
+
                                         <div class="col-md-2" style="visibility:hidden;">
                                             <div class="form-group">
                                                 <label>Verified Company</label>
@@ -456,6 +477,7 @@ if($link_active_flag > 0){
                     var cgstin = new XMLHttpRequest();
                     var method = "GET";
                     var url = "company_fetchdetails_with_gst.php?gstno="+a;
+                    //window.open(url);
                     var asynchronous = true;
                     cgstin.open(method, url, asynchronous);
                     cgstin.send();

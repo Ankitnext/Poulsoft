@@ -3,10 +3,11 @@
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
 if($cid != ""){ $_SESSION['customer'] = $cid; } else{ $cid = $_SESSION['customer']; }
-$sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
+$sql = "SELECT * FROM `main_linkdetails` WHERE `href` LIKE '%$href%' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
 if($link_active_flag > 0){
-    while($row = mysqli_fetch_assoc($query)){ $cname = $row['name']; }
+    while($row = mysqli_fetch_assoc($query)){ $cname = $row['name']; if($cid == ""){ $cid = $row['childid']; } }
     $sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$user_code' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
     $dlink = $alink = $elink = $rlink = $plink = $ulink = $flink = array(); $sector_access = $cgroup_access = $user_type = "";
     while($row = mysqli_fetch_assoc($query)){
@@ -25,6 +26,15 @@ if($link_active_flag > 0){
     if($user_type == "S"){ $acount = 1; }
     else if($aid == 1){ $acount = 1; }
     else{ $acount = 0; }
+
+    /*Check for Table Availability*/
+$database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
+$sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.breeder_cus_lines LIKE poulso6_admin_broiler_broilermaster.breeder_cus_lines;"; mysqli_query($conn,$sql1); }
+// if(in_array("broiler_item_brands", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_item_brands LIKE poulso6_admin_broiler_broilermaster.broiler_item_brands;"; mysqli_query($conn,$sql1); }
+// if(in_array("broiler_hatchentry", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_hatchentry LIKE poulso6_admin_broiler_broilermaster.broiler_hatchentry;"; mysqli_query($conn,$sql1); }
+// if(in_array("broiler_bird_transferout", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_bird_transferout LIKE poulso6_admin_broiler_broilermaster.broiler_bird_transferout;"; mysqli_query($conn,$sql1); }
+
 ?>
 <html lang="en">
     <head>
@@ -36,7 +46,8 @@ if($link_active_flag > 0){
             $sql='SHOW COLUMNS FROM `main_contactdetails`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
             if(in_array("processing_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `processing_flag` INT(100) NOT NULL DEFAULT '0' COMMENT 'Plant Access Flag' AFTER `dflag`"; mysqli_query($conn,$sql); }
-            if(in_array("cus_ccode", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `cus_ccode` VARCHAR(100) NOT NULL DEFAULT NULL COMMENT 'Customer Code' AFTER `code`"; mysqli_query($conn,$sql); }
+            if(in_array("cus_ccode", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `cus_ccode` VARCHAR(100) NULL DEFAULT NULL COMMENT 'Customer Code' AFTER `code`"; mysqli_query($conn,$sql); }
+            
             
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
@@ -207,6 +218,6 @@ else{ }
 <?php
 }
 else{
-     header('location:index.php');
+    //header('location:index.php');
 }
 ?>

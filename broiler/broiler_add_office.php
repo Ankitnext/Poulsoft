@@ -217,7 +217,7 @@ if($link_active_flag > 0){
                     return false;
                 }
             }
-			function check_duplicate(){
+			function check_duplicate(){ 
 				var b = document.getElementById("idesc").value;
 				var c = "add";
 				if(!b.length == 0){

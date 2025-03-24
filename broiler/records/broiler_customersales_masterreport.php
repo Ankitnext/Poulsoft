@@ -114,8 +114,11 @@ while($row = mysqli_fetch_assoc($query)){ $icat_code[$row['code']] = $row['code'
 $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_category[$row['code']] = $row['category']; }
 
-$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
-while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_name[$row['code']] = $row['name']; $vendor_ccode[$row['code']] = $row['cus_ccode']; $vendor_mobl[$row['code']] = $row['mobile1']; $vendor_addr[$row['code']] = $row['baddress']; }
+$sql = "SELECT * FROM `breeder_cus_lines` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code']; $cline_name[$row['code']] = $row['description']; }
+
+// $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$cline_fltr." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
+// while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_name[$row['code']] = $row['name']; $vendor_ccode[$row['code']] = $row['cus_ccode']; $vendor_mobl[$row['code']] = $row['mobile1']; $vendor_addr[$row['code']] = $row['baddress']; }
 
 $me_flag = $mecount = 0; $me_arr_code = array();
 $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Sales' AND `field_function` LIKE 'Marketing Executive Field' AND `user_access` LIKE 'all' AND `flag` = '1'";
@@ -165,7 +168,7 @@ if($_SERVER['REMOTE_ADDR'] == "49.205.135.183" || $user_name = "paras"){
 
     for($i = 0;$i <= 30;$i++){ $fsizes[$i."px"] = $i."px"; }
 }
-$fdate = $tdate = date("Y-m-d"); $item_cat = $items = $branches = $lines = $vendors = $sectors = $farms = $mark_exec = "all"; $excel_type = "display";
+$fdate = $tdate = date("Y-m-d"); $item_cat = $items = $branches = $lines = $vendors =  $clines = $sectors = $farms = $mark_exec = "all"; $excel_type = "display";
 $font_stype = ""; $font_size = "11px";
 if(isset($_POST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
@@ -176,6 +179,7 @@ if(isset($_POST['submit_report']) == true){
     $lines = $_POST['lines'];
     $supervisors = $_POST['supervisors'];
     $vendors = $_POST['vendors'];
+    $clines = $_POST['cline'];
     $sectors = $_POST['sectors'];
     $mark_exec = $_POST['mark_exec'];
     if($_SERVER['REMOTE_ADDR'] == "49.205.135.183" || $user_name = "paras"){
@@ -202,6 +206,17 @@ if(isset($_POST['submit_report']) == true){
         $sector_filter = " AND `warehouse` IN ('$farm_list')";
         $sector_filter2 = " AND `fromwarehouse` IN ('$farm_list')";
     }
+    $cline_fltr = "";
+    if($clines != "all"){ $cline_fltr = " AND `cline_code` IN ('$clines')"; }
+
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$cline_fltr." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
+    while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_name[$row['code']] = $row['name']; $vendor_ccode[$row['code']] = $row['cus_ccode']; $vendor_mobl[$row['code']] = $row['mobile1']; $vendor_addr[$row['code']] = $row['baddress']; }
+
+
+      // $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$vcodes."".$cline_fltr." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
+    // while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_ccode[$row['code']] = $row['cus_ccode'];$vendor_name[$row['code']] = $row['name'];$cus_alist[$row['code']] = $row['code']; }
+    // $cus_list = implode("','",$cus_alist);
+    // $customer_filter = " AND `ccode` IN ('$cus_list')";
 
     if($vendors == "all"){ $vendor_filter = ""; } else{ $vendor_filter = " AND `vcode` = '$vendors'"; }
     if($me_flag > 0 && $me_size > 0){ if($mark_exec == "all"){ $me_filter = ""; } else{ $me_filter = " AND `marketing_executive` = '$mark_exec'"; } } else{ $me_filter = ""; }
@@ -343,6 +358,15 @@ if(isset($_POST['submit_report']) == true){
                                         <option value="all" <?php if($vendors == "all"){ echo "selected"; } ?>>-All-</option>
                                         <?php foreach($vendor_code as $cust){ if($vendor_name[$cust] != ""){ ?>
                                         <option value="<?php echo $cust; ?>" <?php if($vendors == $cust){ echo "selected"; } ?>><?php echo $vendor_name[$cust]; ?></option>
+                                        <?php } } ?>
+                                    </select>
+                                </div>
+                                <div class="m-2 form-group">
+                                    <label>Customer Line</label>
+                                    <select name="cline" id="cline" class="form-control select2">
+                                        <option value="all" <?php if($clines == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($cline_code as $bcode){ if($cline_name[$bcode] != ""){ ?>
+                                        <option value="<?php echo $bcode; ?>" <?php if($clines == $bcode){ echo "selected"; } ?>><?php echo $cline_name[$bcode]; ?></option>
                                         <?php } } ?>
                                     </select>
                                 </div>
@@ -528,6 +552,7 @@ if(isset($_POST['submit_report']) == true){
                             else if($act_col_numbs[$key_id] == "brood_age" || $nac_col_numbs[$key_id1] == "brood_age"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="brood_age" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Mean Age</span>'; }
                             else if($act_col_numbs[$key_id] == "sale_amt_wtcds" || $nac_col_numbs[$key_id1] == "sale_amt_wtcds"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="sale_amt_wtcds" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Total with TCS</span>'; }
                             else if($act_col_numbs[$key_id] == "customer_ccode" || $nac_col_numbs[$key_id1] == "customer_ccode"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="customer_ccode" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Customer Code</span>'; }
+                            else if($act_col_numbs[$key_id] == "customer_sale_image" || $nac_col_numbs[$key_id1] == "customer_sale_image"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="customer_sale_image" onclick="update_masterreport_status(this.id);" '.$checked.'><span>DC Images</span>'; }
                             
                             else{ }
                         }
@@ -588,6 +613,7 @@ if(isset($_POST['submit_report']) == true){
                     else if($act_col_numbs[$key_id] == "brood_age"){ echo "<th id='order_num'>Mean Age</th>"; }
                     else if($act_col_numbs[$key_id] == "sale_amt_wtcds"){ echo "<th id='order_num'>Total with TCS</th>"; }
                     else if($act_col_numbs[$key_id] == "customer_ccode"){ echo "<th id='order_num'>Customer Code</th>"; }
+                    else if($act_col_numbs[$key_id] == "customer_sale_image"){ echo "<th id='order_num'>DC Images</th>"; }
                     else{ }
                 }
                 ?>
@@ -780,6 +806,10 @@ if(isset($_POST['submit_report']) == true){
                         $diff_amt = ((float)$dwise_samt[$key2] - (float)$receipt_details[$key2]);
                     }
 
+                    //DC Images
+                    $customer_sale_image ="";
+                    $fia = $row['sale_image'];
+                    if($fia != ""){ $customer_sale_image = "https://broiler.poulsoft.org".$fia; }
                     //Total with TCS
                     $tamt_wtcs += ((float)$row['item_tamt'] + (float)$row['tcds_amt']);
                     echo "<tr>";
@@ -884,6 +914,14 @@ if(isset($_POST['submit_report']) == true){
                         else if($act_col_numbs[$key_id] == "brood_age"){ echo "<td title='Mean Age' style='text-align:right;'>".str_replace(".00","",number_format_ind($brood_age))."</td>"; }
                         else if($act_col_numbs[$key_id] == "sale_amt_wtcds"){ echo "<td title='Total with TCS' style='text-align:right;'>".number_format_ind($row['item_tamt'] + $row['tcds_amt'])."</td>"; }
                         else if($act_col_numbs[$key_id] == "customer_ccode"){ echo "<td title='Customer Code'>".$vendor_ccode[$row['vcode']]."</td>"; }
+                        else if($act_col_numbs[$key_id] == "customer_sale_image"){
+                            if($customer_sale_image != ""){
+                            ?><td><a href="javascript:void(0)" onclick="openImage('<?php echo $customer_sale_image; ?>')">DC-Img</a></td><?php 
+                            }
+                            else{
+                                echo "<td></td>";
+                            }
+                        }
                         else{ }
                     }
                     echo "</tr>";
@@ -1039,6 +1077,7 @@ if(isset($_POST['submit_report']) == true){
                     else if($act_col_numbs[$key_id] == "brood_age"){ echo "<th style='text-align:right;'>".number_format_ind(round($avg_mage,2))."</th>"; }
                     else if($act_col_numbs[$key_id] == "sale_amt_wtcds"){ echo "<th style='text-align:right;'>".number_format_ind(round($tamt_wtcs,2))."</th>"; }
                     else if($act_col_numbs[$key_id] == "customer_ccode"){ echo "<th style='text-align:right;'></th>"; }
+                    else if($act_col_numbs[$key_id] == "customer_sale_image"){ echo "<th style='text-align:right;'></th>"; }
                     else{ }
                 }
                 echo "</tr>";
@@ -1296,6 +1335,11 @@ if(isset($_POST['submit_report']) == true){
                 }
             }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
+        </script>
+        <script>
+        function openImage(url) {
+            window.open(url, '_blank');
+        }
         </script>
     </body>
 </html>

@@ -30,6 +30,9 @@ while($row = mysqli_fetch_assoc($query)){ $emp_code[$row['code']] = $row['code']
 $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_name[$row['code']] = $row['name']; }
 
+$sql = "SELECT * FROM `breeder_cus_lines` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code']; $cline_name[$row['code']] = $row['description']; }
+
 $sql = "SELECT * FROM `main_groups` WHERE `gtype` LIKE '%C%' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $group_code[$row['code']] = $row['code']; $group_name[$row['code']] = $row['description']; }
 
@@ -38,10 +41,20 @@ while($row = mysqli_fetch_assoc($query)){ $state_code[$row['code']] = $row['code
 
 //$sql = "SELECT * FROM `extra_access` WHERE `field_name` IN ('Decimal','Purchase Qty') AND `user_access` LIKE '%$user_code%' OR `field_name` IN ('Decimal','Purchase Qty') AND `user_access` LIKE 'all'"; $query = mysqli_query($conn,$sql);
 //while($row = mysqli_fetch_assoc($query)){ if($row['field_name'] == "Decimal"){ $decimal_no = $row['flag']; } if($row['field_name'] == "Purchase Qty"){ $qty_on_sqty_flag = $row['flag']; } }
-$vendors = $groups = "all"; $excel_type = "display"; $url = "";
+$vendors = $groups = $clines = "all"; $excel_type = "display"; $url = "";
 if(isset($_POST['submit_report']) == true){
     $vendors = $_POST['vendors'];
     $groups = $_POST['groups'];
+    $clines = $_POST['cline'];
+
+    $cline_fltr = "";
+    if($clines != "all"){ $cline_fltr = " AND `cline_code` IN ('$clines')"; }
+
+    // $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$vcodes."".$cline_fltr." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
+    // while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_ccode[$row['code']] = $row['cus_ccode'];$vendor_name[$row['code']] = $row['name'];$cus_alist[$row['code']] = $row['code']; }
+    // $cus_list = implode("','",$cus_alist);
+    // $customer_filter = " AND `ccode` IN ('$cus_list')";
+
     if($vendors == "all"){ $vcodes = ""; } else{ $vcodes = " AND `code` = '$vendors'"; }
     if($groups != "all"){ $gcodes = " AND `groupcode` = '$groups'"; } else{ $gcodes = ""; }
 
@@ -124,6 +137,15 @@ if(isset($_POST['submit_report']) == true){
                                     </select>
                                 </div>
                                 <div class="m-2 form-group">
+                                    <label>Customer Line</label>
+                                    <select name="cline" id="cline" class="form-control select2">
+                                        <option value="all" <?php if($clines == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($cline_code as $bcode){ if($cline_name[$bcode] != ""){ ?>
+                                        <option value="<?php echo $bcode; ?>" <?php if($clines == $bcode){ echo "selected"; } ?>><?php echo $cline_name[$bcode]; ?></option>
+                                        <?php } } ?>
+                                    </select>
+                                </div>
+                                <div class="m-2 form-group">
                                     <label>Export</label>
                                     <select name="export" id="export" class="form-control select2"  onchange="tableToExcel('main_body', 'Customer List','<?php echo $filename;?>', this.options[this.selectedIndex].value)">
                                         <option value="display" <?php if($excel_type == "display"){ echo "selected"; } ?>>-Display-</option>
@@ -191,6 +213,7 @@ if(isset($_POST['submit_report']) == true){
                     <th>Group</th>
                     <th>Code</th>
                     <th>Name</th>
+                    <th>Customer Line</th>
                     <th>Mobile1</th>
                     <th>Mobile2</th>
                     <th>E-mails</th>
@@ -216,7 +239,7 @@ if(isset($_POST['submit_report']) == true){
             ?>
             <tbody class="tbody1">
                 <?php
-                $sql_record = "SELECT * FROM `main_contactdetails` WHERE `dflag` = '0'".$vcodes."".$gcodes." AND `contacttype` LIKE '%C%'AND `active` = '1' ORDER BY `name` ASC";
+                $sql_record = "SELECT * FROM `main_contactdetails` WHERE `dflag` = '0'".$vcodes."".$gcodes."".$cline_fltr." AND `contacttype` LIKE '%C%'AND `active` = '1' ORDER BY `name` ASC";
                 $query = mysqli_query($conn,$sql_record); $tot_bds = $tot_qty = $tot_amt = 0;
                 while($row = mysqli_fetch_assoc($query)){
                 ?>
@@ -224,6 +247,7 @@ if(isset($_POST['submit_report']) == true){
                     <td title="Group"><?php echo $group_name[$row['groupcode']]; ?></td>
                     <td title="Name"><?php echo $row['cus_ccode']; ?></td>
                     <td title="Name"><?php echo $row['name']; ?></td>
+                    <td title="Customer Line"><?php echo $cline_name[$row['cline_code']]; ?></td>
                     <td title="Mobile1"><?php echo $row['mobile1']; ?></td>
                     <td title="Mobile2"><?php echo $row['mobile2']; ?></td>
                     <td title="E-mails"><?php echo $row['emails']; ?></td>

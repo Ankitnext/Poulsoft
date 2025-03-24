@@ -82,10 +82,10 @@ while($row = mysqli_fetch_assoc($query)){ $egg_code[$row['code']] = $row['code']
 $e_cnt = sizeof($egg_code);
 
 //Breeder Bird Details
-$sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%Breeder Birds%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $cbird_code = array();
+$sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%Breeder Birds%' OR `description` LIKE '%female bird%' OR `description` LIKE '%male bird%') AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $cbird_code = array();
 while($row = mysqli_fetch_assoc($query)){ $cbird_code[$row['code']] = $row['code']; $icat_iac[$row['code']] = $row['iac']; } $bird_list = implode("','", $cbird_code);
 $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$bird_list') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $fbird_code = $mbird_code = "";
-while($row = mysqli_fetch_assoc($query)){ if($row['description'] == "Female birds"){ $fbird_code = $row['code']; } else if($row['description'] == "Male birds"){ $mbird_code = $row['code']; } }
+while($row = mysqli_fetch_assoc($query)){ if(strtolower($row['description']) == "female birds"){ $fbird_code = $row['code']; } else if(strtolower($row['description']) == "male birds"){ $mbird_code = $row['code']; } }
 
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Hatch Egg%' AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC";
 $query = mysqli_query($conn,$sql); $hegg_code = "";
