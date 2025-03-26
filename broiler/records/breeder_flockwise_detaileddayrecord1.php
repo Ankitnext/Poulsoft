@@ -7,7 +7,7 @@ $client = $_SESSION['client'];
 if($db == ''){
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
-    include "../newConfig.php";
+    include "../newConfig.php"; 
     include "header_head.php";
     $form_path = "breeder_flockwise_detaileddayrecord1.php";
 }

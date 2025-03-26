@@ -1,5 +1,5 @@
 <?php
-//broiler_save_employee.php
+//broiler_modify_employee.php
 session_start(); include "newConfig.php";
 $addedemp = $_SESSION['userid'];
 date_default_timezone_set("Asia/Kolkata");
@@ -29,10 +29,6 @@ if(in_array('file_path_3', $existing_col_names, TRUE) == ""){ $sql = "ALTER TABL
 if(in_array('file_path_4', $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `broiler_employee`  ADD `file_path_4` VARCHAR(300) NULL DEFAULT NULL AFTER `file_path_3`;"; mysqli_query($conn,$sql); }
 if(in_array('warehouse', $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `broiler_employee`  ADD `warehouse` VARCHAR(300) NULL DEFAULT NULL AFTER `file_path_4`;"; mysqli_query($conn,$sql); }
 if(in_array('este_code', $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `broiler_employee`  ADD `este_code` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `desig_code`;"; mysqli_query($conn,$sql); }
-
-$sql ="SELECT MAX(incr) as incr FROM `broiler_employee`"; $query = mysqli_query($conn,$sql); $ccount = mysqli_num_rows($query);
-if($ccount > 0){ while($row = mysqli_fetch_assoc($query)){ $incr = $row['incr']; } $incr = $incr + 1; } else { $incr = 1; }
-$prefix = "BEP";
 
 $title = $_POST['title'];
 $name = $_POST['name'];
@@ -64,7 +60,9 @@ $pincode = $_POST['pincode'];
 $country = $_POST['country'];
 $remarks = $_POST['remarks'];
 $vehicle = $_POST['vehicle'];
+$id = $_POST['idvalue'];
 
+$upload_file_list = "";
 if(!empty($_FILES["file_path_1"]["name"])) {
     //Get File Extension
     $filename = basename($_FILES["file_path_1"]["name"]);
@@ -81,6 +79,8 @@ if(!empty($_FILES["file_path_1"]["name"])) {
     $file_path_1_name = $_FILES['file_path_1']['name'];
     $file_path_1_path = $folder_path."/".$file_name;
     move_uploaded_file($filetmp,$file_path_1_path);
+
+    if($upload_file_list == ""){ $upload_file_list = ",`file_path_1` = '$file_path_1_path'"; } else{ $upload_file_list = $upload_file_list.",`file_path_1` = '$file_path_1_path'"; }
 }
 else{
     $file_path_1_name = $file_path_1_path = "";
@@ -101,6 +101,8 @@ if(!empty($_FILES["file_path_2"]["name"])) {
     $file_path_2_name = $_FILES['file_path_2']['name'];
     $file_path_2_path = $folder_path."/".$file_name;
     move_uploaded_file($filetmp,$file_path_2_path);
+
+    if($upload_file_list == ""){ $upload_file_list = ",`file_path_2` = '$file_path_2_path'"; } else{ $upload_file_list = $upload_file_list.",`file_path_2` = '$file_path_2_path'"; }
 }
 else{
     $file_path_2_name = $file_path_2_path = "";
@@ -121,6 +123,8 @@ if(!empty($_FILES["file_path_3"]["name"])) {
     $file_path_3_name = $_FILES['file_path_3']['name'];
     $file_path_3_path = $folder_path."/".$file_name;
     move_uploaded_file($filetmp,$file_path_3_path);
+
+    if($upload_file_list == ""){ $upload_file_list = ",`file_path_3` = '$file_path_3_path'"; } else{ $upload_file_list = $upload_file_list.",`file_path_3` = '$file_path_3_path'"; }
 }
 else{
     $file_path_3_name = $file_path_3_path = "";
@@ -141,6 +145,8 @@ if(!empty($_FILES["file_path_4"]["name"])) {
     $file_path_4_name = $_FILES['file_path_4']['name'];
     $file_path_4_path = $folder_path."/".$file_name;
     move_uploaded_file($filetmp,$file_path_4_path);
+
+    if($upload_file_list == ""){ $upload_file_list = ",`file_path_4` = '$file_path_4_path'"; } else{ $upload_file_list = $upload_file_list.",`file_path_4` = '$file_path_4_path'"; }
 }
 else{
     $file_path_4_name = $file_path_4_path = "";
@@ -161,15 +167,14 @@ if(!empty($_FILES["emp_photo_path"]["name"])) {
     $emp_photo_path_name = $_FILES['emp_photo_path']['name'];
     $emp_photo_paths = $folder_path."/".$file_name;
     move_uploaded_file($filetmp,$emp_photo_paths);
+
+    if($upload_file_list == ""){ $upload_file_list = ",`emp_photo_path` = '$emp_photo_paths'"; } else{ $upload_file_list = $upload_file_list.",`emp_photo_path` = '$emp_photo_paths'"; }
 }
 else{
     $emp_photo_path_name = $emp_photo_paths = "";
 }
 
-if($incr < 10){ $incr = '000'.$incr; } else if($incr >= 10 && $incr < 100){ $incr = '00'.$incr; } else if($incr >= 100 && $incr < 1000){ $incr = '0'.$incr; } else { }
-$code = $prefix."-".$incr;
-$sql = "INSERT INTO `broiler_employee` (incr,prefix,code,title,name,emp_id,mobile,emg_cmobile,email,gender,desig_code,este_code,birth_date,join_date,gross_salary,warehouse,pan_no,aadhar_no,uan_no,esi_no,bank_acc_no,bank_ifsc_code,bank_name,bank_branch_name,emp_photo_path,file_path_1,file_path_2,file_path_3,file_path_4,street_name,city_name,state_code,pincode,country,remarks,vehicle,flag,active,dflag,addedemp,addedtime,updatedtime) VALUES 
-('$incr','$prefix','$code','$title','$name','$emp_id','$mobile','$emc_no','$email','$gender','$desig_code','$este_code','$birth_date','$join_date','$gross_salary','$warehouse','$pan_no','$aadhar_no','$uan_no','$esi_no','$bank_acc_no','$bank_ifsc_code','$bank_name','$bank_branch_name','$emp_photo_paths','$file_path_1_path','$file_path_2_path','$file_path_3_path','$file_path_4_path','$street_name','$city_name','$state_code','$pincode','$country','$remarks','$vehicle','0','1','0','$addedemp','$addedtime','$addedtime')";
+$sql = "UPDATE `broiler_employee` SET `title` = '$title',`name` = '$name',`emp_id` = '$emp_id',`mobile` = '$mobile',`emg_cmobile` = '$emc_no',`email` = '$email',`gender` = '$gender',`desig_code` = '$desig_code',`este_code` = '$este_code',`birth_date` = '$birth_date',`join_date` = '$join_date',`gross_salary` = '$gross_salary',`warehouse` = '$warehouse', `pan_no` = '$pan_no', `aadhar_no` = '$aadhar_no', `uan_no` = '$uan_no', `esi_no` = '$esi_no', `bank_acc_no` = '$bank_acc_no', `bank_ifsc_code` = '$bank_ifsc_code', `bank_name` = '$bank_name', `bank_branch_name` = '$bank_branch_name'".$upload_file_list.",`street_name` = '$street_name',`city_name` = '$city_name',`state_code` = '$state_code',`pincode` = '$pincode',`country` = '$country',`remarks` = '$remarks',`vehicle` = '$vehicle' WHERE `id` = '$id'";
 if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { header('location:broiler_display_employee.php?ccid='.$ccid); }
 
 ?>
