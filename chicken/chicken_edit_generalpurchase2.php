@@ -19,7 +19,7 @@ if($access_error_flag == 0){
     $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
     while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
-    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%S%' AND `active` = '1' ORDER BY `name` ASC";
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%S%' AND `active` = '1' ORDER BY `sort_order` DESC,`name` DESC";
     $query = mysqli_query($conn,$sql); $sup_code = $sup_name = array();
     while($row = mysqli_fetch_assoc($query)){ $sup_code[$row['code']] = $row['code']; $sup_name[$row['code']] = $row['name']; }
     

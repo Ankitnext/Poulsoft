@@ -30,7 +30,7 @@ if($access_error_flag == 0){
     $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
     while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
-    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%S%' AND `active` = '1' ORDER BY `name` ASC";
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%S%' AND `active` = '1' ORDER BY `sort_order` DESC,`name` DESC";
     $query = mysqli_query($conn,$sql); $sup_code = $sup_name = array();
     while($row = mysqli_fetch_assoc($query)){ $sup_code[$row['code']] = $row['code']; $sup_name[$row['code']] = $row['name']; }
     
@@ -117,7 +117,7 @@ if($access_error_flag == 0){
                                 <input type="text" name="from_kms" id="from_kms" class="form-control text-right" style="width:100px;" onkeyup="validate_num(this.id);calculate_tot_kms();" />
                             </div>
                             <div class="form-group" style="width:110px;">
-                                <label>End KMs</label> 
+                                <label>End KMs</label>
                                 <input type="text" name="to_kms" id="to_kms" class="form-control text-right" style="width:100px;" onkeyup="validate_num(this.id);calculate_tot_kms();" />
                             </div>
                             <div class="form-group" style="width:110px;">
@@ -173,7 +173,7 @@ if($access_error_flag == 0){
                                         <td><input type="text" name="nweight[]" id="nweight[0]" class="form-control text-right" style="width:60px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" /></td>
                                         <td><input type="text" name="price[]" id="price[0]" class="form-control text-right" style="width:60px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" /></td>
                                         <td><input type="text" name="item_amt[]" id="item_amt[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>
-                                        <td style="width:50px;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk[0]" onchange="calculate_total_amt();" /></td>
+                                        <td style="width:50px;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk[0]" onchange="calculate_total_amt();" checked/></td>
                                         <td><input type="text" name="tcds_amt[]" id="tcds_amt[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>
                                         <td><input type="text" name="finaltotal[]" id="finaltotal[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>
                                         <td><textarea name="remarks[]" id="remarks[0]" class="form-control" style="width:150px;height:25px;"></textarea></td>
@@ -516,7 +516,7 @@ if($access_error_flag == 0){
                     html += '<td><input type="text" name="nweight[]" id="nweight['+d+']" class="form-control text-right" style="width:60px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" /></td>';
                     html += '<td><input type="text" name="price[]" id="price['+d+']" class="form-control text-right" style="width:60px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" /></td>';
                     html += '<td><input type="text" name="item_amt[]" id="item_amt['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>';
-                    html += '<td style="width:50px;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_total_amt();" /></td>';
+                    html += '<td style="width:50px;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_total_amt();" checked/></td>';
                     html += '<td><input type="text" name="tcds_amt[]" id="tcds_amt['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>';
                     html += '<td><input type="text" name="finaltotal[]" id="finaltotal['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>';
                     html += '<td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="width:150px;height:25px;"></textarea></td>';

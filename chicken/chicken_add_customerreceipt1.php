@@ -173,7 +173,7 @@ if($access_error_flag == 0){
                     tdsper.send();
                     tdsper.onreadystatechange = function(){
                         if(this.readyState == 4 && this.status == 200){
-                            var tcds_per = this.responseText; 
+                            var tcds_per = this.responseText;
                             if(tcds_per != ""){
                                 document.getElementById("tcds_per["+d+"]").value = tcds_per;
                                 calculate_row_amt(a);

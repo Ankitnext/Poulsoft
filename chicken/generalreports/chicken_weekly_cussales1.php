@@ -33,6 +33,11 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'All' ORDER BY `id` D
 $query = mysqli_query($conn,$sql); $logopath = $cdetails = "";
 while($row = mysqli_fetch_assoc($query)){ $logopath = $row['logopath']; $cdetails = $row['cdetails']; $cmpy_fname = $row['fullcname']; }
 
+// Logo Flag
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Reports' AND `field_function` LIKE 'Fetch Logo Dynamically' AND `user_access` LIKE 'all' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
+if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
+
 //Customer Details
 $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
 $query = mysqli_query($conn,$sql); $cus_code = $cus_name = array();
@@ -104,10 +109,16 @@ if(isset($_POST['submit']) == true){
 				    <table <?php if($exports == "print") { echo ' class="main-table"'; } else{ echo ' class="table-sm table-hover main-table2"'; } ?>>
                         <thead class="thead1">
                             <tr>
+                            <?php
+                                if($dlogo_flag > 0) { ?>
+                                    <td><img src="../<?php echo $logo1; ?>" height="150px"/></td>
+                                <?php }
+                                else{ 
+                                ?>
                                 <td colspan="2"><img src="<?php echo "../".$logopath; ?>" height="150px"/></td>
                                 <td colspan="2"><?php echo $cdetails; ?></td>
                                 <td colspan="18" align="center">
-                                    <h3><?php echo $file_name; ?></h3>
+                                    <h3><?php echo $file_name; }?></h3>
                                 </td>
                             </tr>
                         </thead>

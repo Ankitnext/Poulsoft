@@ -372,6 +372,7 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
 
             if(isset($_POST['submit_report']) == true && sizeof($flock_alist) > 0){
                 $flock_list = implode("','", $flock_alist);
+
                 if($un_flag == 1){
                     $w_list = implode("','", $unit_alist);
                 } else if($sh_flag == 1){
@@ -383,7 +384,7 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                 $sql = "SELECT * FROM `breeder_dayentry_consumed` WHERE `date` <= '$tdate' AND `warehouse` IN ('$w_list') AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
                 $query = mysqli_query($conn,$sql); $dentry_oqty = $dentry_bqty = $flock_alist = $item_alist = array();
                 while($row = mysqli_fetch_assoc($query)){ 
-                    $idate = $row['date']; $iflock = $row['flock_code']; $icode = $row['item_code']; $key1 = $iflock."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['flock_code']; $iwar = $row['warehouse']; $icode = $row['item_code']; $key1 = $iwar."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
                         $dentry_oqty[$key1] += $row['quantity']; 
                     }
@@ -394,10 +395,10 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                     $item_alist[$icode] = $icode;
                 } 
                 //Egg Produced
-                $sql = "SELECT * FROM `breeder_dayentry_produced` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                $sql = "SELECT * FROM `breeder_dayentry_produced` WHERE `date` <= '$tdate' AND `warehouse` IN ('$w_list') AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
                 $query = mysqli_query($conn,$sql); $dentry_oqty = $dentry_bqty = $flock_alist = $item_alist = array();
                 while($row = mysqli_fetch_assoc($query)){ 
-                    $idate = $row['date']; $iflock = $row['flock_code']; $icode = $row['item_code']; $key1 = $iflock."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['flock_code']; $iwar = $row['warehouse']; $icode = $row['item_code']; $key1 = $iwar."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
                         $dentry_oqty[$key1] += $row['quantity']; 
                     }
@@ -408,10 +409,10 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                     $item_alist[$icode] = $icode;
                 }
                 //Egg purchase
-                $sql = "SELECT * FROM `broiler_purchases` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                $sql = "SELECT * FROM `broiler_purchases` WHERE `date` <= '$tdate' AND `warehouse` IN ('$w_list') AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
                 $query = mysqli_query($conn,$sql); $sale_oqty = $sale_bqty = array();
                 while($row = mysqli_fetch_assoc($query)){
-                    $idate = $row['date']; $iflock = $row['flock_code']; $icode = $row['icode']; $key1 = $iflock."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['flock_code']; $iwar = $row['warehouse']; $icode = $row['icode']; $key1 = $iwar."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
                         $sale_oqty[$key1] += ($row['rcd_qty'] + $row['fre_qty']);
                     }
@@ -422,10 +423,10 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                     $item_alist[$icode] = $icode;
                 }
                 //Egg Transfer-In
-                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `to_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`to_flock` ASC";
+                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `towarehouse` IN ('$w_list') AND `to_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`to_flock` ASC";
                 $query = mysqli_query($conn,$sql); $tin_oqty = $tin_bqty = array();
                 while($row = mysqli_fetch_assoc($query)){
-                    $idate = $row['date']; $iflock = $row['to_flock']; $icode = $row['code']; $key1 = $iflock."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['to_flock']; $iwar = $row['towarehouse']; $icode = $row['code']; $key1 = $iwar."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
                         $tin_oqty[$key1] += $row['quantity'];
                     }
@@ -436,10 +437,10 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                     $item_alist[$icode] = $icode;
                 }
                 //Egg Transfer-Out
-                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `from_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`from_flock` ASC";
+                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `fromwarehouse` IN ('$w_list') AND `from_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`from_flock` ASC";
                 $query = mysqli_query($conn,$sql); $tout_oqty = $tout_bqty = array();
                 while($row = mysqli_fetch_assoc($query)){
-                    $idate = $row['date']; $iflock = $row['from_flock']; $icode = $row['code']; $key1 = $iflock."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['from_flock']; $iwar = $row['fromwarehouse']; $icode = $row['code']; $key1 = $iwar."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
                         $tout_oqty[$key1] += $row['quantity'];
                     }
