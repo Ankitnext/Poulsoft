@@ -329,10 +329,7 @@ if($link_active_flag > 0){
             }
 
             function fetch_farm_from(a) {
-                // Get the selected value from the dropdown
                 var from_code = document.getElementById("fromwarehouse").value;
-
-                // Initialize fbatch properly
                 var fbatch = "";
 
                 <?php
@@ -344,16 +341,12 @@ if($link_active_flag > 0){
                         echo "} ";
                     }
                 ?>
-
                 // Check if fbatch has been properly assigned before updating the DOM
                 document.getElementById("fromloc").value = fbatch;
             }
 
             function fetch_farm_to(a) {
-                    // Get the selected value from the dropdown
                     var to_code = document.getElementById("towarehouse").value;
-
-                    // Initialize tbatch as an empty string
                     var tbatch = "";
                     
                     <?php
@@ -366,7 +359,6 @@ if($link_active_flag > 0){
                             echo "}";
                         }
                     ?>
-
                     // Set the value of the "toloc" input field
                     document.getElementById("toloc").value = tbatch;
                 }

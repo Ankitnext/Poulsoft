@@ -357,10 +357,7 @@ if($link_active_flag > 0){
             }
 
             function fetch_farm_from(a){
-
-                // var b = a.split("["); var c = b[1].split("]"); var d = c[0];
                 var from_code = document.getElementById("fromwarehouse").value;
-                
                 var fbatch = "";
                 <?php
                     foreach($farms as $fcode){
@@ -372,8 +369,6 @@ if($link_active_flag > 0){
                     }
                 ?>
                 document.getElementById("fromloc").value = fbatch;
-
-
                 }
                 function fetch_farm_to(a) {
                     // Get the selected value from the dropdown
@@ -392,7 +387,6 @@ if($link_active_flag > 0){
                             echo "}";
                         }
                     ?>
-
                     // Set the value of the "toloc" input field
                     document.getElementById("toloc").value = tbatch;
                 }
