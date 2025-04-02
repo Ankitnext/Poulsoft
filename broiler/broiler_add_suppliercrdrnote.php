@@ -1,8 +1,8 @@
 <?php
-//broiler_add_customercrdrnote.php
+//broiler_add_suppliercrdrnote.php
 include "newConfig.php";
 date_default_timezone_set("Asia/Kolkata");
-$user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['customercrdrnote'];
+$user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['suppliercrdrnote'];
 $uri = explode("/",$_SERVER['REQUEST_URI']); $href = $uri[1];
 $sql = "SELECT * FROM `main_linkdetails` WHERE `href` LIKE '$href' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
 $link_active_flag = mysqli_num_rows($query);
@@ -37,13 +37,13 @@ if($link_active_flag > 0){
     }
     if($acount == 1){
         $today = date("d.m.Y");
-		$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1'  ".$sector_access_filter1." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+		$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ".$sector_access_filter1." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 				
-		$sql = "SELECT * FROM `broiler_farm` WHERE `active` = '1' ".$farm_access_filter1."".$branch_access_filter2."".$line_access_filter2." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+		$sql = "SELECT * FROM `broiler_farm` WHERE `active` = '1'  ".$farm_access_filter1."".$branch_access_filter2."".$line_access_filter2." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
         
-		$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
+		$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%S%' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_name[$row['code']] = $row['name']; }
 				
 		$sql = "SELECT * FROM `acc_coa` WHERE `visible_flag` = '1' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
@@ -75,11 +75,11 @@ if($link_active_flag > 0){
                 <div class="m-0 p-0 container-fluid">
                     <div class="m-0 p-0 card">
                         <div class="card-header">
-                            <div class="float-left"><h3 class="card-title">Add Customer CrDr Note</h3></div>
+                            <div class="float-left"><h3 class="card-title">Add Supplier CrDr Note</h3></div>
                         </div>
                         <div class="p-0 pt-5 card-body">
                             <div class="col-md-12">
-                                <form action="broiler_save_customercrdrnote.php" method="post" role="form" onsubmit="return checkval()">
+                                <form action="broiler_save_suppliercrdrnote.php" method="post" role="form" onsubmit="return checkval()">
                                     <div class="row">
                                         <div class="form-group" style="width:170px;">
                                             <label>C/D Type<b style="color:red;">&nbsp;*</b></label>
@@ -91,10 +91,10 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="form-group">
                                             <label>Date<b style="color:red;">&nbsp;*</b></label>
-							                <input type="text" name="date[]" id="date[0]" class="form-control rc_datepicker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" />
+							                <input type="text" name="date[]" id="date[0]" class="form-control datepicker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" />
                                         </div>
                                         <div class="form-group" style="width:170px;">
-                                            <label>Customer<b style="color:red;">&nbsp;*</b></label>
+                                            <label>Supplier<b style="color:red;">&nbsp;*</b></label>
 							                <select name="vcode[]" id="vcode[0]" class="form-control select2" style="width:160px;">
                                                 <option value="select">select</option>
                                                 <?php foreach($vendor_code as $cus_code){ ?><option value="<?php echo $cus_code; ?>"><?php echo $vendor_name[$cus_code]; ?></option><?php } ?>
@@ -113,7 +113,7 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="form-group">
                                             <label>Amount<b style="color:red;">&nbsp;*</b></label>
-							                <input type="text" name="amount[]" id="amount[0]" class="form-control" style="width:90px;" />
+							                <input type="text" name="amount[]" id="amount[0]" class="form-control" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" />
                                         </div>
                                         <div class="form-group" style="width:170px;">
                                             <label>Sector<b style="color:red;">&nbsp;*</b></label>
@@ -162,7 +162,7 @@ if($link_active_flag > 0){
         <script>
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
-                window.location.href = 'broiler_display_customercrdrnote.php?ccid='+ccid;
+                window.location.href = 'broiler_display_suppliercrdrnote.php?ccid='+ccid;
             }
             function checkval(){
 				document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
@@ -181,7 +181,7 @@ if($link_active_flag > 0){
                             l = false;
                         }
                         else if(vcode.match("select")){
-                            alert("Kindly select Customer row: "+c);
+                            alert("Kindly select Supplier row: "+c);
                             document.getElementById("vcode["+b+"]").focus();
                             l = false;
                         }
@@ -218,18 +218,18 @@ if($link_active_flag > 0){
                 
                 html += '<div class="row" id="row_no['+d+']">';
                 html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">C/D Type<b style="color:red;">&nbsp;*</b></label><select name="code[]" id="code['+d+']" class="form-control select2" style="width:160px;"><option value="select">select</option><option value="Credit">Credit</option><option value="Debit">Debit</option></select></div>';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Date<b style="color:red;">&nbsp;*</b></label><input type="text" name="date[]" id="date['+d+']" class="form-control rc_datepicker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" /></div>';
-                html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Customer<b style="color:red;">&nbsp;*</b></label><select name="vcode[]" id="vcode['+d+']" class="form-control select2" style="width:160px;"><option value="select">select</option><?php foreach($vendor_code as $cus_code){ ?><option value="<?php echo $cus_code; ?>"><?php echo $vendor_name[$cus_code]; ?></option><?php } ?></select></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Date<b style="color:red;">&nbsp;*</b></label><input type="text" name="date[]" id="date['+d+']" class="form-control datepicker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" /></div>';
+                html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Supplier<b style="color:red;">&nbsp;*</b></label><select name="vcode[]" id="vcode['+d+']" class="form-control select2" style="width:160px;"><option value="select">select</option><?php foreach($vendor_code as $cus_code){ ?><option value="<?php echo $cus_code; ?>"><?php echo $vendor_name[$cus_code]; ?></option><?php } ?></select></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Dc No.</label><input type="text" name="dcno[]" id="dcno['+d+']" class="form-control" style="width:90px;" /></div>';
                 html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Account<b style="color:red;">&nbsp;*</b></label><select name="coa[]" id="coa['+d+']" class="form-control select2" style="width:160px;"><option value="select">select</option><?php foreach($coa_code as $cb_code){ ?><option value="<?php echo $cb_code; ?>"><?php echo $coa_name[$cb_code]; ?></option><?php } ?></select></div>';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Amount</label><input type="text" name="amount[]" id="amount['+d+']" class="form-control" style="width:90px;" /></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Amount</label><input type="text" name="amount[]" id="amount['+d+']" class="form-control" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></div>';
                 html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Sector<b style="color:red;">&nbsp;*</b></label><select name="sector[]" id="sector['+d+']" class="form-control select2" style="width:160px;"><option value="select">select</option><?php foreach($sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo $sector_name[$whouse_code]; ?></option><?php } ?></select></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Remarks</label><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="width:120px;height:25px;"></textarea></div>';
                 html += '<div class="form-group" id="action['+d+']" style="padding-top: 5px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></div>';
                 html += '</div>';
                 html += '<hr class="labelrow" style="display:none;" />';
                 $('#row_body').append(html); $('.select2').select2();
-                $( ".rc_datepicker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+                $( ".datepicker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", maxDate: today, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
             }
             function destroy_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -251,7 +251,7 @@ if($link_active_flag > 0){
             }, 1000);
             document.addEventListener("keydown", (e) => { if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function (){ $('#submit').click(); }); } } else{ } });
             function validatename(x) { expr = /^[a-zA-Z0-9 (.&)_-]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, ''); } document.getElementById(x).value = a; }
-			function validatenum(x) { expr = /^[0-9]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9]/g, ''); } document.getElementById(x).value = a; }
+			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }
 			function validateamount(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(2); document.getElementById(x).value = b; }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
         </script>

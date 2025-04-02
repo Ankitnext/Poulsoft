@@ -1,5 +1,5 @@
 <?php
-//breeder_stock_summary1_ta.php
+//breeder_eggstock_report1.php
 $requested_data = json_decode(file_get_contents('php://input'),true);
 if(!isset($_SESSION)){ session_start(); }
 $db = $_SESSION['db'] = $_GET['db'];
@@ -9,18 +9,18 @@ if($db == ''){
     $dbname = $_SESSION['dbase'];
     include "../newConfig.php";
     include "header_head.php";
-    $form_path = "breeder_stock_summary1_ta.php";
+    $form_path = "breeder_eggstock_report1.php";
 }
 else{
     $user_code = $_GET['userid'];
     $dbname = $db;
     include "APIconfig.php";
     include "header_head.php";
-    $form_path = "breeder_stock_summary1_ta.php?db=$db&userid=".$user_code;
+    $form_path = "breeder_eggstock_report1.php?db=$db&userid=".$user_code;
 }
 include "decimal_adjustments.php";
 include "breeder_cal_ageweeks.php";
-$file_name = "Breeder Stock Summary Report";
+$file_name = "Breeder Egg Stock Report";
 
 /*Check for Table Availability*/
 $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
@@ -74,7 +74,7 @@ if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
 
 //Breeder Extra Access
-$sql = "SELECT *  FROM `breeder_extra_access` WHERE `field_name` LIKE 'Breeder Display section' AND `field_function` LIKE 'breeder_stock_summary1_ta.php' AND `user_access` LIKE 'all' AND `flag` = '1'";
+$sql = "SELECT *  FROM `breeder_extra_access` WHERE `field_name` LIKE 'Breeder Display section' AND `field_function` LIKE 'breeder_eggstock_report1.php' AND `user_access` LIKE 'all' AND `flag` = '1'";
 $query = mysqli_query($conn,$sql); $e_cnt = mysqli_num_rows($query); $opn_flag = $prd_flag = $tin_flag = $sale_flag = $tout_flag = $cnvti_flag = $cnvto_flag = $disp_flag = $cls_flag = 1;
 if($e_cnt > 0){
     $opn_flag = $prd_flag = $tin_flag = $sale_flag = $tout_flag = $cnvti_flag = $cnvto_flag = $disp_flag = $cls_flag = 0;
@@ -93,14 +93,6 @@ if($e_cnt > 0){
     }
 }
 
-//Breeder Extra Access
-$sql = "SELECT *  FROM `breeder_extra_access` WHERE `field_name` LIKE 'Breeder Module' AND `field_function` LIKE 'Maintain Feed Stock in FARM/UNIT/SHED/BATCH/FLOCK' AND `user_access` LIKE 'all' AND `flag` = '1'";
-$query = mysqli_query($conn,$sql); $e_nt = mysqli_num_rows($query); 
-if($e_nt > 0){
-    if(strtolower($row['field_value']) == "Unit"){ $un_flag = 1; }
-    if(strtolower($row['field_value']) == "Shed"){ $sh_flag = 1; }
-}
-
 $sql = "SELECT * FROM `breeder_farms` WHERE `dflag` = '0' ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $farm_code = $farm_name = array();
 while($row = mysqli_fetch_assoc($query)){ $farm_code[$row['code']] = $row['code']; $farm_name[$row['code']] = $row['description']; }
@@ -112,12 +104,6 @@ while($row = mysqli_fetch_assoc($query)){ $unit_code[$row['code']] = $row['code'
 $sql = "SELECT * FROM `breeder_sheds` WHERE `dflag` = '0' ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $shed_code = $shed_name = array();
 while($row = mysqli_fetch_assoc($query)){ $shed_code[$row['code']] = $row['code']; $shed_name[$row['code']] = $row['description']; }
-
-$sql = "SELECT * FROM `item_category` ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
-while($row = mysqli_fetch_assoc($query)){ $icat_code[$row['code']] = $row['code']; $icat_name[$row['code']] = $row['description']; }
-
-$sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_category[$row['code']] = $row['category']; }
 
 $sql = "SELECT * FROM `breeder_batch` WHERE `dflag` = '0' ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $batch_code = $batch_name = $batch_breed = array();
@@ -149,7 +135,7 @@ while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['descr
 
 $fdate = $tdate = date("Y-m-d"); $farms = $units = $sheds = $batches = $flocks = array(); $excel_type = "display";
 $farms["all"] = $units["all"] = $sheds["all"] = $batches["all"] = $flocks["all"] = "all";
-$f_aflag = $u_aflag = $s_aflag = $b_aflag = $fl_aflag = 1; $fetch_type = "unit_wise";
+$f_aflag = $u_aflag = $s_aflag = $b_aflag = $fl_aflag = 1; $fetch_type = "flck_wise";
 
 if(isset($_POST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_REQUEST['fdate']));
@@ -171,11 +157,10 @@ if($u_aflag == 0){ $unit_list = implode("','",$units); $unit_fltr = " AND `unit_
 if($s_aflag == 0){ $shed_list = implode("','",$sheds); $shed_fltr = " AND `shed_code` IN ('$shed_list')"; }
 if($b_aflag == 0){ $batch_list = implode("','",$batches); $batch_fltr = " AND `batch_code` IN ('$batch_list')"; }
 if($fl_aflag == 0){ $flock_list = implode("','",$flocks); $flock_fltr = " AND `code` IN ('$flock_list')"; }
-$icode_list = implode("','",$flocks); $flock_fltr = " AND `code` IN ('$flock_list')"; 
 
 $sql = "SELECT * FROM `breeder_shed_allocation` WHERE `dflag` = '0'".$farm_fltr."".$unit_fltr."".$shed_fltr."".$batch_fltr."".$flock_fltr." ORDER BY `description` ASC";
-$query = mysqli_query($conn,$sql); $flock_alist = $unit_alist = $shed_alist = array();
-while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['code']; $unit_alist[$row['unit_code']] = $row['code']; $shed_alist[$row['shed_code']] = $row['code']; }
+$query = mysqli_query($conn,$sql); $flock_alist = array();
+while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['code']; }
 
 ?> 
 <html>
@@ -250,35 +235,6 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                                         <?php } } ?>
                                     </select>
                                 </div>
-                                <div class="m-2 form-group" style="width:230px;">
-                                    <label>Category</label>
-                                    <select name="item_cat[]" id="item_cat" class="form-control select2" multiple onchange="fetch_item_list();">
-                                        <option value="all" <?php if($item_cat == "all"){ echo "selected"; } ?>>-All-</option>
-                                        <?php foreach($icat_code as $icats){ if($icat_name[$icats] != ""){ ?>
-                                        <option value="<?php echo $icats; ?>" <?php if($item_cat == $icats){ echo "selected"; } ?>><?php echo $icat_name[$icats]; ?></option>
-                                        <?php } } ?>
-                                    </select>
-                                </div>
-                                <div class="m-2 form-group" style="width:230px;">
-                                    <label>Items</label>
-                                    <select name="items[]" id="items" class="form-control select2" multiple>
-                                        <option value="all" <?php if($items == "all"){ echo "selected"; } ?>>-All-</option>
-                                        <?php if($item_cat == "all"){ ?>
-                                        <?php foreach($item_code as $icodes){ if($item_name[$icodes] != ""){ ?>
-                                        <option value="<?php echo $icodes; ?>" <?php if($items == $icodes){ echo "selected"; } ?>><?php echo $item_name[$icodes]; ?></option>
-                                        <?php } } }
-                                        else{
-                                            foreach($item_code as $icodes){
-                                                if($item_cat == $item_category[$icodes]){
-                                                ?>
-                                                <option value="<?php echo $icodes; ?>" <?php if($items == $icodes){ echo "selected"; } ?>><?php echo $item_name[$icodes]; ?></option>
-                                                <?php
-                                                }
-                                            }
-                                        }
-                                            ?>
-                                    </select>
-                                </div>
                             </div>
                             <div class="row">
                                 <div class="m-2 form-group">
@@ -300,11 +256,11 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                                 <div class="m-2 form-group" style="visibility:hidden;">
                                     <label>Fetch Type</label>
                                     <select name="fetch_type" id="fetch_type" class="form-control select2">
-                                        <!-- <option value="farm_wise" <?php //if($fetch_type == "farm_wise"){ echo "selected"; } ?>>Farm</option> -->
-                                       <?php if((int)$un_flag == 1){ ?> <option value="unit_wise" <?php if($fetch_type == "unit_wise"){ echo "selected"; } ?>>Unit</option> <?php } ?>
-                                       <?php if((int)$sh_flag == 1){ ?> <option value="shed_wise" <?php if($fetch_type == "shed_wise"){ echo "selected"; } ?>>Shed</option> <?php } ?>
-                                        <!-- <option value="bach_wise" <?php //if($fetch_type == "bach_wise"){ echo "selected"; } ?>>Batch</option> -->
-                                        <!-- <option value="flck_wise" <?php //if($fetch_type == "flck_wise"){ echo "selected"; } ?>>Flock</option> -->
+                                        <!--<option value="farm_wise" <?php //if($fetch_type == "farm_wise"){ echo "selected"; } ?>>Farm</option>
+                                        <option value="unit_wise" <?php //if($fetch_type == "unit_wise"){ echo "selected"; } ?>>Unit</option>
+                                        <option value="shed_wise" <?php //if($fetch_type == "shed_wise"){ echo "selected"; } ?>>Shed</option>
+                                        <option value="bach_wise" <?php //if($fetch_type == "bach_wise"){ echo "selected"; } ?>>Batch</option>-->
+                                        <option value="flck_wise" <?php if($fetch_type == "flck_wise"){ echo "selected"; } ?>>Flock</option>
                                     </select>
                                 </div>
                             </div>
@@ -324,17 +280,14 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
             $nhtml .= '<th></th>'; $fhtml .= '<th></th>';
             $nhtml .= '<th></th>'; $fhtml .= '<th></th>';
             if((int)$opn_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Opening</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Opening</th>'; }
-            $nhtml .= '<th>Purchase</th>'; $fhtml .= '<th>Purchase</th>';
-            if((int)$tin_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Transfer In</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Transfer In</th>'; }
             if((int)$prd_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Production</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Production</th>'; }
-            if((int)$cnvti_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Convert-In</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Convert-In</th>'; }
-            $nhtml .= '<th>Consumption</th>'; $fhtml .= '<th id="order_num">Consumption</th>'; 
-            if((int)$tout_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Transfer Out</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Transfer Out</th>'; }
-            if((int)$cnvto_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Convert-Out</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Convert-Out</th>'; }
+            if((int)$tin_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Transfer In</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Transfer In</th>'; }
             if((int)$sale_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Sales</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Sales</th>'; }
+            if((int)$tout_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Transfer Out</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Transfer Out</th>'; }
+            if((int)$cnvti_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Convert-In</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Convert-In</th>'; }
+            if((int)$cnvto_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Convert-Out</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Convert-Out</th>'; }
             if((int)$disp_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Disposed</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Disposed</th>'; }
-            $nhtml .= '<th>Balance</th>'; $fhtml .= '<th id="order_num">Balance</th>'; 
-            // if((int)$cls_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Closing Stock</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Closing Stock</th>'; }
+            if((int)$cls_flag == 1){ $nhtml .= '<th colspan="'.$e_cnt.'">Closing Stock</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Closing Stock</th>'; }
 
             $nhtml .= '</tr>';
             $fhtml .= '</tr>';
@@ -349,21 +302,16 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
             else if($fetch_type == "shed_wise"){ $nhtml .= '<th>Shed</th>'; $fhtml .= '<th id="order">Shed</th>'; }
             else if($fetch_type == "bach_wise"){ $nhtml .= '<th>Batch</th>'; $fhtml .= '<th id="order">Batch</th>'; }
             else{ $nhtml .= '<th>Flock</th>'; $fhtml .= '<th id="order">Flock</th>'; }
-            $nhtml .= '<th>Item Cat</th>'; $fhtml .= '<th id="order_num">Item Cat</th>'; 
-            $nhtml .= '<th>Item</th>'; $fhtml .= '<th id="order_num">Item</th>'; 
 
             if((int)$opn_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
-            $nhtml .= '<th>Purchase</th>'; $fhtml .= '<th id="order_num">Purchase</th>'; 
-            if((int)$tin_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
             if((int)$prd_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
-            if((int)$cnvti_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
-            $nhtml .= '<th>Consumption</th>'; $fhtml .= '<th id="order_num">Consumption</th>'; 
-            if((int)$tout_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
-            if((int)$cnvto_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
+            if((int)$tin_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
             if((int)$sale_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
+            if((int)$tout_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
+            if((int)$cnvti_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
+            if((int)$cnvto_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
             if((int)$disp_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
-            $nhtml .= '<th>Balance</th>'; $fhtml .= '<th id="order_num">Balance</th>'; 
-           // if((int)$cls_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
+            if((int)$cls_flag == 1){ foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; } }
 
             $nhtml .= '</tr>';
             $fhtml .= '</tr>';
@@ -373,61 +321,25 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
 
             if(isset($_POST['submit_report']) == true && sizeof($flock_alist) > 0){
                 $flock_list = implode("','", $flock_alist);
-
-                if($un_flag == 1){
-                    $w_list = implode("','", $unit_alist);
-                } else if($sh_flag == 1){
-                    $w_list = implode("','", $shed_alist);
-                }
-
-
-                //Egg Consumed
-                $sql = "SELECT * FROM `breeder_dayentry_consumed` WHERE `date` <= '$tdate' AND `warehouse` IN ('$w_list') AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                //Egg production
+                $sql = "SELECT * FROM `breeder_dayentry_produced` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
                 $query = mysqli_query($conn,$sql); $dentry_oqty = $dentry_bqty = $flock_alist = $item_alist = array();
-                while($row = mysqli_fetch_assoc($query)){ 
-                    $idate = $row['date']; $iflock = $row['flock_code']; $iwar = $row['warehouse']; $icode = $row['item_code']; $key1 = $iwar."@$&".$icode;
-                    if(strtotime($idate) < strtotime($fdate)){
-                        $dentry_oqty[$key1] += $row['quantity']; 
-                    }
-                    else{
-                        $dentry_bqty[$key1] += $row['quantity']; 
-                    }
-                    $flock_alist[$iflock] = $iflock;
-                    $item_alist[$icode] = $icode;
-                } 
-                //Egg Production
-                $sql = "SELECT * FROM `breeder_dayentry_produced` WHERE `date` <= '$tdate' AND `warehouse` IN ('$w_list') AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
-                $query = mysqli_query($conn,$sql); $dentry_oqty = $dentry_bqty = $flock_alist = $item_alist = array();
-                while($row = mysqli_fetch_assoc($query)){ 
-                    $idate = $row['date']; $iflock = $row['flock_code']; $iwar = $row['warehouse']; $icode = $row['item_code']; $key1 = $iwar."@$&".$icode;
-                    if(strtotime($idate) < strtotime($fdate)){
-                        $dentry_oqty[$key1] += $row['quantity']; 
-                    }
-                    else{
-                        $dentry_bqty[$key1] += $row['quantity']; 
-                    }
-                    $flock_alist[$iflock] = $iflock;
-                    $item_alist[$icode] = $icode;
-                }
-                //Egg purchase
-                $sql = "SELECT * FROM `broiler_purchases` WHERE `date` <= '$tdate' AND `warehouse` IN ('$w_list') AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
-                $query = mysqli_query($conn,$sql); $pur_oqty = $pur_bqty = array();
                 while($row = mysqli_fetch_assoc($query)){
-                    $idate = $row['date']; $iflock = $row['flock_code']; $iwar = $row['warehouse']; $icode = $row['icode']; $key1 = $iwar."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['flock_code']; $icode = $row['item_code']; $key1 = $iflock."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
-                        $pur_oqty[$key1] += ($row['rcd_qty'] + $row['fre_qty']);
+                        $dentry_oqty[$key1] += $row['quantity']; 
                     }
                     else{
-                        $pur_bqty[$key1] += ($row['rcd_qty'] + $row['fre_qty']);
+                        $dentry_bqty[$key1] += $row['quantity'];
                     }
                     $flock_alist[$iflock] = $iflock;
                     $item_alist[$icode] = $icode;
                 }
-                 //Egg sales
-                $sql = "SELECT * FROM `broiler_sales` WHERE `date` <= '$tdate' AND `warehouse` IN ('$w_list') AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                //Egg Sales
+                $sql = "SELECT * FROM `broiler_sales` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
                 $query = mysqli_query($conn,$sql); $sale_oqty = $sale_bqty = array();
                 while($row = mysqli_fetch_assoc($query)){
-                    $idate = $row['date']; $iflock = $row['flock_code']; $iwar = $row['warehouse']; $icode = $row['icode']; $key1 = $iwar."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['flock_code']; $icode = $row['icode']; $key1 = $iflock."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
                         $sale_oqty[$key1] += ($row['rcd_qty'] + $row['fre_qty']);
                     }
@@ -438,10 +350,10 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                     $item_alist[$icode] = $icode;
                 }
                 //Egg Transfer-In
-                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `towarehouse` IN ('$w_list') AND `to_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`to_flock` ASC";
+                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `to_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`to_flock` ASC";
                 $query = mysqli_query($conn,$sql); $tin_oqty = $tin_bqty = array();
                 while($row = mysqli_fetch_assoc($query)){
-                    $idate = $row['date']; $iflock = $row['to_flock']; $iwar = $row['towarehouse']; $icode = $row['code']; $key1 = $iwar."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['to_flock']; $icode = $row['code']; $key1 = $iflock."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
                         $tin_oqty[$key1] += $row['quantity'];
                     }
@@ -452,10 +364,10 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                     $item_alist[$icode] = $icode;
                 }
                 //Egg Transfer-Out
-                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `fromwarehouse` IN ('$w_list') AND `from_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`from_flock` ASC";
+                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `from_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`from_flock` ASC";
                 $query = mysqli_query($conn,$sql); $tout_oqty = $tout_bqty = array();
                 while($row = mysqli_fetch_assoc($query)){
-                    $idate = $row['date']; $iflock = $row['from_flock']; $iwar = $row['fromwarehouse']; $icode = $row['code']; $key1 = $iwar."@$&".$icode;
+                    $idate = $row['date']; $iflock = $row['from_flock']; $icode = $row['code']; $key1 = $iflock."@$&".$icode;
                     if(strtotime($idate) < strtotime($fdate)){
                         $tout_oqty[$key1] += $row['quantity'];
                     }
@@ -524,7 +436,7 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                         $o_qty = (((float)$dentry_oqty[$key1] + (float)$tin_oqty[$key1] + (float)$ecto_oqty[$key1]) - ((float)$sale_oqty[$key1] + (float)$tout_oqty[$key1] + (float)$ecfrom_oqty[$key1] + (float)$disp_oqty[$key1]));
                         $opn_sqty[$key3] += (float)$o_qty;
                         $prd_sqty[$key3] += (float)$dentry_bqty[$key1];
-                        $tin_sqty[$key3] += (float)$tin_bqty[$key1]; 
+                        $tin_sqty[$key3] += (float)$tin_bqty[$key1];
                         $sal_sqty[$key3] += (float)$sale_bqty[$key1];
                         $tou_sqty[$key3] += (float)$tout_bqty[$key1];
                         $cto_sqty[$key3] += (float)$ecto_bqty[$key1];
@@ -1152,49 +1064,6 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
             set_auto_selectors();
             function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
         </script>
-        <script>
-            function fetch_item_list() {
-                var fcode = document.getElementById("item_cat").value.trim();
-                var myselect = document.getElementById("items");
-                removeAllOptions(myselect);
-                var defaultOption = document.createElement("OPTION");
-                defaultOption.text = "-All-";
-                defaultOption.value = "all";
-                myselect.add(defaultOption);
-                if (fcode !== "all") {
-                    <?php
-                    foreach ($item_code as $icodes) {
-                        $icats = $item_category[$icodes];
-                        echo "if (fcode === '$icats') {";
-                    ?>
-                        var option = document.createElement("OPTION");
-                        option.text = "<?php echo addslashes($item_name[$icodes]); ?>";
-                        option.value = "<?php echo $icodes; ?>";
-                        myselect.add(option);
-                    <?php
-                        echo "}";
-                    }
-                    ?>
-                } else {
-                    <?php
-                    foreach ($item_code as $icodes) {
-                    ?>
-                        var option = document.createElement("OPTION");
-                        option.text = "<?php echo addslashes($item_name[$icodes]); ?>";
-                        option.value = "<?php echo $icodes; ?>";
-                        myselect.add(option);
-                    <?php
-                    }
-                    ?>
-                }
-            }
-            function removeAllOptions(selectbox) {
-                while (selectbox.options.length > 0) {
-                    selectbox.remove(0);
-                }
-            }
-
-       </script>
         <script src="../datepicker/jquery/jquery.js"></script>
         <script src="../datepicker/jquery-ui.js"></script>
     </body>

@@ -1,8 +1,8 @@
 <?php
-//broiler_display_generalsales5.php
+//broiler_display_generalsales6.php
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
-if($cid != ""){ $_SESSION['generalsales5'] = $cid; } else{ $cid = $_SESSION['generalsales5']; }
+if($cid != ""){ $_SESSION['generalsales6'] = $cid; } else{ $cid = $_SESSION['generalsales6']; }
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
 $sql = "SELECT * FROM `master_form_tableaccess` WHERE `href` = '$href' AND `active` = '1'"; $query = mysqli_query($sconn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $table_name = $row['table_name']; } $table_session = $cid."tbl_access"; $_SESSION[$table_session] = $table_name;
@@ -102,7 +102,7 @@ if($link_active_flag > 0){
             }
 
             $sale_print1 = 0;
-            $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'broiler_display_generalsales5.php' AND `field_function` = 'Sale Invoice Format-1' AND `user_access` LIKE 'all' AND `flag` = '1'";
+            $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'broiler_display_generalsales6.php' AND `field_function` = 'Sale Invoice Format-1' AND `user_access` LIKE 'all' AND `flag` = '1'";
             $query = mysqli_query($conn,$sql); $sale_print1 = mysqli_num_rows($query);
             
             //Fetch Print-View from Print Master
@@ -172,7 +172,7 @@ if($link_active_flag > 0){
                                         while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
                                         
                                         $delete_url = $delete_link."?utype=delete&trnum=";
-                                        $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND (`sale_type` = 'generalsales5' OR `trlink` = 'broiler_display_generalsales5.php') AND `dflag` = '0' ORDER BY `id` DESC";
+                                        $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND (`sale_type` = 'generalsales6' OR `trlink` = 'broiler_display_generalsales6.php') AND `dflag` = '0' ORDER BY `id` DESC";
                                         $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['trnum'];
@@ -183,7 +183,7 @@ if($link_active_flag > 0){
                                             $print_url4 = "print/Examples/broiler_saleinvoice2.php?id=".$row['trnum']."@inv";
                                             $print_url5 = "print/Examples/broiler_saleinvoice5.php?id=".$row['trnum']."@inv";
 
-                                            $edit_url2 = "broiler_return_generalsales5.php?utype=return&trnum=".$id;
+                                            $edit_url2 = "broiler_return_generalsales6.php?utype=return&trnum=".$id;
                                             $print_dt = "?vcode=".$row['vcode']."&trnum=".$id."&warehouse=".$row['warehouse']."&date=".$row['date']."&id=".$row['trnum']."@inv";
 
                                             $ref_docs1 = "";

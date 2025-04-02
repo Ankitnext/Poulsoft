@@ -1,10 +1,10 @@
 <?php
-//broiler_delete_generalsales5.php
+//broiler_delete_generalsales6.php
 session_start(); include "newConfig.php";
 $addedemp = $_SESSION['userid'];
 date_default_timezone_set("Asia/Kolkata");
 $addedtime = date('Y-m-d H:i:s');
-$ccid = $_SESSION['generalsales5'];
+$ccid = $_SESSION['generalsales6'];
 $table_session = $ccid."tbl_access";
 $table_name = $_SESSION[$table_session];
 $utype = $_GET['utype'];
@@ -16,7 +16,7 @@ if($utype == "delete"){
     else{
         $sql = "UPDATE `account_summary` SET `active` = '0',`dflag` = '1',`updatedemp` = '$addedemp',`updatedtime` = '$addedtime' WHERE `trnum` = '$trnum'";
         if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); }
-        else { header('location:broiler_display_generalsales5.php?ccid='.$ccid); }
+        else { header('location:broiler_display_generalsales6.php?ccid='.$ccid); }
     }
 }
 
