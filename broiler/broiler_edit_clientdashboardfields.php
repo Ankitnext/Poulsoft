@@ -1,24 +1,24 @@
 <?php
-//broiler_add_clientdashboardfields.php
+//broiler_edit_clientdashboardfields.php
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['clientdashboardfields'];
-$uri = explode("/",$_SERVER['REQUEST_URI']); $href = $uri[1];
+$uri = explode("?",$_SERVER['REQUEST_URI']); $url2 = explode("?",$uri[1]); $href = basename($uri[0]);
 $sql = "SELECT * FROM `main_linkdetails` WHERE `href` LIKE '$href' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
 $link_active_flag = mysqli_num_rows($query);
 if($link_active_flag > 0){
     while($row = mysqli_fetch_assoc($query)){ $link_childid = $row['childid']; }
     $sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$user_code' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
-    $alink = array(); $user_type = "";
+    $elink = array(); $user_type = "";
     while($row = mysqli_fetch_assoc($query)){
-        $alink = explode(",",$row['addaccess']);
+        $elink = explode(",",$row['editaccess']);
         if($row['supadmin_access'] == 1 || $row['supadmin_access'] == "1"){ $user_type = "S"; }
         else if($row['admin_access'] == 1 || $row['admin_access'] == "1"){ $user_type = "A"; }
         else{ $user_type = "N"; }
     }
     if($user_type == "S"){ $acount = 1; }
     else{
-        foreach($alink as $add_access_flag){ 
-            if($add_access_flag == $link_childid){
+        foreach($elink as $edit_access_flag){
+            if($edit_access_flag == $link_childid){
                 $acount = 1;
             }
         }
@@ -45,60 +45,66 @@ if($link_active_flag > 0){
     </style>
     </head>
     <body class="m-0 hold-transition">
+        <?php
+		$id = $_GET['id'];
+		$sql = "SELECT * FROM `master_dashboard_links` WHERE `id` = '$id'"; $query = mysqli_query($conn,$sql);
+		while($row = mysqli_fetch_assoc($query)){
+			$ucode = $row['user_code'];
+			$pname = $row['panel_name'];
+			$sordr = $row['sort_order'];
+		}
+		?>
         <div class="m-0 p-0 wrapper">
             <section class="m-0 p-0 content">
                 <div class="m-0 p-0 container-fluid">
                     <div class="m-0 p-0 card">
                         <div class="card-header">
-                            <div class="float-left"><h3 class="card-title">Add Dashboard Access</h3></div>
+                            <div class="float-left"><h3 class="card-title">Edit Dashboard Access</h3></div>
                         </div>
                         <div class="card-body">
                             <div class="col-md-12">
-                                <form action="broiler_save_clientdashboardfields.php" method="post" role="form" onsubmit="return checkval()">
+                                <form action="broiler_modify_clientdashboardfields.php" method="post" role="form" onsubmit="return checkval()">
                                     <div class="row">&nbsp;
                                         <div class="col-md-4"></div>
                                         <div style="display:flex; justify-content: center;" class="col-md-4">
                                             <div class="form-group" style="width:290px;">
                                                 <label>User<b style="color:red;">&nbsp;*</b></label>
-                                                <select name="user_code[]" id="user_code[0]" class="form-control select2" style="width:180px;" onchange="check_duplication(this.id);">
+                                                <select name="user_code" id="user_code" class="form-control select2" style="width:180px;" onchange="check_duplication(this.id);">
                                                     <option value="select">select</option>
                                                     <?php
-                                                    foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>"><?php echo $emp_uname[$fn]; ?></option> <?php } ?>
+                                                     foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>" <?php if($ucode == $fn){ echo "selected"; } ?>><?php echo $emp_uname[$fn]; ?></option> <?php } ?>
                                                 </select>
                                             </div>&ensp;
                                         </div>
                                         <div class="col-md-4"></div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-1"></div>
-                                        <div class="col-md-9">
+                                        <div class="col-md-3"></div>
+                                        <div class="col-md-7">
                                             <div class="row">&nbsp;
-                                                <div class="form-group" style="width:190px;">
-                                                    <!-- <label>User<b style="color:red;">&nbsp;*</b></label>
-                                                    <select name="user_code[]" id="user_code[0]" class="form-control select2" style="width:180px;" onchange="check_duplication(this.id);">
+                                                <!-- <div class="form-group" style="width:190px;">
+                                                    <label>User<b style="color:red;">&nbsp;*</b></label>
+                                                    <select name="user_code" id="user_code" class="form-control select2" style="width:180px;" onchange="check_duplication(this.id);">
                                                         <option value="select">select</option>
                                                         <?php
-                                                        foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>"><?php echo $emp_uname[$fn]; ?></option> <?php } ?>
-                                                    </select> -->
-                                                </div>&ensp;
+                                                        foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>" <?php if($ucode == $fn){ echo "selected"; } ?>><?php echo $emp_uname[$fn]; ?></option> <?php } ?>
+                                                    </select>
+                                                </div>&ensp; -->
                                                 <div class="form-group" style="width:290px;">
                                                     <label>Panel<b style="color:red;">&nbsp;*</b></label>
-                                                    <select name="panel_name[]" id="panel_name[0]" class="form-control select2" style="width:280px;" onchange="check_duplication(this.id);">
+                                                    <select name="panel_name" id="panel_name" class="form-control select2" style="width:280px;" onchange="check_duplication(this.id);">
                                                         <option value="select">select</option>
                                                         <?php
-                                                        foreach($panel_name as $fn){ ?><option value="<?php echo $panel_code[$fn]; ?>"><?php echo $fn; ?></option> <?php } ?>
+                                                        foreach($panel_name as $fn){ ?><option value="<?php echo $panel_code[$fn]; ?>" <?php if($pname == $fn){ echo "selected"; } ?>><?php echo $fn; ?></option> <?php } ?>
                                                     </select>
                                                 </div>&ensp;
                                                 <div class="form-group" style="width:90px;">
                                                     <label>Sort Order<b style="color:red;">&nbsp;*</b></label>
-                                                    <input type="text" style="width:80px;" class="form-control" name="sort_order[]" id="sort_order[0]" />
+                                                    <input type="text" style="width:80px;" class="form-control" name="sort_order" id="sort_order" value="<?php echo $sordr; ?>" />
                                                 </div>&ensp;
-                                                <div class="form-group" id="action[0]"><br/>
-                                                    <a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)" class="form-control" style="padding-top:15px;width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a>
-                                                </div>
                                                 <div class="form-group" style="width:10px;visibility:hidden;">
                                                     <label>dflag<b style="color:red;">&nbsp;*</b></label>
-                                                    <input type="text" style="width:9px;" class="form-control" name="dup_flag[]" id="dup_flag[0]" />
+                                                    <input type="text" style="width:9px;" class="form-control" name="dup_flag" id="dup_flag" />
                                                 </div>&ensp;
                                             </div>
                                         </div>
@@ -107,8 +113,8 @@ if($link_active_flag > 0){
                                     <div class="col-md-12" id="row_body"></div><br/><br/>
                                     <div class="row">
                                         <div class="form-group col-md-6" style="visibility:hidden;">
-                                            <label>incr<b style="color:red;">&ensp;*</b></label>
-                                            <input type="text" name="incr" id="incr" class="form-control" value="0">
+                                            <label>Id<b style="color:red;">&ensp;*</b></label>
+                                            <input type="text" name="idvalue" id="idvalue" class="form-control" value="<?php echo $id; ?>">
                                         </div>
                                         <div class="form-group col-md-1" style="visibility:hidden;"><!-- style="visibility:hidden;"-->
                                             <label>ECount<b style="color:red;">&nbsp;*</b></label>
@@ -135,33 +141,30 @@ if($link_active_flag > 0){
             }
             function checkval(){
 				document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
-                var incrs = document.getElementById("incr").value;
                 var user_code = panel_name = dup_flag = "";
                 var l = true; var c = 0;
-                for(var d = 0;d <= incrs;d++){
-                    c = d + 1;
-                    if(l == true){
-                        dup_flag = document.getElementById("dup_flag["+d+"]").value;
-                        user_code = document.getElementById("user_code["+d+"]").value;
-                        panel_name = document.getElementById("panel_name["+d+"]").value;
-                        if(dup_flag == 1 || dup_flag == "1"){
-                            alert("Already panel allocated for the selected user in row: "+c);
-                            document.getElementById("user_code["+d+"]").focus();
-                            l = false;
-                        }
-                        else if(user_code.match("select")){
-                            alert("Select Username in row: "+c);
-                            document.getElementById("user_code["+d+"]").focus();
-                            l = false;
-                        }
-                        else if(panel_name.match("select")){
-                            alert("Select Panel Name in row: "+c);
-                            document.getElementById("panel_name["+d+"]").focus();
-                            l = false;
-                        }
-                        else{ }
-                    }
+                
+                dup_flag = document.getElementById("dup_flag").value;
+                user_code = document.getElementById("user_code").value;
+                panel_name = document.getElementById("panel_name").value;
+
+                if(dup_flag == 1 || dup_flag == "1"){
+                    alert("Already panel allocated for the selected user");
+                    document.getElementById("user_code").focus();
+                    l = false;
                 }
+                else if(user_code.match("select")){
+                    alert("Select Username");
+                    document.getElementById("user_code").focus();
+                    l = false;
+                }
+                else if(panel_name.match("select")){
+                    alert("Select Panel Name");
+                    document.getElementById("panel_name").focus();
+                    l = false;
+                }
+                else{ }
+
                 if(l == true){
                     return true;
                 }
@@ -171,41 +174,14 @@ if($link_active_flag > 0){
                     return false;
                 }
             }
-            function create_row(a){
-                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
-                document.getElementById("action["+d+"]").style.visibility = "hidden";
-                d++; var html = '';
-                document.getElementById("incr").value = d;
-                html += '<div class="row" id="row_no['+d+']">';
-                html += '<div class="col-md-1"></div>';
-                html += '<div class="col-md-9"><div class="row">';
-               // html += '<div class="form-group" style="width:190px;"><label class="labelrow" style="display:none;">User<b style="color:red;">&nbsp;*</b></label><select name="user_code[]" id="user_code['+d+']" class="form-control select2" style="width:180px;" onchange="check_duplication(this.id);"><option value="select">select</option><?php foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>"><?php echo $emp_uname[$fn]; ?></option> <?php } ?></select></div>&ensp;';
-                html += '<div class="form-group" style="width:290px;"><label class="labelrow" style="display:none;">Panel<b style="color:red;">&nbsp;*</b></label><select name="panel_name[]" id="panel_name['+d+']" class="form-control select2" style="width:280px;" onchange="check_duplication(this.id);"><option value="select">select</option><?php foreach($panel_name as $fn){ ?><option value="<?php echo $panel_code[$fn]; ?>"><?php echo $fn; ?></option> <?php } ?></select></div>&ensp;';
-                html += '<div class="form-group" style="width:90px;"><label class="labelrow" style="display:none;">Sort Order<b style="color:red;">&nbsp;*</b></label><input type="text" style="width:80px;" class="form-control" name="sort_order[]" id="sort_order['+d+']" /></div>&ensp;';
-                html += '<div class="form-group" id="action['+d+']" style="padding-top: 5px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></div>';
-                html += '<div class="form-group" style="width:10px;visibility:hidden;"><label class="labelrow" style="display:none;">dflag<b style="color:red;">&nbsp;*</b></label><input type="text" style="width:9px;" class="form-control" name="dup_flag[]" id="dup_flag['+d+']" /></div>&ensp;';
-                html += '</div></div>';
-                html += '<div class="col-md-2"></div>';
-                html += '</div>';
-                $('#row_body').append(html);
-                $('.select2').select2();
-            }
-            function destroy_row(a){
-                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
-                document.getElementById("row_no["+d+"]").remove();
-                d--;
-                document.getElementById("incr").value = d;
-                document.getElementById("action["+d+"]").style.visibility = "visible";
-            }
-            function check_duplication(a){
-                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
-                var user_code = document.getElementById("user_code["+d+"]").value;
-                var panel_name = document.getElementById("panel_name["+d+"]").value;
-
+            function check_duplication(){
+                var user_code = document.getElementById("user_code").value;
+                var panel_name = document.getElementById("panel_name").value;
+                var id = '<?php echo $id; ?>';
                 if(user_code != "select" && panel_name != "select"){
                     var inv_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "broiler_check_dashboardaccess_duplication.php?user_code="+user_code+"&panel_name="+panel_name+"&row_count="+d;
+                    var url = "broiler_check_dashboardaccess_duplication.php?user_code="+user_code+"&panel_name="+panel_name+"&id="+id;
                     //window.open(url);
                     var asynchronous = true;
                     inv_items.open(method, url, asynchronous);
@@ -217,14 +193,14 @@ if($link_active_flag > 0){
                             var dup_flag  = dval2[0];
                             var row  = dval2[1];
                             if(dup_flag == 0 || dup_flag == "0"){
-                                document.getElementById("dup_flag["+row+"]").value = dup_flag;
+                                document.getElementById("dup_flag").value = dup_flag;
                                 var pval1 = panel_name.split("@");
-                                document.getElementById("sort_order["+row+"]").value = pval1[2];
+                                document.getElementById("sort_order").value = pval1[2];
                             }
                             else{
-                                document.getElementById("dup_flag["+row+"]").value = dup_flag;
+                                document.getElementById("dup_flag").value = dup_flag;
                                 row = row + 1;
-                                alert("Already panel allocated for the selected user in row: "+row);
+                                alert("Already panel allocated for the selected user");
                             }
                         }
                     }
