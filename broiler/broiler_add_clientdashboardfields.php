@@ -55,54 +55,37 @@ if($link_active_flag > 0){
                         <div class="card-body">
                             <div class="col-md-12">
                                 <form action="broiler_save_clientdashboardfields.php" method="post" role="form" onsubmit="return checkval()">
-                                    <div class="row">&nbsp;
-                                        <div class="col-md-4"></div>
-                                        <div style="display:flex; justify-content: center;" class="col-md-4">
-                                            <div class="form-group" style="width:290px;">
-                                                <label>User<b style="color:red;">&nbsp;*</b></label>
-                                                <select name="user_code[]" id="user_code[0]" class="form-control select2" style="width:180px;" onchange="check_duplication(this.id);">
-                                                    <option value="select">select</option>
-                                                    <?php
-                                                    foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>"><?php echo $emp_uname[$fn]; ?></option> <?php } ?>
-                                                </select>
-                                            </div>&ensp;
-                                        </div>
-                                        <div class="col-md-4"></div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-1"></div>
-                                        <div class="col-md-9">
-                                            <div class="row">&nbsp;
-                                                <div class="form-group" style="width:190px;">
-                                                    <!-- <label>User<b style="color:red;">&nbsp;*</b></label>
-                                                    <select name="user_code[]" id="user_code[0]" class="form-control select2" style="width:180px;" onchange="check_duplication(this.id);">
-                                                        <option value="select">select</option>
-                                                        <?php
-                                                        foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>"><?php echo $emp_uname[$fn]; ?></option> <?php } ?>
-                                                    </select> -->
-                                                </div>&ensp;
-                                                <div class="form-group" style="width:290px;">
-                                                    <label>Panel<b style="color:red;">&nbsp;*</b></label>
-                                                    <select name="panel_name[]" id="panel_name[0]" class="form-control select2" style="width:280px;" onchange="check_duplication(this.id);">
-                                                        <option value="select">select</option>
-                                                        <?php
-                                                        foreach($panel_name as $fn){ ?><option value="<?php echo $panel_code[$fn]; ?>"><?php echo $fn; ?></option> <?php } ?>
-                                                    </select>
-                                                </div>&ensp;
-                                                <div class="form-group" style="width:90px;">
-                                                    <label>Sort Order<b style="color:red;">&nbsp;*</b></label>
-                                                    <input type="text" style="width:80px;" class="form-control" name="sort_order[]" id="sort_order[0]" />
-                                                </div>&ensp;
-                                                <div class="form-group" id="action[0]"><br/>
-                                                    <a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)" class="form-control" style="padding-top:15px;width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a>
-                                                </div>
-                                                <div class="form-group" style="width:10px;visibility:hidden;">
-                                                    <label>dflag<b style="color:red;">&nbsp;*</b></label>
-                                                    <input type="text" style="width:9px;" class="form-control" name="dup_flag[]" id="dup_flag[0]" />
-                                                </div>&ensp;
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2"></div>
+                                    <div class="row justify-content-center align-items-center">
+                                        <table align="center">
+                                            <thead>
+                                                <tr>
+                                                    <th>
+                                                        <div class="form-group">
+                                                            <label>User<b style="color:red;">&nbsp;*</b></label>
+                                                            <select name="user_code" id="user_code" class="form-control select2" style="width:180px;" onchange="check_duplication_2();">
+                                                                <option value="select">select</option>
+                                                                <?php
+                                                                foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>"><?php echo $emp_uname[$fn]; ?></option> <?php } ?>
+                                                            </select>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                                <tr>
+                                                    <th>Panel<b style="color:red;">&nbsp;*</b></th>
+                                                    <th>Sort Order<b style="color:red;">&nbsp;*</b></th>
+                                                    <th style="visibility:hidden;">Action</th>
+                                                    <th style="visibility:hidden;">DF</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbody">
+                                                <tr>
+                                                    <td><select name="panel_name[]" id="panel_name[0]" class="form-control select2" style="width:280px;" onchange="check_duplication(this.id);"> <option value="select">select</option> <?php foreach($panel_name as $fn){ ?><option value="<?php echo $panel_code[$fn]; ?>"><?php echo $fn; ?></option> <?php } ?></select></td>
+                                                    <td><input type="text" style="width:80px;" class="form-control" name="sort_order[]" id="sort_order[0]" /></td>
+                                                    <td id="action[0]" style="width:80px;"><a href="javascript:void(0);" id="addrow[0]" onClick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
+                                                    <td style="visibility:hidden;"><input type="text" name="dup_flag[0]" id="dup_flag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                     <div class="col-md-12" id="row_body"></div><br/><br/>
                                     <div class="row">
@@ -136,21 +119,23 @@ if($link_active_flag > 0){
             function checkval(){
 				document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
                 var incrs = document.getElementById("incr").value;
-                var user_code = panel_name = dup_flag = "";
+                var user_code = document.getElementById("user_code").value;
+
+                if(user_code.match("select")){
+                    alert("Select Username ");
+                    document.getElementById("user_code").focus();
+                    l = false;
+                }
+                var panel_name = dup_flag = "";
                 var l = true; var c = 0;
                 for(var d = 0;d <= incrs;d++){
                     c = d + 1;
                     if(l == true){
                         dup_flag = document.getElementById("dup_flag["+d+"]").value;
-                        user_code = document.getElementById("user_code["+d+"]").value;
+                        // user_code = document.getElementById("user_code["+d+"]").value;
                         panel_name = document.getElementById("panel_name["+d+"]").value;
                         if(dup_flag == 1 || dup_flag == "1"){
                             alert("Already panel allocated for the selected user in row: "+c);
-                            document.getElementById("user_code["+d+"]").focus();
-                            l = false;
-                        }
-                        else if(user_code.match("select")){
-                            alert("Select Username in row: "+c);
                             document.getElementById("user_code["+d+"]").focus();
                             l = false;
                         }
@@ -176,18 +161,13 @@ if($link_active_flag > 0){
                 document.getElementById("action["+d+"]").style.visibility = "hidden";
                 d++; var html = '';
                 document.getElementById("incr").value = d;
-                html += '<div class="row" id="row_no['+d+']">';
-                html += '<div class="col-md-1"></div>';
-                html += '<div class="col-md-9"><div class="row">';
-               // html += '<div class="form-group" style="width:190px;"><label class="labelrow" style="display:none;">User<b style="color:red;">&nbsp;*</b></label><select name="user_code[]" id="user_code['+d+']" class="form-control select2" style="width:180px;" onchange="check_duplication(this.id);"><option value="select">select</option><?php foreach($emp_ucode as $fn){ ?><option value="<?php echo $fn; ?>"><?php echo $emp_uname[$fn]; ?></option> <?php } ?></select></div>&ensp;';
-                html += '<div class="form-group" style="width:290px;"><label class="labelrow" style="display:none;">Panel<b style="color:red;">&nbsp;*</b></label><select name="panel_name[]" id="panel_name['+d+']" class="form-control select2" style="width:280px;" onchange="check_duplication(this.id);"><option value="select">select</option><?php foreach($panel_name as $fn){ ?><option value="<?php echo $panel_code[$fn]; ?>"><?php echo $fn; ?></option> <?php } ?></select></div>&ensp;';
-                html += '<div class="form-group" style="width:90px;"><label class="labelrow" style="display:none;">Sort Order<b style="color:red;">&nbsp;*</b></label><input type="text" style="width:80px;" class="form-control" name="sort_order[]" id="sort_order['+d+']" /></div>&ensp;';
-                html += '<div class="form-group" id="action['+d+']" style="padding-top: 5px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></div>';
-                html += '<div class="form-group" style="width:10px;visibility:hidden;"><label class="labelrow" style="display:none;">dflag<b style="color:red;">&nbsp;*</b></label><input type="text" style="width:9px;" class="form-control" name="dup_flag[]" id="dup_flag['+d+']" /></div>&ensp;';
-                html += '</div></div>';
-                html += '<div class="col-md-2"></div>';
-                html += '</div>';
-                $('#row_body').append(html);
+                html += '<tr id="row_no['+d+']">';
+                html += '<td><select name="panel_name[]" id="panel_name['+d+']" class="form-control select2" style="width:280px;" onchange="check_duplication(this.id);"> <option value="select">select</option> <?php foreach($panel_name as $fn){ ?><option value="<?php echo $panel_code[$fn]; ?>"><?php echo $fn; ?></option> <?php } ?></select></td>';
+                html += '<td><input type="text" style="width:80px;" class="form-control" name="sort_order[]" id="sort_order['+d+']" /></td>';
+                html += '<td id="action['+d+']" style="padding-top: 5px;width:80px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
+                html += '<td style="visibility:hidden;"><input type="text" name="dup_flag['+d+']" id="dup_flag['+d+']" class="form-control text-right" value="0" style="width:20px;" /></td>';
+                html += '</tr>';
+                $('#tbody').append(html);
                 $('.select2').select2();
             }
             function destroy_row(a){
@@ -199,12 +179,13 @@ if($link_active_flag > 0){
             }
             function check_duplication(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
-                var user_code = document.getElementById("user_code["+d+"]").value;
+                 var user_code = document.getElementById("user_code").value;
                 var panel_name = document.getElementById("panel_name["+d+"]").value;
 
                 if(user_code != "select" && panel_name != "select"){
                     var inv_items = new XMLHttpRequest();
                     var method = "GET";
+                   // var url = "broiler_check_dashboardaccess_duplication.php?panel_name="+panel_name+"&row_count="+d;
                     var url = "broiler_check_dashboardaccess_duplication.php?user_code="+user_code+"&panel_name="+panel_name+"&row_count="+d;
                     //window.open(url);
                     var asynchronous = true;
@@ -230,6 +211,38 @@ if($link_active_flag > 0){
                     }
                 }
             }
+            function check_duplication_2() {
+                // Fetch the user_code directly (single value)
+                var user_code = document.getElementById("user_code").value;  // Use single value for user_code
+
+                // Ensure user_code is valid
+                if (user_code != "select" && user_code != "") {
+                    var inv_items = new XMLHttpRequest();
+                    var method = "GET";
+                    var url = "broiler_check_dashboardaccess_duplication.php?user_code=" + user_code;
+                    var asynchronous = true;
+                    
+                    inv_items.open(method, url, asynchronous);
+                    inv_items.send();
+
+                    inv_items.onreadystatechange = function () {
+                        if (this.readyState == 4 && this.status == 200) {
+                            var dval = this.responseText;
+                            var dval2 = dval.split("@");
+                            var dup_flag = dval2[0];
+
+                            if (dup_flag == 0 || dup_flag == "0") {
+                                // alert("No duplication for the selected user.");
+                            } else {
+                                alert("Duplicate found for the selected user.");
+                            }
+                        }
+                    }
+                } else {
+                    alert("Please select a valid user code.");
+                }
+            }
+
             function validatename(x) {
                 expr = /^[a-zA-Z0-9 (.&)_-]*$/;
                 var a = document.getElementById(x).value;

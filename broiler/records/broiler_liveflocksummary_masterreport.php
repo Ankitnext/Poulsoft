@@ -114,7 +114,7 @@ $sql = "SELECT * FROM `location_region` WHERE `active` = '1' ORDER BY `descripti
 while($row = mysqli_fetch_assoc($query)){ $region_code[$row['code']] = $row['code']; $region_name[$row['code']] = $row['description']; }
 
 $sql = "SELECT * FROM `location_branch` WHERE `active` = '1'".$branch_access_filter1." AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($query)){ $branch_code[$row['code']] = $row['code']; $branch_name[$row['code']] = $row['description']; }
+while($row = mysqli_fetch_assoc($query)){ $branch_code[$row['code']] = $row['code']; $branch_name[$row['code']] = $row['description']; $branch_region[$row['code']] = $row['region_code']; }
 
 $sql = "SELECT * FROM `location_line` WHERE `active` = '1'".$line_access_filter1."".$branch_access_filter2." AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $line_code[$row['code']] = $row['code']; $line_name[$row['code']] = $row['description']; $line_branch[$row['code']] = $row['branch_code']; }
@@ -191,6 +191,7 @@ if(isset($_REQUEST['submit_report']) == true){
     $branches = $_REQUEST['branches'];
     $lines = $_REQUEST['lines'];
     $farms = $_REQUEST['farms'];
+    $regions = $_POST['regions'];
     $supervisors = $_REQUEST['supervisors'];
     $abirds = $_REQUEST['abirds'];
     if($_SERVER['REMOTE_ADDR'] == "49.205.135.183"){
@@ -204,7 +205,32 @@ if(isset($_REQUEST['submit_report']) == true){
     $mort_above = $_REQUEST['mort_above'];
     if($day_entryfeed_flag == 1){ $manual_nxtfeed = $_REQUEST['manual_nxtfeed']; }
 
-    $farm_list = "";
+
+
+
+    $farm_query = "";
+    if($regions != "all"){
+        $rbrh_alist = array(); foreach($branch_code as $bcode){ $rcode = $branch_region[$bcode]; if($rcode == $regions){ $rbrh_alist[$bcode] = $bcode; } }
+        $rbrh_list = implode("','",$rbrh_alist);
+        $farm_query .= " AND `branch_code` IN ('$rbrh_list')";
+    }
+
+    if($regions != "all"){ $farm_query .= " AND `region_code` LIKE '$regions'"; }
+    if($branches != "all"){ $farm_query .= " AND `branch_code` LIKE '$branches'"; }
+    if($lines != "all"){ $farm_query .= " AND `line_code` LIKE '$lines'"; }
+    if($supervisors != "all"){ $farm_query .= " AND `supervisor_code` LIKE '$supervisors'"; }
+    if($farms != "all"){ $farm_query .= " AND `code` LIKE '$farms'"; }
+
+    $farm_list = ""; $farm_list = implode("','", $farm_code);
+
+    
+    $sql = "SELECT * FROM `broiler_farm` WHERE `active` = '1' ".$farm_query." AND `dflag` = '0' ORDER BY `description` ASC";
+
+    $query = mysqli_query($conn,$sql); $farm_alist = array();
+    while($row = mysqli_fetch_assoc($query)){ $farm_alist[$row['code']] = $row['code']; }
+    
+    
+    $farm_list = implode("','",$farm_alist);
     if($farms != "all"){
         $farm_query = " AND a.farm_code = '$farms'";
         $farm_query2 = " AND farm_code = '$farms'";
@@ -216,7 +242,7 @@ if(isset($_REQUEST['submit_report']) == true){
                     $farm_list = $fcode;
                 }
                 else{
-                    $farm_list = $farm_list."','".$fcode;
+                    $farm_list = $farm_list;
                 }
             }
         }
@@ -230,7 +256,7 @@ if(isset($_REQUEST['submit_report']) == true){
                     $farm_list = $fcode;
                 }
                 else{
-                    $farm_list = $farm_list."','".$fcode;
+                    $farm_list = $farm_list;
                 }
             }
         }
@@ -244,7 +270,7 @@ if(isset($_REQUEST['submit_report']) == true){
                     $farm_list = $fcode;
                 }
                 else{
-                    $farm_list = $farm_list."','".$fcode;
+                    $farm_list = $farm_list;
                 }
             }
         }
@@ -257,7 +283,7 @@ if(isset($_REQUEST['submit_report']) == true){
                 $farm_list = $fcode;
             }
             else{
-                $farm_list = $farm_list."','".$fcode;
+                $farm_list = $farm_list;
             }
         }
         $farm_query = " AND a.farm_code IN ('$farm_list')";
@@ -286,6 +312,15 @@ if(isset($_REQUEST['submit_report']) == true){
                     <tr>
                         <th colspan="<?php echo $tblcol_size; ?>">
                             <div class="row">
+                                <div class="m-2 form-group">
+                                    <label>Region</label>
+                                    <select name="regions" id="regions" class="form-control select2" onChange="fetch_farms_details(this.id)">
+                                        <option value="all" <?php if($regions == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($region_code as $rcode){ if(!empty($region_name[$rcode])){ ?>
+                                        <option value="<?php echo $rcode; ?>" <?php if($regions == $rcode){ echo "selected"; } ?>><?php echo $region_name[$rcode]; ?></option>
+                                        <?php } } ?>
+                                    </select>
+                                </div>
                                 <div class="m-2 form-group">
                                     <label>Branch</label>
                                     <select name="branches" id="branches" class="form-control select2" onChange="fetch_farms_details(this.id)">
@@ -322,6 +357,7 @@ if(isset($_REQUEST['submit_report']) == true){
                                         <?php } } ?>
                                     </select>
                                 </div>
+                                
                               <div class="m-2 form-group">
                                     <label>Available Birds</label>
                                     <input type="text" name="abirds" id="abirds" class="form-control" value="<?php echo $abirds; ?>" style="width:90px;" />
@@ -693,7 +729,7 @@ if(isset($_REQUEST['submit_report']) == true){
                 }
 
                 //Purchases
-                $sql_record = "SELECT SUM(rcd_qty) as rcd_qty,SUM(fre_qty) as fre_qty,SUM(item_tamt) as item_tamt,MIN(date) as sdate,MAX(date) as edate,icode,farm_batch,vcode FROM `broiler_purchases` WHERE `farm_batch` IN ('$batch2') AND `active` = '1' AND `dflag` = '0' GROUP BY `farm_batch`,`icode` ORDER BY `date`,`trnum` ASC";
+                $sql_record = "SELECT SUM(rcd_qty) as rcd_qty,SUM(fre_qty) as fre_qty,SUM(item_tamt) as item_tamt,MIN(date) as sdate,MAX(date) as edate,icode,farm_batch,warehouse,vcode FROM `broiler_purchases` WHERE `farm_batch` IN ('$batch2') AND `active` = '1' AND `dflag` = '0' GROUP BY `farm_batch`,`icode` ORDER BY `date`,`trnum` ASC";
                 $query = mysqli_query($conn,$sql_record); $cin_sup_code = array();
                 while($row = mysqli_fetch_assoc($query)){
                     $key_code = $row['farm_batch']."@".$row['icode'];
@@ -707,6 +743,8 @@ if(isset($_REQUEST['submit_report']) == true){
                     else if(!empty($feed_code[$row['icode']])){
                         $pur_feed_qty[$key_code] = $row['rcd_qty'] + $row['fre_qty'];
                         $pur_feed_amt[$key_code] = $row['item_tamt'];
+
+                        //echo "<br/>".$row['warehouse']."@".$row['farm_batch']."@".$row['icode']."@".$row['rcd_qty']."@".$row['fre_qty'];
                     }
                     else if(!empty($medvac_code[$row['icode']])){
                         $pur_medvac_qty[$key_code] = $row['rcd_qty'] + $row['fre_qty'];
@@ -1237,7 +1275,9 @@ if(isset($_REQUEST['submit_report']) == true){
                             $display_feeds_in_farm = $farm_transferin_feeds;
                             $display_feeds_consumed = $consumed_feeds;
                             $display_feeds_out_farm = $farm_transferout_feeds;
+                           
                             $display_feeds_balance = (($display_feeds_transferred + $display_feeds_in_farm) - ($display_feeds_consumed + $display_feeds_out_farm + $sales_feeds + $sector_transferout_feeds));
+                            //echo "<br/>$display_feeds_balance = (($display_feeds_transferred + $display_feeds_in_farm) - ($display_feeds_consumed + $display_feeds_out_farm + $sales_feeds + $sector_transferout_feeds));";
                             
                             $latest_consumed_qty = $dentry_con[$batches];
 
@@ -1526,447 +1566,122 @@ if(isset($_REQUEST['submit_report']) == true){
         <script src="../datepicker/jquery/jquery.js"></script>
         <script src="../datepicker/jquery-ui.js"></script>
         
-        <script>
+          <script>
             function fetch_farms_details(a){
+                var regions = document.getElementById("regions").value;
                 var branches = document.getElementById("branches").value;
                 var lines = document.getElementById("lines").value;
                 var supervisors = document.getElementById("supervisors").value;
-
-                if(a.match("branches")){
-                    if(!branches.match("all")){
-                        //Update Line Details
-                        removeAllOptions(document.getElementById("lines"));
-                        myselect1 = document.getElementById("lines");
-                        theOption1=document.createElement("OPTION");
-                        theText1=document.createTextNode("-All-");
-                        theOption1.value = "all"; 
-                        theOption1.appendChild(theText1); 
-                        myselect1.appendChild(theOption1);
-                        <?php
-                            foreach($line_code as $fcode){
-                                $b_code = $line_branch[$fcode];
-                                echo "if(branches == '$b_code'){";
-                        ?>
-                            theOption1=document.createElement("OPTION");
-                            theText1=document.createTextNode("<?php echo $line_name[$fcode]; ?>");
-                            theOption1.value = "<?php echo $line_code[$fcode]; ?>";
-                            theOption1.appendChild(theText1); myselect1.appendChild(theOption1);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                        //Update Supervisor Details
-                        removeAllOptions(document.getElementById("supervisors"));
-                        myselect2 = document.getElementById("supervisors");
-                        theOption2=document.createElement("OPTION");
-                        theText2=document.createTextNode("-All-");
-                        theOption2.value = "all"; 
-                        theOption2.appendChild(theText2); 
-                        myselect2.appendChild(theOption2);
-                        <?php
-                            foreach($supervisor_code as $fcode){
-                                if(!empty($farm_svr[$fcode])){ $f_code = $farm_svr[$fcode]; } else{ $f_code = ""; }
-                                if(!empty($farm_branch[$fcode])){ $b_code = $farm_branch[$fcode]; } else{ $b_code = ""; }
-                                
-                                echo "if(branches == '$b_code' && '$f_code' != ''){";
-                        ?>
-                            theOption2=document.createElement("OPTION");
-                            theText2=document.createTextNode("<?php echo $supervisor_name[$fcode]; ?>");
-                            theOption2.value = "<?php echo $fcode; ?>";
-                            theOption2.appendChild(theText2); myselect2.appendChild(theOption2);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                        //Update Farm Details
-                        removeAllOptions(document.getElementById("farms"));
-                        myselect3 = document.getElementById("farms");
-                        theOption3=document.createElement("OPTION");
-                        theText3=document.createTextNode("-All-");
-                        theOption3.value = "all"; 
-                        theOption3.appendChild(theText3); 
-                        myselect3.appendChild(theOption3);
-                        <?php
-                            foreach($farm_code as $fcode){
-                                $b_code = $farm_branch[$fcode];
-                                echo "if(branches == '$b_code'){";
-                        ?>
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                            theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                            theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                    }
-                    else{
-                        //Update Line Details
-                        removeAllOptions(document.getElementById("lines"));
-                        myselect1 = document.getElementById("lines");
-                        theOption1=document.createElement("OPTION");
-                        theText1=document.createTextNode("-All-");
-                        theOption1.value = "all"; 
-                        theOption1.appendChild(theText1); 
-                        myselect1.appendChild(theOption1);
-                        <?php
-                            foreach($line_code as $fcode){
-                        ?>
-                            theOption1=document.createElement("OPTION");
-                            theText1=document.createTextNode("<?php echo $line_name[$fcode]; ?>");
-                            theOption1.value = "<?php echo $line_code[$fcode]; ?>";
-                            theOption1.appendChild(theText1); myselect1.appendChild(theOption1);
-                        <?php
-                            }
-                        ?>
-                        //Update Supervisor Details
-                        removeAllOptions(document.getElementById("supervisors"));
-                        myselect2 = document.getElementById("supervisors");
-                        theOption2=document.createElement("OPTION");
-                        theText2=document.createTextNode("-All-");
-                        theOption2.value = "all"; 
-                        theOption2.appendChild(theText2); 
-                        myselect2.appendChild(theOption2);
-                        <?php
-                            foreach($supervisor_code as $fcode){
-                                if(!empty($farm_svr[$fcode])){ $f_code = $farm_svr[$fcode]; } else{ $f_code = ""; }
-                                echo "if('$f_code' != ''){";
-                        ?>
-                            theOption2=document.createElement("OPTION");
-                            theText2=document.createTextNode("<?php echo $supervisor_name[$fcode]; ?>");
-                            theOption2.value = "<?php echo $supervisor_code[$fcode]; ?>";
-                            theOption2.appendChild(theText2); myselect2.appendChild(theOption2);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                        //Update Farm Details
-                        removeAllOptions(document.getElementById("farms"));
-                        myselect3 = document.getElementById("farms");
-                        theOption3=document.createElement("OPTION");
-                        theText3=document.createTextNode("-All-");
-                        theOption3.value = "all"; 
-                        theOption3.appendChild(theText3); 
-                        myselect3.appendChild(theOption3);
-                        <?php
-                            foreach($farm_code as $fcode){
-                        ?>
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                            theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                            theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                        <?php
-                            }
-                        ?>
-                    }
-                }
-                else if(a.match("lines")){
-                    if(!lines.match("all")){
-                        //Update Supervisor Details
-                        removeAllOptions(document.getElementById("supervisors"));
-                        myselect2 = document.getElementById("supervisors");
-                        theOption2=document.createElement("OPTION");
-                        theText2=document.createTextNode("-All-");
-                        theOption2.value = "all"; 
-                        theOption2.appendChild(theText2); 
-                        myselect2.appendChild(theOption2);
-                        <?php
-                            foreach($supervisor_code as $fcode){
-                                if(!empty($farm_svr[$fcode])){ $f_code = $farm_svr[$fcode]; } else{ $f_code = ""; }
-                                if(!empty($farm_line[$fcode])){ $l_code = $farm_line[$fcode]; } else{ $l_code = ""; }
-                                
-                                echo "if(lines == '$l_code' && '$f_code' != ''){";
-                        ?>
-                            theOption2=document.createElement("OPTION");
-                            theText2=document.createTextNode("<?php echo $supervisor_name[$fcode]; ?>");
-                            theOption2.value = "<?php echo $supervisor_code[$fcode]; ?>";
-                            theOption2.appendChild(theText2); myselect2.appendChild(theOption2);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                        //Update Farm Details
-                        removeAllOptions(document.getElementById("farms"));
-                        myselect3 = document.getElementById("farms");
-                        theOption3=document.createElement("OPTION");
-                        theText3=document.createTextNode("-All-");
-                        theOption3.value = "all"; 
-                        theOption3.appendChild(theText3); 
-                        myselect3.appendChild(theOption3);
-                        <?php
-                            foreach($farm_code as $fcode){
-                                $l_code = $farm_line[$fcode];
-                                echo "if(lines == '$l_code'){";
-                        ?>
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                            theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                            theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                    }
-                    else if(!branches.match("all")){
-                        //Update Supervisor Details
-                        removeAllOptions(document.getElementById("supervisors"));
-                        myselect2 = document.getElementById("supervisors");
-                        theOption2=document.createElement("OPTION");
-                        theText2=document.createTextNode("-All-");
-                        theOption2.value = "all"; 
-                        theOption2.appendChild(theText2); 
-                        myselect2.appendChild(theOption2);
-                        <?php
-                            foreach($supervisor_code as $fcode){
-                                if(!empty($farm_svr[$fcode])){ $f_code = $farm_svr[$fcode]; } else{ $f_code = ""; }
-                                if(!empty($farm_branch[$fcode])){ $b_code = $farm_branch[$fcode]; } else{ $b_code = ""; }
-                                
-                                echo "if(branches == '$b_code' && '$f_code' != ''){";
-                        ?>
-                            theOption2=document.createElement("OPTION");
-                            theText2=document.createTextNode("<?php echo $supervisor_name[$fcode]; ?>");
-                            theOption2.value = "<?php echo $supervisor_code[$fcode]; ?>";
-                            theOption2.appendChild(theText2); myselect2.appendChild(theOption2);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                        //Update Farm Details
-                        removeAllOptions(document.getElementById("farms"));
-                        myselect3 = document.getElementById("farms");
-                        theOption3=document.createElement("OPTION");
-                        theText3=document.createTextNode("-All-");
-                        theOption3.value = "all"; 
-                        theOption3.appendChild(theText3); 
-                        myselect3.appendChild(theOption3);
-                        <?php
-                            foreach($farm_code as $fcode){
-                                $b_code = $farm_branch[$fcode];
-                                echo "if(branches == '$b_code'){";
-                        ?>
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                            theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                            theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                    }
-                    else{
-                        //Update Supervisor Details
-                        removeAllOptions(document.getElementById("supervisors"));
-                        myselect2 = document.getElementById("supervisors");
-                        theOption2=document.createElement("OPTION");
-                        theText2=document.createTextNode("-All-");
-                        theOption2.value = "all"; 
-                        theOption2.appendChild(theText2); 
-                        myselect2.appendChild(theOption2);
-                        <?php
-                            foreach($supervisor_code as $fcode){
-                                if(!empty($farm_svr[$fcode])){
-                                    $f_code = $farm_svr[$fcode];
-                                }
-                                else{
-                                    $f_code = "";
-                                }
-                                echo "if('$f_code' != ''){";
-                        ?>
-                            theOption2=document.createElement("OPTION");
-                            theText2=document.createTextNode("<?php echo $supervisor_name[$fcode]; ?>");
-                            theOption2.value = "<?php echo $supervisor_code[$fcode]; ?>";
-                            theOption2.appendChild(theText2); myselect2.appendChild(theOption2);
-                        <?php
-                            echo "}";
-                            }
-                        ?>
-                        //Update Farm Details
-                        removeAllOptions(document.getElementById("farms"));
-                        myselect3 = document.getElementById("farms");
-                        theOption3=document.createElement("OPTION");
-                        theText3=document.createTextNode("-All-");
-                        theOption3.value = "all"; 
-                        theOption3.appendChild(theText3); 
-                        myselect3.appendChild(theOption3);
-                        <?php
-                            foreach($farm_code as $fcode){
-                        ?>
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                            theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                            theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                        <?php
-                            }
-                        ?>
-                    }
-                }
-                else if(a.match("supervisors")){
-                    if(!supervisors.match("all")){
-                        if(!lines.match("all")){
-                            //Update Farm Details
-                            removeAllOptions(document.getElementById("farms"));
-                            myselect3 = document.getElementById("farms");
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("-All-");
-                            theOption3.value = "all"; 
-                            theOption3.appendChild(theText3); 
-                            myselect3.appendChild(theOption3);
-                            <?php
-                                foreach($farm_code as $fcode){
-                                    $l_code = $farm_line[$fcode]; $s_code = $farm_supervisor[$fcode];
-                                    echo "if(lines == '$l_code' && supervisors == '$s_code'){";
-                            ?>
-                                theOption3=document.createElement("OPTION");
-                                theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                                theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                                theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                            <?php
-                                echo "}";
-                                }
-                            ?>
-                        }
-                        else if(!branches.match("all")){
-                            //Update Farm Details
-                            removeAllOptions(document.getElementById("farms"));
-                            myselect3 = document.getElementById("farms");
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("-All-");
-                            theOption3.value = "all"; 
-                            theOption3.appendChild(theText3); 
-                            myselect3.appendChild(theOption3);
-                            <?php
-                                foreach($farm_code as $fcode){
-                                    $b_code = $farm_branch[$fcode]; $s_code = $farm_supervisor[$fcode];
-                                    echo "if(branches == '$b_code' && supervisors == '$s_code'){";
-                            ?>
-                                theOption3=document.createElement("OPTION");
-                                theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                                theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                                theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                            <?php
-                                echo "}";
-                                }
-                            ?>
-                        }
-                        else{
-                            //Update Farm Details
-                            removeAllOptions(document.getElementById("farms"));
-                            myselect3 = document.getElementById("farms");
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("-All-");
-                            theOption3.value = "all"; 
-                            theOption3.appendChild(theText3); 
-                            myselect3.appendChild(theOption3);
-                            <?php
-                                foreach($farm_code as $fcode){
-                                    $s_code = $farm_supervisor[$fcode];
-                                    echo "if(supervisors == '$s_code'){";
-                            ?>
-                                theOption3=document.createElement("OPTION");
-                                theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                                theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                                theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                            <?php
-                                echo "}";
-                                }
-                            ?>
-                        }
-                    }
-                    else{
-                        if(!lines.match("all")){
-                            //Update Farm Details
-                            removeAllOptions(document.getElementById("farms"));
-                            myselect3 = document.getElementById("farms");
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("-All-");
-                            theOption3.value = "all"; 
-                            theOption3.appendChild(theText3); 
-                            myselect3.appendChild(theOption3);
-                            <?php
-                                foreach($farm_code as $fcode){
-                                    $l_code = $farm_line[$fcode];
-                                    echo "if(lines == '$l_code'){";
-                            ?>
-                                theOption3=document.createElement("OPTION");
-                                theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                                theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                                theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                            <?php
-                                echo "}";
-                                }
-                            ?>
-                        }
-                        else if(!branches.match("all")){
-                            //Update Farm Details
-                            removeAllOptions(document.getElementById("farms"));
-                            myselect3 = document.getElementById("farms");
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("-All-");
-                            theOption3.value = "all"; 
-                            theOption3.appendChild(theText3); 
-                            myselect3.appendChild(theOption3);
-                            <?php
-                                foreach($farm_code as $fcode){
-                                    $b_code = $farm_branch[$fcode];
-                                    echo "if(branches == '$b_code'){";
-                            ?>
-                                theOption3=document.createElement("OPTION");
-                                theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                                theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                                theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                            <?php
-                                echo "}";
-                                }
-                            ?>
-                        }
-                        else{
-                            //Update Farm Details
-                            removeAllOptions(document.getElementById("farms"));
-                            myselect3 = document.getElementById("farms");
-                            theOption3=document.createElement("OPTION");
-                            theText3=document.createTextNode("-All-");
-                            theOption3.value = "all"; 
-                            theOption3.appendChild(theText3); 
-                            myselect3.appendChild(theOption3);
-                            <?php
-                                foreach($farm_code as $fcode){
-                            ?>
-                                theOption3=document.createElement("OPTION");
-                                theText3=document.createTextNode("<?php echo $farm_name[$fcode]; ?>");
-                                theOption3.value = "<?php echo $farm_code[$fcode]; ?>";
-                                theOption3.appendChild(theText3); myselect3.appendChild(theOption3);
-                            <?php
-                                }
-                            ?>
-                        }
-                    }
-                }
-                else{ }
-            }
-            function update_masterreport_status(a){
-                var file_url = '<?php echo $field_href[0]; ?>';
                 var user_code = '<?php echo $user_code; ?>';
-                var field_name = a;
-                var modify_col = new XMLHttpRequest();
+                var rf_flag = bf_flag = lf_flag = sf_flag = ff_flag = 0;
+                if(a.match("regions")){ rf_flag = 1; } else if(a.match("branches")){ bf_flag = 1; } else if(a.match("lines")){ lf_flag = 1; } else if(a.match("supervisors")){ sf_flag = 1; } else{ ff_flag = 1; }
+                    
+                var fetch_fltrs = new XMLHttpRequest();
                 var method = "GET";
-                var url = "broiler_modify_clientfieldstatus.php?file_url="+file_url+"&user_code="+user_code+"&field_name="+field_name;
+                var url = "broiler_fetch_farm_filter_master.php?regions="+regions+"&branches="+branches+"&lines="+lines+"&supervisors="+supervisors+"&rf_flag="+rf_flag+"&bf_flag="+bf_flag+"&lf_flag="+lf_flag+"&sf_flag="+sf_flag+"&ff_flag="+ff_flag+"&user_code="+user_code;
                 //window.open(url);
                 var asynchronous = true;
-                modify_col.open(method, url, asynchronous);
-                modify_col.send();
-                modify_col.onreadystatechange = function(){
+                fetch_fltrs.open(method, url, asynchronous);
+                fetch_fltrs.send();
+                fetch_fltrs.onreadystatechange = function(){
                     if(this.readyState == 4 && this.status == 200){
-                        var item_list = this.responseText;
-                        if(item_list == 0){
-                            //alert("Column Modified Successfully ...! \n Kindly reload the page to see the changes.")
+                        var fltr_dt1 = this.responseText;
+                        var fltr_dt2 = fltr_dt1.split("[@$&]");
+                        var brnh_list = fltr_dt2[3];
+                        var line_list = fltr_dt2[0];
+                        var supr_list = fltr_dt2[1];
+                        var farm_list = fltr_dt2[2];
+
+                        if(rf_flag == 1){
+                            removeAllOptions(document.getElementById("branches"));
+                            removeAllOptions(document.getElementById("lines"));
+                            removeAllOptions(document.getElementById("supervisors"));
+                            removeAllOptions(document.getElementById("farms"));
+                            $('#branches').append(brnh_list);
+                            $('#lines').append(line_list);
+                            $('#supervisors').append(supr_list);
+                            $('#farms').append(farm_list);
                         }
-                        else{
-                            alert("Invalid request \n Kindly check and try again ...!");
+                        else if(bf_flag == 1){
+                            removeAllOptions(document.getElementById("lines"));
+                            removeAllOptions(document.getElementById("supervisors"));
+                            removeAllOptions(document.getElementById("farms"));
+                            $('#lines').append(line_list);
+                            $('#supervisors').append(supr_list);
+                            $('#farms').append(farm_list);
                         }
+                        else if(lf_flag == 1){
+                            removeAllOptions(document.getElementById("supervisors"));
+                            removeAllOptions(document.getElementById("farms"));
+                            $('#supervisors').append(supr_list);
+                            $('#farms').append(farm_list);
+                        }
+                        else if(sf_flag == 1){
+                            removeAllOptions(document.getElementById("farms"));
+                            $('#farms').append(farm_list);
+                        }
+                        else{ }
                     }
                 }
             }
-            function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
+            var f_cnt = 0;
+            function set_auto_selectors(){
+                if(f_cnt == 0){
+                    var fx = "regions"; fetch_farms_details(fx); f_cnt = f_cnt + 1;
+                }
+                else if(f_cnt == 1){
+                    var br_val = brlist = "";
+                    $('#branches').select2();
+                    for(var option of document.getElementById("branches").options){
+                        option.selected = false;
+                        br_val = option.value;
+                        brlist = ''; brlist = '<?php echo $branches; ?>';
+                        if(br_val == brlist){ option.selected = true; }
+                    }
+                    $('#branches').select2();
+                    var fx = "branches"; fetch_farms_details(fx); f_cnt = f_cnt + 1;
+                }
+                else if(f_cnt == 2){
+                    var l_val = llist = "";
+                    $('#lines').select2();
+                    for(var option of document.getElementById("lines").options){
+                        option.selected = false;
+                        l_val = option.value;
+                        llist = ''; llist = '<?php echo $lines; ?>';
+                        if(l_val == llist){ option.selected = true; }
+                    }
+                    $('#lines').select2();
+                    var fx = "lines"; fetch_farms_details(fx); f_cnt = f_cnt + 1;
+                }
+                else if(f_cnt == 3){
+                    var s_val = slist = "";
+                    $('#supervisors').select2();
+                    for(var option of document.getElementById("supervisors").options){
+                        option.selected = false;
+                        s_val = option.value;
+                        slist = ''; slist = '<?php echo $supervisors; ?>';
+                        if(s_val == slist){ option.selected = true; }
+                    }
+                    $('#supervisors').select2();
+                    var fx = "supervisors"; fetch_farms_details(fx); f_cnt = f_cnt + 1;
+                }
+                else if(f_cnt == 4){
+                    var f_val = flist = "";
+                    $('#farms').select2();
+                    for(var option of document.getElementById("farms").options){
+                        option.selected = false;
+                        f_val = option.value;
+                        flist = ''; flist = '<?php echo $farms; ?>';
+                        if(f_val == flist){ option.selected = true; }
+                    }
+                    $('#farms').select2();
+                    var fx = "farms"; fetch_farms_details(fx); f_cnt = f_cnt + 1;
+                }
+                else{ }
+                
+                if(f_cnt <= 4){ setTimeout(set_auto_selectors, 300); }
+            }
+            set_auto_selectors();
         </script>
         <script>
  function table_sort() {
@@ -2174,6 +1889,31 @@ if(isset($_REQUEST['submit_report']) == true){
                 });
             });
         </script>
+        <script>
+            function update_masterreport_status(a){
+                var file_url = '<?php echo $field_href[0]; ?>';
+                var user_code = '<?php echo $user_code; ?>';
+                var field_name = a;
+                var modify_col = new XMLHttpRequest();
+                var method = "GET";
+                var url = "broiler_modify_clientfieldstatus.php?file_url="+file_url+"&user_code="+user_code+"&field_name="+field_name;
+                //window.open(url);
+                var asynchronous = true;
+                modify_col.open(method, url, asynchronous);
+                modify_col.send();
+                modify_col.onreadystatechange = function(){
+                    if(this.readyState == 4 && this.status == 200){
+                        var item_list = this.responseText;
+                        if(item_list == 0){
+                            //alert("Column Modified Successfully ...! \n Kindly reload the page to see the changes.")
+                        }
+                        else{
+                            alert("Invalid request \n Kindly check and try again ...!");
+                        }
+                    }
+                }
+            }
+        </script>
         <script type="text/javascript">
             function tableToExcel(table, name, filename, chosen){
                 if(chosen === 'excel'){ 
@@ -2194,6 +1934,9 @@ if(isset($_REQUEST['submit_report']) == true){
                 }
                 else{ }
             }
+        </script>
+        <script>
+            function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
         </script>
     </body>
 </html>

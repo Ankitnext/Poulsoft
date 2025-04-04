@@ -59,6 +59,16 @@ if($link_active_flag > 0){
         $sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%bag%' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $bcodes = "";
         while($row = mysqli_fetch_assoc($query)){ if($bcodes == ""){ $bcodes = $row['code']; } else{ $bcodes = $bcodes."','".$row['code']; } }
         
+        $sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%BAG%' AND `dflag` = '0'";
+        $query = mysqli_query($conn,$sql); $icode_bag = array();
+        while($row = mysqli_fetch_assoc($query)){ $icode_bag[$row['code']] = $row['code']; }
+        $icat_list = implode("','",$icode_bag);
+
+        //Item Category
+        $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$icat_list') AND `dflag` = '0'";
+        $query = mysqli_query($conn,$sql); $bag_code = array();
+        while($row = mysqli_fetch_assoc($query)){ $bag_code[$row['code']] = $row['code']; }
+
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Feed Sale' AND `field_function` LIKE 'Stock Check'"; $query = mysqli_query($conn,$sql); $stockcheck_flag = 0; $sccount = mysqli_num_rows($query);
         if($sccount > 0){ while($row = mysqli_fetch_assoc($query)){ $stockcheck_flag = $row['flag']; } } else{ $stockcheck_flag = 0; } if($stockcheck_flag == "" || $stockcheck_flag == 0){ $stockcheck_flag = 0; }
 
@@ -467,11 +477,17 @@ if($link_active_flag > 0){
                 var qty = document.getElementById("rcd_qty["+d+"]").value;
                 var price = document.getElementById("rate["+d+"]").value;
                 var avg_price = document.getElementById("avg_price["+d+"]").value;
+                var item_cd = document.getElementById("icode["+d+"]").value;
+                var bg_code = "<?php echo $h; ?>"
                 if(qty == "" || qty.length == 0 || qty == "0.00" || qty == "0"){ qty = 0; }
                 if(price == "" || price.length == 0 || price == "0.00" || price == "0"){ price = 0; }
                 if(avg_price == "" || avg_price.length == 0 || avg_price == "0.00" || avg_price == "0"){ avg_price = 0; }
+                if(item_cd == bg_code) {
+                    
+                } else {
                 var total_amt = parseFloat(qty) * parseFloat(price);
                 var avg_amount = parseFloat(qty) * parseFloat(avg_price);
+                }
                 document.getElementById("item_tamt["+d+"]").value = total_amt.toFixed(2);
                 document.getElementById("avg_amount["+d+"]").value = avg_amount.toFixed(2);
                 calculate_final_total_amount();

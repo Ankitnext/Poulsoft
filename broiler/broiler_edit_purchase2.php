@@ -219,6 +219,9 @@ if($link_active_flag > 0){
             $vehicle_code[$pcount] = $row['vehicle_code'];
             $dcode[$pcount] = $row['driver_code'];
             $dmobile[$pcount] = $row['driver_mobile'];
+            $purdoc_path1 = $row['purdoc_path1'];
+            $purdoc_path2 = $row['purdoc_path2'];
+            $purdoc_path3 = $row['purdoc_path3'];
             $addedemp[$pcount] = $row['addedemp'];
             $addedtime[$pcount] = $row['addedtime'];
             $updatedemp[$pcount] = $row['updatedemp'];
@@ -236,7 +239,7 @@ if($link_active_flag > 0){
                         </div>
                         <div class="m-0 p-2 card-body">
                             <div class="col-md-18">
-                                <form action="broiler_modify_purchase2.php" method="post" role="form" onsubmit="return checkval()">
+                                <form action="broiler_modify_purchase2.php" method="post" role="form" enctype="multipart/form-data" onsubmit="return checkval()">
                                     <div class="row">
                                         <div class="form-group">
                                             <label>Date<b style="color:red;">&nbsp;*</b></label>
@@ -427,7 +430,7 @@ if($link_active_flag > 0){
                                                     <select name="freight_pay_acc" id="freight_pay_acc" class="form-control select2">
                                                         <option value="select">select</option>
                                                         <?php
-                                                        if($freight_pay_type == "PayLater"){
+                                                        if($freight_pay_type[0] == "PayLater"){
                                                             $sql = "SELECT * FROM `acc_coa` WHERE `transporter_flag` = '1' AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
                                                         }
                                                         else{
@@ -556,6 +559,53 @@ if($link_active_flag > 0){
                                         <div class="col-md-4 form-group"></div>
                                     </div>
                                     <div class="row">
+                                        <div class="col-md-2"></div>
+                                        <div class="col-md-3">
+                                           <div class="form-group" style="width:200px;">
+                                                <label>Reference Document-1</label>
+                                                <input type="file" name="pur_doc_1" id="pur_doc_1" class="form-control1" onchange="show_delete_btn(this.id,'clearButton')" style="width:180px;">
+                                                <i class="fa fa-close" style="color:red;visibility:hidden;" title="delete" id="clearButton" onclick="clear_file(this.id, 'pur_doc_1')"></i>
+                                                <span id="r1">    
+                                                <?php if($purdoc_path1 != ""){ echo "<br/><span >".basename(parse_url($purdoc_path1, PHP_URL_PATH))."</span>"; ?> 
+                                                    <a href='javascript:void(0)' id='<?php echo $id; ?>' value='<?php echo $id; ?>' onclick='check_delete(this.id,"Reference Document-1","purdoc_path1","r1")'>
+                                                       &nbsp;&nbsp; <i class='fa fa-trash' style='color:red;' title='delete'></i>
+                                                    </a>
+                                                <?php } ?>
+                                              
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group" style="width:200px;">
+                                                <label>Reference Document-2</label>
+                                                <input type="file" name="pur_doc_2" id="pur_doc_2" class="form-control1" onchange="show_delete_btn(this.id,'clearButton1')" style="width:180px;">
+                                                <i class='fa fa-close' style='color:red; visibility: hidden;' title='delete' id="clearButton1" onclick="clear_file(this.id,'pur_doc_2')"></i>
+                                                <span id='r2'>
+                                                <?php if($purdoc_path2 != ""){ echo "<br/><span >".basename(parse_url($purdoc_path2, PHP_URL_PATH))."</span>"; ?> 
+                                                    <a href='javascript:void(0)' id='<?php echo $id; ?>' value='<?php echo $id; ?>' onclick='check_delete(this.id,"Reference Document-2","purdoc_path2","r2")'>
+                                                       &nbsp;&nbsp; <i class='fa fa-trash' style='color:red;' title='delete'></i>
+                                                    </a>
+                                                <?php } ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group" style="width:200px;">
+                                                <label>Reference Document-3</label>
+                                                <input type="file" name="pur_doc_3" id="pur_doc_3" class="form-control1" onchange="show_delete_btn(this.id,'clearButton2')" style="width:180px;">
+                                                <i class='fa fa-close' style='color:red; visibility: hidden;' title='delete' id="clearButton2" onclick="clear_file(this.id,'pur_doc_3')"></i>
+                                                <span id='r3'>
+                                                <?php if($purdoc_path3 != ""){ echo "<br/><span>".basename(parse_url($purdoc_path3, PHP_URL_PATH))."</span>"; ?>
+                                                     <a href='javascript:void(0)' id='<?php echo $id; ?>' value='<?php echo $id; ?>' onclick='check_delete(this.id,"Reference Document-3","purdoc_path3","r3")'>
+                                                       &nbsp;&nbsp; <i class='fa fa-trash' style='color:red;' title='delete'></i>
+                                                    </a>
+                                                <?php } ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1"></div>
+                                    </div>
+                                    <div class="row">
                                         <div class="form-group col-md-6" style="visibility:hidden;">
                                             <label>Id<b style="color:red;">&ensp;*</b></label>
                                             <input type="text" name="idvalue" id="idvalue" class="form-control" value="<?php echo $id; ?>">
@@ -590,13 +640,58 @@ if($link_active_flag > 0){
                 var ccid = '<?php echo $ccid; ?>';
                 window.location.href = 'broiler_display_purchase2.php?ccid='+ccid;
             }
+            function clear_file(a,b) { 
+               document.getElementById(b).value = '';
+               document.getElementById(a).style.visibility = 'hidden';
+            }
+            function show_delete_btn(a,b) {
+                var selected_file = document.getElementById(a);
+                var hidedeletebutton = document.getElementById(b);
+
+                if (selected_file.files.length > 0) {
+                hidedeletebutton.style.visibility = 'visible'; 
+                } else {
+                hidedeletebutton.style.visibility = 'hidden'; 
+                }
+            }
+            function check_delete(a,b,c,d){
+                var trnum = a;
+                var reference = b;
+                var column = c;
+                console.log(trnum);
+                console.log(reference);
+                console.log(column);
+                var confirmation = confirm("Are you sure you want to delete "+reference+" ?");
+                if (confirmation) {
+                    //alert('Successfully deleted');
+                    var fetch_fltrs = new XMLHttpRequest();
+                    var method = "GET";
+                    var url = "broiler_delete_refdoc1.php?trnum="+trnum+"&colm="+column+"&type=purchase"
+                    //window.open(url);
+                    var asynchronous = true;
+                    fetch_fltrs.open(method, url, asynchronous);
+                    fetch_fltrs.send();
+                    fetch_fltrs.onreadystatechange = function(){
+                        if(this.readyState == 4 && this.status == 200){  
+                           // var res = this.responseText; 
+                           // alert(res);   
+                            var spanElement = document.getElementById(d);
+                            if (spanElement) {
+                                spanElement.style.display = "none";
+                            }
+                        }
+                    }
+                } else {
+                    console.log("Delete action canceled");
+                }
+            }
             function checkval(){
 				document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
                 var sup_code = document.getElementById("vcode").value;
                 var ocharge_coa = document.getElementById("ocharge_coa").value;
                 var ocharge_amt = document.getElementById("ocharge_amt").value; if(ocharge_amt == ""){ ocharge_amt = 0; }
                 var incrs = document.getElementById("incr").value;
-                var item_code = warehouse = ""; var rcd_qty = rate = c = 0;
+                var item_code = warehouse = ""; var rcd_qty = fre_qty = rate = c = 0;
                 var l = true;
                 if(sup_code.match("select")){
                     alert("Please select Supplier");
@@ -618,20 +713,21 @@ if($link_active_flag > 0){
                         if(l == true){
                             c = d + 1;
                             item_code = document.getElementById("icode["+d+"]").value;
-                            rcd_qty = document.getElementById("rcd_qty["+d+"]").value;
-                            rate = document.getElementById("rate["+d+"]").value;
+                            rcd_qty = document.getElementById("rcd_qty["+d+"]").value; if(rcd_qty == ""){ rcd_qty = 0; }
+                            fre_qty = document.getElementById("fre_qty["+d+"]").value; if(fre_qty == ""){ fre_qty = 0; }
+                            rate = document.getElementById("rate["+d+"]").value; if(rate == ""){ rate = 0; }
                             warehouse = document.getElementById("warehouse["+d+"]").value;
                             if(item_code.match("select")){
                                 alert("Please select Item in row:-"+c);
                                 document.getElementById("icode["+d+"]").focus();
                                 l = false;
                             }
-                            else if(rcd_qty == "" || rcd_qty.length == 0 || rcd_qty == "0" || rcd_qty == 0 || rcd_qty == "0.00"){
-                                alert("Please enter Rcd Qty in row:-"+c);
+                            else if(parseFloat(rcd_qty) == 0 && parseFloat(fre_qty) == 0){
+                                alert("Please enter Rcd Qty / Free qty in row:-"+c);
                                 document.getElementById("rcd_qty["+d+"]").focus();
                                 l = false;
                             }
-                            else if(rate == "" || rate.length == 0 || rate == "0" || rate == 0 || rate == "0.00"){
+                            else if(parseFloat(rcd_qty) > 0 && parseFloat(rate) == 0){
                                 alert("Please enter Rate in row:-"+c);
                                 document.getElementById("rate["+d+"]").focus();
                                 l = false;

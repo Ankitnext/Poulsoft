@@ -37,7 +37,7 @@ if($link_active_flag > 0){
 
 ?>
 <html lang="en">
-    <head>
+    <head> 
     <?php include "header_head.php"; ?>
     <style>
         body{
@@ -114,9 +114,9 @@ if($link_active_flag > 0){
                                                     <td><input type="text" name="t_taken[]" id="t_taken[0]" class="form-control" value="" ></td>
                                                     <td><input type="text" name="statuses[]" id="statuses[0]" class="form-control" value="" ></td>
                                                     <td><textarea name="remarks[]" id="remarks[0]" class="form-control" style="padding:0;width:150px;height:28px;" onkeyup="validatename(this.id);"></textarea></td>
-                                                    <td><input type="file" name="logo_image" id="image[0]" class="form-control"/></td>
-                                                    <td><input type="file" name="logo_image2" id="image2[0]" class="form-control"/></td>
-                                                    <td><input type="file" name="logo_image3" id="image3[0]" class="form-control"/></td>
+                                                    <td><input type="file" name="logo_image[0]" id="image[0]" class="form-control"/></td>
+                                                    <td><input type="file" name="logo_image2[0]" id="image2[0]" class="form-control"/></td>
+                                                    <td><input type="file" name="logo_image3[0]" id="image3[0]" class="form-control"/></td>
 
                                                     <td id="action[0]" style="width:80px;"><a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id);" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
                                                     <td style="visibility:hidden;"><input type="text" name="stk_qty[]" id="stk_qty[0]" class="form-control text-right" style="width:20px;" readonly /></td>
@@ -267,10 +267,10 @@ if($link_active_flag > 0){
                 html += '  <td><input type="text" name="t_taken[]" id="t_taken['+d+']" class="form-control" value="" ></td>';
                 html += '  <td><input type="text" name="statuses[]" id="statuses['+d+']" class="form-control" value="" ></td>';
                 html += ' <td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="padding:0;width:150px;height:28px;" onkeyup="validatename(this.id);"></textarea></td>';
-                html += ' <td><td><input type="file" name="logo_image" id="image['+d+']" class="form-control"/></td></td>';
-                html += '  <td><td><input type="file" name="logo_image2" id="image2['+d+']" class="form-control"/></td></td>';
-                html += '  <td><td><input type="file" name="logo_image3" id="image3['+d+']" class="form-control"/></td></td>';
-                html += '<td style="visibility:hidden;"><input type="text" name="stk_prc[]" id="stk_prc['+d+']" class="form-control text-right" style="width:20px;" readonly /></td>';
+                html += ' <td><input type="file" name="logo_image['+d+']" id="image['+d+']" class="form-control"/></td>';
+                html += ' <td><input type="file" name="logo_image2['+d+']" id="image2['+d+']" class="form-control"/></td>';
+                html += ' <td><input type="file" name="logo_image3['+d+']" id="image3['+d+']" class="form-control"/></td>';
+                html += '<td id="action['+d+']" style="width:80px;"><a href="javascript:void(0);" id="addrow['+d+']" onClick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>';
                 html += '</tr>';
                 $('#tbody').append(html);
                 $('.select2').select2();

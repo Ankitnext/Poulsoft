@@ -138,7 +138,7 @@ if($link_active_flag > 0){
                         </div>
                         <div class="m-0 p-2 card-body">
                             <div class="col-md-18">
-                                <form action="broiler_save_purchase2.php" method="post" role="form" onsubmit="return checkval()">
+                                <form action="broiler_save_purchase2.php" method="post" role="form" enctype="multipart/form-data" onsubmit="return checkval()">
                                     <div class="row">
                                         <div class="form-group">
                                             <label>Date<b style="color:red;">&nbsp;*</b></label>
@@ -412,6 +412,31 @@ if($link_active_flag > 0){
                                         <div class="col-md-4 form-group"></div>
                                     </div>
                                     <div class="row">
+                                        <div class="col-md-2"></div>
+                                        <div class="col-md-3">
+                                            <div class="form-group" style="width:200px;">
+                                                <label>Reference Document-1</label>
+                                                <input type="file" name="pur_doc_1" id="pur_doc_1" class="form-control1" onchange="show_delete_btn(this.id,'clearButton')" style="width:180px;">&nbsp;
+                                                <i class="fa fa-close" style="color:red;visibility:hidden;" title="delete" id="clearButton" onclick="clear_file(this.id, 'pur_doc_1')"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group" style="width:200px;">
+                                                <label>Reference Document-2</label>
+                                                <input type="file" name="pur_doc_2" id="pur_doc_2" class="form-control1" onchange="show_delete_btn(this.id,'clearButton1')" style="width:180px;">&nbsp;
+                                                <i class='fa fa-close' style='color:red; visibility: hidden;' title='delete' id="clearButton1" onclick="clear_file(this.id,'pur_doc_2')"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                             <div class="form-group" style="width:200px;">
+                                                <label>Reference Document-3</label>
+                                                <input type="file" name="pur_doc_3" id="pur_doc_3" class="form-control1" onchange="show_delete_btn(this.id,'clearButton2')" style="width:180px;">&nbsp;
+                                                <i class='fa fa-close' style='color:red; visibility: hidden;' title='delete' id="clearButton2" onclick="clear_file(this.id,'pur_doc_3')"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1"></div>
+                                    </div>
+                                    <div class="row">
                                         <div class="form-group col-md-6" style="visibility:hidden;">
                                             <label>incr<b style="color:red;">&ensp;*</b></label>
                                             <input type="text" name="incr" id="incr" class="form-control" value="0">
@@ -442,13 +467,27 @@ if($link_active_flag > 0){
                 var ccid = '<?php echo $ccid; ?>';
                 window.location.href = 'broiler_display_purchase2.php?ccid='+ccid;
             }
+            function clear_file(a,b) { 
+               document.getElementById(b).value = '';
+               document.getElementById(a).style.visibility = 'hidden';
+            }
+            function show_delete_btn(a,b) {
+                var selected_file = document.getElementById(a);
+                var hidedeletebutton = document.getElementById(b);
+
+                if (selected_file.files.length > 0) {
+                hidedeletebutton.style.visibility = 'visible'; 
+                } else {
+                hidedeletebutton.style.visibility = 'hidden'; 
+                }
+            }
             function checkval(){
 				document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
                 var sup_code = document.getElementById("vcode").value;
                 var ocharge_coa = document.getElementById("ocharge_coa").value;
                 var ocharge_amt = document.getElementById("ocharge_amt").value; if(ocharge_amt == ""){ ocharge_amt = 0; }
                 var incrs = document.getElementById("incr").value;
-                var item_code = warehouse = ""; var rcd_qty = rate = c = rate_count = 0;
+                var item_code = warehouse = ""; var rcd_qty = fre_qty = rate = c = rate_count = 0;
                 var l = true;
                 if(sup_code.match("select")){
                     alert("Please select Supplier");
@@ -470,7 +509,8 @@ if($link_active_flag > 0){
                         if(l == true){
                             c = d + 1;
                             item_code = document.getElementById("icode["+d+"]").value;
-                            rcd_qty = document.getElementById("rcd_qty["+d+"]").value;
+                            rcd_qty = document.getElementById("rcd_qty["+d+"]").value; if(rcd_qty == ""){ rcd_qty = 0; }
+                            fre_qty = document.getElementById("fre_qty["+d+"]").value; if(fre_qty == ""){ fre_qty = 0; }
                             rate = document.getElementById("rate["+d+"]").value; if(rate == ""){ rate = 0; }
                             warehouse = document.getElementById("warehouse["+d+"]").value;
                             if(item_code.match("select")){
@@ -478,12 +518,12 @@ if($link_active_flag > 0){
                                 document.getElementById("icode["+d+"]").focus();
                                 l = false;
                             }
-                            else if(rcd_qty == "" || rcd_qty.length == 0 || rcd_qty == "0" || rcd_qty == 0 || rcd_qty == "0.00"){
-                                alert("Please enter Rcd Qty in row:-"+c);
+                            else if(parseFloat(rcd_qty) == 0 && parseFloat(fre_qty) == 0){
+                                alert("Please enter Rcd Qty / Free qty in row:-"+c);
                                 document.getElementById("rcd_qty["+d+"]").focus();
                                 l = false;
                             }
-                            else if(parseFloat(rate) == 0){
+                            else if(parseFloat(rcd_qty) > 0 && parseFloat(rate) == 0){
                                 alert("Please enter Rate in row:-"+c);
                                 document.getElementById("rate["+d+"]").focus();
                                 l = false;

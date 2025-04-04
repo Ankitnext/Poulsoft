@@ -24,6 +24,9 @@ if($link_active_flag > 0){
         }
     }
     if($acount == 1){
+        $sql = "SELECT * FROM `location_region` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+        $query = mysqli_query($conn,$sql); $region_code = $region_name = array();
+        while($row = mysqli_fetch_assoc($query)){ $region_code[$row['code']] = $row['code']; $region_name[$row['code']] = $row['description']; }
 ?>
 <html lang="en">
     <head>
@@ -48,53 +51,33 @@ if($link_active_flag > 0){
                         <div class="card-body">
                             <div class="col-md-12">
                                 <form action="broiler_save_branch.php" method="post" role="form" onsubmit="return checkval()">
-                                    <div class="row" >
-                                        <div class="col-md-4"></div>
-                                        <div class="col-md-6">
-                                            <div class="col-md-8">
-                                                <div class="form-group">
-                                                    <label>Region<b style="color:red;">&nbsp;*</b></label>
-                                                    <select name="region" id="region" class="form-control select2" style="width: 100%;">
-                                                        <option value="select">select</option>
-                                                        <?php
-                                                        $sql = "SELECT * FROM `location_region` WHERE `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql);
-                                                        while($row = mysqli_fetch_assoc($query)){
-                                                        ?>
-                                                        <option value="<?php echo $row['code']; ?>"><?php echo $row['description']; ?></option>
-                                                        <?php
-                                                        }
-                                                        ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2"></div>
-                                    </div>
-                                    <div class="row" id="row_no[0]">
-                                        <div class="col-md-4"></div>
-                                       
-                                        <div class="col-md-2">
-                                            <div class="form-group">
-                                            <label>Branch<b style="color:red;">&nbsp;*</b></label>
-							                <input type="text" name="branch[]" id="branch[0]" class="form-control" placeholder="Enter description..." onkeyup="validatename(this.id)" onchange="check_duplicate(this.id);">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="form-group">
-                                            <label>Prefix<b style="color:red;">&nbsp;*</b></label>
-							                <input type="text" name="flk_prefix[]" id="flk_prefix[0]"  class="form-control" placeholder="Enter description..." onkeyup="validatename(this.id)">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2" id="action[0]">
-                                            <div class="form-group" style="padding-top: 12px;"><br/>
-                                                <a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1" style="visibility:hidden;">
-                                            <label>D-Flag<b style="color:red;">&nbsp;*</b></label>
-                                            <input type="text" style="width:auto;"    class="form-control" name="dupflag[]" id="dupflag[0]" value="0">
-                                        </div>
-                                        <div class="col-md-1"></div>
+                                    <div class="row justify-content-center align-items-center">
+                                        <table align="center">
+                                            <thead>
+                                                <tr>
+                                                    <th>
+                                                        <div class="form-group">
+                                                            <label>Region<b style="color:red;">&nbsp;*</b></label>
+                                                            <select name="region" id="region" class="form-control select2" style="width: 100%;" onchange=""><option value="select">select</option><?php foreach($region_code as $rcode){ ?><option value="<?php echo $rcode; ?>"><?php echo $region_name[$rcode]; ?></option><?php } ?></select>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                                <tr>
+                                                    <th>Branch<b style="color:red;">&nbsp;*</b></th>
+                                                    <th>Prefix<b style="color:red;">&nbsp;*</b></th>
+                                                    <th style="visibility:hidden;">Action</th>
+                                                    <th style="visibility:hidden;">DF</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbody">
+                                                <tr>
+                                                    <td><input type="text" name="branch[]" id="branch[0]" class="form-control select2" placeholder="Enter description..." onkeyup="validatename(this.id)" onchange="check_duplicate(this.id);"></td>
+                                                    <td><input type="text" name="flk_prefix[]" id="flk_prefix[0]"  class="form-control" placeholder="Enter description..." onkeyup="validatename(this.id)"></td>
+                                                    <td id="action[0]" style="width:80px;"><a href="javascript:void(0);" id="addrow[0]" onClick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
+                                                    <td style="visibility:hidden;"><input type="text" name="dupflag[0]" id="dupflag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                     <div class="col-md-12" id="row_body">
 
@@ -180,18 +163,13 @@ if($link_active_flag > 0){
                 document.getElementById("action["+d+"]").style.visibility = "hidden";
                 d++; var html = '';
                 document.getElementById("incr").value = d;
-                html+= '<div class="row" id="row_no['+d+']">';
-               // html+= '<div class="col-md-4"></div>';
-               // html+= '<div class="col-md-2"><div class="form-group"><select name="region[]" id="region['+d+']" class="form-control select2" style="width: 100%;"><option value="select">select</option><?php $sql = "SELECT * FROM `location_region` WHERE `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ ?> <option value="<?php echo $row['code']; ?>"><?php echo $row['description']; ?></option><?php } ?></select></div></div>';
-                html+= '<div class="col-md-4"><div class="form-group"><input type="text" name="branch[]" id="branch['+d+']" class="form-control" placeholder="Enter description..." onkeyup="validatename(this.id)" onchange="check_duplicate(this.id);"></div></div>';
-                html+= '<div class="col-md-4"><div class="form-group"><input type="text" name="flk_prefix[]" id="flk_prefix['+d+']" class="form-control" placeholder="Enter description..." onkeyup="validatename(this.id)"></div></div>';
-                html+= '<div class="col-md-2" id="action['+d+']"><div class="form-group" style="padding-top: 12px;"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></div></div>';
-                html+= '<div class="col-md-1" style="visibility:hidden;">';
-                html+= '<input type="text" style="width:auto;" class="form-control" name="dupflag[]" id="dupflag['+d+']" value="0">';
-                html+= '</div>';
-                html+= '<div class="col-md-1"></div>';
-                html+= '</div>';
-                $('#row_body').append(html); $('.select2').select2();
+                 html += '<tr id="row_no['+d+']">';
+                 html += '<td><input type="text" name="branch[]" id="branch['+d+']" class="form-control select2" placeholder="Enter description..." onkeyup="validatename(this.id)" onchange="check_duplicate(this.id);"></td>';
+                 html += '<td><input type="text" name="flk_prefix[]" id="flk_prefix['+d+']"  class="form-control" placeholder="Enter description..." onkeyup="validatename(this.id)"></td>';
+                 html += '<td id="action['+d+']" style="padding-top: 5px;width:80px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
+                 html += '<td style="visibility:hidden;"><input type="text" name="dupflag['+d+']" id="dupflag['+d+']" class="form-control text-right" value="0" style="width:20px;" /></td>';
+                 html += '</tr>';
+				 $('#tbody').append(html); $('.select2').select2();
             }
             function destroy_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
