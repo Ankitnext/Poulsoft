@@ -94,15 +94,15 @@ while($row = mysqli_fetch_assoc($query)){ $feed_code[$row['code']] = $row['code'
 //$sql = "SELECT * FROM `extra_access` WHERE `field_name` IN ('Decimal','Purchase Qty') AND `user_access` LIKE '%$user_code%' OR `field_name` IN ('Decimal','Purchase Qty') AND `user_access` LIKE 'all'"; $query = mysqli_query($conn,$sql);
 //while($row = mysqli_fetch_assoc($query)){ if($row['field_name'] == "Decimal"){ $decimal_no = $row['flag']; } if($row['field_name'] == "Purchase Qty"){ $qty_on_sqty_flag = $row['flag']; } }
 $fdate = $tdate = date("Y-m-d"); $item_cat = $items = $loc_sector_from = $vehicle = $drivers = $loc_sector_to = "all"; $excel_type = "display";
-if(isset($_POST['submit_report']) == true){
-    $fdate = date("Y-m-d",strtotime($_POST['fdate']));
-    $tdate = date("Y-m-d",strtotime($_POST['tdate']));
-    $item_cat = $_POST['item_cat'];
-    $items = $_POST['items'];
-    $loc_sector_from = $_POST['loc_sector_from'];
-    $loc_sector_to = $_POST['loc_sector_to'];
-    $vehicle = $_POST['vehicle'];
-    $drivers = $_POST['drivers'];
+if(isset($_REQUEST['submit_report']) == true){
+    $fdate = date("Y-m-d",strtotime($_REQUEST['fdate']));
+    $tdate = date("Y-m-d",strtotime($_REQUEST['tdate']));
+    $item_cat = $_REQUEST['item_cat'];
+    $items = $_REQUEST['items'];
+    $loc_sector_from = $_REQUEST['loc_sector_from'];
+    $loc_sector_to = $_REQUEST['loc_sector_to'];
+    $vehicle = $_REQUEST['vehicle'];
+    $drivers = $_REQUEST['drivers'];
 
     if($loc_sector_from == "all"){ $fromwarehouse = ""; } else{ $fromwarehouse = " AND `fromwarehouse` = '$loc_sector_from'"; }
     if($loc_sector_to == "all"){ $towarehouse = ""; } else{ $towarehouse = " AND `towarehouse` = '$loc_sector_to'"; }
@@ -126,7 +126,7 @@ if(isset($_POST['submit_report']) == true){
         }
         $item_filter = " AND `code` IN ('$icat_list')";
     }
-	$excel_type = $_POST['export'];
+	$excel_type = $_REQUEST['export'];
 	$url = "../PHPExcel/Examples/broiler_item_transferreport-Excel.php?fromdate=".$fdate."&todate=".$tdate."&items=".$items."&itemcat=".$item_cat."&fsector=".$loc_sector_from."&tsector=".$loc_sector_to;
 }
 ?>
@@ -316,7 +316,7 @@ if(isset($_POST['submit_report']) == true){
                 </tr>
             </thead>
             <?php
-            if(isset($_POST['submit_report']) == true){
+            if(isset($_REQUEST['submit_report']) == true){
             ?>
             <tbody class="tbody1">
                 <?php

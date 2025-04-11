@@ -96,15 +96,16 @@ if($link_active_flag > 0){
                                         </thead>
                                         <tbody id="tbody">
                                             <tr>
-                                                <td><select name="sector[]" id="sector[0]" class="form-control select2" style="width:190px;" onchange=""><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>
-                                                <td><select name="desg[]" id="desg[0]" class="form-control select2" style="width:190px;" onchange=""><option value="select">-select-</option><?php foreach($desg_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $desg_name[$ucode]; ?></option><?php } ?></select></td>
+                                                <td><select name="sector[]" id="sector[0]" class="form-control select2" style="width:190px;" onchange="check_duplicate(this.id);"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>
+                                                <td><select name="desg[]" id="desg[0]" class="form-control select2" style="width:190px;" onchange="check_duplicate(this.id);"><option value="select">-select-</option><?php foreach($desg_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $desg_name[$ucode]; ?></option><?php } ?></select></td>
                                                 <td><input type="text" name="basic[]" id="basic[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="hra[]" id="hra[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="med[]" id="med[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="conv[]" id="conv[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="trans[]" id="trans[0]" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td id="action[0]" style="width:80px;"><a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
-                                                </tr>
+                                                <td style="visibility:hidden;"><input type="text" name="dupflag[0]" id="dupflag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div><br/>
@@ -138,7 +139,7 @@ if($link_active_flag > 0){
 				update_ebtn_status(1);
                 var l = true;
                 var incr = document.getElementById("incr").value;
-                var sector = desg = ""; var basic = hra = med = conv = trans = 0;
+                var sector = desg = dupflag = ""; var basic = hra = med = conv = trans = 0;
                 var bstk_cflag = '<?php echo $bstk_cflag; ?>'; if(bstk_cflag == ""){ bstk_cflag = 0; }
 
                 for(var d = 0;d <= incr;d++){
@@ -147,10 +148,20 @@ if($link_active_flag > 0){
                         sector = document.getElementById("sector["+d+"]").value;
                         desg = document.getElementById("desg["+d+"]").value;
                         basic = document.getElementById("basic["+d+"]").value; if(basic == ""){ basic = 0; }
-                       
+                        dupflag = document.getElementById("dupflag["+d+"]").value;
                         
                         if(sector == "" || sector == "select"){
                             alert("Please select From Sector in row: "+e);
+                            document.getElementById("sector["+d+"]").focus();
+                            l = false;
+                        }
+                        else if(desg == "" || desg == "select"){
+                            alert("Please select From Designation in row: "+e);
+                            document.getElementById("desg["+d+"]").focus();
+                            l = false;
+                        }
+                        else if(parseInt(dupflag) == 1){
+                            alert("This Row already exist.\n Kindly check in row: "+e);
                             document.getElementById("sector["+d+"]").focus();
                             l = false;
                         }
@@ -181,15 +192,15 @@ if($link_active_flag > 0){
                 document.getElementById("incr").value = d;
                 
                 html += '<tr id="row_no['+d+']">';
-                html += '<td><select name="sector[]" id="sector['+d+']" class="form-control select2" style="width:190px;" onchange=""><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>';
-                html += '<td><select name="desg[]" id="desg['+d+']" class="form-control select2" style="width:190px;" onchange=""><option value="select">-select-</option><?php foreach($desg_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $desg_name[$ucode]; ?></option><?php } ?></select></td>';
+                html += '<td><select name="sector[]" id="sector['+d+']" class="form-control select2" style="width:190px;" onchange="check_duplicate(this.id);"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>';
+                html += '<td><select name="desg[]" id="desg['+d+']" class="form-control select2" style="width:190px;" onchange="check_duplicate(this.id);"><option value="select">-select-</option><?php foreach($desg_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $desg_name[$ucode]; ?></option><?php } ?></select></td>';
                 html += '<td><input type="text" name="basic[]" id="basic['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><input type="text" name="hra[]" id="hra['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><input type="text" name="med[]" id="med['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><input type="text" name="conv[]" id="conv['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><input type="text" name="trans[]" id="trans['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td id="action['+d+']" style="padding-top: 5px;width:80px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
-
+                html += '<td style="visibility:hidden;"><input type="text" name="dupflag['+d+']" id="dupflag['+d+']" class="form-control text-right" value="0" style="width:20px;" /></td>';
                 html += '</tr>';
                 $('#tbody').append(html);
                 $('.select2').select2();
@@ -212,6 +223,36 @@ if($link_active_flag > 0){
 					document.getElementById("ebtncount").value = "0";
                 }
             }
+            function check_duplicate(a){
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+				var sector = document.getElementById("sector["+d+"]").value;
+				var desg = document.getElementById("desg["+d+"]").value;
+				var type = "add";
+				if(sector != "" && desg != ""){ 
+					var oldqty = new XMLHttpRequest();
+					var method = "GET"; 
+					var url = "broiler_fetch_salaryparam1_duplicates.php?sector="+sector+"&desg="+desg+"&type="+type+"&row_count="+d;
+                    //window.open(url);
+					var asynchronous = true;
+					oldqty.open(method, url, asynchronous);
+					oldqty.send();
+					oldqty.onreadystatechange = function(){
+						if(this.readyState == 4 && this.status == 200){
+							var dup_dt = this.responseText;
+                            var dup_info = dup_dt.split("@");
+                            var row = dup_info[1];
+							if(parseInt(dup_info[0]) == 0){
+								document.getElementById("dupflag["+row+"]"). value = 0;
+							}
+							else {
+								alert("This Row already exist.\n Kindly change the Sector or Designation");
+								document.getElementById("dupflag["+row+"]"). value = 1;
+							}
+						}
+					}
+				}
+				else { }
+			}
             document.addEventListener("keydown", (e) => { if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function (){ $('#submit').click(); }); } } else{ } });
             function validatename(x) { expr = /^[a-zA-Z0-9 (.&)_-]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, ''); } document.getElementById(x).value = a; }
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }

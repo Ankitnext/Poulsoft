@@ -210,7 +210,14 @@ if($link_active_flag > 0){
                                         
              $sql = "SELECT * FROM `inv_sectors` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
              while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
-                                                
+             // Driver  Category 
+             $sql = "SELECT * FROM `broiler_designation` WHERE `description` LIKE '%driver%' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $desig_code = "";
+             while($row = mysqli_fetch_assoc($query)){ if($desig_code == ""){ $desig_code = $row['code']; } else{ $desig_code = $desig_code."','".$row['code']; } }
+             // Driver Name            
+             $sql = "SELECT * FROM `broiler_employee` WHERE `desig_code` IN ('$desig_code') AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $jcount = mysqli_num_rows($query);
+             while($row = mysqli_fetch_assoc($query)){ $emp_code[$row['code']] = $row['code']; $emp_name[$row['code']] = $row['name']; }
+          
+
              $sql = "SELECT * FROM `broiler_farm` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
              while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
         ?>
@@ -269,6 +276,7 @@ if($link_active_flag > 0){
                                         <th>From Location</th>
                                         <th>Item Code</th>
                                         <th>Item Name</th>
+                                        <th>Driver</th>
 										<th>Quantity</th>
 										<th>To Location</th>
 										<th>Action</th>
@@ -310,6 +318,7 @@ if($link_active_flag > 0){
 										<td><?php echo $sector_name[$row['fromwarehouse']]; ?></td>
 										<td><?php echo $row['code']; ?></td>
 										<td><?php echo $item_name[$row['code']]; ?></td>
+										<td><?php echo $emp_name[$row['driver_code']]; ?></td>
 										<td><?php echo $row['quantity']; ?></td>
 										<td><?php echo $sector_name[$row['towarehouse']]; ?></td>
                                         <td style="width:15%;" align="left">

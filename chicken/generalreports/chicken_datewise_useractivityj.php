@@ -22,10 +22,11 @@
     $sql = "SELECT * FROM `log_useraccess` WHERE `dblist` = '$dbname' AND `dflag` = '0' ORDER BY `username` ASC"; $query = mysqli_query($conns,$sql);
     while($row = mysqli_fetch_assoc($query)){ $user_code[$row['empcode']] = $row['empcode']; $user_name[$row['empcode']] = $row['username']; }
     
-    $tdate = date("Y-m-d"); $usr_code = "all"; $exoption = "displaypage";
+    $tdate = date("Y-m-d"); $usr_code = $trans_type = "all"; $exoption = "displaypage";
     if(isset($_POST['submit_report']) == true){
         $tdate = date("Y-m-d",strtotime($_POST['tdate']));
         $usr_code = $_POST['usr_code'];
+        $trans_type = $_POST['trans_type'];
     }
     
 ?>
@@ -130,6 +131,18 @@
                                             <option value="<?php echo $fcode; ?>" <?php if($usr_code == $fcode){ echo "selected"; } ?>><?php echo $user_name[$fcode]; ?></option>
                                             <?php } } ?>
                                         </select>&ensp;&ensp;
+                                        <label class="reportselectionlabel">Transaction Type</label>&nbsp;
+										<select name="trans_type" id="trans_type" class="form-control select2" style="width:290px;text-align:left;">
+                                        <option value="all" <?php if($trans_type == "all"){ echo "selected"; } ?>>-All-</option>
+                                            <option value="purchase" <?php if($trans_type == "purchase"){ echo "selected"; } ?>>Purchase</option>
+                                            <option value="payment" <?php if($trans_type == "payment"){ echo "selected"; } ?>>Payments</option>
+                                            <option value="sales" <?php if($trans_type == "sales"){ echo "selected"; } ?>>Sales</option>
+                                            <option value="receipt" <?php if($trans_type == "receipt"){ echo "selected"; } ?>>Receipt</option>
+                                            <option value="voucher" <?php if($trans_type == "voucher"){ echo "selected"; } ?>>Vouchers</option>
+                                            <option value="dly_prt" <?php if($trans_type == "dly_prt"){ echo "selected"; } ?>>Daily Paper Rate</option>
+                                            <option value="authorize" <?php if($trans_type == "authorize"){ echo "selected"; } ?>>Authorize</option>
+                                            <option value="d_details" <?php if($trans_type == "d_details"){ echo "selected"; } ?>>Deletion Details</option>
+                                        </select>&ensp;&ensp;
 										<button type="submit" class="btn btn-warning btn-sm" name="submit_report" id="submit_report">Open Report</button>
 									</td>
 								</tr>
@@ -147,6 +160,7 @@
                                     <th>Transaction Date</th>
                                     <th>Transaction Type</th>
                                     <th>Transaction No.</th>
+                                    <th>Amount</th>
                                     <th>Activity Type</th>
                                     <th>Date &amp; Time</th>
                                 </tr>
@@ -155,7 +169,7 @@
                             <?php
                             foreach($usr_arr_list as $ecode){
                                 $i = 0;
-                                if($count57 > 0){
+                                if(($count57 > 0) && ($trans_type == "all" ||$trans_type == "purchase")){
                                     $sql = "SELECT * FROM `pur_purchase` WHERE `addedemp` IN ('$ecode') AND `addedtime` >= '$time1' AND `addedtime` <= '$time2' OR `updatedemp` IN ('$ecode') AND `updated` >= '$time1' AND `updated` <= '$time2'";
                                     $query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query);
                                     if($count > 0){
@@ -171,6 +185,7 @@
                                                 $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$aemp]."</td><td>".$edate."</td><td>Purchase</td>
                                                 
                                                 <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td>
+                                                <td style='text-align:right;'>".number_format_ind($row['finaltotal'])."</td>
                                                 <td style='color:green;'>Entry Created</td><td>".$adtime2."</td></tr>";
                                             }
                                             $adtime1 = date("Y-m-d",strtotime($row['updated'])); $adtime2 = date("d.m.Y h:i:sA",strtotime($row['updated']));
@@ -182,17 +197,21 @@
                                            
                                                 if($row['tdflag'] == 1 || $row['pdflag'] == '1'){
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Purchase</td>
-                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td><td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
+                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['finaltotal'])."</td>
+                                                    <td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
                                                 }
                                                 else{
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Purchase</td>
-                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td><td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
+                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['finaltotal'])."</td>
+                                                    <td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                if($count56 > 0){
+                                if(($count56 > 0) && ($trans_type == "all" ||$trans_type == "payment")){
                                     $sql = "SELECT * FROM `pur_payments` WHERE `addedemp` IN ('$ecode') AND `addedtime` >= '$time1' AND `addedtime` <= '$time2' OR `updatedemp` IN ('$ecode') AND `updatedtime` >= '$time1' AND `updatedtime` <= '$time2'";
                                     $query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query);
                                     if($count > 0){
@@ -206,7 +225,9 @@
                                                 $path = "openPopup('../pur_editpayments.php?id=$id&view=$report_view')";
                                                 
                                                 $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$aemp]."</td><td>".$edate."</td><td>Payment</td>
-                                                <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:green;'>Entry Created</td><td>".$adtime2."</td></tr>";
+                                                <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
+                                                <td style='color:green;'>Entry Created</td><td>".$adtime2."</td></tr>";
                                             }
                                             $adtime1 = date("Y-m-d",strtotime($row['updatedtime'])); $adtime2 = date("d.m.Y h:i:sA",strtotime($row['updatedtime']));
                                             if($row['updatedemp'] != "" && strtotime($adtime1) == strtotime($tdate)){
@@ -220,19 +241,20 @@
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Payment</td>
                                                     
                                                     <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
                                                     <td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
                                                 }
                                                 else{
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Payment</td>
                                                     <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
-                                                    
+                                                    <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
                                                     <td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                if($count14 > 0){
+                                if(($count14 > 0) && ($trans_type == "all" ||$trans_type == "sales")){
                                     $sql = "SELECT * FROM `customer_sales` WHERE `addedemp` IN ('$ecode') AND `addedtime` >= '$time1' AND `addedtime` <= '$time2' OR `updatedemp` IN ('$ecode') AND `updated` >= '$time1' AND `updated` <= '$time2'";
                                     $query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query);
                                     if($count > 0){
@@ -247,8 +269,8 @@
                                                     $path = "openPopup('../cus_editsales.php?id=$id&view=$report_view')";
                                                 $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$aemp]."</td><td>".$edate."</td><td>Sale</td>
                                                 <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td>
+                                                <td style='text-align:right;'>".number_format_ind($row['finaltotal'])."</td>
                                                 <td style='color:green;'>Entry Created</td><td>".$adtime2."</td></tr>";
-                
                                             }
                                             $adtime1 = date("Y-m-d",strtotime($row['updated'])); $adtime2 = date("d.m.Y h:i:sA",strtotime($row['updated']));
                                             if($row['updatedemp'] != "" && strtotime($adtime1) == strtotime($tdate)){
@@ -260,7 +282,7 @@
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Sale</td>
                                                     
                                                     <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td>
-                                                
+                                                    <td style='text-align:right;'>".number_format_ind($row['finaltotal'])."</td>
                                                     <td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
                                                 }
                                                 else{
@@ -269,15 +291,15 @@
                                                     $path = "openPopup('../cus_editsales.php?id=$id&view=$report_view')";
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Sale</td>
                                                     
-                                                      <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td>
-                                                
+                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['invoice']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['finaltotal'])."</td>
                                                     <td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                if($count13 > 0){
+                                if(($count13 > 0) && ($trans_type == "all" ||$trans_type == "receipt")){
                                     $sql = "SELECT * FROM `customer_receipts` WHERE `addedemp` IN ('$ecode') AND `addedtime` >= '$time1' AND `addedtime` <= '$time2' OR `updatedemp` IN ('$ecode') AND `updatedtime` >= '$time1' AND `updatedtime` <= '$time2'";
                                     $query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query);
                                     if($count > 0){
@@ -292,6 +314,7 @@
                                                 $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$aemp]."</td><td>".$edate."</td><td>Receipt</td>
                                                 
                                                 <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
                                                 <td style='color:green;'>Entry Created</td><td>".$adtime2."</td></tr>";
                                             }
                                             $adtime1 = date("Y-m-d",strtotime($row['updatedtime'])); $adtime2 = date("d.m.Y h:i:sA",strtotime($row['updatedtime']));
@@ -302,17 +325,21 @@
                                                 $path = "openPopup('../cus_editreceipts.php?id=$id&view=$report_view')";
                                                 if($row['tdflag'] == 1 || $row['pdflag'] == '1'){
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Receipt</td>
-                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
+                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
+                                                    <td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
                                                 }
                                                 else{
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Receipt</td>
-                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
+                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
+                                                    <td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                if($count7 > 0){
+                                if(($count7 > 0) && ($trans_type == "all" ||$trans_type == "voucher")){
                                     $sql = "SELECT * FROM `acc_vouchers` WHERE `addedemp` IN ('$ecode') AND `addedtime` >= '$time1' AND `addedtime` <= '$time2' OR `updatedemp` IN ('$ecode') AND `updatedtime` >= '$time1' AND `updatedtime` <= '$time2'";
                                     $query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query);
                                     if($count > 0){
@@ -328,6 +355,7 @@
                                                 $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$aemp]."</td><td>".$edate."</td><td>Voucher</td>
                                                 
                                                 <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
                                                 <td style='color:green;'>Entry Created</td><td>".$adtime2."</td></tr>";
                                             }
                                             $adtime1 = date("Y-m-d",strtotime($row['updatedtime'])); $adtime2 = date("d.m.Y h:i:sA",strtotime($row['updatedtime']));
@@ -339,17 +367,21 @@
                                                 
                                                 if($row['tdflag'] == 1 || $row['pdflag'] == '1'){
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Voucher</td>
-                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
+                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
+                                                    <td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
                                                 }
                                                 else{
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Voucher</td>
-                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
+                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
+                                                    <td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                if($count33 > 0){
+                                if(($count33 > 0) && ($trans_type == "all" ||$trans_type == "dly_prt")){
                                     $sql = "SELECT * FROM `main_dailypaperrate` WHERE `addedemp` IN ('$ecode') AND `addedtime` >= '$time1' AND `addedtime` <= '$time2' OR `updatedemp` IN ('$ecode') AND `updatedtime` >= '$time1' AND `updatedtime` <= '$time2'";
                                     $query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query);
                                     if($count > 0){
@@ -363,7 +395,9 @@
                                                 $id = $row['trnum'];$report_view='report';
                                                 $path = "openPopup('../main_editpaperrate.php?id=$id&view=$report_view')";
                                                 $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$aemp]."</td><td>".$edate."</td><td>Paper Rate</td>
-                                                <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:green;'>Entry Created</td><td>".$adtime2."</td></tr>";
+                                                <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                <td style='text-align:right;'>".number_format_ind($row['new_price'])."</td>
+                                                <td style='color:green;'>Entry Created</td><td>".$adtime2."</td></tr>";
                                             }
                                             $adtime1 = date("Y-m-d",strtotime($row['updatedtime'])); $adtime2 = date("d.m.Y h:i:sA",strtotime($row['updatedtime']));
                                             if($row['updatedemp'] != "" && strtotime($adtime1) == strtotime($tdate)){
@@ -373,17 +407,21 @@
                                                 $path = "openPopup('../main_editpaperrate.php?id=$id&view=$report_view')";
                                                 if($row['tdflag'] == 1 || $row['pdflag'] == '1'){
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Paper Rate</td>
-                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
+                                                    <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['new_price'])."</td>
+                                                    <td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
                                                 }
                                                 else{
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td>
-                                                    <td>Paper Rate</td><td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
+                                                    <td>Paper Rate</td><td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['new_price'])."</td>
+                                                    <td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                if($count10 > 0){
+                                if(($count10 > 0) && ($trans_type == "all" ||$trans_type == "authorize")){
                                     $sql = "SELECT * FROM `authorize` WHERE `addedemp` IN ('$ecode') AND `addedtime` >= '$time1' AND `addedtime` <= '$time2' OR `updatedemp` IN ('$ecode') AND `updatedtime` >= '$time1' AND `updatedtime` <= '$time2'";
                                     $query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query);
                                     if($count > 0){
@@ -396,7 +434,9 @@
                                                 $id = $row['trnum'];$report_view='report';
                                                 $path = "openPopup('../main_editpaperrate.php?id=$id&view=$report_view')";
                                                 $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$aemp]."</td><td>".$edate."</td><td>Authorization</td>
-                                                 <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:green;'>Entry Authorized</td><td>".$adtime2."</td></tr>";
+                                                 <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                 <td style='text-align:right;'>".number_format_ind($row['finalamt'])."</td>
+                                                 <td style='color:green;'>Entry Authorized</td><td>".$adtime2."</td></tr>";
                                             }
                                             $adtime1 = date("Y-m-d",strtotime($row['updatedtime'])); $adtime2 = date("d.m.Y h:i:sA",strtotime($row['updatedtime']));
                                             if($row['updatedemp'] != "" && strtotime($adtime1) == strtotime($tdate)){
@@ -406,17 +446,21 @@
                                                 $path = "openPopup('../main_editpaperrate.php?id=$id&view=$report_view')";
                                                 if($row['tdflag'] == 1 || $row['pdflag'] == '1'){
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td><td>Authorization</td>
-                                                     <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
+                                                     <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                     <td style='text-align:right;'>".number_format_ind($row['finalamt'])."</td>
+                                                     <td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
                                                 }
                                                 else{
                                                     $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$eemp]."</td><td>".$edate."</td>
-                                                    <td>Authorization</td> <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td><td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
+                                                    <td>Authorization</td> <td><a href='javascript:void(0);' onclick=".$path.">".$row['trnum']."</a></td>
+                                                    <td style='text-align:right;'>".number_format_ind($row['finalamt'])."</td>
+                                                    <td style='color:orange;'>Entry Modified</td><td>".$adtime2."</td></tr>";
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                if($count35 > 0){
+                                if(($count35 > 0) && ($trans_type == "all" ||$trans_type == "d_details")){
                                     $sql = "SELECT * FROM `main_deletiondetails` WHERE `empcode` IN ('$ecode') AND `updated` >= '$time1' AND `updated` <= '$time2'";
                                     
                                     $query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query);
@@ -433,6 +477,7 @@
                                                 $html .= "<tr><td style='text-align:center;'>".$i."</td><td>".$user_name[$aemp]."</td><td>".$edate."</td><td>".$row['type']."</td>
                                                
                                                 <td><a href='javascript:void(0);' onclick=".$path.">".$row['transactionno']."</a></td>
+                                                <td style='text-align:right;'>".number_format_ind($row['amount'])."</td>
                                                 <td style='color:red;'>Entry Deleted</td><td>".$adtime2."</td></tr>";
                                             }
                                         }

@@ -144,7 +144,7 @@ if($link_active_flag > 0){
 					var url = "breeder_fetch_breedname1_duplicates.php?description="+description+"&id="+id+"&type="+type;
                     //window.open(url);
 					var asynchronous = true;
-					oldqty.open(method, url, asynchronous);
+					oldqty.open(method, url, asynchronous); 
 					oldqty.send();
 					oldqty.onreadystatechange = function(){
 						if(this.readyState == 4 && this.status == 200){

@@ -238,7 +238,7 @@ if($link_active_flag > 0){
                                         <div class="col-md-4">
                                         <div class="form-group">
                                             <label>Emergency Number</label>
-							                <input type="number" name="emc_no" id="emc_no" class="form-control">
+							                <input type="text" name="emc_no" id="emc_no" class="form-control" onkeyup="validatename(this.id)">
                                             </div>
                                         </div>
                                     </div>

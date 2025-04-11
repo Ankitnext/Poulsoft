@@ -298,7 +298,7 @@ while($row = mysqli_fetch_assoc($query)){ $flock_alist[$row['code']] = $row['cod
                         $mbody_weight[$key1] = (float)$row['mbody_weight'];
                         $mfeed_qty[$key1] += ((float)$row['mfeed_qty1'] + (float)$row['mfeed_qty2']);
                         $egg_weight[$key1] = (float)$row['egg_weight'];
-
+ 
                         $flock_alist[$key1] = $key1;
                     }
 

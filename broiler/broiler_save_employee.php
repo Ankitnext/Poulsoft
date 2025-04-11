@@ -38,13 +38,14 @@ $title = $_POST['title'];
 $name = $_POST['name'];
 $emp_id = $_POST['emp_id'];
 $mobile = $_POST['mobile'];
-$emc_no = $_POST['emc_no'];
+$emc_no = intval($_POST['emc_no']);
 $email = $_POST['email'];
 $gender = $_POST['gender'];
 $desig_code = $_POST['desig_code'];
 $este_code = $_POST['este_code'];
 $birth_date = date("Y-m-d",strtotime($_POST['birth_date']));
 $join_date = date("Y-m-d",strtotime($_POST['join_date']));
+
 
 $gross_salary = $_POST['gross_salary'];
 $warehouse = $_POST['warehouse'];
@@ -163,7 +164,7 @@ if(!empty($_FILES["emp_photo_path"]["name"])) {
     move_uploaded_file($filetmp,$emp_photo_paths);
 }
 else{
-    $emp_photo_path_name = $emp_photo_paths = "";
+    $emp_photo_path_name = $emp_photo_paths = ""; 
 }
 
 if($incr < 10){ $incr = '000'.$incr; } else if($incr >= 10 && $incr < 100){ $incr = '00'.$incr; } else if($incr >= 100 && $incr < 1000){ $incr = '0'.$incr; } else { }

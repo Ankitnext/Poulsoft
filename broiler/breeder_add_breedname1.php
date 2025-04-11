@@ -59,7 +59,7 @@ if($link_active_flag > 0){
                                                     <th style="text-align:center;"><label>+/-</label></th>
                                                     <th style="visibility:hidden;"></th>
                                                 </tr>
-                                            </thead>
+                                            </thead> 
                                             <tbody id="tbody">
                                                 <tr>
                                                     <td><input type="text" name="description[]" id="description[0]" class="form-control" style="width:210px;" onkeyup="validatename(this.id);check_duplicate(this.id);" /></td>
@@ -184,7 +184,7 @@ if($link_active_flag > 0){
 					oldqty.onreadystatechange = function(){
 						if(this.readyState == 4 && this.status == 200){
 							var dup_dt = this.responseText;
-                            var dup_info = dup_dt.split("@");
+                            var dup_info = dup_dt.split("@"); 
                             var row = dup_info[1];
 							if(parseInt(dup_info[0]) == 0){
 								document.getElementById("dupflag["+row+"]"). value = 0;

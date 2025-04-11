@@ -178,7 +178,7 @@
 							<?php
 								if(isset($_POST['submit']) == true){
 									$tcr_amt = $tdr_amt = $trec_amt = $texp_amt = $c = 0; $whcodes = array();
-									foreach($_POST['whname'] as $whcode){ if($whcode == "all"){ $c = 1; } else{ $whcodes[] = $whcode; } }
+									foreach($_POST['whname'] as $whcode){ if($whcode == "all"){ $c = $w_all = 1; } else{ $whcodes[] = $whcode; } }
 									$csize = sizeof($whcodes); $whcode = "";
 									for($i = 0;$i <= $csize;$i++){ if($whcodes[$i] == ""){ } else if($whcode == ""){ $whcode = $whcodes[$i]; } else{ $whcode = $whcode."','".$whcodes[$i]; } }
 									if($c == 1){ $whname = ""; } else{ $whname = " AND `warehouse` IN ('$whcode')"; }
@@ -189,7 +189,7 @@
 									$grp = " ORDER BY `code` ASC";
 									$sql = $seq."".$whname."".$grp;
 									$query = mysqli_query($conn,$sql);
-									while($row = mysqli_fetch_assoc($query)){
+									while($row = mysqli_fetch_assoc($query)){ 
 										$ob_qty[$row['code']] = $row['closedquantity'];
 										$ob_amt[$row['code']] = $ob_amt[$row['code']] + ($row['closedquantity'] * $row['price']);
 									}
@@ -223,9 +223,14 @@
 										$sal_qty[$row['itemcode']] = $sal_qty[$row['itemcode']] + $row['netweight'];
 										$sal_amt[$row['itemcode']] = $sal_amt[$row['itemcode']] + $row['totalamt'];
 									}
+
+									$w_alist = array(); $w_all = 0; foreach($_POST['whname'] as $wcode){ if($wcode == "all"){ $w_all = 1; } $w_alist[$wcode] = $wcode; }
+									$w_list = implode("','",$w_alist);
+									$w_fltr = ""; if($w_all == 0){ $w_fltr = " AND `mtype` = 'sector' AND `ccode` IN ('$w_list')"; }
+
 									$seq = "SELECT * FROM `main_mortality` WHERE `date` >= '$fdate' AND  `date` <= '$tdate'";
 									$flags = " AND `active` = '1' AND `dflag` = '0' ORDER BY `itemcode` ASC";
-									$sql = $seq."".$flags; //".$whname."
+									$sql = $seq."".$w_fltr."".$flags; //".$whname."
 									$query = mysqli_query($conn,$sql);
 									while($row = mysqli_fetch_assoc($query)){
 										$mort_qty[$row['itemcode']] = $mort_qty[$row['itemcode']] + $row['netweight'];

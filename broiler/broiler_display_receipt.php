@@ -9,13 +9,18 @@ while($row = mysqli_fetch_assoc($query)){ $table_name = $row['table_name']; } $t
 $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
 if($link_active_flag > 0){
+    //Check for table
+    $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name;
+    $sql1 = "SHOW TABLES WHERE ".$table_head." LIKE 'location_branch';"; $query1 = mysqli_query($conn,$sql1); $tcount = mysqli_num_rows($query1);
+    if($tcount > 0){ } else{ $sql1 = "CREATE TABLE $database_name.location_branch LIKE poulso6_admin_broiler_broilermaster.location_branch;"; mysqli_query($conn,$sql1); }
+    
     while($row = mysqli_fetch_assoc($query)){ $cname = $row['name']; }
     $sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$user_code' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
     $dlink = $alink = $elink = $rlink = $plink = $ulink = $flink = array(); $sector_access = $cgroup_access = $user_type = "";
     while($row = mysqli_fetch_assoc($query)){
         $dlink = str_replace(",","','",$row['displayaccess']);
         $alink = str_replace(",","','",$row['addaccess']);
-        $elink = str_replace(",","','",$row['editaccess']);
+        $elink = str_replace(",","','",$row['editaccess']); 
         $rlink = str_replace(",","','",$row['deleteaccess']);
         $plink = str_replace(",","','",$row['printaccess']);
         $ulink = str_replace(",","','",$row['otheraccess']);
@@ -38,15 +43,12 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition sidebar-mini">
         <?php
         if($acount == 1){
-            /*Check for Table Availability*/
-            $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
-            $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("broiler_printview_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_printview_master LIKE poulso6_admin_broiler_broilermaster.broiler_printview_master;"; mysqli_query($conn,$sql1); }
-             
-            //Fetch Column From Sales Table
+           
+            // //Fetch Column From Sales Table
             $sql = "SHOW COLUMNS FROM `".$table_name."`"; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $c = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
             if(in_array("vmg_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `".$table_name."` ADD `vmg_code` VARCHAR(500) NULL DEFAULT NULL COMMENT 'Vendor Master Group Code' AFTER `dflag`"; mysqli_query($conn,$sql); }
+            // if(in_array("dataentry_daterange_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.dataentry_daterange_master LIKE poulso6_admin_broiler_broilermaster.dataentry_daterange_master;"; mysqli_query($conn,$sql1); }
 
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);

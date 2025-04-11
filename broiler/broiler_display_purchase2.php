@@ -9,6 +9,11 @@ while($row = mysqli_fetch_assoc($query)){ $table_name = $row['table_name']; } $t
 $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
 if($link_active_flag > 0){
+
+    $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name;
+    $sql1 = "SHOW TABLES WHERE ".$table_head." LIKE 'image_deletion_details';"; $query1 = mysqli_query($conn,$sql1); $tcount = mysqli_num_rows($query1);
+    if($tcount > 0){ } else{ $sql1 = "CREATE TABLE $database_name.image_deletion_details LIKE poulso6_admin_broiler_broilermaster.image_deletion_details;"; mysqli_query($conn,$sql1); }
+
     while($row = mysqli_fetch_assoc($query)){ $cname = $row['name']; }
     $sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$user_code' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
     $dlink = $alink = $elink = $rlink = $plink = $ulink = $flink = array(); $sector_access = $cgroup_access = $user_type = "";
@@ -84,6 +89,12 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition sidebar-mini">
         <?php
         if($acount == 1){
+             /*Check for Table Availability*/
+             $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
+             $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+             if(in_array("broiler_printview_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_printview_master LIKE poulso6_admin_broiler_broilermaster.broiler_printview_master;"; mysqli_query($conn,$sql1); }
+             if(in_array("dataentry_daterange_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.dataentry_daterange_master LIKE poulso6_admin_broiler_broilermaster.dataentry_daterange_master;"; mysqli_query($conn,$sql1); }
+  
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
@@ -203,6 +214,8 @@ if($link_active_flag > 0){
 										<th>Price</th>
 										<th>Amount</th>
 										<th>Farm/Warehouse</th>
+										<th>Vehicle</th>
+										<th>Driver</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
@@ -228,6 +241,27 @@ if($link_active_flag > 0){
                                             //$delivernote_url = "print/Examples/purchase_delivery_note1.php?trnum=".$row['trnum']."&sector=".$row['warehouse'];
                                             $delivernote_url = "print/Examples/broiler_purchase_invoice.php?trnum=".$row['trnum']."&sector=".$row['warehouse']."&type=inv";
                                             $delivernote_url2 = "print/Examples/broiler_purchase_invoice3.php?trnum=".$row['trnum']."&sector=".$row['warehouse']."&type=inv";
+
+                                            
+                                            $refs_download = $refs_view = "";
+                                            if($row['purdoc_path1'] != ""){
+                                                $refs_download .= '<a href="'.$row["purdoc_path1"].'" download title="download"><i class="fa-solid fa-angles-down" style="font-size:15px;"></i></a>&ensp;';
+                                            }
+                                            if($row['purdoc_path2'] != ""){
+                                                $refs_download .= '<a href="'.$row["purdoc_path2"].'" download title="download"><i class="fa-solid fa-angles-down" style="font-size:15px;"></i></a>&ensp;';
+                                            }
+                                            if($row['purdoc_path3'] != ""){
+                                                $refs_download .= '<a href="'.$row["purdoc_path3"].'" download title="download"><i class="fa-solid fa-angles-down" style="font-size:15px;"></i></a>&ensp;';
+                                            }
+                                            if($row['purdoc_path1'] != ""){
+                                                $refs_view .= '<a href="'.$row["purdoc_path1"].'" title="view" target="_BLANK"><i class="fa-solid fa-eye" style="font-size:15px;"></i></a>&ensp;';
+                                            }
+                                            if($row['purdoc_path2'] != ""){
+                                                $refs_view .= '<a href="'.$row["purdoc_path2"].'" title="view" target="_BLANK"><i class="fa-solid fa-eye" style="font-size:15px;"></i></a>&ensp;';
+                                            }
+                                            if($row['purdoc_path3'] != ""){
+                                                $refs_view .= '<a href="'.$row["purdoc_path3"].'" title="view" target="_BLANK"><i class="fa-solid fa-eye" style="font-size:15px;"></i></a>&ensp;';
+                                            }
                                     ?>
                                     <tr>
 										<td data-sort="<?= strtotime($row['date']) ?>"><?= date('d.m.Y',strtotime($row['date'])) ?></td>
@@ -239,6 +273,8 @@ if($link_active_flag > 0){
 										<td><?php echo $row['rate']; ?></td>
 										<td><?php echo $row['item_tamt']; ?></td>
 										<td><?php echo $sector_name[$row['warehouse']]; ?></td>
+										<td><?php echo $row['vehicle_code']; ?></td>
+										<td><?php echo $row['driver_code']; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
@@ -274,6 +310,12 @@ if($link_active_flag > 0){
                                                 echo "<a href='".$print_url."'><i class='fa fa-print' style='color:black;' title='Print'></i></a>&ensp;&ensp;";
                                                 echo "<a href='".$delivernote_url."' target='_BLANK'><i class='fa fa-print' style='color:green;' title='Purchase Delivery Note'></i></a>&ensp;&ensp;";
                                                 echo "<a href='".$delivernote_url2."' target='_BLANK'><i class='fa fa-print' style='color:brown;' title='Purchase Delivery Note'></i></a>&ensp;&ensp;";
+                                            }
+                                            if($refs_download != ""){
+                                                echo $refs_download;
+                                            }
+                                            if($refs_view != ""){
+                                                echo $refs_view;
                                             }
                                         ?>
                                         </td>

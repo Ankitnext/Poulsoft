@@ -60,10 +60,15 @@ if($link_active_flag > 0){
                                                             <label>Region<b style="color:red;">&nbsp;*</b></label>
                                                             <select name="region" id="region" class="form-control select2" style="width: 100%;" onchange="clear_data();"><option value="select">select</option><?php foreach($region_code as $rcode){ ?><option value="<?php echo $rcode; ?>"><?php echo $region_name[$rcode]; ?></option><?php } ?></select>
                                                         </div>
+                                                    </th> 
+                                                    <th>
+                                                        <div class="form-group">
+                                                            <label>Branch<b style="color:red;">&nbsp;*</b></label>
+                                                            <select name="branch" id="branch" class="form-control select2" style="width:200px;"></select>
+                                                        </div>
                                                     </th>
                                                 </tr>
                                                 <tr>
-                                                    <th>Branch<b style="color:red;">&nbsp;*</b></th>
                                                     <th>Line<b style="color:red;">&nbsp;*</b></th>
                                                     <th style="visibility:hidden;">Action</th>
                                                     <th style="visibility:hidden;">DF</th>
@@ -71,7 +76,7 @@ if($link_active_flag > 0){
                                             </thead>
                                             <tbody id="tbody">
                                                 <tr>
-                                                    <td><select name="branch[]" id="branch[0]" class="form-control select2" style="width:200px;"></select></td>
+                                                    <!-- <td><select name="branch[]" id="branch[0]" class="form-control select2" style="width:200px;"></select></td> -->
                                                     <td><input type="text" name="line[]" id="line[0]" class="form-control" style="width:250px;" onkeyup="validatename(this.id)" onchange="check_duplicate(this.id);" /></td>
                                                     <td id="action[0]" style="width:80px;"><a href="javascript:void(0);" id="addrow[0]" onClick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
                                                     <td style="visibility:hidden;"><input type="text" name="dupflag[0]" id="dupflag[0]" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
@@ -111,11 +116,11 @@ if($link_active_flag > 0){
 				document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
                 var incr = document.getElementById("incr").value;
                 var a = document.getElementById("region").value;
-                    if(a.match("select")){
-                        alert("Please select Region");
-                        document.getElementById("region").focus();
-                        l = false;
-                    }
+                if(a.match("select")){
+                    alert("Please select Region");
+                    document.getElementById("region").focus();
+                    l = false;
+                }
                 var d = e = ""; var c = dupflag = 0; var l = x = true;
                 for(var b = 0;b <= incr;b++){
                     if(l == true){
@@ -184,12 +189,13 @@ if($link_active_flag > 0){
             }
 			function create_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                var selectedBranch = document.getElementById("branch").value;
                 document.getElementById("action["+d+"]").style.visibility = "hidden";
                 d++; var html = '';
                 var slno = d + 1;
                 document.getElementById("incr").value = d;
                 html += '<tr id="row_no['+d+']">';
-                html += '<td><select name="branch[]" id="branch['+d+']" class="form-control select2" style="width:200px;"></select></td>';
+               // html += '<td><select name="branch[]" id="branch['+d+']" class="form-control select2" style="width:200px;"></select></td>';
                 html += '<td><input type="text" name="line[]" id="line['+d+']" class="form-control" style="width:250px;" onkeyup="validatename(this.id)" onchange="check_duplicate(this.id);" /></td>';
                 html += '<td id="action['+d+']" style="padding-top: 5px;width:80px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
                 html += '<td style="visibility:hidden;"><input type="text" name="dupflag['+d+']" id="dupflag['+d+']" class="form-control text-right" value="0" style="width:20px;" /></td>';
@@ -197,6 +203,7 @@ if($link_active_flag > 0){
 				$('#tbody').append(html);
 				$('.select2').select2();
                 var prx = "row_no["+d+"]"; fetch_branch_details(prx);
+                document.getElementById("branch").value = selectedBranch;
             }
             function destroy_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -211,7 +218,7 @@ if($link_active_flag > 0){
                 document.getElementById("incr").value = d;
 
                 html += '<tr id="row_no['+d+']">';
-                html += '<td><select name="branch[]" id="branch['+d+']" class="form-control select2" style="width:200px;"></select></td>';
+               // html += '<td><select name="branch" id="branch" class="form-control select2" style="width:200px;"></select></td>';
                 html += '<td><input type="text" name="line[]" id="line['+d+']" class="form-control" style="width:250px;" onkeyup="validatename(this.id)" onchange="check_duplicate(this.id);" /></td>';
                 html += '<td id="action['+d+']" style="width:80px;"><a href="javascript:void(0);" id="addrow['+d+']" onClick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>';
                 html += '<td style="visibility:hidden;"><input type="text" name="dupflag['+d+']" id="dupflag['+d+']" class="form-control text-right" value="0" style="width:20px;" /></td>';
@@ -220,33 +227,37 @@ if($link_active_flag > 0){
 				$('.select2').select2();
                 var prx = "row_no["+d+"]"; fetch_branch_details(prx);
             }
-            function fetch_branch_details(a){
-                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+            function fetch_branch_details() {
                 var reg_code = document.getElementById("region").value;
-                removeAllOptions(document.getElementById("branch["+d+"]"));
-                if(!reg_code.match("select")){
-                    myselect1 = document.getElementById("branch["+d+"]");
-                    theOption1=document.createElement("OPTION");
-                    theText1=document.createTextNode("select");
-                    theOption1.value = "select"; 
-                    theOption1.appendChild(theText1); 
+                var myselect1 = document.getElementById("branch");
+                removeAllOptions(myselect1); // Clear any existing options first
+
+                if (reg_code !== "select") {
+                    var theOption1 = document.createElement("OPTION");
+                    var theText1 = document.createTextNode("select");
+                    theOption1.value = "select";
+                    theOption1.appendChild(theText1);
                     myselect1.appendChild(theOption1);
+
                     <?php
-                        $sql = "SELECT * FROM `location_branch` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+                        $sql = "SELECT * FROM `location_branch` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+                        $query = mysqli_query($conn, $sql);
                         while($row = mysqli_fetch_assoc($query)){
                             $r_code = $row['region_code'];
-                            echo "if(reg_code == '$r_code'){";
+                            echo "if (reg_code == '$r_code') {";
                     ?>
-                        theOption1=document.createElement("OPTION");
-						theText1=document.createTextNode("<?php echo $row['description']; ?>");
-						theOption1.value = "<?php echo $row['code']; ?>";
-						theOption1.appendChild(theText1); myselect1.appendChild(theOption1);
+                            var theOption1 = document.createElement("OPTION");
+                            var theText1 = document.createTextNode("<?php echo $row['description']; ?>");
+                            theOption1.value = "<?php echo $row['code']; ?>";
+                            theOption1.appendChild(theText1);
+                            myselect1.appendChild(theOption1);
                     <?php
-                        echo "}";
+                            echo "}";
                         }
                     ?>
                 }
             }
+
             function validatename(x) {
                 expr = /^[a-zA-Z0-9 (.&)_-]*$/;
                 var a = document.getElementById(x).value;

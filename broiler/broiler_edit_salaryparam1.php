@@ -110,13 +110,14 @@ if($link_active_flag > 0){
                                         </thead>
                                         <tbody id="tbody">
                                             <tr>
-                                                <td><select name="sector" id="sector" class="form-control select2" style="width:190px;" onchange=""><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($ucode == $sect){ echo "selected"; } ?>><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>
-                                                <td><select name="desg" id="desg" class="form-control select2" style="width:190px;" onchange=""><option value="select">-select-</option><?php foreach($desg_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($ucode == $desig_code){ echo "selected"; } ?>><?php echo $desg_name[$ucode]; ?></option><?php } ?></select></td>
+                                                <td><select name="sector" id="sector" class="form-control select2" style="width:190px;" onchange="check_duplicate();"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($ucode == $sect){ echo "selected"; } ?>><?php echo $sector_name[$ucode]; ?></option><?php } ?></select></td>
+                                                <td><select name="desg" id="desg" class="form-control select2" style="width:190px;" onchange="check_duplicate();"><option value="select">-select-</option><?php foreach($desg_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($ucode == $desig_code){ echo "selected"; } ?>><?php echo $desg_name[$ucode]; ?></option><?php } ?></select></td>
                                                 <td><input type="text" name="basic" id="basic" class="form-control text-right" value="<?php echo $basic; ?>" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="hra" id="hra" class="form-control text-right" value="<?php echo $hra; ?>" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="med" id="med" class="form-control text-right" value="<?php echo $medical; ?>" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="conv" id="conv" class="form-control text-right" value="<?php echo $con_allow; ?>" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><input type="text" name="trans" id="trans" class="form-control text-right" value="<?php echo $transport; ?>" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
+                                                <td style="visibility:hidden;"><input type="text" name="dupflag" id="dupflag" class="form-control text-right" value="0" style="width:20px;" readonly /></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -154,7 +155,7 @@ if($link_active_flag > 0){
                 var sector = document.getElementById("sector").value;
                 var desg = document.getElementById("desg").value;
                 var basic = document.getElementById("basic").value; if(basic == ""){ basic = 0; }
-               
+                var dupflag = document.getElementById("dupflag").value;
                         
                 if(sector == "" || sector == "select"){
                     alert("Please select From Sector");
@@ -164,6 +165,11 @@ if($link_active_flag > 0){
                 else if(desg == "" || desg == "select"){
                     alert("Please select Designation");
                     document.getElementById("desg").focus();
+                    l = false;
+                } 
+                else if(parseInt(dupflag) == 1){
+                    alert("Thir row already exist.\n Kindly check");
+                    document.getElementById("sector").focus();
                     l = false;
                 }
                 else if(parseFloat(basic) == 0){
@@ -196,7 +202,36 @@ if($link_active_flag > 0){
 					document.getElementById("ebtncount").value = "0";
                 }
             }
-           
+            function check_duplicate(){
+				var sector = document.getElementById("sector").value;
+				var desg = document.getElementById("desg").value;
+                var id = '<?php echo $ids; ?>';
+				var type = "edit";
+				if(sector != "" && desg != ""){ 
+					var oldqty = new XMLHttpRequest();
+					var method = "GET";
+					var url = "broiler_fetch_salaryparam1_duplicates.php?sector="+sector+"&desg="+desg+"&type="+type;
+                    //window.open(url);
+					var asynchronous = true;
+					oldqty.open(method, url, asynchronous); 
+					oldqty.send();
+					oldqty.onreadystatechange = function(){
+						if(this.readyState == 4 && this.status == 200){
+							var dup_dt = this.responseText;
+                            var dup_info = dup_dt.split("@");
+                            
+							if(parseInt(dup_info[0]) == 0){
+								document.getElementById("dupflag"). value = 0;
+							}
+							else {
+								alert("This Row already exist.\n Kindly change the Sector or Designation");
+								document.getElementById("dupflag"). value = 1;
+							}
+						}
+					}
+				}
+				else { }
+			}
             document.addEventListener("keydown", (e) => { if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function (){ $('#submit').click(); }); } } else{ } });
             function validatename(x) { expr = /^[a-zA-Z0-9 (.&)_-]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, ''); } document.getElementById(x).value = a; }
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }

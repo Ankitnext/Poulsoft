@@ -132,6 +132,7 @@ if($link_active_flag > 0){
             $rate[$pcount] = $row['item_tamt'] / $row['rcd_qty'];
             $snt_qty[$pcount] = $row['snt_qty'];
             $fre_qper[$pcount] = $row['fre_qper'];
+            $mnu_fqty_flag[$pcount] = $row['mnu_fqty_flag']; if($mnu_fqty_flag[$pcount] == ""){ $mnu_fqty_flag[$pcount] = 0; }
             $rcd_qty[$pcount] = $row['rcd_qty'];
             $fre_qty[$pcount] = $row['fre_qty'];
             $rate[$pcount] = $row['rate'];
@@ -142,7 +143,7 @@ if($link_active_flag > 0){
             $gst_amt[$pcount] = $row['gst_amt'];
             $tcds_per[$pcount] = $row['tcds_per'];
             $tcds_amt[$pcount] = $row['tcds_amt'];
-            $item_tamt[$pcount] = $row['item_tamt'];
+            $item_tamt[$pcount] = round($row['item_tamt']); 
             $freight_type[$pcount] = $row['freight_type'];
             $freight_amt[$pcount] = $row['freight_amt'];
             $freight_pay_type[$pcount] = $row['freight_pay_type'];
@@ -272,7 +273,7 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="form-group">
                                             <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Free Qty %</label>
-                                            <input type="text" name="fre_qper[]" id="fre_qper[<?php echo $i; ?>]" class="form-control" value="<?php echo $fre_qper[$i]; ?>" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" >
+                                            <input type="text" name="fre_qper[]" id="fre_qper[<?php echo $i; ?>]" class="form-control" value="<?php echo $fre_qper[$i]; ?>" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);upd_mnhfree_qty_flag(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" >
                                         </div>
                                         <div class="form-group">
                                             <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Mortality</label>
@@ -296,7 +297,7 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="form-group">
                                             <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Free Qty</label>
-                                            <input type="text" name="fre_qty[]" id="fre_qty[<?php echo $i; ?>]" class="form-control" value="<?php echo $fre_qty[$i]; ?>" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id)" onchange="validateamount(this.id);" >
+                                            <input type="text" name="fre_qty[]" id="fre_qty[<?php echo $i; ?>]" class="form-control" value="<?php echo $fre_qty[$i]; ?>" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);upd_mnhfree_qty_flag(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" >
                                         </div>
                                         <div class="form-group">
                                             <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Total Qty</label>
@@ -304,11 +305,11 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="form-group">
                                             <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Rate<b style="color:red;">&nbsp;*</b></label>
-                                            <input type="text" name="rate[]" id="rate[<?php echo $i; ?>]" class="form-control" value="<?php echo $rate[$i]; ?>" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" >
+                                            <input type="text" name="rate[]" id="rate[<?php echo $i; ?>]" class="form-control" value="<?php echo $rate[$i]; ?>" placeholder="0.00" style="width:80px;" onkeyup="validatenum5(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount5(this.id);" >
                                         </div>
                                         <div class="form-group">
                                             <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Amount</label>
-                                            <input type="text" name="item_tamt[]" id="item_tamt[<?php echo $i; ?>]" value="<?php echo round(($rcd_qty[$i] * $rate[$i]),2); ?>" class="form-control" placeholder="0.00" style="width:90px;" readonly >
+                                            <input type="text" name="item_tamt[]" id="item_tamt[<?php echo $i; ?>]" value="<?php echo round(($rcd_qty[$i] * $rate[$i]),0); ?>" class="form-control" placeholder="0.00" style="width:90px;" readonly >
                                         </div>
                                         <div class="form-group">
                                             <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Sector/Farm<b style="color:red;">&nbsp;*</b></label>
@@ -337,6 +338,10 @@ if($link_active_flag > 0){
                                                 <option value="select">select</option>
                                                 <?php foreach($gst_code as $gsts){ $gst_cval = $gsts."@".$gst_value[$gsts]; ?><option value="<?php echo $gst_cval; ?>" <?php if($edit_gst_code[$i] == $gsts){ echo "selected"; } ?>><?php echo $gst_name[$gsts]; ?></option><?php } ?>
                                             </select>
+                                        </div>
+                                        <div class="form-group" style="width:20px;visibility:hidden;">
+                                            <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?> title="Discount Percentage">MF</label>
+                                            <input type="text" name="mnu_fqty_flag[]" id="mnu_fqty_flag[<?php echo $i; ?>]" class="form-control" value="<?php echo $mnu_fqty_flag[$i]; ?>" style="width:20px;" readonly />
                                         </div>
                                     </div>
                                     <?php
@@ -617,15 +622,15 @@ if($link_active_flag > 0){
                 
                 html += '<div class="row" id="row_no['+d+']">';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Billed Qty</label><input type="text" name="snt_qty[]" id="snt_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">free Qty %</label><input type="text" name="fre_qper[]" id="fre_qper['+d+']" class="form-control text-right" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" ></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">free Qty %</label><input type="text" name="fre_qper[]" id="fre_qper['+d+']" class="form-control text-right" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);upd_mnhfree_qty_flag(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Mortality</label><input type="text" name="mortality[]" id="mortality['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Shortage</label><input type="text" name="shortage[]" id="shortage['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Weeks</label><input type="text" name="weeks[]" id="weeks['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Excess Qty<b style="color:red;">&nbsp;*</b></label><input type="text" name="excess_qty[]" id="excess_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Rcv Qty<b style="color:red;">&nbsp;*</b></label><input type="text" name="rcd_qty[]" id="rcd_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" ></div>';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Free Qty</label><input type="text" name="fre_qty[]" id="fre_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Free Qty</label><input type="text" name="fre_qty[]" id="fre_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);upd_mnhfree_qty_flag(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Total Qty</label><input type="text" name="total_qty[]" id="total_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" readonly /></div>';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Rate<b style="color:red;">&nbsp;*</b></label><input type="text" name="rate[]" id="rate['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Rate<b style="color:red;">&nbsp;*</b></label><input type="text" name="rate[]" id="rate['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum5(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount5(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Amount</label><input type="text" name="item_tamt[]" id="item_tamt['+d+']" class="form-control" placeholder="0.00" style="width:90px;" readonly ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Sector/Farm<b style="color:red;">&nbsp;*</b></label><select name="warehouse[]" id="warehouse['+d+']" class="form-control select2" style="width:180px;" onchange="fetch_batch(this.id);"><option value="select">select</option><?php foreach($sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo $sector_name[$whouse_code]; ?></option><?php } ?></select></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Batch</label><td><input readonly type="text" name="batch[]" id="batch['+d+']"  class="form-control" style="width:120px;" /></td></div>';
@@ -634,6 +639,7 @@ if($link_active_flag > 0){
                 html += '<div class="form-group" style="width:20px;visibility:hidden;"><label class="labelrow" style="display:none;">Disc. %</label><input type="text" name="dis_per[]" id="dis_per['+d+']" class="form-control" placeholder="%" style="width:20px;" onkeyup="validatenum(this.id);fetch_discount_amount(this.id);"></div>';
                 html += '<div class="form-group" style="width:20px;visibility:hidden;"><label class="labelrow" style="display:none;">Disc. &#8377</label><input type="text" name="dis_amt[]" id="dis_amt['+d+']" class="form-control" placeholder="&#8377" style="width:20px;" onkeyup="validatenum(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);"></div>';
                 html += '<div class="form-group" style="width:20px;visibility:hidden;"><label class="labelrow" style="display:none;">GST</label><select name="gst_per[]" id="gst_per['+d+']" class="form-control select2" onchange="calculate_total_amt(this.id)" style="width:20px;"><option value="select">select</option><?php foreach($gst_code as $gsts){ $gst_cval = $gsts."@".$gst_value[$gsts]; ?><option value="<?php echo $gst_cval; ?>"><?php echo $gst_name[$gsts]; ?></option><?php } ?></select></div>';
+                html += '<div class="form-group" style="width:20px;visibility:hidden;"><label class="labelrow" style="display:none;" title="Manual Free Qty Edit">MF</label><input type="text" name="mnu_fqty_flag[]" id="mnu_fqty_flag['+d+']" class="form-control" value="0" style="width:20px;" readonly /></div>'
                 //html += '<div class="form-group" style="width:20px;visibility:hidden;"><label class="labelrow" style="display:none;">GST &#8377</label><input type="text" name="gst_amt[]'.'" id="gst_amt['+d+']'.'" class="form-control" placeholder="&#8377" style="width:20px;" readonly ></div>';
                 html += '</div>';
                 html += '<hr class="labelrow" style="display:none;" />';
@@ -662,15 +668,21 @@ if($link_active_flag > 0){
                 if(shortage_qty == "" || shortage_qty.length == 0 || shortage_qty == "0.00" || shortage_qty == "0"){ shortage_qty = 0; }
                 if(weeks_qty == "" || weeks_qty.length == 0 || weeks_qty == "0.00" || weeks_qty == "0"){ weeks_qty = 0; }
                 if(excess_qty == "" || excess_qty.length == 0 || excess_qty == "0.00" || excess_qty == "0"){ excess_qty = 0; }
-                var fre_qty = fqty_per = 0;
-                if(parseFloat(fre_qper) > 0){
-                    fqty_per = (parseFloat(fre_qper) / 100);
-                    fre_qty = parseFloat((parseFloat(sent_qty) * parseFloat(fqty_per))).toFixed(0);
-                    if(fre_qty == "" || fre_qty.length == 0 || fre_qty == "0.00" || fre_qty == "0"){ fre_qty = 0; }
-                    document.getElementById("fre_qty["+d+"]").value = parseFloat(fre_qty).toFixed(2);
-                }
-                fre_qty = document.getElementById("fre_qty["+d+"]").value; if(fre_qty == ""){ fre_qty = 0; }
                 
+                var fre_qty = fqty_per = 0;
+                var mnu_fqty_flag = document.getElementById("mnu_fqty_flag["+d+"]").value; if(mnu_fqty_flag == ""){ mnu_fqty_flag = 0; }
+                if(parseInt(mnu_fqty_flag) == 1){
+                    fre_qty = document.getElementById("fre_qty["+d+"]").value; if(fre_qty == ""){ fre_qty = 0; }
+                }
+                else{
+                    if(parseFloat(fre_qper) > 0){
+                        fqty_per = (parseFloat(fre_qper) / 100);
+                        fre_qty = parseFloat((parseFloat(sent_qty) * parseFloat(fqty_per))).toFixed(0);
+                        if(fre_qty == "" || fre_qty.length == 0 || fre_qty == "0.00" || fre_qty == "0"){ fre_qty = 0; }
+                        document.getElementById("fre_qty["+d+"]").value = parseFloat(fre_qty).toFixed(2);
+                    }
+                }
+
                 var tot_minusqty_qty = parseFloat(mortality_qty) + parseFloat(shortage_qty) + parseFloat(weeks_qty);
                 var tot_rec_qty = parseFloat(sent_qty) - parseFloat(tot_minusqty_qty) + parseFloat(excess_qty);
                 if(tot_rec_qty == "" || tot_rec_qty.length == 0 || tot_rec_qty == "0.00" || tot_rec_qty == "0"){ tot_rec_qty = 0; }
@@ -698,7 +710,7 @@ if($link_active_flag > 0){
                 if(dis_amt == "" || dis_amt.length == 0 || dis_amt == "0.00" || dis_amt == "0"){ dis_amt = 0; }
                 if(gst_per == "" || gst_per.length == 0 || gst_per == "0.00" || gst_per == "0"){ gst_per = 0; }
 
-                var total_amt = parseFloat(qty) * parseFloat(price);
+                var total_amt = parseFloat(qty) * parseFloat(price); if(total_amt == ""){ total_amt = 0; } total_amt = parseFloat(total_amt).toFixed(0);
                 /*if(dis_amt > 0){
                     total_amt = parseFloat(total_amt) - parseFloat(dis_amt);
                 }
@@ -706,7 +718,7 @@ if($link_active_flag > 0){
                     var gst_value = ((parseFloat(gst_per) / 100) * total_amt);
                     total_amt = parseFloat(total_amt) + parseFloat(gst_value);
                 }*/
-                document.getElementById("item_tamt["+d+"]").value = total_amt;
+                document.getElementById("item_tamt["+d+"]").value = total_amt; 
                 calculate_netpay();
             }
             function fetch_discount_amount(a){
@@ -720,7 +732,7 @@ if($link_active_flag > 0){
                 if(qty == "" || qty.length == 0 || qty == "0.00" || qty == "0"){ qty = 0; }
                 if(price == "" || price.length == 0 || price == "0.00" || price == "0"){ price = 0; }
 
-                var total_amt = parseFloat(qty) * parseFloat(price);
+                var total_amt = parseFloat(qty) * parseFloat(price); if(total_amt == ""){ total_amt = 0; } total_amt = parseFloat(total_amt).toFixed(0);
 
                 if(total_amt == "" || total_amt.length == 0 || total_amt == "0.00" || total_amt == "0"){ total_amt = 0; }
                 if(b[0].match("dis_per")){
@@ -744,6 +756,18 @@ if($link_active_flag > 0){
                         document.getElementById("dis_per["+d+"]").value = dis_per.toFixed(2);
                         calculate_total_amt(a);
                     }
+                }
+            }
+            function upd_mnhfree_qty_flag(a){
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                if(b[0] == "fre_qper"){
+                    document.getElementById("mnu_fqty_flag["+d+"]").value = 0;
+                }
+                else if(b[0] == "fre_qty"){
+                    document.getElementById("mnu_fqty_flag["+d+"]").value = 1;
+                }
+                else{
+                    document.getElementById("mnu_fqty_flag["+d+"]").value = 0;
                 }
             }
             function calculate_netpay(){
@@ -921,6 +945,8 @@ if($link_active_flag > 0){
             function validatename(x) { expr = /^[a-zA-Z0-9 (.&)_-]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, ''); } document.getElementById(x).value = a; }
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }
 			function validateamount(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(2); document.getElementById(x).value = b; }
+			function validatenum5(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }
+			function validateamount5(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(5); document.getElementById(x).value = b; }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
             setInterval(function(){
                 // window.screen.availHeight window.screen.availWidth

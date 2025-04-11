@@ -36,6 +36,12 @@ if($link_active_flag > 0){
         }
     }
     if($acount == 1){
+        //check and fetch date range
+        $file_aurl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH))); $e_code = $_SESSION['userid'];
+        $sql = "SELECT * FROM `dataentry_daterange_master` WHERE `file_name` LIKE '$file_aurl' AND `user_code` LIKE '$e_code' AND `active` = '1' AND `dflag` = '0'";
+        $query = mysqli_query($conn,$sql); $r_cnt = mysqli_num_rows($query); $s_days = $e_days = 0; $rdate = date("d.m.Y");
+        if($r_cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $s_days = $row['min_days']; $e_days = $row['max_days']; } }
+
         $today = date("Y-m-d");
 		$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%S%' AND `active` = '1' ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){ $ven_code[$row['code']] = $row['code']; $ven_name[$row['code']] = $row['name']; }
@@ -243,7 +249,7 @@ if($link_active_flag > 0){
                                     <div class="row">
                                         <div class="form-group">
                                             <label>Date<b style="color:red;">&nbsp;*</b></label>
-                                            <input type="text" name="date" id="date" class="form-control datepicker_plus_oneday" value="<?php echo date('d.m.Y',strtotime($date[0])); ?>" style="width:100px;" <?php if($auto_tds_flag == "1"){ echo 'onchange="broiler_fetch_Supplierpurchases();"'; } ?>>
+                                            <input type="text" name="date" id="date" class="form-control range_picker" value="<?php echo date('d.m.Y',strtotime($date[0])); ?>" style="width:100px;" <?php if($auto_tds_flag == "1"){ echo 'onchange="broiler_fetch_Supplierpurchases();"'; } ?>>
                                         </div>
                                         <div class="form-group">
                                             <label>Supplier<b style="color:red;">&nbsp;*</b></label>
@@ -1143,6 +1149,12 @@ if($link_active_flag > 0){
                     for (let i = 0; i < collection.length; i++) { collection[i].style.display = "none"; }
                 }
             }, 1000);
+        </script>
+         <script>
+            //Date Range selection
+            var s_date = '<?php echo date('d.m.Y', strtotime('-'.$s_days.' days', strtotime($rdate))); ?>';
+            var e_date = '<?php echo date('d.m.Y', strtotime('+'.$e_days.' days', strtotime($rdate))); ?>';
+            $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
         </script>
         <?php include "header_foot.php"; ?>
     </body>

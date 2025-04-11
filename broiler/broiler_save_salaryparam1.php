@@ -38,7 +38,7 @@ for($i = 0;$i < $dsize;$i++){
 
 
     if($basic[$i] == ""){ $basic[$i] = 0; }
-    if($hra[$i] == ""){ $hra[$i] = 0; }
+    if($hra[$i] == ""){ $hra[$i] = 0; } 
     if($med[$i] == ""){ $med[$i] = 0; }
     if($conv[$i] == ""){ $conv[$i] = 0; }
     if($trans[$i] == ""){ $trans[$i] = 0; }

@@ -30,6 +30,12 @@ $database_name = $dbname; $table_head = "Tables_in_".$database_name; $exist_tbl_
 $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
 if(in_array("broiler_bird_transferout", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_bird_transferout LIKE poulso6_admin_broiler_broilermaster.broiler_bird_transferout;"; mysqli_query($conn,$sql1); }
 if(in_array("company_price_list", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.company_price_list LIKE poulso6_admin_broiler_broilermaster.company_price_list;"; mysqli_query($conn,$sql1); }
+if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.breeder_cus_lines LIKE poulso6_admin_broiler_broilermaster.breeder_cus_lines;"; mysqli_query($conn,$sql1); }
+
+/*Check for Column Availability*/
+$sql='SHOW COLUMNS FROM `main_contactdetails`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+if(in_array("cline_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `cline_code` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `name`"; mysqli_query($conn,$sql); }
 
 /*Master Report Format*/
 $href = explode("/", $_SERVER['REQUEST_URI']); $field_href = explode("?", $href[2]); 
@@ -70,9 +76,11 @@ else{ $farm_access_list = implode("','", explode(",",$farm_access_code)); $farm_
 if($sector_access_code == "all"){ $sector_access_filter1 = ""; }
 else{ $sector_access_list = implode("','", explode(",",$sector_access_code)); $sector_access_filter1 = " AND `code` IN ('$sector_access_list')"; }
 
+$sql = "SELECT * FROM `location_region` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $region_code[$row['code']] = $row['code']; $region_name[$row['code']] = $row['description']; }
 
 $sql = "SELECT * FROM `location_branch` WHERE `active` = '1' ".$branch_access_filter1." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($query)){ $branch_code[$row['code']] = $row['code']; $branch_name[$row['code']] = $row['description']; }
+while($row = mysqli_fetch_assoc($query)){ $branch_code[$row['code']] = $row['code']; $branch_name[$row['code']] = $row['description']; $branch_region[$row['code']] = $row['region_code']; }
 
 $sql = "SELECT * FROM `location_line` WHERE `active` = '1' ".$line_access_filter1."".$branch_access_filter2."  ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $line_code[$row['code']] = $row['code']; $line_name[$row['code']] = $row['description']; }
@@ -168,7 +176,7 @@ if($_SERVER['REMOTE_ADDR'] == "49.205.135.183" || $user_name = "paras"){
 
     for($i = 0;$i <= 30;$i++){ $fsizes[$i."px"] = $i."px"; }
 }
-$fdate = $tdate = date("Y-m-d"); $item_cat = $items = $branches = $lines = $vendors =  $clines = $sectors = $farms = $mark_exec = "all"; $excel_type = "display";
+$fdate = $tdate = date("Y-m-d"); $item_cat = $items = $branches = $lines = $vendors = $regions = $clines = $sectors = $farms = $mark_exec = "all"; $excel_type = "display";
 $font_stype = ""; $font_size = "11px";
 if(isset($_POST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
@@ -181,10 +189,18 @@ if(isset($_POST['submit_report']) == true){
     $vendors = $_POST['vendors'];
     $clines = $_POST['cline'];
     $sectors = $_POST['sectors'];
+     $regions = $_POST['regions'];
     $mark_exec = $_POST['mark_exec'];
     if($_SERVER['REMOTE_ADDR'] == "49.205.135.183" || $user_name = "paras"){
         $font_stype = $_POST['font_stype'];
         $font_size = $_POST['font_size'];
+    }
+
+       $farm_query = "";
+     if($regions != "all"){
+        $rbrh_alist = array(); foreach($branch_code as $bcode){ $rcode = $branch_region[$bcode]; if($rcode == $regions){ $rbrh_alist[$bcode] = $bcode; } }
+        $rbrh_list = implode("','",$rbrh_alist);
+        $farm_query = " AND `branch_code` IN ('$rbrh_list')";
     }
     if($sectors != "all"){
         $sector_filter = " AND `warehouse` = '$sectors'";
@@ -196,7 +212,7 @@ if(isset($_POST['submit_report']) == true){
         if($lines != "all"){ $farm_filter .= " AND `line_code` = '$lines'"; }
         if($supervisors != "all"){ $farm_filter .= " AND `supervisor_code` = '$supervisors'"; }
 
-        $sql = "SELECT * FROM `broiler_farm` WHERE `dflag` = '0'".$farm_access_filter1."".$branch_access_filter2."".$line_access_filter2."".$farm_filter." ORDER BY `farm_code` ASC"; $query = mysqli_query($conn,$sql); $farm_list = "";
+        $sql = "SELECT * FROM `broiler_farm` WHERE `dflag` = '0'".$farm_access_filter1."".$branch_access_filter2."".$line_access_filter2."".$farm_filter."".$farm_query." ORDER BY `farm_code` ASC"; $query = mysqli_query($conn,$sql); $farm_list = "";
         while($row = mysqli_fetch_assoc($query)){ if($farm_list == ""){ $farm_list = $row['code']; } else{ $farm_list = $farm_list."','".$row['code']; } }
 
         if($branches == "all" && $lines == "all" && $supervisors == "all"){
@@ -209,16 +225,19 @@ if(isset($_POST['submit_report']) == true){
     $cline_fltr = "";
     if($clines != "all"){ $cline_fltr = " AND `cline_code` IN ('$clines')"; }
 
-    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$cline_fltr." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$cline_fltr." ORDER BY `name` ASC";
+    $query = mysqli_query($conn,$sql); $bcodes = ""; $vendor_code = array();
     while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_name[$row['code']] = $row['name']; $vendor_ccode[$row['code']] = $row['cus_ccode']; $vendor_mobl[$row['code']] = $row['mobile1']; $vendor_addr[$row['code']] = $row['baddress']; }
 
+    if($vendors != "all"){
+        $vendor_filter = " AND `vcode` = '$vendors'";
+    }
+    else if($clines != "all"){
+        $cus_list = implode("','",$vendor_code);
+        $vendor_filter = " AND `vcode` IN ('$cus_list')";
+    }
+    else{ $vendor_filter = ""; }
 
-      // $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$vcodes."".$cline_fltr." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
-    // while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_ccode[$row['code']] = $row['cus_ccode'];$vendor_name[$row['code']] = $row['name'];$cus_alist[$row['code']] = $row['code']; }
-    // $cus_list = implode("','",$cus_alist);
-    // $customer_filter = " AND `ccode` IN ('$cus_list')";
-
-    if($vendors == "all"){ $vendor_filter = ""; } else{ $vendor_filter = " AND `vcode` = '$vendors'"; }
     if($me_flag > 0 && $me_size > 0){ if($mark_exec == "all"){ $me_filter = ""; } else{ $me_filter = " AND `marketing_executive` = '$mark_exec'"; } } else{ $me_filter = ""; }
 
     
@@ -367,6 +386,15 @@ if(isset($_POST['submit_report']) == true){
                                         <option value="all" <?php if($clines == "all"){ echo "selected"; } ?>>-All-</option>
                                         <?php foreach($cline_code as $bcode){ if($cline_name[$bcode] != ""){ ?>
                                         <option value="<?php echo $bcode; ?>" <?php if($clines == $bcode){ echo "selected"; } ?>><?php echo $cline_name[$bcode]; ?></option>
+                                        <?php } } ?>
+                                    </select>
+                                </div>
+                                  <div class="m-2 form-group">
+                                    <label>Region</label>
+                                    <select name="regions" id="regions" class="form-control select2">
+                                        <option value="all" <?php if($regions == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($region_code as $rcode){ if(!empty($region_name[$rcode])){ ?>
+                                        <option value="<?php echo $rcode; ?>" <?php if($regions == $rcode){ echo "selected"; } ?>><?php echo $region_name[$rcode]; ?></option>
                                         <?php } } ?>
                                     </select>
                                 </div>
