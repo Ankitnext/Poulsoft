@@ -37,10 +37,16 @@ if($link_active_flag > 0){
     }
     if($acount == 1){
         //check and fetch date range
-        $file_aurl = str_replace("_edit_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH))); $e_code = $_SESSION['userid'];
-        $sql = "SELECT * FROM `dataentry_daterange_master` WHERE `file_name` LIKE '$file_aurl' AND `user_code` LIKE '$e_code' AND `active` = '1' AND `dflag` = '0'";
-        $query = mysqli_query($conn,$sql); $r_cnt = mysqli_num_rows($query); $s_days = $e_days = 0; $rdate = date("d.m.Y");
-        if($r_cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $s_days = $row['min_days']; $e_days = $row['max_days']; } }
+        // $file_aurl = str_replace("_edit_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH))); $e_code = $_SESSION['userid'];
+        // $sql = "SELECT * FROM `dataentry_daterange_master` WHERE `file_name` LIKE '$file_aurl' AND `user_code` LIKE '$e_code' AND `active` = '1' AND `dflag` = '0'";
+        // $query = mysqli_query($conn,$sql); $r_cnt = mysqli_num_rows($query); $s_days = $e_days = 0; $rdate = date("d.m.Y");
+        // if($r_cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $s_days = $row['min_days']; $e_days = $row['max_days']; } }
+        // $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE '$file_aurl' AND `field_function` LIKE 'Date Range Selection' AND `user_access` LIKE 'all' AND `flag` = '1'";
+        // $query = mysqli_query($conn,$sql); $drange_flag = mysqli_num_rows($query); if($drange_flag <= 0){ $s_days = $e_days = 9999; }
+
+         //check and fetch date range
+         global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_edit_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+         include "poulsoft_fetch_daterange_master.php";
 
         $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%S%' AND `active` = '1' ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){
@@ -296,10 +302,9 @@ if($link_active_flag > 0){
 			function validateamount(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(2); document.getElementById(x).value = b; }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
         </script>
-        <script>
+         <script>
             //Date Range selection
-            var s_date = '<?php echo date('d.m.Y', strtotime('-'.$s_days.' days', strtotime($rdate))); ?>';
-            var e_date = '<?php echo date('d.m.Y', strtotime('+'.$e_days.' days', strtotime($rdate))); ?>';
+            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
             $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
         </script>
 		<script src="main_numbertoamount.js"></script>

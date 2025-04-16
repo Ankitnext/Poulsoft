@@ -1,7 +1,7 @@
 <?php
-//broiler_edit_feedsale_lsfi.php
+//broiler_edit_feedsale4.php
 include "newConfig.php";
-$user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['feedsale_lsfi'];
+$user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['feedsale4'];
 date_default_timezone_set("Asia/Kolkata");
 $uri = explode("/",$_SERVER['REQUEST_URI']); $url2 = explode("?",$uri[1]); $href = $url2[0];
 $sql = "SELECT * FROM `main_linkdetails` WHERE `href` LIKE '$href' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
@@ -91,6 +91,9 @@ if($link_active_flag > 0){
         }
         if($bag_access_flag == ''){ $bag_access_flag =  0; }
     
+        $sql = "SELECT * FROM `feed_bagcapacity` WHERE `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+        while($row = mysqli_fetch_assoc($query)){ $bags_code[$row['code']] = $row['code']; $bags_size[$row['code']] = $row['bag_size']; }
+
         $sql = "SELECT * FROM `broiler_vendor_mastergroup` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $vmg_code = $vmg_name = array();
         while($row = mysqli_fetch_assoc($query)){ $vmg_code[$row['code']] = $row['code']; $vmg_name[$row['code']] = $row['description']; }
@@ -124,10 +127,16 @@ if($link_active_flag > 0){
             $icode[$i] = $row['icode'];
             $rcd_qty[$i] = $row['rcd_qty'];
             $fre_qty[$i] = $row['fre_qty'];
+            $mrp_amt[$i] = $row['mrp_amt'];
+            $dis_per[$i] = $row['dis_per'];
+            $nof_bags[$i] = $row['nof_bags'];
+            $avg_final_amount = $row['avg_final_amount'];
+            $disc_price[$i] = $row['disc_price'];
             $farm_mnu_name[$i] = $row['farm_mnu_name'];
             $batch_mnu_name[$i] = $row['batch_mnu_name'];
             $vg_code = $row['vmg_code'];
             $rate[$i] = $row['rate'];
+            $profit = $row['profit'];
             $gst_ecode[$i] = $row['gst_code'];
             $gst_eper[$i] = round($row['gst_per'],5);
             $gst_eamt[$i] = round($row['gst_amt'],5);
@@ -184,7 +193,7 @@ if($link_active_flag > 0){
                         </div>
                         <div class="m-0 p-2 card-body">
                             <div class="col-md-18">
-                                <form action="broiler_modify_feedsale_lsfi.php" method="post" role="form" onsubmit="return checkval()">
+                                <form action="broiler_modify_feedsale4.php" method="post" role="form" onsubmit="return checkval()">
                                     <div class="row">
                                         <div class="form-group">
                                             <label>Date<b style="color:red;">&nbsp;*</b></label>
@@ -227,16 +236,19 @@ if($link_active_flag > 0){
                                     <table>
                                         <thead>
                                             <tr style="text-align:center;">
-                                                <th>Item</th>
+                                                <th>Item<b style="color:red;">&nbsp;*</b></th>
+                                                <th>No. of Bags<b style="color:red;">&nbsp;*</b></th>
                                                 <?php if($bag_access_flag == 1) { ?>
                                                     <th>Qty (In Bags)</th>
                                                 <?php } else{ ?>
-                                                    <th>Qty (In Kgs)</th>
+                                                    <th>Bags (In Kgs)</th>
                                                 <?php } ?>
-                                                <th>Free Qty</th>
-                                                <th title="Available Stock">Stock</th>
-                                                <th>Sale Rate</th>
-                                                <th>GST</th>
+                                                
+                                                <th>MRP<b style="color:red;">&nbsp;*</b></th>
+                                                <th title="Discount Per">Disc. %</th>
+                                                <th title="Discount Per">Disc. &#8377</th>
+                                                <th>Final Rate</th>
+                                                <!-- <th>GST</th> -->
                                                 <th>Amount</th>
                                                 <th></th>
                                                 <th style="visibility:hidden;"></th>
@@ -249,12 +261,13 @@ if($link_active_flag > 0){
                                         <tbody id="row_body">
                                             <?php for($c = 0;$c <= $i;$c++){ ?>
                                             <tr id="row_no[<?php echo $c; ?>]">
-                                                <td><select name="icode[]" id="icode[<?php echo $c; ?>]" class="form-control select2" style="width:180px;" onchange="fetch_stock_master(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>" <?php if($icode[$c] == $prod_code){ echo "selected"; } ?>><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></td>
-                                                <td><input type="text" name="rcd_qty[]" id="rcd_qty[<?php echo $c; ?>]" class="form-control" value="<?php echo $rcd_qty[$c]; ?>" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" ></td>
-                                                <td><input type="text" name="fre_qty[]" id="fre_qty[<?php echo $c; ?>]" class="form-control" value="<?php echo $fre_qty[$c]; ?>" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" ></td>
-                                                <td><input type="text" name="available_stock[]" id="available_stock[<?php echo $c; ?>]" class="form-control" placeholder="0.00" style="width:90px;" readonly ></td>
+                                                <td><select name="icode[]" id="icode[<?php echo $c; ?>]" class="form-control select2" style="width:180px;" onchange="fetch_stock_master(this.id);fetch_reset(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>" <?php if($icode[$c] == $prod_code){ echo "selected"; } ?>><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></td>
+                                                <td><input type="text" name="fre_qty[]" id="fre_qty[<?php echo $c; ?>]" class="form-control" value="<?php echo $nof_bags[$c]; ?>" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);fetch_kgs(this.id);fetch_discount_amount2(this.id);" onchange="validateamount(this.id);" ></td>
+                                                <td><input type="text" name="rcd_qty[]" id="rcd_qty[<?php echo $c; ?>]" class="form-control" value="<?php echo $rcd_qty[$c]; ?>" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" readonly></td>
+                                                <td><input type="text" name="mrp_amt[]" id="mrp_amt[<?php echo $c; ?>]" class="form-control" value="<?php echo $mrp_amt[$c]; ?>" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);fetch_discount_amount2(this.id);fetch_prc(this.id);" onchange="validateamount(this.id)"; ></td>
+                                                <td><input type="text" name="dis_per[]" id="dis_per[<?php echo $c; ?>]" class="form-control" value="<?php echo $dis_per[$c]; ?>" placeholder="%" style="width:80px;" onkeyup="validatenum(this.id);fetch_discount_amount(this.id);fetch_discount_amount2(this.id);calculate_total_amt(this.id);"></td>
+                                                <td><input type="text" name="dis_amt[]" id="dis_amt[<?php echo $c; ?>]" class="form-control" value="<?php echo $disc_price[$c]; ?>" placeholder="&#8377" style="width:80px;" onkeyup="validatenum(this.id);fetch_discount_amount(this.id);calculate_total_amt(this.id);fetch_discount_amount2(this.id);" onchange="validateamount(this.id);"></td>
                                                 <td><input type="text" name="rate[]" id="rate[<?php echo $c; ?>]" class="form-control" value="<?php echo $rate[$c]; ?>" placeholder="0.00" style="width:90px;" onkeyup="validatenum5(this.id);calculate_total_amt(this.id);" onchange="validateamount5(this.id);" ></td>
-                                                <td style="width:105px;"><select name="gst_val[]" id="gst_val[<?php echo $c; ?>]" class="form-control select2" onchange="calculate_total_amt(this.id)" style="width:100px;"><option value="select">select</option><?php foreach($gst_code as $gsts){ $gst_cval = $gsts."@".$gst_value[$gsts]."@".$gst_coa[$gsts]; ?><option value="<?php echo $gst_cval; ?>" <?php if($gst_ecode[$c] == $gsts){ echo "selected"; } ?>><?php echo $gst_name[$gsts]; ?></option><?php } ?></select></td>
                                                 <td><input type="text" name="item_tamt[]" id="item_tamt[<?php echo $c; ?>]" class="form-control" value="<?php echo $item_tamt[$c]; ?>" placeholder="0.00" style="width:90px;" readonly ></td>
                                                 <td id="action[<?php echo $c; ?>]" <?php if($c == $i){ echo 'style="padding-top: 5px;"'; } else{ echo 'style="padding-top: 5px;visibility:hidden;"'; } ?> >
                                                     <?php if($c == 0){ echo '<br/>'; } ?>
@@ -268,8 +281,8 @@ if($link_active_flag > 0){
                                                 </td>
                                                 <td style="visibility:visible;"><input type="text" name="avg_price[]" id="avg_price[<?php echo $c; ?>]" class="form-control" placeholder="0.00" style="width:50px;" readonly ></td>
                                                 <td style="visibility:visible;"><input type="text" name="avg_amount[]" id="avg_amount[<?php echo $c; ?>]" class="form-control" placeholder="0.00" style="width:50px;" readonly ></td>
-                                                <td><input type="text" name="farm_mnu_name[]" id="farm_mnu_name[<?php echo $c; ?>]" class="form-control" value="<?php echo $farm_mnu_name[$c]; ?>" style="width:120px;" /></td>
-                                                <td><input type="text" name="batch_mnu_name[]" id="batch_mnu_name[<?php echo $c; ?>]" class="form-control" value="<?php echo $batch_mnu_name[$c]; ?>" style="width:120px;" /></td>
+                                                <td><input type="text" name="farm_mnu_name[]" id="farm_mnu_name[<?php echo $c; ?>]" class="form-control" value="<?php echo $farm_mnu_name[$c]; ?>" style="width:80px;" /></td>
+                                                <td><input type="text" name="batch_mnu_name[]" id="batch_mnu_name[<?php echo $c; ?>]" class="form-control" value="<?php echo $batch_mnu_name[$c]; ?>" style="width:80px;" /></td>
                                                 <td style="visibility:hidden;"><input type="text" name="gst_amt[]" id="gst_amt[<?php echo $c; ?>]" class="form-control text-right" value="<?php echo $gst_eamt[$c]; ?>" style="width:20px;" ></td>
                                             </tr>
                                             <?php } ?>
@@ -366,7 +379,7 @@ if($link_active_flag > 0){
                                             </div>
                                             <div class="col-md-2 form-group" style="visibility:visible;">
                                                 <label>Profit Amount</label>
-                                                <input type="text" name="profit_amount" id="profit_amount" class="form-control" placeholder="0.00" >
+                                                <input type="text" name="profit_amount" id="profit_amount" class="form-control" value="<?php echo $profit; ?>" placeholder="0.00" >
                                             </div>
                                             <div class="col-md-2 form-group" style="visibility:visible;">
                                                 <label>Round Off</label>
@@ -432,34 +445,13 @@ if($link_active_flag > 0){
         <script>
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
-                window.location.href = 'broiler_display_feedsale_lsfi.php?ccid='+ccid;
+                window.location.href = 'broiler_display_feedsale4.php?ccid='+ccid;
             }
             function checkval(){
 				document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
                 var incrs = document.getElementById("incr").value; var qty = price = total_amt = avg_amount = c = d = stock = gst_per = gst_amt = 0; var icode = gst_val = "";
                 var l = true;
-                //Re-calculate Item Amount
-                for(d = 0;d <= incrs;d++){
-                    qty = document.getElementById("rcd_qty["+d+"]").value; if(qty == ""){ qty = 0; }
-                    price = document.getElementById("rate["+d+"]").value; if(price == ""){ price = 0; }
-                    avg_price = document.getElementById("avg_price["+d+"]").value; if(avg_price == ""){ avg_price = 0; }
-                    total_amt = parseFloat(qty) * parseFloat(price);
-                    avg_amount = parseFloat(qty) * parseFloat(avg_price);
-
-                    //GST Calculations
-                    gst_per = gst_amt = 0;
-                    gst_val = document.getElementById("gst_val["+d+"]").value;
-                    if(gst_val != "select"){ var gst_val2 = gst_val.split("@"); gst_per = gst_val2[1]; }
-                    if(gst_per == ""){ gst_per = 0; }
-                    if(parseFloat(gst_per) > 0){ gst_amt = ((parseFloat(gst_per) / 100) * total_amt); }
-                    total_amt = parseFloat(total_amt) + parseFloat(gst_amt);
-
-                    document.getElementById("gst_amt["+d+"]").value = parseFloat(gst_amt).toFixed(2);
-                    document.getElementById("item_tamt["+d+"]").value = total_amt.toFixed(2);
-                    document.getElementById("avg_amount["+d+"]").value = avg_amount.toFixed(2);
-                }
-                calculate_final_total_amount();
-
+               
                 var date = document.getElementById("date").value;
                 var vcode = document.getElementById("vcode").value;
                 var warehouse = document.getElementById("warehouse").value;
@@ -479,6 +471,39 @@ if($link_active_flag > 0){
                     l = false;
                 }
                 else{
+                    
+                    //Check Item Details
+                    for(d = 0;d <= incrs;d++){
+                        if(l == true){
+                            c = d + 1;
+                            icode = document.getElementById("icode["+d+"]").value;
+                            fre_qty = document.getElementById("fre_qty["+d+"]").value;
+                            mrp_amt = document.getElementById("mrp_amt["+d+"]").value; if(mrp_amt == ""){ mrp_amt = 0; }
+                            qty = document.getElementById("rcd_qty["+d+"]").value; 
+                            price = document.getElementById("rate["+d+"]").value;
+                            if(icode.match("select")){
+                                alert("Kindly select appropriate Item in row: "+c);
+                                document.getElementById("icode["+d+"]").focus();
+                                l = false;
+                            }
+                            else if(mrp_amt == "" || mrp_amt == "0.00" || mrp_amt == 0){
+                                alert("Kindly enter MRP in row: "+c);
+                                document.getElementById("mrp_amt["+d+"]").focus();
+                                l = false;
+                            }
+                            else if(fre_qty == "" || fre_qty == "0.00" || fre_qty == 0){
+                                alert("Kindly enter No. Of Bags in row: "+c);
+                                document.getElementById("fre_qty["+d+"]").focus();
+                                l = false;
+                            } 
+                            else if(price == "" || price == "0.00" || price == 0){
+                                alert("Kindly enter Rate in row: "+c);
+                                document.getElementById("rate["+d+"]").focus();
+                                l = false;
+                            }
+                        }
+                    }
+
                     //Stock Check
                     var stockcheck_flag = '<?php echo $stockcheck_flag; ?>';
                     if(stockcheck_flag == 1){
@@ -496,31 +521,6 @@ if($link_active_flag > 0){
                         }
                     }
                     else{ }
-
-                    //Check Item Details
-                    for(d = 0;d <= incrs;d++){
-                        if(l == true){
-                            c = d + 1;
-                            icode = document.getElementById("icode["+d+"]").value;
-                            qty = document.getElementById("rcd_qty["+d+"]").value;
-                            price = document.getElementById("rate["+d+"]").value;
-                            if(icode.match("select")){
-                                alert("Kindly select appropriate Item in row: "+c);
-                                document.getElementById("icode["+d+"]").focus();
-                                l = false;
-                            }
-                            else if(qty == "" || qty == "0.00" || qty == 0){
-                                alert("Kindly enter Quantity in row: "+c);
-                                document.getElementById("rcd_qty["+d+"]").focus();
-                                l = false;
-                            } 
-                            else if(price == "" || price == "0.00" || price == 0){
-                                alert("Kindly enter Rate in row: "+c);
-                                document.getElementById("rate["+d+"]").focus();
-                                l = false;
-                            }
-                        }
-                    }
                 }
                 
                 if(l == true){
@@ -538,18 +538,19 @@ if($link_active_flag > 0){
                 d++; var html = '';
                 document.getElementById("incr").value = d;
                 html += '<tr id="row_no['+d+']">';
-                html += '<td><select name="icode[]" id="icode['+d+']" class="form-control select2" style="width:180px;" onchange="fetch_stock_master(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></td>';
+                html += '<td><select name="icode[]" id="icode['+d+']" class="form-control select2" style="width:180px;" onchange="fetch_stock_master(this.id);fetch_reset(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></td>';
+                html += '<td><input type="text" name="fre_qty[]" id="fre_qty['+d+']" class="form-control" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);fetch_kgs(this.id);fetch_discount_amount2(this.id);" onchange="validateamount(this.id);" ></td>';
                 html += '<td><input type="text" name="rcd_qty[]" id="rcd_qty['+d+']" class="form-control" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" ></td>';
-                html += '<td><input type="text" name="fre_qty[]" id="fre_qty['+d+']" class="form-control" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" ></td>';
-                html += '<td><input type="text" name="available_stock[]" id="available_stock['+d+']" class="form-control" placeholder="0.00" style="width:90px;" readonly ></td>';
+                html += '<td><input type="text" name="mrp_amt[]" id="mrp_amt['+d+']" class="form-control" placeholder="0.00" style="width:90px;" onkeyup="validatenum(this.id);fetch_prc(this.id);" onchange="validateamount(this.id)"; ></td>';
+                html += '<td><input type="text" name="dis_per[]" id="dis_per['+d+']" class="form-control" placeholder="%" style="width:80px;" onkeyup="validatenum(this.id);fetch_discount_amount(this.id);fetch_discount_amount2(this.id);calculate_total_amt(this.id);"></td>';
+                html += '<td><input type="text" name="dis_amt[]" id="dis_amt['+d+']" class="form-control" placeholder="&#8377" style="width:80px;" onkeyup="validatenum(this.id);fetch_discount_amount(this.id);fetch_discount_amount2(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);"></td>';
                 html += '<td><input type="text" name="rate[]" id="rate['+d+']" class="form-control" placeholder="0.00" style="width:90px;" onkeyup="validatenum5(this.id);calculate_total_amt(this.id);" onchange="validateamount5(this.id);" ></td>';
-                html += '<td style="width:105px;"><select name="gst_val[]" id="gst_val['+d+']" class="form-control select2" onchange="calculate_total_amt(this.id)" style="width:100px;"><option value="select">select</option><?php foreach($gst_code as $gsts){ $gst_cval = $gsts."@".$gst_value[$gsts]."@".$gst_coa[$gsts]; ?><option value="<?php echo $gst_cval; ?>"><?php echo $gst_name[$gsts]; ?></option><?php } ?></select></td>';
                 html += '<td><input type="text" name="item_tamt[]" id="item_tamt['+d+']" class="form-control" placeholder="0.00" style="width:90px;" readonly ></td>';
                 html += '<td id="action['+d+']"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
                 html += '<td style="visibility:visible;"><input type="text" name="avg_price[]" id="avg_price['+d+']" class="form-control" placeholder="0.00" style="width:50px;" readonly ></td>';
                 html += '<td style="visibility:visible;"><input type="text" name="avg_amount[]" id="avg_amount['+d+']" class="form-control" placeholder="0.00" style="width:50px;" readonly ></td>';
-                html += '<td><input type="text" name="farm_mnu_name[]" id="farm_mnu_name['+d+']" class="form-control" style="width:120px;" /></td>';
-                html += '<td><input type="text" name="batch_mnu_name[]" id="batch_mnu_name['+d+']" class="form-control" style="width:120px;" ></td>';
+                html += '<td><input type="text" name="farm_mnu_name[]" id="farm_mnu_name['+d+']" class="form-control" style="width:80px;" /></td>';
+                html += '<td><input type="text" name="batch_mnu_name[]" id="batch_mnu_name['+d+']" class="form-control" style="width:80px;" ></td>';
                 html += '<td style="visibility:hidden;"><input type="text" name="gst_amt[]" id="gst_amt['+d+']" class="form-control text-right" style="width:20px;" ></td>';
                 html += '</tr>';
                 $('#row_body').append(html);
@@ -563,26 +564,141 @@ if($link_active_flag > 0){
                 document.getElementById("action["+d+"]").style.visibility = "visible";
                 calculate_final_total_amount();
             }
+            function calculate_total_amt2(a){
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                var qty = document.getElementById("rcd_qty["+d+"]").value;
+                var price = document.getElementById("rate["+d+"]").value;
+                var avg_price = document.getElementById("avg_price["+d+"]").value;
+                var dis_amt = document.getElementById("dis_amt["+d+"]").value;
+                var mrp_amt = document.getElementById("mrp_amt["+d+"]").value;
+
+                if(qty == "" || qty.length == 0 || qty == "0.00" || qty == "0"){ qty = 0; }
+                if(price == "" || price.length == 0 || price == "0.00" || price == "0"){ price = 0; }
+                if(avg_price == "" || avg_price.length == 0 || avg_price == "0.00" || avg_price == "0"){ avg_price = 0; }
+                if(dis_amt == "" || dis_amt.length == 0 || dis_amt == "0.00" || dis_amt == "0"){ dis_amt = 0; }
+                if(mrp_amt == "" || mrp_amt.length == 0 || mrp_amt == "0.00" || mrp_amt == "0"){ mrp_amt = 0; }
+                
+                var avg_amount = parseFloat(qty) * parseFloat(avg_price);
+
+                if(dis_amt > 0){
+                    price = parseFloat(mrp_amt) - parseFloat(dis_amt);
+                } else if(dis_amt == 0 || dis_amt == ""){
+                    var total_amt = parseFloat(qty) * parseFloat(price);
+                }
+                // document.getElementById("gst_amt["+d+"]").value = gst_amt.toFixed(2);
+                document.getElementById("rate["+d+"]").value = price.toFixed(2);
+                
+                var total_amt = parseFloat(qty) * parseFloat(price);
+                document.getElementById("item_tamt["+d+"]").value = total_amt.toFixed(2);
+                document.getElementById("avg_amount["+d+"]").value = avg_amount.toFixed(2);
+                calculate_total_amt();
+                // calculate_final_total_amount();
+            }
+            function fetch_discount_amount(a){
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                var qty = document.getElementById("rcd_qty["+d+"]").value; 
+                var price = document.getElementById("rate["+d+"]").value;
+
+                if(qty == "" || qty.length == 0 || qty == "0.00" || qty == "0"){ qty = 0; }
+                if(price == "" || price.length == 0 || price == "0.00" || price == "0"){ price = 0; }
+
+                var total_amt = parseFloat(qty) * parseFloat(price);
+
+                if(total_amt == "" || total_amt.length == 0 || total_amt == "0.00" || total_amt == "0"){ total_amt = 0; }
+                if(b[0].match("dis_per")){
+                    var dis_per = document.getElementById("dis_per["+d+"]").value;
+                    if(dis_per == "" || dis_per.length == 0 || dis_per == "0.00" || dis_per == "0"){ 
+                        var total_amt = parseFloat(qty) * parseFloat(price);
+                        document.getElementById("item_tamt["+d+"]").value = total_amt;
+                     }
+                    else{
+                        var dis_value = ((parseFloat(dis_per) / 100) * total_amt);
+                        if(dis_value == "NaN" || dis_value.length == 0 || dis_value == 0){ dis_value = ""; }
+                        document.getElementById("dis_amt["+d+"]").value = dis_value;
+                        calculate_total_amt(a);
+                    }
+                    
+                }
+                else{
+                    var dis_amt = document.getElementById("dis_amt["+d+"]").value;
+                    if(dis_amt == "" || dis_amt.length == 0 || dis_amt == "0.00" || dis_amt == "0"){
+                        var total_amt = parseFloat(qty) * parseFloat(price);
+                        document.getElementById("item_tamt["+d+"]").value = total_amt;
+                     }
+                    else{
+                        var dis_per = ((parseFloat(dis_amt) * 100) / total_amt);
+                        //var dis_per = (((parseFloat(dis_amt) * 100) / total_amt) * 100);
+                        if(dis_per == "NaN" || dis_per.length == 0 || dis_per == 0){ dis_per = ""; }
+                        document.getElementById("dis_per["+d+"]").value = dis_per.toFixed(2);
+                        calculate_total_amt(a);
+                    }
+                }
+            }
+            function fetch_discount_amount2(a){
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                var qty = document.getElementById("rcd_qty["+d+"]").value; 
+                var mrp_amt = document.getElementById("mrp_amt["+d+"]").value; 
+                
+                var price = document.getElementById("rate["+d+"]").value;
+
+                if(qty == "" || qty.length == 0 || qty == "0.00" || qty == "0"){ qty = 0; }
+                if(price == "" || price.length == 0 || price == "0.00" || price == "0"){ price = 0; }
+
+               // var total_amt = parseFloat(qty) * parseFloat(price);
+
+                //if(total_amt == "" || total_amt.length == 0 || total_amt == "0.00" || total_amt == "0"){ total_amt = 0; }
+                if(mrp_amt == "" || mrp_amt.length == 0 || mrp_amt == "0.00" || mrp_amt == "0"){ mrp_amt = 0; }
+                if(b[0].match("dis_per")){
+                    var dis_per = document.getElementById("dis_per["+d+"]").value;
+                    if(dis_per == "" || dis_per.length == 0 || dis_per == "0.00" || dis_per == "0"){ 
+                        var total_amt = parseFloat(qty) * parseFloat(price);
+                        document.getElementById("item_tamt["+d+"]").value = total_amt;
+                        // document.getElementById("dis_amt["+d+"]").value = 0;
+                     }
+                    else{
+                        var dis_value = ((parseFloat(dis_per) / 100) * mrp_amt);
+                        if(dis_value == "NaN" || dis_value.length == 0 || dis_value == 0){ dis_value = ""; }
+                        document.getElementById("dis_amt["+d+"]").value = dis_value;
+                        calculate_total_amt2(a);
+                    }
+                    
+                }
+                else{
+                    var dis_amt = document.getElementById("dis_amt["+d+"]").value;
+                    if(dis_amt == "" || dis_amt.length == 0 || dis_amt == "0.00" || dis_amt == "0"){
+                        var total_amt = parseFloat(qty) * parseFloat(price);
+                        document.getElementById("item_tamt["+d+"]").value = total_amt;
+                        document.getElementById("dis_per["+d+"]").value = 0;
+                     }
+                    else{
+                        var dis_per = ((parseFloat(dis_amt) * 100) / mrp_amt);
+                        //var dis_per = (((parseFloat(dis_amt) * 100) / total_amt) * 100);
+                        if(dis_per == "NaN" || dis_per.length == 0 || dis_per == 0){ dis_per = ""; }
+                        document.getElementById("dis_per["+d+"]").value = dis_per.toFixed(2);
+                        calculate_total_amt2(a);
+                    }
+                }
+            }
             function calculate_total_amt(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
                 var qty = document.getElementById("rcd_qty["+d+"]").value;
                 var price = document.getElementById("rate["+d+"]").value;
                 var avg_price = document.getElementById("avg_price["+d+"]").value;
+                var dis_amt = document.getElementById("dis_amt["+d+"]").value;
+
                 if(qty == "" || qty.length == 0 || qty == "0.00" || qty == "0"){ qty = 0; }
                 if(price == "" || price.length == 0 || price == "0.00" || price == "0"){ price = 0; }
                 if(avg_price == "" || avg_price.length == 0 || avg_price == "0.00" || avg_price == "0"){ avg_price = 0; }
+                if(dis_amt == "" || dis_amt.length == 0 || dis_amt == "0.00" || dis_amt == "0"){ dis_amt = 0; }
                 var total_amt = parseFloat(qty) * parseFloat(price);
                 var avg_amount = parseFloat(qty) * parseFloat(avg_price);
 
-                //GST Calculations
-                var gst_per = gst_amt = 0;
-                var gst_val = document.getElementById("gst_val["+d+"]").value;
-                if(gst_val != "select"){ var gst_val2 = gst_val.split("@"); gst_per = gst_val2[1]; }
-                if(gst_per == ""){ gst_per = 0; }
-                if(parseFloat(gst_per) > 0){ gst_amt = ((parseFloat(gst_per) / 100) * total_amt); }
-                total_amt = parseFloat(total_amt) + parseFloat(gst_amt);
-
-                document.getElementById("gst_amt["+d+"]").value = parseFloat(gst_amt).toFixed(2);
+                if(dis_amt > 0){
+                    total_amt = parseFloat(total_amt) - parseFloat(dis_amt);
+                } else if(dis_amt == 0 || dis_amt == ""){
+                    var total_amt = parseFloat(qty) * parseFloat(price);
+                }
+                // document.getElementById("gst_amt["+d+"]").value = gst_amt.toFixed(2);
                 document.getElementById("item_tamt["+d+"]").value = total_amt.toFixed(2);
                 document.getElementById("avg_amount["+d+"]").value = avg_amount.toFixed(2);
                 calculate_final_total_amount();
@@ -735,6 +851,44 @@ if($link_active_flag > 0){
 			function validateamount5(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(5); document.getElementById(x).value = b; }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
             setInterval(function(){ if(window.screen.availWidth <= 400){ const collection = document.getElementsByClassName("labelrow"); for (let i = 0; i < collection.length; i++) { collection[i].style.display = "inline"; } } else{ const collection = document.getElementsByClassName("labelrow"); for (let i = 0; i < collection.length; i++) { collection[i].style.display = "none"; } } }, 1000);
+        </script>
+         <script>
+                // Generate JavaScript array from PHP for bag sizes
+                var bagsSize = <?php echo json_encode($bags_size); ?>;
+
+                function fetch_reset(a){
+                    var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                    document.getElementById("fre_qty[" + d + "]").value = 0;
+                    document.getElementById("rcd_qty[" + d + "]").value = 0;
+
+                }
+
+                function fetch_kgs(a) {
+                    var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                    var icd = document.getElementById("icode[" + d + "]").value;
+                    var rd_qty = bagsSize[icd];
+                    var fre_qty = document.getElementById("fre_qty[" + d + "]").value;
+
+                    // Update rcd_qty field based on user input
+                    if (rd_qty) {
+                        if (fre_qty == 1) {
+                            // If user enters 1, directly use rd_qty
+                            document.getElementById("rcd_qty[" + d + "]").value = rd_qty;
+                        } else if (!isNaN(fre_qty) && fre_qty > 0) {
+                            // If user enters a valid number greater than 1, multiply by rd_qty
+                            document.getElementById("rcd_qty[" + d + "]").value = rd_qty * fre_qty;
+                        } else {
+                            alert("Please enter a valid number in 'fre_qty'.");
+                        }
+                    } else {
+                    alert("Bag size not found for the selected item code.");
+                    }
+                }
+                function fetch_prc(a) {
+                    var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                    var mrp_amt = document.getElementById("mrp_amt[" + d + "]").value;
+                    document.getElementById("rate[" + d + "]").value = mrp_amt;
+                }
         </script>
         <script>
             //Date Range selection

@@ -34,7 +34,7 @@ if($link_active_flag > 0){
             if($add_access_flag == $link_childid){
                 $acount = 1;
             }
-        } 
+        }
     }
     if($acount == 1){
         //check and fetch date range
@@ -42,6 +42,8 @@ if($link_active_flag > 0){
         $sql = "SELECT * FROM `dataentry_daterange_master` WHERE `file_name` LIKE '$file_aurl' AND `user_code` LIKE '$e_code' AND `active` = '1' AND `dflag` = '0'";
         $query = mysqli_query($conn,$sql); $r_cnt = mysqli_num_rows($query); $s_days = $e_days = 0; $rdate = date("d.m.Y");
         if($r_cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $s_days = $row['min_days']; $e_days = $row['max_days']; } }
+        $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE '$file_aurl' AND `field_function` LIKE 'Date Range Selection' AND `user_access` LIKE 'all' AND `flag` = '1'";
+        $query = mysqli_query($conn,$sql); $drange_flag = mysqli_num_rows($query); if($drange_flag <= 0){ $s_days = 9999; $e_days = 0; }
         
         $date = date("Y-m-d",);
         //Generate Transaction No.

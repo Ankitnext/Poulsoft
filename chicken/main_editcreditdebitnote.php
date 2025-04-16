@@ -90,7 +90,7 @@
 												<th><label>Supplier/Customer<b style="color:red;">&nbsp;*</b></label></th>
 												<th><label>Date<b style="color:red;">&nbsp;*</b></label></th>
 												<th><label>Doc No</label></th>
-												<th><label>Account<b style="color:red;">&nbsp;*</b></label></th>
+												<th><label>Account Name<b style="color:red;">&nbsp;*</b></label></th>
 												<th><label>Amount<b style="color:red;">&nbsp;*</b></label></th>
 												<?php if((int)$rsncrdr_flag == 1){ echo '<th><label>Reason</label></th>'; } ?>
 												<th><label>Sector<b style="color:red;">&nbsp;*</b></label></th>

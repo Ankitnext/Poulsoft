@@ -124,12 +124,11 @@ if($link_active_flag > 0){
 
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Purchases' AND `field_function` LIKE 'Display Brand Selection Dropdown' AND `flag` = '1' AND (`user_access` LIKE '%$user_code%' || `user_access` LIKE 'all');";
         $query = mysqli_query($conn,$sql); $brand_flag = mysqli_num_rows($query);
-        //if($brand_flag > 0) { echo "Brand Flag"; }
-
-        $sql = "SELECT * FROM `broiler_item_brands` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
-        $query = mysqli_query($conn,$sql); $brand_code = $brand_name = array();
-        while($row = mysqli_fetch_assoc($query)){ $brand_code[$row['code']] = $row['code']; $brand_name[$row['code']] = $row['description']; }
-       
+        // if($brand_flag > 0) {
+            $sql = "SELECT * FROM `broiler_item_brands` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+            $query = mysqli_query($conn,$sql); $brand_code = $brand_name = array();
+            while($row = mysqli_fetch_assoc($query)){ $brand_code[$row['code']] = $row['code']; $brand_name[$row['code']] = $row['description']; }
+        // }
 ?>
 <html lang="en">
     <head>
@@ -212,17 +211,17 @@ if($link_active_flag > 0){
                                     <div class="row" style="margin-bottom:3px;">
                                         <div class="form-group">
                                             <label>Item<b style="color:red;">&nbsp;*</b></label>
-                                            <select name="icode[]" id="icode[0]" class="form-control select2" style="width:110px;" onchange="fetch_itemuom(this.id);">
+                                            <select name="icode[]" id="icode[0]" class="form-control select2" style="width:180px;" onchange="fetch_itemuom(this.id);">
                                                 <option value="select">select</option>
                                                 <?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $item_name[$prod_code]; ?></option><?php } ?>
                                             </select>
                                         </div>
                                         <?php if($brand_flag > 0) { ?>
                                         <div class="form-group">
-                                            <label>Brand</label>
-                                            <select name="brand_code[]" id="brand_code[0]" class="form-control select2" style="width:110px;" onchange="">
+                                            <label>Brands<b style="color:red;">&nbsp;*</b></label>
+                                            <select name="brand[]" id="brand[0]" class="form-control select2" style="width:180px;" onchange="">
                                                 <option value="select">select</option>
-                                                <?php foreach($brand_code as $bd_code){ ?><option value="<?php echo $bd_code; ?>"><?php echo $brand_name[$bd_code]; ?></option><?php } ?>
+                                                <?php foreach($brand_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $brand_name[$prod_code]; ?></option><?php } ?>
                                             </select>
                                         </div> <?php } ?>
                                         <div class="form-group">
@@ -270,7 +269,7 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="form-group">
                                             <label>Sector/Farm<b style="color:red;">&nbsp;*</b></label>
-                                            <select name="warehouse[]" id="warehouse[0]" class="form-control select2" style="width:110px;">
+                                            <select name="warehouse[]" id="warehouse[0]" class="form-control select2" style="width:180px;">
                                                 <option value="select">select</option>
                                                 <?php foreach($sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo $sector_name[$whouse_code]; ?></option><?php } ?>
                                         </select>
@@ -598,11 +597,9 @@ if($link_active_flag > 0){
                 document.getElementById("action["+d+"]").style.visibility = "hidden";
                 d++; var html = '';
                 document.getElementById("incr").value = d;
-                var brand_flag = '<?php echo $brand_flag; ?>';
-
+                
                 html += '<div class="row" id="row_no['+d+']">';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Item<b style="color:red;">&nbsp;*</b></label><select name="icode[]" id="icode['+d+']" class="form-control select2" style="width:110px;" onchange="fetch_itemuom(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></div>';
-                if(parseInt(brand_flag) > 0){ html += '<div class="form-group"><label class="labelrow" style="display:none;">Brand<b style="color:red;">&nbsp;*</b></label><select name="brand_code[]" id="brand_code['+d+']" class="form-control select2" style="width:110px;" onchange=""><option value="select">select</option><?php foreach($brand_code as $bd_code){ ?><option value="<?php echo $bd_code; ?>"><?php echo $brand_name[$bd_code]; ?></option><?php } ?></select></div>'; }
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Item<b style="color:red;">&nbsp;*</b></label><select name="icode[]" id="icode['+d+']" class="form-control select2" style="width:180px;" onchange="fetch_itemuom(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">UOM</label><input type="text" name="uom[]" id="uom['+d+']" class="form-control" placeholder="0.00" style="width:80px;" readonly /></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Sent Qty</label><input type="text" name="snt_qty[]" id="snt_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Rcv Qty<b style="color:red;">&nbsp;*</b></label><input type="text" name="rcd_qty[]" id="rcd_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" ></div>';
@@ -613,7 +610,7 @@ if($link_active_flag > 0){
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">GST</label><select name="gst_per[]" id="gst_per['+d+']" class="form-control select2" onchange="calculate_total_amt(this.id)" style="width:120px;"><option value="select">select</option><?php foreach($gst_code as $gsts){ $gst_cval = $gsts."@".$gst_value[$gsts]; ?><option value="<?php echo $gst_cval; ?>"><?php echo $gst_name[$gsts]; ?></option><?php } ?></select></div>';
                 //html += '<div class="form-group"><label class="labelrow" style="display:none;">GST &#8377</label><input type="text" name="gst_amt[]'.'" id="gst_amt['+d+']'.'" class="form-control" placeholder="&#8377" style="width:90px;" readonly ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Amount</label><input type="text" name="item_tamt[]" id="item_tamt['+d+']" class="form-control" placeholder="0.00" style="width:90px;" readonly ></div>';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Sector/Farm<b style="color:red;">&nbsp;*</b></label><select name="warehouse[]" id="warehouse['+d+']" class="form-control select2" style="width:110px;"><option value="select">select</option><?php foreach($sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo $sector_name[$whouse_code]; ?></option><?php } ?></select></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Sector/Farm<b style="color:red;">&nbsp;*</b></label><select name="warehouse[]" id="warehouse['+d+']" class="form-control select2" style="width:180px;"><option value="select">select</option><?php foreach($sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo $sector_name[$whouse_code]; ?></option><?php } ?></select></div>';
                 //html += '<div class="form-group"><label class="labelrow" style="display:none;">Farm Batch</label><select name="farm_batch[]" id="farm_batch['+d+']" class="form-control select2" style="width:100px;"><option value="select">select</option></select></div>';
                 html += '<div class="form-group" id="action['+d+']" style="padding-top: 5px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></div>';
                 html += '</div>';

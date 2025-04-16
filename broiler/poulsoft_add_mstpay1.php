@@ -22,11 +22,9 @@ if($link_active_flag > 0){
     if($user_type == "S"){ $acount = 1; } else{ foreach($alink as $add_access_flag){ if($add_access_flag == $link_childid){ $acount = 1; } } }
     if($acount == 1){
         //check and fetch date range
-        $file_aurl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH))); $e_code = $_SESSION['userid'];
-        $sql = "SELECT * FROM `dataentry_daterange_master` WHERE `file_name` LIKE '$file_aurl' AND `user_code` LIKE '$e_code' AND `active` = '1' AND `dflag` = '0'";
-        $query = mysqli_query($conn,$sql); $r_cnt = mysqli_num_rows($query); $s_days = $e_days = 0; $rdate = date("d.m.Y");
-        if($r_cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $s_days = $row['min_days']; $e_days = $row['max_days']; } }
-
+        global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+        include "poulsoft_fetch_daterange_master.php";
+        
         $date = date("d.m.Y");
         $sql = "SELECT * FROM `acc_types` WHERE `active` = '1' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $type_alist = array();
@@ -105,7 +103,7 @@ if($link_active_flag > 0){
                                             <input type="text" name="billno" id="billno" class="form-control" style="width:80px;" onkeyup="validatename(this.id);" />
                                         </div>
                                         <div class="form-group" style="width:200px;">
-                                            <label for="sector">Branch<b style="color:red;">&nbsp;*</b></label>
+                                            <label for="sector">Branch</label>
                                             <select name="sector" id="sector" class="form-control select2" style="width:190px;" onchange="fetch_balace_amt();"><option value="select">-select-</option><?php foreach($sector_code as $ucode){ ?><option value="<?php echo $ucode; ?>"><?php echo $sector_name[$ucode]; ?></option><?php } ?></select>
                                         </div>
                                     </div>
@@ -209,7 +207,7 @@ if($link_active_flag > 0){
 				update_ebtn_status(1);
                 var l = true;
                 var date = document.getElementById("date").value;
-                var sector = document.getElementById("sector").value;
+               // var sector = document.getElementById("sector").value;
                 var from_account = document.getElementById("from_account").value;
                 //var acc_bal2 = document.getElementById("acc_bal2").value; if(acc_bal2 == ""){ acc_bal2 = 0; }
                 var tot_amt = document.getElementById("tot_amt").value; if(tot_amt == ""){ tot_amt = 0; }
@@ -219,11 +217,11 @@ if($link_active_flag > 0){
                     document.getElementById("date").focus();
                     l = false;
                 }
-                else if(sector == "" || sector == "select"){
-                    alert("Please select Branch");
-                    document.getElementById("sector").focus();
-                    l = false;
-                }
+                // else if(sector == "" || sector == "select"){
+                //     alert("Please select Branch");
+                //     document.getElementById("sector").focus();
+                //     l = false;
+                // }
                 else if(from_account == "" || from_account == "select"){
                     alert("Please select Account");
                     document.getElementById("from_account").focus();
@@ -489,8 +487,7 @@ if($link_active_flag > 0){
         </script>
         <script>
             //Date Range selection
-            var s_date = '<?php echo date('d.m.Y', strtotime('-'.$s_days.' days', strtotime($rdate))); ?>'
-            var e_date = '<?php echo date('d.m.Y', strtotime('+'.$e_days.' days', strtotime($rdate))); ?>'
+            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
             $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
         </script>
         <?php include "header_foot.php"; ?>

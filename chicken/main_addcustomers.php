@@ -44,7 +44,11 @@
 	$query = mysqli_query($conn,$sql); $d_cnt = mysqli_num_rows($query); $dam_flag = 0;
 	if((int)$d_cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $dam_flag = $row['flag']; } }
 	else{ $sql = "INSERT INTO `extra_access` (`field_name`,`field_function`,`user_access`,`flag`) VALUES ('Customer Master','Display Area selection','all','0');"; mysqli_query($conn,$sql); }
-	
+	if((int)$dam_flag > 0){
+		$sql = "SELECT * FROM `main_areas` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+		$query = mysqli_query($conn, $sql); $area_code = $area_name = array();
+		while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code']; $area_name[$row['code']] = $row['description']; }
+	}
 ?>
 <html>
 	<body class="hold-transition skin-blue sidebar-mini">
@@ -76,7 +80,7 @@
 					$cunits = $row['cunits'];
 				}
 				}
-			?>
+			?> 
 				<div class="box-body">
 					<div class="row">
 						<div class="col-md-12">
@@ -110,7 +114,7 @@
 										<label>ECount<b style="color:red;">&nbsp;*</b></label>
 										<input type="text" style="width:auto;" class="form-control" name="ebtncount" id="ebtncount" value="0">
 									</div>
-								</div> 
+								</div>
 								<div class="col-md-12">
 									<div class="form-group col-md-2">
 										<label>GSTIN</label>
@@ -118,7 +122,7 @@
 									</div>
 									<div class="form-group col-md-2">
 										<label>Group<b style="color:red;">&nbsp;*</b></label>
-										<select name="sgrp" id="sgrp" class="form-control select2" style="width: 100%;" <?php if((int)$dam_flag > 0){ echo 'onchange="fetch_groupareas();"'; }?>>
+										<select name="sgrp" id="sgrp" class="form-control select2" style="width: 100%;" <?php //if((int)$dam_flag > 0){ echo 'onchange="fetch_groupareas();"'; }?>>
 											<option value="select">select</option>
 										</select>
 									</div>
@@ -127,6 +131,7 @@
 										<label>Area</label>
 										<select name="area_code" id="area_code" class="form-control select2" style="width: 100%;">
 											<option value="select">select</option>
+											<?php foreach($area_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $area_name[$scode]; ?></option><?php } ?>
 										</select>
 									</div>
 									<?php } ?>

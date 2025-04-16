@@ -148,6 +148,7 @@ $amt_cal_basedon = $_POST['amt_cal_basedon'];
 
 $tot_rcd_qty = 0; $icode = array();
 $i = 0; foreach($_POST['icode'] as $icodes){ $icode[$i] = $icodes; $i++; }
+$i = 0; foreach($_POST['brand_code'] as $brand_codes){ $brand_code[$i] = $brand_codes; $i++; }
 $i = 0; foreach($_POST['snt_qty'] as $snt_qtys){ $snt_qty[$i] = $snt_qtys; $i++; }
 $i = 0; foreach($_POST['rcd_qty'] as $rcd_qtys){ $rcd_qty[$i] = $rcd_qtys; $tot_rcd_qty = $tot_rcd_qty + $rcd_qtys; $i++; }
 $i = 0; foreach($_POST['fre_qty'] as $fre_qtys){ $fre_qty[$i] = $fre_qtys; $i++; }
@@ -298,8 +299,8 @@ for($i = 0;$i < $dsize;$i++){
         }
     }
     
-    $sql = "INSERT INTO `broiler_purchases` (incr,prefix,trnum,date,vcode,billno,icode,snt_qty,rcd_qty,fre_qty,rate,farmer_price,dis_per,dis_amt,gst_code,gst_per,gst_amt,mnu_tds_edit,tcds_per,tcds_amt,item_tamt,freight_type,freight_amt,freight_pay_type,freight_pay_acc,freight_acc,round_off,ocharge_coa,ocharge_amt,finl_amt,bal_qty,bal_amt,remarks,warehouse,farm_batch,bag_code,bag_count,batch_no,exp_date,vehicle_code,driver_code,driver_mobile,purdoc_path1,purdoc_path2,purdoc_path3,active,flag,dflag,amt_cal_basedon,addedemp,addedtime,updatedtime) 
-    VALUES ('$incr','$prefix','$trnum','$date','$vcode','$billno','$icode[$i]','$snt_qty[$i]','$rcd_qty[$i]','$fre_qty[$i]','$rate[$i]','$farmer_price','$dis_per[$i]','$dis_amt[$i]','$gst_code[$i]','$gst_value[$i]','$gst_amt[$i]','$mnu_tds_edit','$tcds_per','$tcds_amt','$item_tamt[$i]','$freight_type','$freight_amt','$freight_pay_type','$freight_pay_acc','$freight_acc','$round_off','$ocharge_coa','$ocharge_amt','$finl_amt','$rcd_qty[$i]','$item_tamt[$i]','$remarks','$warehouse[$i]','$farm_batch','$bag_code','$bag_count','$batch_no','$exp_date','$vehicle_code','$driver_code','$driver_mobile','$purdoc_path1','$purdoc_path2','$purdoc_path3','$active','$flag','$dflag','$amt_cal_basedon','$addedemp','$addedtime','$addedtime')";
+    $sql = "INSERT INTO `broiler_purchases` (incr,prefix,trnum,date,vcode,billno,icode,brand_code,snt_qty,rcd_qty,fre_qty,rate,farmer_price,dis_per,dis_amt,gst_code,gst_per,gst_amt,mnu_tds_edit,tcds_per,tcds_amt,item_tamt,freight_type,freight_amt,freight_pay_type,freight_pay_acc,freight_acc,round_off,ocharge_coa,ocharge_amt,finl_amt,bal_qty,bal_amt,remarks,warehouse,farm_batch,bag_code,bag_count,batch_no,exp_date,vehicle_code,driver_code,driver_mobile,purdoc_path1,purdoc_path2,purdoc_path3,active,flag,dflag,amt_cal_basedon,addedemp,addedtime,updatedtime) 
+    VALUES ('$incr','$prefix','$trnum','$date','$vcode','$billno','$icode[$i]','$brand_code[$i]','$snt_qty[$i]','$rcd_qty[$i]','$fre_qty[$i]','$rate[$i]','$farmer_price','$dis_per[$i]','$dis_amt[$i]','$gst_code[$i]','$gst_value[$i]','$gst_amt[$i]','$mnu_tds_edit','$tcds_per','$tcds_amt','$item_tamt[$i]','$freight_type','$freight_amt','$freight_pay_type','$freight_pay_acc','$freight_acc','$round_off','$ocharge_coa','$ocharge_amt','$finl_amt','$rcd_qty[$i]','$item_tamt[$i]','$remarks','$warehouse[$i]','$farm_batch','$bag_code','$bag_count','$batch_no','$exp_date','$vehicle_code','$driver_code','$driver_mobile','$purdoc_path1','$purdoc_path2','$purdoc_path3','$active','$flag','$dflag','$amt_cal_basedon','$addedemp','$addedtime','$addedtime')";
     if(!mysqli_query($conn,$sql)){ die("Error 1:-".mysqli_error($conn)); }
     else {
         $coa_Dr = $icat_iac[$icat_code[$icode[$i]]]; $coa_Cr = $control_acc_group[$contact_group[$vcode]];

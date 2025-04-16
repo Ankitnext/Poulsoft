@@ -103,6 +103,10 @@ if($link_active_flag > 0){
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
             if(in_array("bank_crg1", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `broiler_payments` ADD `bank_crg1` DECIMAL(20,5) NOT NULL DEFAULT '0' COMMENT 'bank Charges' AFTER `amount`"; mysqli_query($conn,$sql); }
 
+            //check and fetch date range
+            global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+            include "poulsoft_fetch_daterange_master.php";
+
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
@@ -226,6 +230,9 @@ if($link_active_flag > 0){
                                             }
                                             else if($row['gc_flag'] == 1){
                                                 echo "<i class='fa fa-lock' style='color:gray;' title='GC processed'></i></a>";
+                                            }
+                                            else if(strtotime($row['date']) < strtotime($rng_sdate) || strtotime($row['date']) > strtotime($rng_edate)){
+                                                echo "<i class='fa fa-check' style='color:green;' title='Date Entry Range Closed'></i></a>&ensp;&ensp;";
                                             }
                                             else {
                                                 if($edit_flag == 1){

@@ -1,26 +1,27 @@
 <?php
-//broiler_display_receipt.php
+//broiler_display_customercrdrnote.php
 include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
-if($cid != ""){ $_SESSION['receipt'] = $cid; } else{ $cid = $_SESSION['receipt']; }
-$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
-$sql = "SELECT * FROM `master_form_tableaccess` WHERE `href` = '$href' AND `active` = '1'"; $query = mysqli_query($sconn,$sql);
+if($cid != ""){ $_SESSION['customercrdrnote'] = $cid; } else{ $cid = $_SESSION['customercrdrnote']; }
+$href = explode("/", $_SERVER['REQUEST_URI']); $url = $href[1]; $file_name = explode("?", $href[1]);
+$sql = "SELECT * FROM `master_form_tableaccess` WHERE `href` = '$file_name[0]' AND `active` = '1'"; $query = mysqli_query($sconn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $table_name = $row['table_name']; } $table_session = $cid."tbl_access"; $_SESSION[$table_session] = $table_name;
 $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
 if($link_active_flag > 0){
+
     //Check for table
     $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name;
     $sql1 = "SHOW TABLES WHERE ".$table_head." LIKE 'location_branch';"; $query1 = mysqli_query($conn,$sql1); $tcount = mysqli_num_rows($query1);
     if($tcount > 0){ } else{ $sql1 = "CREATE TABLE $database_name.location_branch LIKE poulso6_admin_broiler_broilermaster.location_branch;"; mysqli_query($conn,$sql1); }
-    
+
     while($row = mysqli_fetch_assoc($query)){ $cname = $row['name']; }
     $sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$user_code' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
     $dlink = $alink = $elink = $rlink = $plink = $ulink = $flink = array(); $sector_access = $cgroup_access = $user_type = "";
     while($row = mysqli_fetch_assoc($query)){
         $dlink = str_replace(",","','",$row['displayaccess']);
         $alink = str_replace(",","','",$row['addaccess']);
-        $elink = str_replace(",","','",$row['editaccess']); 
+        $elink = str_replace(",","','",$row['editaccess']);
         $rlink = str_replace(",","','",$row['deleteaccess']);
         $plink = str_replace(",","','",$row['printaccess']);
         $ulink = str_replace(",","','",$row['otheraccess']);
@@ -47,11 +48,6 @@ if($link_active_flag > 0){
             $sql = "SHOW COLUMNS FROM `".$table_name."`"; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $c = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
             if(in_array("vmg_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `".$table_name."` ADD `vmg_code` VARCHAR(500) NULL DEFAULT NULL COMMENT 'Vendor Master Group Code' AFTER `dflag`"; mysqli_query($conn,$sql); }
-          
-            /*Check for Table Availability*/
-            $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
-            $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("dataentry_daterange_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.dataentry_daterange_master LIKE poulso6_admin_broiler_broilermaster.dataentry_daterange_master;"; mysqli_query($conn,$sql1); }
 
             //check and fetch date range
             global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
@@ -94,28 +90,13 @@ if($link_active_flag > 0){
                 if(!empty($_SESSION[$fsdate])){ $fdate = date("Y-m-d",strtotime($_SESSION[$fsdate])); }
                 if(!empty($_SESSION[$tsdate])){ $tdate = date("Y-m-d",strtotime($_SESSION[$tsdate])); }
             }
-
-            //Fetch Print-View from Print Master
-            $i = $pc = 0; $field_name = $print_path = $icon_type = $icon_path = $icon_color = $target = array();
-            $psql = "SELECT * FROM `broiler_printview_master` WHERE `file_name` LIKE '$href' AND `active` = '1' AND `dflag` = '0' ORDER BY `sort_order`,`id` ASC";
-            $pquery = mysqli_query($conn,$psql);
-            while($prow = mysqli_fetch_array($pquery)){
-                $field_name[$i] = $prow['field_name'];
-                $print_path[$i] = $prow['print_path'];
-                $icon_type[$i] = $prow['icon_type'];
-                $icon_path[$i] = $prow['icon_path'];
-                $icon_color[$i] = $prow['icon_color'];
-                $target[$i] = $prow['target'];
-                $i++;
-            }
-            $pc = $i - 1;
         ?>
         <div class="m-0 p-0 wrapper">
             <section class="m-0 p-0 content">
                 <div class="m-0 p-0 container-fluid">
                     <div class="m-0 p-0 card">
                         <div class="card-header">
-                        <form action="<?php echo $href; ?>" method="post">
+                        <form action="<?php echo $url; ?>" method="post">
                                 <div class="row">
                                     <div class="col-md-2">
                                         <div class="form-group"><label for="fdate">From Date: </label><input type="text" class="form-control rc_datepicker" name="fdate" id="fdate" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>"></div>
@@ -141,8 +122,7 @@ if($link_active_flag > 0){
                                         <th>Date</th>
                                         <th>Trnum</th>
                                         <th>Customer</th>
-										<th>Mode</th>
-										<th>Method</th>
+										<th>CoA</th>
 										<th>Amount</th>
 										<th>Action</th>
                                     </tr>
@@ -155,31 +135,32 @@ if($link_active_flag > 0){
                                         $sql = "SELECT * FROM `main_contactdetails`"; $query = mysqli_query($conn,$sql); $item_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $vendor_name[$row['code']] = $row['name']; }
                                         
-                                        $sql = "SELECT * FROM `acc_coa` WHERE `ctype` in ('Cash','Bank')"; $query = mysqli_query($conn,$sql); $item_name = array();
+                                        $sql = "SELECT * FROM `acc_coa`"; $query = mysqli_query($conn,$sql); $item_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $method_name[$row['code']] = $row['description']; }
-                                        
+
                                         $delete_url = $delete_link."?utype=delete&trnum=";
-                                        $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `vtype` LIKE 'Customer' AND `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `type` LIKE 'Customer' AND `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['trnum'];
                                             $edit_url = $edit_link."?utype=edit&trnum=".$id;
-                                            
-                                            $print_dt = ""; $print_dt = "?trnum=".$row['trnum']."&date=".$row['date']."&ccode=".$row['ccode']."&mode=".$row['mode']."&method=".$row['method'];
+                                            //$delete_url = $delete_link."?utype=delete&trnum=".$id;
+                                            $print_url = $print_link."?utype=print&trnum=".$id;
+                                            $print_url1 = "/print/Examples/broiler_customer_crdrnote.php?trnum=".$row['trnum'];
+                                            $print_url2 = "/print/Examples/broiler_customer_crdrnote2.php?trnum=".$row['trnum'];
                                     ?>
                                     <tr>
 										<td data-sort="<?= strtotime($row['date']) ?>"><?= date('d.m.Y',strtotime($row['date'])) ?></td>
 										<td><?php echo $row['trnum']; ?></td>
-										<td><?php echo $vendor_name[$row['ccode']]; ?></td>
-										<td><?php echo $mode_name[$row['mode']]; ?></td>
-										<td><?php echo $method_name[$row['method']]; ?></td>
+										<td><?php echo $vendor_name[$row['vcode']]; ?></td>
+										<td><?php echo $method_name[$row['coa']]; ?></td>
 										<td><?php echo $row['amount']; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
-                                                echo "<i class='fa fa-check' style='color:green;' title='Authorized'></i></a>&ensp;&ensp;";
+                                                echo "<i class='fa fa-check' style='color:green;' title='Authorized'></i></a>";
                                             }
                                             else if($row['gc_flag'] == 1){
-                                                echo "<i class='fa fa-lock' style='color:gray;' title='GC processed'></i></a>&ensp;&ensp;";
+                                                echo "<i class='fa fa-lock' style='color:gray;' title='GC processed'></i></a>";
                                             }
                                             else if(strtotime($row['date']) < strtotime($rng_sdate) || strtotime($row['date']) > strtotime($rng_edate)){
                                                 echo "<i class='fa fa-check' style='color:green;' title='Date Entry Range Closed'></i></a>&ensp;&ensp;";
@@ -189,11 +170,11 @@ if($link_active_flag > 0){
                                                     echo "<a href='".$edit_url."'><i class='fa fa-pen' style='color:brown;' title='Edit'></i></a>&ensp;&ensp;";
                                                 }
                                                 if($delete_flag == 1){
-                                                ?>
+                                                    ?>
                                                     <a href='javascript:void(0)' id='<?php echo $id; ?>' value='<?php echo $id; ?>' onclick='checkdelete(this.id)'>
                                                     <i class='fa fa-trash' style='color:red;' title='delete'></i>
                                                     </a>&ensp;&ensp;
-                                                <?php
+                                                    <?php
                                                 }
                                                 if($paflag == 1){
                                                     if($row['active'] == 1){
@@ -208,17 +189,8 @@ if($link_active_flag > 0){
                                                 }
                                             }
                                             if($print_flag == 1){
-                                                $printv_list = "";
-                                                for($p = 0;$p <= $pc;$p++){
-                                                    $ppath = ""; $ppath = $print_path[$p]."".$print_dt;
-                                                    if($icon_type[$p] == "image"){
-                                                        $printv_list .= '<a href="'.$ppath.'" target="'.$target[$p].'"><img src="'.$icon_path[$p].'" style="width:15px;height:15px;" title="'.$field_name[$p].'" /></a>&ensp;&ensp;';
-                                                    }
-                                                    else if($icon_type[$p] == "icon"){
-                                                        $printv_list .= '<a href="'.$ppath.'" target="'.$target[$p].'"><i class="'.$icon_path[$p].'" style="color:'.$icon_color[$p].';" title="'.$field_name[$p].'"></i></a>&ensp;&ensp;';
-                                                    }
-                                                }
-                                                echo $printv_list;
+                                                echo "<a href='".$print_url1."' target='_BLANK'><i class='fa fa-print' style='color:black;' title='Print'></i></a>&ensp;&ensp;";
+                                                echo "<a href='".$print_url2."' target='_BLANK'><i class='fa fa-print' style='color:brown;' title='Print'></i></a>&ensp;&ensp;";
                                             }
                                         ?>
                                         </td>
@@ -267,7 +239,7 @@ if($link_active_flag > 0){
 		</script>
     <?php include "header_foot.php"; ?>
     </body>
-</html> 
+</html>
 <?php
 }
 else{
