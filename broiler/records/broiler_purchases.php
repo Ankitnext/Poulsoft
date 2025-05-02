@@ -127,7 +127,7 @@ if(isset($_POST['submit_report']) == true){
     $sectors = $_POST['sectors'];
     $upload_status = $_POST['upload_status'];
 
-    if($branches == "all"){ $branch_filter = ""; }
+    if($branches == "all"){ $branch_filter = ""; $branch_filter1 = ""; }
     else{
         $farm_list = "";
         foreach($farm_code as $fcode){
@@ -141,6 +141,7 @@ if(isset($_POST['submit_report']) == true){
             }
         }
         $branch_filter = " AND `warehouse` IN ('$farm_list')";
+        $branch_filter1 = " AND `farmer_code` IN ('$farm_list')";
     }
     if($sectors == "all"){ $wcodes = ""; } else{ $wcodes = " AND `warehouse` = '$sectors'"; }
     if($vendors == "all"){ $vcodes = ""; } else{ $vcodes = " AND `vcode` = '$vendors'"; }
@@ -424,12 +425,14 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
             <thead class="thead3" align="center">
                 <tr align="center"  id="header_sorting">
                     <th id='order_date'>Date</th>
+                    <th id='order'>Farm Code</th>
                     <th id='order_date'>Received Date</th>
                     <th id='order'>Supplier</th>
                     <th id='order'>Dc. No.</th>
                     <th id='order'>Invoice</th>
                     <th id='order'>Item Code</th>
                     <th id='order'>Item</th>
+                    <th id='order'>Bags</th>
                     <th id='order_num'>Sent Qty</th>
                     <th id='order_num'>Received Qty</th>
                     <?php  if($bag_column == 1){ ?>
@@ -439,6 +442,8 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
                     <th id='order_num'>Amount</th>
                     <th id='order'>Vehicle No</th>
                     <th id='order'>Farm/Warehouse</th>
+                    <th id='order'>Farm/Warehouse Code</th>
+                    <th id='order'>Driver Name</th>
                     <th id='order'>Remarks</th>
                     <th id='order'>Upload Status</th>
                     <th id='order'>Added By</th>
@@ -450,12 +455,14 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
             
             <tr align="center">
                     <th>Date</th>
+                    <th >Farm Code</th>
                     <th>Received Date</th>
                     <th>Supplier</th>
                     <th>Dc. No.</th>
                     <th>Invoice</th>
                     <th>Item Code</th>
                     <th>Item</th>
+                    <th>Bags</th>
                     <th>Sent Qty</th>
                     <th>Received Qty</th>
                     <?php  if($bag_column == 1){ ?>
@@ -465,6 +472,8 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
                     <th>Amount</th>
                     <th>Vehicle No</th>
                     <th>Farm/Warehouse</th>
+                    <th>Farm/Warehouse Code</th>
+                    <th>Driver Name</th>
                     <th>Remarks</th>
                     <th>Upload Status</th>
                     <th>Added By</th>
@@ -488,7 +497,10 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
                         $gr_date[$row['trnum']] = $row['date'];
                     }
                 }
-                
+
+                 $sql_record = "SELECT * FROM `broiler_farm` WHERE `active` = '1' ".$branch_filter1."  AND `dflag` = '0' ORDER BY `incr` ASC";
+                $query = mysqli_query($conn,$sql_record); $farm_code = array();
+                while($row = mysqli_fetch_assoc($query)){ $farm_code[$row['code']] = $row['farm_code']; }
 
                 $sql_record = "SELECT * FROM `broiler_purchases` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$vcodes."".$item_filter."".$wcodes."".$branch_filter."".$upload_filter." AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                 $query = mysqli_query($conn,$sql_record); $tot_bds = $tot_rqty = $tot_qty = $tot_amt = 0;
@@ -536,12 +548,15 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
                 ?>
                 <tr>
                     <td title="Date"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
+                    
+                    <td title="Farm Code"><?php echo $farm_code[$row['warehouse']]; ?></td>
                     <td title="Received Date"><?php echo $received_date; ?></td>
                     <td title="Supplier"><?php echo $vendor_name[$row['vcode']]; ?></td>
                     <td title="Dc. No."><?php echo $row['billno']; ?></td>
                     <td title="Invoice"><?php echo $row['trnum']; ?></td>
                     <td title="Item Code"><?php echo $row['icode']; ?></td>
                     <td title="Item"><?php echo $item_name[$row['icode']]; ?></td>
+                    <td title="Item Code"><?php echo $row['bag_code']; ?></td>
                     <td title="Sent Qty" style="text-align:right;"><?php echo number_format_ind($row['snt_qty']); ?></td>
                     <td title="Received Qty" style="text-align:right;"><?php echo number_format_ind($row['rcd_qty'] + $row['fre_qty']); ?></td>
                     <?php  if($bag_column == 1){ ?>
@@ -556,8 +571,10 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
                     ?>
                     <td title="Rate" style="text-align:right;"><?php echo number_format_ind(round(($result),2)); ?></td>
                     <td title="Amount" style="text-align:right;"><?php echo number_format_ind($row['item_tamt']); ?></td>
-                    <td title="Farm/Warehouse" style="text-align:left;"><?php if(!empty($vehicle_name[$row['vehicle_code']])){ echo $vehicle_name[$row['vehicle_code']]; } else{ echo $row['vehicle_code']; } ?></td>
+                    <td title="Vehicle No" style="text-align:left;"><?php if(!empty($vehicle_name[$row['vehicle_code']])){ echo $vehicle_name[$row['vehicle_code']]; } else{ echo $row['vehicle_code']; } ?></td>
                     <td title="Farm/Warehouse" style="text-align:left;"><?php echo $sector_name[$row['warehouse']]; ?></td>
+                    <td title="Farm/Warehouse Code" style="text-align:left;"><?php echo $farm_ccode[$row['warehouse']]; ?></td>
+                    <td title="driver name" style="text-align:left;"><?php echo $row['driver_code'];  ?></td>
                     <td title="Remarks" style="width:180px;white-space: normal;text-align:left;"><?php echo $row['remarks']; ?></td>
                     <td title="Upload Status" style="text-align:left;" rowspan="<?php echo $inv_rowc[$row['trnum']]; ?>"><?php if((int)$file_count > 0){ echo "Uploaded"; } else{ echo "Not Uploaded"; } ?></td>
                     <td title="Remarks" style="text-align:left;"><?php echo $supplier_addedemp; ?></td>
@@ -581,7 +598,7 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
             </tbody>
             <thead class="thead2">
             <tr >
-                <th colspan="7" style="text-align:center;">Total</th>
+                <th colspan="9" style="text-align:center;">Total</th>
                 <th style="text-align:right;"><?php echo number_format_ind(round($tot_bds)); ?></th>
                 <th style="text-align:right;"><?php echo number_format_ind(round($tot_qty,2)); ?></th>
                 <?php  if($bag_column == 1){ ?>
@@ -589,6 +606,8 @@ if(in_array("broiler_pc_goodsreceipt", $exist_tbl_names, TRUE) == ""){ $sql1 = "
                 <?php } ?>
                 <th style="text-align:right;"><?php echo number_format_ind(round($avg_price,2)); ?></th>
                 <th style="text-align:right;"><?php echo number_format_ind(round($tot_amt,2)); ?></th>
+                <th style="text-align:right;"></th>
+                <th style="text-align:right;"></th>
                 <th style="text-align:right;"></th>
                 <th style="text-align:right;"></th>
                 <th style="text-align:right;"></th>

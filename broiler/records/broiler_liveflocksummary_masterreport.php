@@ -1,9 +1,10 @@
 <?php
 //broiler_liveflocksummary_masterreport.php
 $requested_data = json_decode(file_get_contents('php://input'),true);
-if(!isset($_SESSION)){ session_start(); }
-$db = $_SESSION['db'] = $_GET['db'];
-$client = $_SESSION['client'];
+//if(!isset($_SESSION)){ session_start(); }
+session_start();
+if(!empty($_GET['db']) && $_GET['db'] != ""){ $db = $_SESSION['db'] = $_SESSION['dbase'] = $_GET['db']; }
+//$client = $_SESSION['client'];
 if($db == ''){
     $user_code = $_SESSION['userid'];
     include "../newConfig.php";

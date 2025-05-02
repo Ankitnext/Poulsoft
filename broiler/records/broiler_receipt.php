@@ -101,7 +101,8 @@ if(isset($_POST['submit_report']) == true){
     $cline_fltr = "";
     if($clines != "all"){ $cline_fltr = " AND `cline_code` IN ('$clines')"; }
 
-    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$vcodes."".$cline_fltr." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql); $bcodes = "";
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$vcodes."".$cline_fltr." ORDER BY `name` ASC";
+    $query = mysqli_query($conn,$sql); $bcodes = ""; $cus_alist = array();
     while($row = mysqli_fetch_assoc($query)){ $vendor_code[$row['code']] = $row['code']; $vendor_ccode[$row['code']] = $row['cus_ccode'];$vendor_name[$row['code']] = $row['name'];$cus_alist[$row['code']] = $row['code']; }
     $cus_list = implode("','",$cus_alist);
     $customer_filter = " AND `ccode` IN ('$cus_list')";
@@ -276,6 +277,7 @@ if(isset($_POST['submit_report']) == true){
                     <th id='order'>Farm/Warehouse</th>
                     <th id='order'>Remarks</th>
                     <th id='order'>Added Emp.</th>
+                    <th id='order_date'>Added Time</th>
                 </tr>
             </thead>
             <?php
@@ -299,6 +301,7 @@ if(isset($_POST['submit_report']) == true){
                     <td title="Farm/Warehouse"><?php echo $sector_name[$row['warehouse']]; ?></td>
                     <td title="Remarks"><?php echo $row['remarks']; ?></td>
                     <td title="Remarks"><?php echo $user_name[$emp_db_code[$row['addedemp']]]; ?></td>
+                    <td title="AddedTime"><?php echo date("d.m.Y h:s:iA",strtotime($row['addedtime'])); ?></td>
                 </tr>
                 <?php
                     $tot_amt = $tot_amt + $row['amount'];

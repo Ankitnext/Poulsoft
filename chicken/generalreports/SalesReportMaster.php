@@ -342,7 +342,7 @@
                                     else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<th id="order">Remarks</th>'; }
                                     else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<th id="order">Vehicle</th>'; }
                                     else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<th id="order">Driver</th>'; }
-                                    else if($field_details[$i.":".$aflag] == "cr_flag"){ $html .= '<th id="order_num">Sales</th>'; }
+                                    else if($field_details[$i.":".$aflag] == "cr_flag"){ $html .= '<th id="order_num">Amount</th>'; }
                                     else if($field_details[$i.":".$aflag] == "dr_flag"){ $html .= '<th id="order_num">Receipts</th>'; }
                                     else if($field_details[$i.":".$aflag] == "rb_flag"){ $html .= '<th id="order_num">Running Balance</th>'; }
                                     else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<th id="order">User</th>'; }
@@ -432,12 +432,18 @@
                                 $i++;
                             }
                             $ccount = sizeof($sales); $exi_inv = "";
+                            $rowred = 'style="background-color:red;"';
                             for($cdate = strtotime($fdate);$cdate <= strtotime($tdate);$cdate += (86400)){
                                 $adate = date('Y-m-d', $cdate);
                                 for($j = 0;$j <= $ccount;$j++){
                                     if($sales[$adate."@".$j] != ""){
                                         $sales_details = explode("@",$sales[$adate."@".$j]);
-                                        $html .= '<tr>';
+                                       // $html .= '<tr>';
+                                        if ($sales_details[10] == 1) {
+                                            $html .= '<tr ' . $rowred . '>';
+                                        } else {
+                                            $html .= '<tr>';
+                                        }
                                         $tacount = $tacount + (float)$sales_details[11];
                                         if($exi_inv != $sales_details[1]){
                                             $exi_inv = $sales_details[1];
@@ -456,9 +462,9 @@
                                                 if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td>'.$cus_name[$sales_details[3]].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td>'.$ltno_vname[$sales_details[26]].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td>'.$item_name[$sales_details[7]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$ltno_vname[$sales_details[26]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$item_name[$sales_details[7]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "jals_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($sales_details[4])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "birds_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($sales_details[8])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[5]).'</td>'; }
@@ -474,15 +480,15 @@
                                                     }
                                                 }
                                                 else if($field_details[$i.":".$aflag] == "prate_flag"){ $prate_index = $sales_details[0]."@".$cus_group[$sales_details[3]]."@".$sales_details[7]; $ppr_count++; $ppr_amt = $ppr_amt + $prates[$prate_index]; $html .= '<td class="text-right">'.number_format_ind($prates[$prate_index]).'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "price_flag"){ $html .= '<td class="text-right">'.$sales_details[10].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "price_flag"){  $html .= '<td class="text-right">'.$sales_details[10].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "freightamt_flag"){ $html .= '<td class="text-right">'.$sales_details[24].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[11]).'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td>'.$sector_name[$sales_details[16]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$sales_details[16]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<td>'.$sales_details[20].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<td>'.$sales_details[21].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<td>'.$sales_details[22].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "discount_flag"){ $html .= '<td>'.$sales_details[18].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td>'.$user_name[$sales_details[23]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$user_name[$sales_details[23]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "atime_flag"){ $html .= '<td>'.date("d.m.Y H:i:s",strtotime($sales_details[27])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "jfreight_flag"){ $html .= '<td class="text-right">'.number_format_ind($slc_freightamt[$sales_details[1]]).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tcds_flag"){ $html .= '<td class="text-right">'.number_format_ind($slc_tcdsamt[$sales_details[1]]).'</td>'; }
@@ -497,9 +503,9 @@
                                                 if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td>'.$cus_name[$sales_details[3]].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td>'.$ltno_vname[$sales_details[26]].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td>'.$item_name[$sales_details[7]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$ltno_vname[$sales_details[26]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$item_name[$sales_details[7]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "jals_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($sales_details[4])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "birds_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($sales_details[8])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[5]).'</td>'; }
@@ -516,14 +522,16 @@
                                                 }
                                                 else if($field_details[$i.":".$aflag] == "prate_flag"){ $prate_index = $sales_details[0]."@".$cus_group[$sales_details[3]]; $ppr_count++; $ppr_amt = $ppr_amt + $prates[$prate_index]; $html .= '<td class="text-right">'.number_format_ind($prates[$prate_index]).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "price_flag"){ $html .= '<td class="text-right">'.$sales_details[10].'</td>'; }
+                                                
+                                                    
                                                 else if($field_details[$i.":".$aflag] == "freightamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[24]).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[11]).'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td>'.$sector_name[$sales_details[16]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$sales_details[16]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<td>'.$sales_details[20].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<td>'.$sales_details[21].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<td>'.$sales_details[22].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "discount_flag"){ $html .= '<td>'.$sales_details[18].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td>'.$user_name[$sales_details[23]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$user_name[$sales_details[23]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "atime_flag"){ $html .= '<td>'.date("d.m.Y H:i:s",strtotime($sales_details[27])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "jfreight_flag"){ $html .= '<td></td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tcds_flag"){ $html .= '<td></td>'; }

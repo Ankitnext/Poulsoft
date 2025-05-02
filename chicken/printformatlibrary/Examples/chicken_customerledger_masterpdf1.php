@@ -56,23 +56,23 @@ if($count1 > 0 || $count2 > 0){
         $rpt_col_type[$row['mst_col_name']] = $row['col_type'];
         if((int)$field_calign_flag == 1){
             if($row['tbl_col_name'] == "date" || $row['tbl_col_name'] == "trns_type2"){
-                $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:left;border:1px solid black;"';
+                $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:left;border:0.1mm solid black;"';
             }
             else{
-                if($row['tbl_col_name'] == "cr_amt"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:center;color:green;border:1px solid black;"'; }
-                else if($row['tbl_col_name'] == "dr_amt"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:center;color:blue;border:1px solid black;"'; }
-                else if($row['tbl_col_name'] == "cr_amt" || $row['tbl_col_name'] == "odue_days"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:center;color:red;border:1px solid black;"'; }
-                else{ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:center;border:1px solid black;"'; }
+                if($row['tbl_col_name'] == "cr_amt"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:center;color:green;border:0.1mm solid black;"'; }
+                else if($row['tbl_col_name'] == "dr_amt"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:center;color:blue;border:0.1mm solid black;"'; }
+                else if($row['tbl_col_name'] == "cr_amt" || $row['tbl_col_name'] == "odue_days"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:center;color:red;border:0.1mm solid black;"'; }
+                else{ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:center;border:0.1mm solid black;"'; }
             }
         }
         else if($row['col_type'] == "order_date" || $row['col_type'] == "order"){
-            $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:left;border:1px solid black;"';
+            $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:left;border:0.1mm solid black;"';
         }
         else if($row['col_type'] == "order_num"){
-            if($row['tbl_col_name'] == "cr_amt"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:right;color:green;border:1px solid black;"'; }
-            else if($row['tbl_col_name'] == "dr_amt"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:right;color:blue;border:1px solid black;"'; }
-            else if($row['tbl_col_name'] == "cr_amt" || $row['tbl_col_name'] == "odue_days"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:right;color:red;border:1px solid black;"'; }
-            else{ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:right;border:1px solid black;"'; }
+            if($row['tbl_col_name'] == "cr_amt"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:right;color:green;border:0.1mm solid black;"'; }
+            else if($row['tbl_col_name'] == "dr_amt"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:right;color:blue;border:0.1mm solid black;"'; }
+            else if($row['tbl_col_name'] == "cr_amt" || $row['tbl_col_name'] == "odue_days"){ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:right;color:red;border:0.1mm solid black;"'; }
+            else{ $rpt_txt_align[$row['mst_col_name']] = 'style="text-align:right;border:0.1mm solid black;"'; }
         }
         else{ }
     }
@@ -132,8 +132,8 @@ $sql = "SELECT * FROM `crdr_note_reasons` WHERE `active` = '1' AND `dflag` = '0'
 $query = mysqli_query($conn,$sql); $reason_code = $reason_name = array();
 while($row = mysqli_fetch_assoc($query)){ $reason_code[$row['code']] = $row['code']; $reason_name[$row['code']] = $row['description']; }
 
-$paper_mode = "L";
-$paper_size = "A4";
+$paper_mode = "P";
+$paper_size = "A3";
 $d_cnt = $ccount - 6;
 
 $fdate = date("Y-m-d",strtotime($_POST['fdate'])); $tdate = date("Y-m-d",strtotime($_POST['tdate'])); $send_type = $_POST['send_type'];
@@ -143,7 +143,7 @@ $bcount = $pcount = 0; $today = date("Y-m-d");
 foreach($_POST['ccode'] as $ccode){ $bcount++; }
 
 //Heading and col width calculations
-$nhtml .= '<tr class="tfoot1">';
+$nhtml .= '<tr class="tfoot1" style="line-height:2.2;font-weight:bold;">';
 $ifix_cnt = $ini_val1 = $ino_sval = $img_cwdt = $com_cwdt = $cus_cwdt = $c_cnt = $tpx_cnt = 0;
 for($i = 1;$i <= $ccount;$i++){
     $key1 = "A:1:".$i; $key2 = "A:0:".$i;
@@ -153,61 +153,61 @@ for($i = 1;$i <= $ccount;$i++){
         if(empty($acname[$key1]) && $acname[$key1] == ""){ }
         else{
             $tcname = $tbl_col_name[$cname];
-            if($tcname == "date"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "invoice"){ $nhtml .= '<th style="width:110px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
-            else if($tcname == "so_trnum"){ $nhtml .= '<th style="width:110px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
-            else if($tcname == "link_trnum"){ $nhtml .= '<th style="width:110px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
-            else if($tcname == "bookinvoice"){ $nhtml .= '<th style="width:60px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 60; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 60; } else if($c_cnt > 4){ $cus_cwdt += 60; } else{ } $tpx_cnt += 60; }
-            else if($tcname == "customercode"){ $nhtml .= '<th style="width:110px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
-            else if($tcname == "sup_code"){ $nhtml .= '<th style="width:105px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 105; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 105; } else if($c_cnt > 4){ $cus_cwdt += 105; } else{ } $tpx_cnt += 105; }
-            else if($tcname == "itemcode"){ $nhtml .= '<th style="width:110px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
-            else if($tcname == "item_sname"){ $nhtml .= '<th style="width:50px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 50; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 50; } else if($c_cnt > 4){ $cus_cwdt += 50; } else{ } $tpx_cnt += 50; }
-            else if($tcname == "jals"){ $nhtml .= '<th style="width:60px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 60; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 60; } else if($c_cnt > 4){ $cus_cwdt += 60; } else{ } $tpx_cnt += 60; }
-            else if($tcname == "birds"){ $nhtml .= '<th style="width:60px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 60; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 60; } else if($c_cnt > 4){ $cus_cwdt += 60; } else{ } $tpx_cnt += 60; }
-            else if($tcname == "totalweight"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "emptyweight"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "sent_weight"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "mort_weight"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "order_qty"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "delivery_qty"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "farm_weight"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "netweight"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "actual_price"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "addOnPrice"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "itemprice"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "totalamt"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "tcdsper"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "tcds_type1"){ $nhtml .= '<th style="width:50px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 50; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 50; } else if($c_cnt > 4){ $cus_cwdt += 50; } else{ } $tpx_cnt += 50; }
-            else if($tcname == "tcds_type2"){ $nhtml .= '<th style="width:50px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 50; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 50; } else if($c_cnt > 4){ $cus_cwdt += 50; } else{ } $tpx_cnt += 50; }
-            else if($tcname == "tcdsamt"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "delivery_charge"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "dressing_charge"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "transporter_code"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "freight_amount"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "freight_amt"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "freight_price_perjal"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "freight_amount_jal"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "roundoff_type1"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "roundoff_type2"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "roundoff"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "finaltotal"){ $nhtml .= '<th style="width:80px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 80; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 80; } else if($c_cnt > 4){ $cus_cwdt += 80; } else{ } $tpx_cnt += 80; }
-            else if($tcname == "warehouse"){ $nhtml .= '<th style="width:80px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 80; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 80; } else if($c_cnt > 4){ $cus_cwdt += 80; } else{ } $tpx_cnt += 80; }
-            else if($tcname == "remarks"){ $nhtml .= '<th style="width:100px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 100; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 100; } else if($c_cnt > 4){ $cus_cwdt += 100; } else{ } $tpx_cnt += 100; }
-            else if($tcname == "drivercode"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "vehiclecode"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "addedemp"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "addedtime"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "approvedemp"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "approvedtime"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "updatedemp"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "updated"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "trlink"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "cr_amt"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "dr_amt"){ $nhtml .= '<th style="width:90px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
-            else if($tcname == "rb_amt"){ $nhtml .= '<th style="width:110px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
-            else if($tcname == "odue_days"){ $nhtml .= '<th style="width:70px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
-            else if($tcname == "trns_type"){ $nhtml .= '<th style="width:130px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 130; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 130; } else if($c_cnt > 4){ $cus_cwdt += 130; } else{ } $tpx_cnt += 130; }
-            else if($tcname == "trns_type2"){ $nhtml .= '<th style="width:130px;border:1px solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 130; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 130; } else if($c_cnt > 4){ $cus_cwdt += 130; } else{ } $tpx_cnt += 130; }
+            if($tcname == "date"){ $nhtml .= '<th style="width:75px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 75; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 75; } else if($c_cnt > 4){ $cus_cwdt += 75; } else{ } $tpx_cnt += 75; }
+            else if($tcname == "invoice"){ $nhtml .= '<th style="width:110px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
+            else if($tcname == "so_trnum"){ $nhtml .= '<th style="width:110px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
+            else if($tcname == "link_trnum"){ $nhtml .= '<th style="width:110px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
+            else if($tcname == "bookinvoice"){ $nhtml .= '<th style="width:60px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 60; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 60; } else if($c_cnt > 4){ $cus_cwdt += 60; } else{ } $tpx_cnt += 60; }
+            else if($tcname == "customercode"){ $nhtml .= '<th style="width:110px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
+            else if($tcname == "sup_code"){ $nhtml .= '<th style="width:105px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 105; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 105; } else if($c_cnt > 4){ $cus_cwdt += 105; } else{ } $tpx_cnt += 105; }
+            else if($tcname == "itemcode"){ $nhtml .= '<th style="width:110px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
+            else if($tcname == "item_sname"){ $nhtml .= '<th style="width:50px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 50; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 50; } else if($c_cnt > 4){ $cus_cwdt += 50; } else{ } $tpx_cnt += 50; }
+            else if($tcname == "jals"){ $nhtml .= '<th style="width:60px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 60; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 60; } else if($c_cnt > 4){ $cus_cwdt += 60; } else{ } $tpx_cnt += 60; }
+            else if($tcname == "birds"){ $nhtml .= '<th style="width:60px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 60; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 60; } else if($c_cnt > 4){ $cus_cwdt += 60; } else{ } $tpx_cnt += 60; }
+            else if($tcname == "totalweight"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "emptyweight"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "sent_weight"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "mort_weight"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "order_qty"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "delivery_qty"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "farm_weight"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "netweight"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "actual_price"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "addOnPrice"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "itemprice"){ $nhtml .= '<th style="width:65px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 65; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 65; } else if($c_cnt > 4){ $cus_cwdt += 65; } else{ } $tpx_cnt += 65; }
+            else if($tcname == "totalamt"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "tcdsper"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "tcds_type1"){ $nhtml .= '<th style="width:50px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 50; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 50; } else if($c_cnt > 4){ $cus_cwdt += 50; } else{ } $tpx_cnt += 50; }
+            else if($tcname == "tcds_type2"){ $nhtml .= '<th style="width:50px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 50; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 50; } else if($c_cnt > 4){ $cus_cwdt += 50; } else{ } $tpx_cnt += 50; }
+            else if($tcname == "tcdsamt"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "delivery_charge"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "dressing_charge"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "transporter_code"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "freight_amount"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "freight_amt"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "freight_price_perjal"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "freight_amount_jal"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "roundoff_type1"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "roundoff_type2"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "roundoff"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "finaltotal"){ $nhtml .= '<th style="width:80px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 80; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 80; } else if($c_cnt > 4){ $cus_cwdt += 80; } else{ } $tpx_cnt += 80; }
+            else if($tcname == "warehouse"){ $nhtml .= '<th style="width:80px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 80; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 80; } else if($c_cnt > 4){ $cus_cwdt += 80; } else{ } $tpx_cnt += 80; }
+            else if($tcname == "remarks"){ $nhtml .= '<th style="width:130px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 130; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 130; } else if($c_cnt > 4){ $cus_cwdt += 130; } else{ } $tpx_cnt += 130; }
+            else if($tcname == "drivercode"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "vehiclecode"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "addedemp"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "addedtime"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "approvedemp"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "approvedtime"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "updatedemp"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "updated"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "trlink"){ $nhtml .= '<th style="width:90px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 90; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 90; } else if($c_cnt > 4){ $cus_cwdt += 90; } else{ } $tpx_cnt += 90; }
+            else if($tcname == "cr_amt"){ $nhtml .= '<th style="width:110px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
+            else if($tcname == "dr_amt"){ $nhtml .= '<th style="width:110px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 110; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 110; } else if($c_cnt > 4){ $cus_cwdt += 110; } else{ } $tpx_cnt += 110; }
+            else if($tcname == "rb_amt"){ $nhtml .= '<th style="width:120px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 120; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 120; } else if($c_cnt > 4){ $cus_cwdt += 120; } else{ } $tpx_cnt += 120; }
+            else if($tcname == "odue_days"){ $nhtml .= '<th style="width:70px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 70; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 70; } else if($c_cnt > 4){ $cus_cwdt += 70; } else{ } $tpx_cnt += 70; }
+            else if($tcname == "trns_type"){ $nhtml .= '<th style="width:130px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 130; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 130; } else if($c_cnt > 4){ $cus_cwdt += 130; } else{ } $tpx_cnt += 130; }
+            else if($tcname == "trns_type2"){ $nhtml .= '<th style="width:240px;border:0.1mm solid black;text-align:center;">'.$rpt_col_name[$cname].'</th>'; $c_cnt++; if($c_cnt <= 2){ $img_cwdt += 240; } else if($c_cnt > 2 && $c_cnt <= 4){ $com_cwdt += 240; } else if($c_cnt > 4){ $cus_cwdt += 240; } else{ } $tpx_cnt += 240; }
 
             else{ }
 
@@ -453,34 +453,34 @@ foreach($_POST['ccode'] as $ccode){
 
     if($send_type == "send_pdf" || $send_type == "download_pdf"){ $html = ''; }
     if($send_type != "view_pdf_print"){
-    $html .= '<html><head><title>PoulSoft Solutions</title><style> table,tr,th,td{ font-size:10px;text-align:left;border:1px solid black;border-collapse:collapse; } td,th{ padding: 3px;text-align:left; } td{ text-align:left; } .thead1, .tfoot1{ background-color: #98fb98; } </style></head>';
+    $html .= '<html><head><title>PoulSoft Solutions</title><style> table,tr,th,td{ font-size:12px;text-align:left;border:0.1mm solid black;border-collapse:collapse; } td,th{ padding: 3px;text-align:left; } td{ text-align:left; } .thead1, .tfoot1{ background-color: #98fb98; } </style></head>';
     $html .= '<body align="center">';
     }
     $html .= '<table style="white-space:nowrap;" align="center">';
     $html .= '<thead>';
     if($dbname == "poulso6_chicken_tn_nataraj_broilers"){
-        $html .= '<tr class="tfoot1" style="line-height:1.7;">';
-        $html .= '<td style="width:'.$sh_cnt.'px;border-top:1px solid black;border-left:1px solid black; border-right:1px solid black;text-align:center;">NATARAJ BROILER</td>';
-        $html .= '<td style="width:'.$sh_cnt.'px;border-top:1px solid black;border-left:1px solid black; border-right:1px solid black;text-align:center;">'.$cus_name[$vendors].'</td>';
+        $html .= '<tr class="tfoot1" style="line-height:2.2;">';
+        $html .= '<td style="width:'.$sh_cnt.'px;border-top:0.1mm solid black;border-left:0.1mm solid black; border-right:0.1mm solid black;text-align:center;font-size: 18px;">NATARAJ BROILER</td>';
+        $html .= '<td style="width:'.$sh_cnt.'px;border-top:0.1mm solid black;border-left:0.1mm solid black; border-right:0.1mm solid black;text-align:center;font-size: 18px;">'.$cus_name[$vendors].'</td>';
         $html .= '</tr>';
-        $html .= '<tr class="tfoot1" style="line-height:1.7;">';
-        $html .= '<td style="width:'.$sh_cnt.'px; border-left:1px solid black; border-right:1px solid black; text-align:center;">SEENAPURAM, PERUNDURAI</td>';
-        $html .= '<td style="width:'.$sh_cnt.'px; border-left:1px solid black; border-right:1px solid black;text-align:center;">PH: '.$cus_mobile[$vendors].'</td>';
+        $html .= '<tr class="tfoot1" style="line-height:2.2;">';
+        $html .= '<td style="width:'.$sh_cnt.'px; border-left:0.1mm solid black; border-right:0.1mm solid black; text-align:center;">SEENAPURAM, PERUNDURAI</td>';
+        $html .= '<td style="width:'.$sh_cnt.'px; border-left:0.1mm solid black; border-right:0.1mm solid black;text-align:center;">PH: '.$cus_mobile[$vendors].'</td>';
         $html .= '</tr>';
-        $html .= '<tr class="tfoot1" style="line-height:1.7;">';
-        $html .= '<td style="width:'.$sh_cnt.'px;border-bottom:1px solid black;border-left:1px solid black; border-right:1px solid black;text-align:center;">GPAY - 9566501234, 9952333880</td>';
-        $html .= '<td style="width:'.$sh_cnt.'px;border-bottom:1px solid black;border-left:1px solid black; border-right:1px solid black;text-align:center;">Statement '.date("d.m.Y",strtotime($fdate)).' - '.date("d.m.Y",strtotime($tdate)).'</td>';
+        $html .= '<tr class="tfoot1" style="line-height:2.2;">';
+        $html .= '<td style="width:'.$sh_cnt.'px;border-bottom:0.1mm solid black;border-left:0.1mm solid black; border-right:0.1mm solid black;text-align:center;">GPAY - 9566501234, 9952333880</td>';
+        $html .= '<td style="width:'.$sh_cnt.'px;border-bottom:0.1mm solid black;border-left:0.1mm solid black; border-right:0.1mm solid black;text-align:center;">Statement '.date("d.m.Y",strtotime($fdate)).' - '.date("d.m.Y",strtotime($tdate)).'</td>';
         $html .= '</tr>';
-        $html .= '<tr class="tfoot1" style="line-height:1.7;">';
-        $html .= '<td style="width:'.$sh_cnt.'px;border:1px solid black;text-align:center;color:red;">PREVIUOS WEEK BALANCE: '.number_format_ind($pweek_samt).'</td>';
-        $html .= '<td style="width:'.$sh_cnt.'px;border:1px solid black;text-align:center;">OPENING: '.number_format_ind($rb_amt).'</td>';
+        $html .= '<tr class="tfoot1" style="line-height:2.2;">';
+        $html .= '<td style="width:'.$sh_cnt.'px;border:0.1mm solid black;text-align:center;color:red;"><b>PREVIOUS WEEK BALANCE: '.number_format_ind(round($pweek_samt)).'</b></td>';
+        $html .= '<td style="width:'.$sh_cnt.'px;border:0.1mm solid black;text-align:center;"><b>OPENING: '.number_format_ind($rb_amt).'</b></td>';
         $html .= '</tr>';
     }
     else{
         $html .= '<tr class="tfoot1">';
-        $html .= '<td style="width:'.$img_cwdt.'px;border:1px solid black;"><br/><br/><img src="../../'.$logopath.'" height="110px"/></td>';
-        $html .= '<td style="width:'.$com_cwdt.'px;border:1px solid black;text-align:left;"><br/><br/>'.$cdetails.'</td>';
-        $html .= '<td style="width:'.$cus_cwdt.'px;border:1px solid black;text-align:left;" align="center">';
+        $html .= '<td style="width:'.$img_cwdt.'px;border:0.1mm solid black;"><br/><br/><img src="../../'.$logopath.'" height="110px"/></td>';
+        $html .= '<td style="width:'.$com_cwdt.'px;border:0.1mm solid black;text-align:left;"><br/><br/>'.$cdetails.'</td>';
+        $html .= '<td style="width:'.$cus_cwdt.'px;border:0.1mm solid black;text-align:left;" align="center">';
         $html .= '<h3>'.$file_name.'</h3>';
         $html .= '<label><b style="color: green;">From Date:</b>&nbsp;'.date("d.m.Y",strtotime($fdate)).'</label>&ensp;&ensp;';
         $html .= '<label><b style="color: green;">To Date:</b>&nbsp;'.date("d.m.Y",strtotime($tdate)).'</label>';
@@ -496,8 +496,8 @@ foreach($_POST['ccode'] as $ccode){
 
     $html .= $nhtml;
     if($dbname != "poulso6_chicken_tn_nataraj_broilers"){
-        $html .= '<tr style="line-height:1.7;">';
-        $html .= '<th colspan="'.$ifix_cnt.'" style="border:1px solid black;">Opening Balance</th>';
+        $html .= '<tr style="line-height:2.2;">';
+        $html .= '<th colspan="'.$ifix_cnt.'" style="border:0.1mm solid black;">Opening Balance</th>';
         for($i = $ini_val1 + 1;$i <= $ccount;$i++){
             $key1 = "A:1:".$i;
             if(empty($acname[$key1]) && $acname[$key1] == ""){ }
@@ -507,11 +507,11 @@ foreach($_POST['ccode'] as $ccode){
                     if(empty($tbl_col_name[$cname]) || $tbl_col_name[$cname] == ""){ }
                     else{
                         $tcname = $tbl_col_name[$cname];
-                        if($tcname == "cr_amt"){ $html .= '<td '.$rpt_txt_align[$cname].' style="border:1px solid black;text-align:right;color:green;" title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; }
-                        else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' style="border:1px solid black;text-align:right;color:blue;" title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                        else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' style="border:1px solid black;text-align:right;color:red;" title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
+                        if($tcname == "cr_amt"){ $html .= '<td '.$rpt_txt_align[$cname].' style="border:0.1mm solid black;text-align:right;color:green;" title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; }
+                        else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' style="border:0.1mm solid black;text-align:right;color:blue;" title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
+                        else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' style="border:0.1mm solid black;text-align:right;color:red;" title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                         else{
-                            $html .= '<th style="border:1px solid black;"></th>';
+                            $html .= '<th style="border:0.1mm solid black;"></th>';
                         }
                     }
                 }
@@ -569,7 +569,7 @@ foreach($_POST['ccode'] as $ccode){
 
                     $bdr_amt += (float)$dr_amt;
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -638,10 +638,11 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 
                                 else if($tcname == "odue_days"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.str_replace(".00","",number_format_ind($odue_days)).'</td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Sales</td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Sales</td>'; }
                                 else if($tcname == "trns_type2"){
-                                    if($tr_info[47] == "chicken_display_multiplesale6.php"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">SPS / '.$item_sname[$tr_info[7]].'</td>'; }
-                                    else{ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Sales / '.$item_sname[$tr_info[7]].'</td>'; }           
+                                    $rmks = ""; if($tr_info[38] != ""){ $rmks = " / ".$tr_info[38]; }
+                                    if($tr_info[47] == "chicken_display_multiplesale6.php"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">SPS / '.$item_sname[$tr_info[7]]."".$rmks.'</td>'; }
+                                    else{ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Sales / '.$item_sname[$tr_info[7]]."".$rmks.'</td>'; }           
                                 }
                                 else{ }
                             }
@@ -690,7 +691,7 @@ foreach($_POST['ccode'] as $ccode){
 
                     $bcr_amt += (float)$cr_amt;
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -750,9 +751,12 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "odue_days"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:right;color:red;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Purchases</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Purchases / '.$item_sname[$tr_info[7]].'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:right;color:red;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Purchases</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[25] != ""){ $rmks = " / ".$tr_info[25]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Purchases / '.$item_sname[$tr_info[7]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -776,7 +780,7 @@ foreach($_POST['ccode'] as $ccode){
                     $cr_amt = (float)$tr_info[9]; $rb_amt -= (float)$cr_amt;
                     $bcr_amt += (float)$cr_amt;
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -835,10 +839,13 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "trlink"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.$tr_info[18].'</td>'; }
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "rb_amt"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.str_replace(".00","",number_format_ind($rb_amt)).'</td>'; }
-                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:center;color:black;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Receipt</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Receipt / '.$acc_mode[$tr_info[7]].'</td>'; }
+                                else if($tcname == "rb_amt"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:center;color:black;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Receipt</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[11] != ""){ $rmks = " / ".$tr_info[11]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Receipt / '.$acc_mode[$tr_info[7]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -862,7 +869,7 @@ foreach($_POST['ccode'] as $ccode){
                     $dr_amt = (float)$tr_info[6]; $rb_amt += (float)$dr_amt;
                     $bdr_amt += (float)$dr_amt;
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -921,10 +928,13 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "trlink"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.$tr_info[15].'</td>'; }
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "rb_amt"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.str_replace(".00","",number_format_ind($rb_amt)).'</td>'; }
-                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:center;color:black;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Payment</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Payment / '.$acc_mode[$tr_info[4]].'</td>'; }
+                                else if($tcname == "rb_amt"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:center;color:black;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Payment</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[8] != ""){ $rmks = " / ".$tr_info[8]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Payment / '.$acc_mode[$tr_info[4]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -953,7 +963,7 @@ foreach($_POST['ccode'] as $ccode){
 
                     $bdr_amt += (float)$dr_amt;
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -1014,8 +1024,11 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "odue_days"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.str_replace(".00","",number_format_ind($odue_days)).'</td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Debit Note</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">DN / '.$reason_name[$tr_info[15]].'</td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Debit Note</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[8] != ""){ $rmks = " / ".$tr_info[8]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">DN / '.$reason_name[$tr_info[15]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -1039,7 +1052,7 @@ foreach($_POST['ccode'] as $ccode){
                     $cr_amt = (float)$tr_info[6]; $rb_amt -= (float)$cr_amt;
                     $bcr_amt += (float)$cr_amt;
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -1100,8 +1113,11 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "odue_days"){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.str_replace(".00","",number_format_ind($odue_days)).'</td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Debit Note</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">DN / '.$reason_name[$tr_info[15]].'</td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Debit Note</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[8] != ""){ $rmks = " / ".$tr_info[8]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">DN / '.$reason_name[$tr_info[15]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -1125,7 +1141,7 @@ foreach($_POST['ccode'] as $ccode){
                     $cr_amt = (float)$tr_info[6]; $rb_amt -= (float)$cr_amt;
                     $bcr_amt += (float)$cr_amt;
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -1185,9 +1201,12 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Credit Note</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">CN / '.$reason_name[$tr_info[15]].'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Credit Note</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[8] != ""){ $rmks = " / ".$tr_info[8]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">CN / '.$reason_name[$tr_info[15]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -1211,7 +1230,7 @@ foreach($_POST['ccode'] as $ccode){
                     $dr_amt = (float)$tr_info[6]; $rb_amt += (float)$dr_amt;
                     $bdr_amt += (float)$dr_amt;
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -1271,9 +1290,12 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Credit Note</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">CN / '.$reason_name[$tr_info[15]].'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Credit Note</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[8] != ""){ $rmks = " / ".$tr_info[8]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">CN / '.$reason_name[$tr_info[15]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -1301,7 +1323,7 @@ foreach($_POST['ccode'] as $ccode){
                     $tot_birds -= (float)$tr_info[6];
                     $tot_nweight -= (float)$tr_info[7];
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -1361,9 +1383,11 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Sales Return</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Sales Return / '.$item_sname[$tr_info[4]].'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Sales Return</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Sales Return / '.$item_sname[$tr_info[4]].'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -1391,7 +1415,7 @@ foreach($_POST['ccode'] as $ccode){
                     $tot_birds -= (float)$tr_info[6];
                     $tot_nweight -= (float)$tr_info[7];
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -1451,9 +1475,9 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Purchase Return</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Purchase Return / '.$item_sname[$tr_info[4]].'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Purchase Return</td>'; }
+                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Purchase Return / '.$item_sname[$tr_info[4]].'</td>'; }
                                 else{ }
                             }
                         }
@@ -1481,7 +1505,7 @@ foreach($_POST['ccode'] as $ccode){
                     $tot_birds -= (float)$tr_info[5];
                     $tot_nweight -= (float)$tr_info[6];
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -1541,9 +1565,12 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Mortality</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Mortality / '.$item_sname[$tr_info[4]].'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Mortality</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[9] != ""){ $rmks = " / ".$tr_info[9]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Mortality / '.$item_sname[$tr_info[4]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -1571,7 +1598,7 @@ foreach($_POST['ccode'] as $ccode){
                     $tot_birds -= (float)$tr_info[5];
                     $tot_nweight -= (float)$tr_info[6];
 
-                    $html .= '<tr style="line-height:1.7;">';
+                    $html .= '<tr style="line-height:2.2;">';
                     for($j = 1;$j <= $ccount;$j++){
                         $key1 = "A:1:".$j;
                         if(empty($acname[$key1]) || $acname[$key1] == ""){ }
@@ -1631,9 +1658,12 @@ foreach($_POST['ccode'] as $ccode){
                                 else if($tcname == "cr_amt"){ if((float)$cr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($cr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "dr_amt"){ if((float)$dr_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($dr_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
                                 else if($tcname == "rb_amt"){ if((float)$rb_amt != 0){ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($rb_amt).'</td>'; } else{ $html .= '<td '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'"></td>'; } }
-                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:1px solid black;"></td>'; }
-                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Mortality</td>'; }
-                                else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;">Mortality / '.$item_sname[$tr_info[4]].'</td>'; }
+                                else if($tcname == "odue_days"){ $html .= '<td style="text-align:right;color:red;border:0.1mm solid black;"></td>'; }
+                                else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Mortality</td>'; }
+                                else if($tcname == "trns_type2"){
+                                    $rmks = ""; if($tr_info[9] != ""){ $rmks = " / ".$tr_info[9]; }
+                                    $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;">Mortality / '.$item_sname[$tr_info[4]]."".$rmks.'</td>';
+                                }
                                 else{ }
                             }
                         }
@@ -1644,12 +1674,12 @@ foreach($_POST['ccode'] as $ccode){
         }
     }
     
-    $html .= '<tr class="tfoot1" style="line-height:1.7;">';
+    $html .= '<tr class="tfoot1" style="font-weight:bold;line-height:2.2;">';
     if($dbname == "poulso6_chicken_tn_nataraj_broilers"){
-        $html .= '<th colspan="'.$ifix_cnt.'" style="border:1px solid black;">Total</th>';
+        $html .= '<th colspan="'.$ifix_cnt.'" style="border:0.1mm solid black;">Total</th>';
     }
     else{
-        $html .= '<th colspan="'.$ifix_cnt.'" style="border:1px solid black;">Between Day closing</th>';
+        $html .= '<th colspan="'.$ifix_cnt.'" style="border:0.1mm solid black;">Between Day closing</th>';
     }
     
     for($i = $ini_val1 + 1;$i <= $ccount;$i++){
@@ -1680,14 +1710,14 @@ foreach($_POST['ccode'] as $ccode){
                     else if($tcname == "freight_amount_jal"){ $html .= '<th '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($tot_jfrtamt).'</th>'; }
                     else if($tcname == "roundoff"){ $html .= '<th '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($tot_rndfamt).'</th>'; }
                     else if($tcname == "finaltotal"){ $html .= '<th '.$rpt_txt_align[$cname].' title="'.$rpt_col_name[$cname].'">'.number_format_ind($tot_finlamt).'</th>'; }
-                    else if($tcname == "cr_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:green;border:1px solid black;">'.number_format_ind($bcr_amt).'</th>'; }
-                    else if($tcname == "dr_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:blue;border:1px solid black;">'.number_format_ind($bdr_amt).'</th>'; }
-                    else if($tcname == "rb_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:red;border:1px solid black;"></th>'; }
-                    else if($tcname == "odue_days"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:red;border:1px solid black;"></th>'; }
-                    else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:center;border:1px solid black;"></td>'; }
-                    else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:1px solid black;"></td>'; }
+                    else if($tcname == "cr_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:green;border:0.1mm solid black;">'.number_format_ind($bcr_amt).'</th>'; }
+                    else if($tcname == "dr_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:blue;border:0.1mm solid black;">'.number_format_ind($bdr_amt).'</th>'; }
+                    else if($tcname == "rb_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:red;border:0.1mm solid black;"></th>'; }
+                    else if($tcname == "odue_days"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:red;border:0.1mm solid black;"></th>'; }
+                    else if($tcname == "trns_type"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;"></td>'; }
+                    else if($tcname == "trns_type2"){ $html .= '<td title="'.$rpt_col_name[$cname].'" style="text-align:left;border:0.1mm solid black;"></td>'; }
                     else{
-                        $html .= '<th style="text-align:right;color:red;border:1px solid black;"></th>';
+                        $html .= '<th style="text-align:right;color:red;border:0.1mm solid black;"></th>';
                     }
                 }
             }
@@ -1699,8 +1729,8 @@ foreach($_POST['ccode'] as $ccode){
     $gdr_amt = ((float)$odr_amt + (float)$bdr_amt);
 
     if($dbname != "poulso6_chicken_tn_nataraj_broilers"){
-        $html .= '<tr class="tfoot1" style="line-height:1.7;">';
-        $html .= '<th colspan="'.$ifix_cnt.'" style="border:1px solid black;">Grand Total</th>';
+        $html .= '<tr class="tfoot1" style="font-weight:bold;line-height:2.2;">';
+        $html .= '<th colspan="'.$ifix_cnt.'" style="border:0.1mm solid black;">Grand Total</th>';
         for($i = $ini_val1 + 1;$i <= $ccount;$i++){
             $key1 = "A:1:".$i;
             if(empty($acname[$key1]) && $acname[$key1] == ""){ }
@@ -1710,11 +1740,11 @@ foreach($_POST['ccode'] as $ccode){
                     if(empty($tbl_col_name[$cname]) || $tbl_col_name[$cname] == ""){ }
                     else{
                         $tcname = $tbl_col_name[$cname];
-                        if($tcname == "cr_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:green;border:1px solid black;">'.number_format_ind($gcr_amt).'</th>'; }
-                        else if($tcname == "dr_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:blue;border:1px solid black;">'.number_format_ind($gdr_amt).'</th>'; }
-                        else if($tcname == "rb_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:red;border:1px solid black;"></th>'; }
+                        if($tcname == "cr_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:green;border:0.1mm solid black;">'.number_format_ind($gcr_amt).'</th>'; }
+                        else if($tcname == "dr_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:blue;border:0.1mm solid black;">'.number_format_ind($gdr_amt).'</th>'; }
+                        else if($tcname == "rb_amt"){ $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:red;border:0.1mm solid black;"></th>'; }
                         else{
-                            $html .= '<th style="text-align:right;color:red;border:1px solid black;"></th>';
+                            $html .= '<th style="text-align:right;color:red;border:0.1mm solid black;"></th>';
                         }
                     }
                 }
@@ -1726,8 +1756,8 @@ foreach($_POST['ccode'] as $ccode){
     if((float)$gcr_amt > (float)$gdr_amt){ $ccr_amt = ((float)$gcr_amt - (float)$gdr_amt); }
     else{ $cdr_amt = ((float)$gdr_amt - (float)$gcr_amt); }
 
-    $html .= '<tr class="tfoot1" style="line-height:1.7;">';
-    $html .= '<th colspan="'.$ifix_cnt.'" style="border:1px solid black;">Closing Balance</th>';
+    $html .= '<tr class="tfoot1" style="font-weight:bold;line-height:2.2;">';
+    $html .= '<th colspan="'.$ifix_cnt.'" style="border:0.1mm solid black;">Closing Balance</th>';
     for($i = $ini_val1 + 1;$i <= $ccount;$i++){
         $key1 = "A:1:".$i;
         if(empty($acname[$key1]) && $acname[$key1] == ""){ }
@@ -1739,35 +1769,40 @@ foreach($_POST['ccode'] as $ccode){
                     $tcname = $tbl_col_name[$cname];
                     if($tcname == "cr_amt"){
                         if(number_format_ind($ccr_amt) == "0.00"){
-                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:green;border:1px solid black;"></th>';
+                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:green;border-bottom:0.1mm solid black;"></th>';
                         }
                         else{
-                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:green;border:1px solid black;">'.number_format_ind($ccr_amt).'</th>';
+                            if($dbname == "poulso6_chicken_tn_nataraj_broilers"){
+                                $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:green;border-bottom:0.1mm solid black;"></th>';
+                            }
+                            else{
+                                $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:green;border-bottom:0.1mm solid black;">'.number_format_ind($ccr_amt).'</th>';
+                            }
                         }
                     }
                     else if($tcname == "dr_amt"){
                         if(number_format_ind($cdr_amt) == "0.00"){
-                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:blue;border:1px solid black;"></th>';
+                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:blue;border-bottom:0.1mm solid black;"></th>';
                         }
                         else{
                             if($dbname == "poulso6_chicken_tn_nataraj_broilers"){
-                                $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:blue;border:1px solid black;"></th>';
+                                $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:blue;border-bottom:0.1mm solid black;"></th>';
                             }
                             else{
-                                $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:blue;border:1px solid black;">'.number_format_ind($cdr_amt).'</th>';
+                                $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:blue;border-bottom:0.1mm solid black;">'.number_format_ind($cdr_amt).'</th>';
                             }
                         }
                     }
                     else if($tcname == "rb_amt"){
                         if($dbname == "poulso6_chicken_tn_nataraj_broilers"){
-                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:blue;border:1px solid black;">'.number_format_ind($cdr_amt).'</th>';
+                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:center;color:blue;border:0.1mm solid black;">'.number_format_ind($rb_amt).'</th>';
                         }
                         else{
-                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:red;border:1px solid black;"></th>';
+                            $html .= '<th title="'.$rpt_col_name[$cname].'" style="text-align:right;color:blue;border:0.1mm solid black;"></th>';
                         }
                     }
                     else{
-                        $html .= '<th style="text-align:right;color:red;border:1px solid black;"></th>';
+                        $html .= '<th style="border-bottom:0.1mm solid black;"></th>';
                     }
                 }
             }
@@ -1793,12 +1828,12 @@ foreach($_POST['ccode'] as $ccode){
         $pdf->SetTitle('Customer Ledger');
         $pdf->SetSubject('Ledger PDF');
         $pdf->SetKeywords('TCPDF, PDF, example, test, guide');
-        $pdf->SetFont('dejavusans', '', 11, '', true);
+        $pdf->SetFont('dejavusans', '', 12, '', true);
         $dt = date("d.m.Y",strtotime($odate));
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
         $pdf->SetMargins(5, 5, 5, true);
-        $pdf->AddPage($paper_mode, $paper_size);
+        $pdf->AddPage("L", "A1");
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
         $file = $pdf->Output(__DIR__."/".$file_name.".pdf",'F');
         $filepath = "https://chicken.poulsoft.org/printformatlibrary/Examples/".$file_name.".pdf";
@@ -1813,7 +1848,7 @@ foreach($_POST['ccode'] as $ccode){
 
         foreach($mobno_list as $mobile){
             if(strlen($mobile) == 10 || strlen($mobile) == "10"){
-                $message = "Dear ".$cus_name[$vendors].",%0D%0A%0D%0A".$company_name." shared your Ledger from ".date("d.m.Y",strtotime($fdate))." to ".date("d.m.Y",strtotime($tdate));
+                $message = "Dear ".$cus_name[$vendors].",%0D%0A%0D%0A".$company_name." shared your Statement from ".date("d.m.Y",strtotime($fdate))." to ".date("d.m.Y",strtotime($tdate));
                 $message = str_replace(" ","+",$message);
         
                 $sql = "SELECT * FROM `whatsapp_master` WHERE `id` = '$url_id' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conns,$sql);
@@ -1878,7 +1913,7 @@ foreach($_POST['ccode'] as $ccode){
         $pdf->SetTitle('Customer Ledger');
         $pdf->SetSubject('Ledger PDF');
         $pdf->SetKeywords('TCPDF, PDF, example, test, guide');
-        $pdf->SetFont('dejavusans', '', 11, '', true);
+        $pdf->SetFont('dejavusans', '', 12, '', true);
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
         $pdf->SetMargins(5, 5, 5, true);
@@ -1914,11 +1949,12 @@ else if($send_type == "view_pdf_print"){
     $pdf->SetTitle('Customer Ledger');
     $pdf->SetSubject('Ledger PDF');
     $pdf->SetKeywords('TCPDF, PDF, example, test, guide');
-    $pdf->SetFont('dejavusans', '', 11, '', true);
+    $pdf->SetFont('dejavusans', '', 12, '', true);
     $pdf->SetPrintHeader(false);
     $pdf->SetPrintFooter(false);
     $pdf->SetMargins(5, 5, 5, true);
     $pdf->AddPage($paper_mode, $paper_size);
+    $pdf->SetLineWidth(0.01);
     $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
     $pdf->Output('CustomerLedger.pdf', 'I');
 }

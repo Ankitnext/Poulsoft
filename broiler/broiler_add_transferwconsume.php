@@ -38,6 +38,10 @@ if($link_active_flag > 0){
         }
     }
     if($acount == 1){
+        //check and fetch date range
+        global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+        include "poulsoft_fetch_daterange_master.php";
+
         $today = date("d.m.Y");
         $sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%medicine%' OR `description` LIKE '%Vaccine%' OR `description` LIKE '%bio%' OR `description` LIKE '%Water Soluble%') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $icat_code = "";
@@ -161,7 +165,7 @@ if($link_active_flag > 0){
                                     <div class="row">
                                         <div class="form-group">
                                             <label>Date<b style="color:red;">&nbsp;*</b></label>
-							                <input type="text" name="date[]" id="date[0]" class="form-control <?php echo $date_class; ?>" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" onchange="broiler_check_futuredate(this.id);check_medvac_masterprices(this.id);" />
+							                <input type="text" name="date[]" id="date[0]" class="form-control range_picker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" onchange="broiler_check_futuredate(this.id);check_medvac_masterprices(this.id);" />
                                         </div>
                                         <div class="form-group">
                                             <label>Dc No.</label>
@@ -248,9 +252,15 @@ if($link_active_flag > 0){
 				document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
                 var item = from_loc = to_loc = ""; var c = quantity = fd_flag = mflag = 0; var l = true; //var date = dateOne = dateTwo = ""; dates = [];
                 var a = document.getElementById("incr").value;
+
+                
                 
                 from_loc = document.getElementById("fromwarehouse").value;
                 to_loc = document.getElementById("towarehouse").value;
+                if(from_loc == to_loc){
+                    alert('From location and to location cannot be the same');
+                    l = false;
+                }
                 
                 if(from_loc.match("select")){
                     alert("Kindly select From Location");
@@ -371,7 +381,7 @@ if($link_active_flag > 0){
                 var today = '<?php echo $today; ?>';
                 
                 html += '<div class="row" id="row_no['+d+']">';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Date<b style="color:red;">&nbsp;*</b></label><input type="text" name="date[]" id="date['+d+']" class="form-control datepicker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" onchange="broiler_check_futuredate(this.id);check_medvac_masterprices(this.id);" /></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Date<b style="color:red;">&nbsp;*</b></label><input type="text" name="date[]" id="date['+d+']" class="form-control range_picker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" onchange="broiler_check_futuredate(this.id);check_medvac_masterprices(this.id);" /></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Dc No.</label><input type="text" name="dcno[]" id="dcno['+d+']" class="form-control" style="width:70px;" /></div>';
                 html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Item<b style="color:red;">&nbsp;*</b></label><select name="code[]" id="code['+d+']" class="form-control select2" style="width:160px;" onchange="fetch_stock_master(this.id);check_medvac_masterprices(this.id);fetch_itemuom(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">UOM</label><input type="text" name="uom[]" id="uom['+d+']" class="form-control" style="width:80px;" readonly /></div>';
@@ -386,7 +396,11 @@ if($link_active_flag > 0){
                 html += '</div>';
                 html += '<hr class="labelrow" style="display:none;" />';
                 $('#row_body').append(html); $('.select2').select2();
-                $( ".datepicker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", maxDate: today, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+                //Date Range selection
+                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
+                $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+               
+                //$( ".datepicker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", maxDate: today, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
             }
             function destroy_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -562,6 +576,11 @@ if($link_active_flag > 0){
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }
 			function validateamount(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(5); document.getElementById(x).value = parseFloat(b).toFixed(2); }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
+        </script>
+         <script>
+            //Date Range selection
+            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
+            $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
         </script>
         <?php include "header_foot.php"; ?>
     </body>

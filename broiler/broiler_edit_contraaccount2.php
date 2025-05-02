@@ -41,7 +41,7 @@ if($link_active_flag > 0){
 		$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ".$sector_access_filter1." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
-		$sql = "SELECT * FROM `acc_coa` WHERE `ctype` LIKE '%CASH%' OR `ctype` LIKE '%BANK%' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+		$sql = "SELECT * FROM `acc_coa` WHERE (`ctype` LIKE '%CASH%' OR `ctype` LIKE '%BANK%') AND `active` = '1' AND `dflag` = '0' AND `visible_flag` = '1'"; $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){ $coa_code[$row['code']] = $row['code']; $coa_name[$row['code']] = $row['description']; }
 
         $sql = "SELECT * FROM `location_branch` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);

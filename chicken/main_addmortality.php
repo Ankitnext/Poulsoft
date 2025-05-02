@@ -92,6 +92,7 @@
 												<th style="text-align:center;"><label>Amount</label></th>
 												<th style="text-align:center;"><label>Mortality On</label></th>
 												<th style="text-align:center;"><label>Customer / Warehouse</label></th>
+												<th style="text-align:center;"><label>Vehicle</label></th>
 												<th style="text-align:center;"><label>Remarks</label></th>
 												<th>Action</th>
 											</tr>
@@ -106,6 +107,7 @@
 												<td><input type="text" name="amount[]" id="amount[0]" class="form-control" style="min-width:90px;" readonly ></td>
 												<td><select name="mtype[]" id="mtype[0]" class="form-control select2" style="width: 180px;" onchange="setgroup(this.id)"><option value="select">select</option><option value="customer">Customer</option><option value="supplier">Supplier</option><option value="sector">Warehouse</option></select></td>
 												<td><select name="ccode[]" id="ccode[0]" class="form-control select2"style="width:180px;"><option value="select">select</option></select></td>
+												<td><select name="warehouse[]" id="warehouse[0]" class="form-control select2"style="width:180px;"><option value="select">select</option><?php foreach($sector_code as $icode){ ?><option value="<?php echo $icode; ?>"><?php echo $sector_name[$icode]; ?></option><?php } ?></select></td>
 												<td><textarea name="remark[]" id="remark[0]" class="form-control" style="height: 23px;"></textarea></td>
 												<td><a href="JavaScript:Void(0);" name="addval[]" id="addval[0]" onclick="rowgen()"><i class="fa fa-plus"></i></a>&ensp;&ensp;<a href="JavaScript:Void(0);" name="rmval[]" id="rmval[0]" onclick="rowdes()" style="visibility:hidden;"><i class="fa fa-minus" style="color:red;"></i></a></td>
 											</tr>
@@ -216,6 +218,7 @@
 					html+= '<td><input type="text" name="amount[]" id="amount['+c+']" class="form-control" style="min-width:90px;" readonly ></td>';
 					html+= '<td><select name="mtype[]" id="mtype['+c+']" class="form-control select2" style="width: 180px;" onchange="setgroup(this.id)"><option value="select">select</option><option value="customer">Customer</option><option value="supplier">Supplier</option><option value="sector">Warehouse</option></select></td>';
 					html+= '<td><select name="ccode[]" id="ccode['+c+']" class="form-control select2" style="width:180px;"><option value="select">select</option></select></td>';
+					html+= '<td><select name="warehouse[]" id="warehouse['+c+']" class="form-control select2"style="width:180px;"><option value="select">select</option><?php foreach($sector_code as $icode){ ?><option value="<?php echo $icode; ?>"><?php echo $sector_name[$icode]; ?></option><?php } ?></select></td>';
 					html+= '<td><textarea name="remark[]" id="remark['+c+']" class="form-control" style="height: 23px;"></textarea></td>';
 					html+= '<td style="width: 100%;"><a href="JavaScript:Void(0);" name="addval[]" id="addval['+c+']" onclick="rowgen()"><i class="fa fa-plus"></i></a>&ensp;&ensp;<a href="JavaScript:Void(0);" name="rmval[]" id="rmval['+c+']" class="delete" onclick="removerow(this.id)" style="visibility:visible;"><i class="fa fa-minus" style="color:red;"></i></a></td>';
 				html+= '</tr>';
@@ -280,7 +283,6 @@
 				}
 				else{ }
 			}
-			
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
 			document.addEventListener("keydown", (e) => { var key_search = document.activeElement.id.includes("["); if(key_search == true){ var b = document.activeElement.id.split("["); var c = b[1].split("]"); var d = c[0]; document.getElementById("incrs").value = d; } if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function () { $('#submittrans').click(); }); } } else{ } });
 		</script>

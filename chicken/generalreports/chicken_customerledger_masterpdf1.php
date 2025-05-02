@@ -128,8 +128,8 @@ while($row = mysqli_fetch_assoc($query)){ $cus_code[$row['code']] = $row['code']
 
 //Customer Details
 $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `active` = '1' AND `dflag` = '0'".$user_sector_filter." ORDER BY `name` ASC";
-$query = mysqli_query($conn,$sql); $csup_alist = $carea_alist = array();
-while($row = mysqli_fetch_assoc($query)){ $csup_alist[$row['supr_code']] = $row['supr_code']; $carea_alist[$row['area_code']] = $row['area_code']; }
+$query = mysqli_query($conn,$sql); $csup_alist = array();
+while($row = mysqli_fetch_assoc($query)){ $csup_alist[$row['supr_code']] = $row['supr_code']; }
 
 //Supervisor Details
 $supv_list = implode("','",$csup_alist);
@@ -137,20 +137,22 @@ $sql = "SELECT * FROM `chicken_employee` WHERE `code` IN ('$supv_list') AND `act
 $query = mysqli_query($conn,$sql); $supv_code = $supv_name = array();
 while($row = mysqli_fetch_assoc($query)){ $supv_code[$row['code']] = $row['code']; $supv_name[$row['code']] = $row['name']; }
 
+$fdate = $tdate = $today = date("Y-m-d"); $supervisors = "all"; $area_acode = array(); $area_acode["all"] = "all"; $area_fltr = ""; $aa_flag = 0;
+if(isset($_POST['submit_report']) == true){
+    $supervisors = $_POST['supervisors'];
+    $area_acode = array(); foreach($_POST['areas'] as $t1){ $area_acode[$t1] = $t1; if($t1 == "all" || $t1 == ""){ $area_acode["all"] = "all"; $aa_flag = 1; } }
+    if($aa_flag == 0){ $area_list = implode("','",$area_acode); $area_fltr = " AND `area_code` IN ('$area_list')"; }
+}
+$sup_fltr = ""; if($supervisors != "all"){ $sup_fltr = " AND `supr_code` IN ('$supervisors')"; }
+
+$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$sup_fltr."".$area_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
+$query = mysqli_query($conn,$sql); $carea_alist = array();
+while($row = mysqli_fetch_assoc($query)){ $carea_alist[$row['area_code']] = $row['area_code']; }
 //Area Details
 $area_list = implode("','",$carea_alist);
 $sql = "SELECT * FROM `main_areas` WHERE `code` IN ('$area_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $area_code = $area_name = array();
 while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code']; $area_name[$row['code']] = $row['description']; }
-
-$fdate = $tdate = $today = date("Y-m-d"); $supervisors = $areas = "all"; $today_sale = 0;
-if(isset($_POST['submit_report']) == true){
-    $supervisors = $_POST['supervisors'];
-    $areas = $_POST['areas'];
-    if($_POST['today_sale'] == true || $_POST['today_sale'] == "on" || $_POST['today_sale'] == 1){ $today_sale = 1; } else{ $today_sale = 0; }
-}
-$sup_fltr = ""; if($supervisors != "all"){ $sup_fltr = " AND `supr_code` IN ('$supervisors')"; }
-$area_fltr = ""; if($areas != "all"){ $area_fltr = " AND `area_code` IN ('$areas')"; }
 ?>
 <html>
 	<head>
@@ -178,25 +180,25 @@ $area_fltr = ""; if($areas != "all"){ $area_fltr = " AND `area_code` IN ('$areas
                                 <label><b style="color: green;">To Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($tdate)); ?></label>
                             </td>
                         </tr>
-                        <form action="<?php echo $form_reload_page; ?>" method="post">
+                        <form action="<?php echo $form_reload_page; ?>" method="post" onsubmit="return check_val2();">
                             <tr>
                                 <th colspan="16">
                                     <div class="m-1 p-1 row">
-                                        <div class="m-2 form-group">
+                                        <div class="m-2 form-group" style="width:200px;">
                                             <label>Supervisor</label>
-                                            <select name="supervisors" id="supervisors" class="form-control select2" onchange="fetch_careas();">
+                                            <select name="supervisors" id="supervisors" class="form-control select2" style="width:190px;" onchange="fetch_careas();">
                                                 <option value="all" <?php if($supervisors == "all"){ echo "selected"; } ?>>-All-</option>
                                                 <?php foreach($supv_code as $gcode){ if($supv_name[$gcode] != ""){ ?>
                                                 <option value="<?php echo $gcode; ?>" <?php if($supervisors == $gcode){ echo "selected"; } ?>><?php echo $supv_name[$gcode]; ?></option>
                                                 <?php } } ?>
                                             </select>
                                         </div>
-                                        <div class="m-2 form-group">
+                                        <div class="m-2 form-group" style="width:200px;">
                                             <label>Area</label>
-                                            <select name="areas" id="areas" class="form-control select2">
-                                                <option value="all" <?php if($areas == "all"){ echo "selected"; } ?>>-All-</option>
+                                            <select name="areas[]" id="areas" class="form-control select2" style="width:190px;" multiple >
+                                                <option value="all" <?php foreach($area_acode as $areas){ if($areas == "all"){ echo "selected"; } } ?>>-All-</option>
                                                 <?php foreach($area_code as $gcode){ if($area_name[$gcode] != ""){ ?>
-                                                <option value="<?php echo $gcode; ?>" <?php if($areas == $gcode){ echo "selected"; } ?>><?php echo $area_name[$gcode]; ?></option>
+                                                <option value="<?php echo $gcode; ?>" <?php foreach($area_acode as $areas){ if($areas == $gcode){ echo "selected"; } } ?>><?php echo $area_name[$gcode]; ?></option>
                                                 <?php } } ?>
                                             </select>
                                         </div>
@@ -228,9 +230,9 @@ $area_fltr = ""; if($areas != "all"){ $area_fltr = " AND `area_code` IN ('$areas
                 echo '</thead>';
                 ?>
                 </table>
+                <form action="..\printformatlibrary\Examples\chicken_customerledger_masterpdf1.php" method="post" target="_blank" onsubmit="return checkval()">
 				<table class="table-sm table-hover main-table2">
 					<thead class="thead1">
-                        <form action="..\printformatlibrary\Examples\chicken_customerledger_masterpdf1.php" method="post" onsubmit="return checkval()">
 						<tr>
 							<td colspan="19" class="p-1">
                                 <div class="m-1 p-1 row">
@@ -250,13 +252,28 @@ $area_fltr = ""; if($areas != "all"){ $area_fltr = " AND `area_code` IN ('$areas
                                         <label for="inc_sac">S&amp;C</label>
                                         <input type="checkbox" name="inc_sac" id="inc_sac" class="form-control" style="text-align:center;" />
                                     </div>
-                                    <div class="ml-2 mr-2 form-group" style="width:210px;">
+                                    <!--<div class="ml-2 mr-2 form-group" style="width:210px;">
                                         <label>Type</label>
-                                        <select name="send_type" id="send_type" class="form-control select2" style="width:200px;">
+                                        <select name="open_type" id="open_type" class="form-control select2" style="width:200px;">
                                             <option value="download_pdf" selected >-Download PDF-</option>
                                             <option value="view_normal_print">-View Normal Print-</option>
                                             <option value="view_pdf_print">-View PDF Print-</option>
                                         </select>
+                                    </div>-->
+                                    <div class="form-group">
+                                        <br/><button type="button" name="download_pdf" id="download_pdf" class="btn btn-warning btn-sm" onclick="upd_opn_details(this.id);">Download PDF</button>
+                                    </div>&ensp;
+                                    <div class="form-group">
+                                        <br/><button type="button" name="view_pdf_print" id="view_pdf_print" class="btn btn-warning btn-sm" onclick="upd_opn_details(this.id);">View PDF</button>
+                                    </div>&ensp;
+                                    <div class="form-group">
+                                        <br/><button type="button" name="send_pdf" id="send_pdf" class="btn btn-warning btn-sm" onclick="upd_opn_details(this.id);">WhatsApp PDF</button>
+                                    </div>
+                                    <div class="form-group" style="width:30px;visibility:hidden;">
+                                        <input type="text" name="send_type" id="send_type" class="btn btn-warning btn-sm" value="" style="width:30px;" readonly />
+                                    </div>
+                                    <div class="form-group" style="visibility:hidden;">
+                                        <br/><button type="submit" class="btn btn-warning btn-sm" name="send_cuspdf" id="send_cuspdf">Download</button>
                                     </div>
                                     <!--<div class="form-group">
                                             <br/><button type="submit" class="btn btn-warning btn-sm" name="submit" id="submit">Open Report</button>
@@ -289,17 +306,31 @@ $area_fltr = ""; if($areas != "all"){ $area_fltr = " AND `area_code` IN ('$areas
                             echo "</tr>";
                         }
                         ?>
-                        <tr class="thead3">
-                            <th colspan="4" style="text-align:center;">
-                                <button type="submit" name="send_cuspdf" id="send_cuspdf" class="btn btn-sm btn-success">Send</button>
-                            </th>
-                        </tr>
                     </tbody>
+                    <!--<tr class="thead3">
+                        <th colspan="4" style="text-align:center;">
+                            <button type="submit" name="send_cuspdf" id="send_cuspdf" class="btn btn-sm btn-success">Send</button>
+                        </th>
+                    </tr>-->
                 </table>
 				</form>
 			</div>
 		</section>
         <script>
+            function check_val2(){
+                var areas = document.getElementById("areas").value;
+                var l = true;
+                if(areas == ""){
+                    alert("Please select Area");
+                    l = false;
+                }
+                if(l == true){ return true; }
+                else{ return false; }
+            }
+            function upd_opn_details(a){
+                document.getElementById("send_type").value = a;
+                document.getElementById("send_cuspdf").click();
+            }
             function checkval(){
                 var incr = '<?php echo $c; ?>';
                 var l = true; var c = d = ""; var a = g = 0; var e = [];

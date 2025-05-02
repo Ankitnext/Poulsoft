@@ -293,14 +293,14 @@ if(isset($_POST['submit_report']) == true){
             $nhtml .= '<th>Remarks</th>'; $fhtml .= '<th id="order">Remarks</th>';
 
             $nhtml .= '</tr>';
-            $fhtml .= '</tr>'; 
+            $fhtml .= '</tr>';
             $html .= $fhtml;
             $html .= '</thead>';
             $html .= '<tbody class="tbody1" id="tbody1">';
             if(isset($_POST['submit_report']) == true){
-                if(sizeof($flock_alist) > 0){
-                    $flock_list = implode("','",$flock_alist);
-                    $sql = "SELECT * FROM `breeder_dayentry_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                //if(sizeof($flock_alist) > 0){
+                    //$flock_list = implode("','",$flock_alist);
+                    $sql = "SELECT * FROM `breeder_dayentry_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `flock_code` IN ('$flocks') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
                     $query = mysqli_query($conn,$sql);
                     $fmort_qty = $fcull_qty = $fbody_weight = $ffeed_code1 = $ffeed_qty1 = $ffeed_code2 = $ffeed_qty2 = $mfeed_code1 = $mfeed_qty1 = $mfeed_code2 = $mfeed_qty2 = $mmort_qty = $mcull_qty = 
                     $mbody_weight = $egg_weight = $flock_alist = array();
@@ -389,14 +389,14 @@ if(isset($_POST['submit_report']) == true){
 
                 $html .= '</tr>';
                 $html .= '</tfoot>';
-            }
+            //}
             echo $html;
         ?>
         </table><br/><br/><br/>
         <script>
             function checkval(){
                 var flocks = document.getElementById("flocks").value;
-                var l = false;
+                var l = true;
                 if(flocks == "select"){
                     alert("Please select Flock");
                     document.getElementById("flocks").focus();

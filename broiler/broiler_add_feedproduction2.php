@@ -36,6 +36,13 @@ if($link_active_flag > 0){
         }
     }
     if($acount == 1){
+         //check and fetch date range
+        global $drng_cday; $drng_cday = 1; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+        include "poulsoft_fetch_daterange_master.php";
+
+        $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Item Selection Drop-Down' AND `field_function` LIKE 'Fetch Items Based On User Sector Access' AND `user_access` LIKE 'all' AND `flag` = '1'";
+        $query = mysqli_query($conn,$sql); $isel_flag = mysqli_num_rows($query);
+
         $bag_size = $bag_code = array();
         $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Feed Mill' AND `field_function` = 'Min Wastage per'"; $query = mysqli_query($conn,$sql); $extras_count = mysqli_num_rows($query);
         if($extras_count > 0){ while($row = mysqli_fetch_assoc($query)){ $auto_Wastage_per = $row['flag']; } } else{ $auto_Wastage_per = 0; }
@@ -93,6 +100,10 @@ if($link_active_flag > 0){
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Feed Production' AND `field_function` LIKE 'Auto Avg Price'"; $query = mysqli_query($conn,$sql); $autoavgprice_flag = 0; $aapcount = mysqli_num_rows($query);
         if($aapcount > 0){ while($row = mysqli_fetch_assoc($query)){ $autoavgprice_flag = $row['flag']; } } else{ $autoavgprice_flag = 0; } if($autoavgprice_flag == "" || $autoavgprice_flag == 0){ $autoavgprice_flag = 0; }
         
+        $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'broiler_display_feedproduction2.php' AND `field_function` LIKE 'Date Range Extended'"; $query = mysqli_query($conn,$sql);
+        $nt_flag = mysqli_num_rows($query); 
+        //if($nt_flag > 0) { echo "nt flag working";}
+
         $sql = "SELECT * FROM `inv_sectors` WHERE `type` IN ('$feedmill_type_code') AND `active` = '1' ".$sector_access_filter1." AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
@@ -141,7 +152,7 @@ if($link_active_flag > 0){
                                     <div class="row">
                                         <div class="form-group">
                                             <label>Date<b style="color:red;">&nbsp;*</b></label>
-							                <input type="text" name="date" id="date" class="form-control datepicker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" />
+							                <input type="text" name="date" id="date" class="form-control range_picker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" />
                                         </div>
                                         <div class="form-group">
                                             <label>Dc No.</label>
@@ -356,8 +367,13 @@ if($link_active_flag > 0){
                                                 </tr>
                                                 <tr>
                                                     <td><input type="text" name="fbatch_no" id="fbatch_no" class="form-control" style="width:200px;" /></td>
-                                                    <td><input type="text" name="make_date" id="make_date" class="form-control rc_datepicker" style="width:200px;" value="<?php echo date('d.m.Y'); ?>" readonly /></td>
-                                                    <td><input type="text" name="exp_date" id="exp_date" class="form-control rc_datepicker" style="width:200px;" value="<?php echo date('d.m.Y'); ?>" readonly /></td>
+                                                    <td><input type="text" name="make_date" id="make_date" class="form-control range_picker" style="width:200px;" value="<?php echo date('d.m.Y'); ?>"  readonly/></td>
+
+                                                    <?php if($nt_flag > 0) { ?>
+                                                    <td><input type="text" name="exp_date" id="exp_date" class="form-control rc_datepicker" style="width:200px;" value="<?php echo date('d.m.Y'); ?>" readonly/></td>
+                                                    <?php } else { ?>
+                                                    <td><input type="text" name="exp_date" id="exp_date" class="form-control range_picker" style="width:200px;" value="<?php echo date('d.m.Y'); ?>" readonly/></td>
+                                                    <?php } ?>                                               
                                                 </tr>
                                         </table>
                                         </div>
@@ -491,6 +507,7 @@ if($link_active_flag > 0){
                 html += '<td><div class="form-group" id="action['+d+']" style="padding-top: 5px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></div>';
                 html += '</tr>';
                 $('#row_body').append(html); $('.itm_select2').select2();
+                var isel_flag = '<?php echo $isel_flag; ?>'; if(parseInt(isel_flag) == 1){ fetch_itemlist_master(d); }
             }
             function destroy_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -642,12 +659,77 @@ if($link_active_flag > 0){
                                 document.getElementById("final_item_prod_price").value = parseFloat(final_item_prod_price).toFixed(2);
                                 document.getElementById("final_item_prod_amount").value = parseFloat(final_item_prod_amount).toFixed(2);
                             }
+                            fetch_edititem_master();
                         }
                         else{
 
                         }
                     }
                 }
+            }
+            function fetch_itemlist_master(a){
+                update_ebtn_status(1);
+                var incr = document.getElementById("incr").value;
+                var feed_mill = document.getElementById("feed_mill").value;
+                var d = a;
+                removeAllOptions(document.getElementById("itm_names["+d+"]"));
+                var s_opt = '<option value="select">-select-</option>';
+                $('#itm_names\\['+d+'\\]').append(s_opt);
+
+                if(feed_mill != "select"){
+                    var oldqty = new XMLHttpRequest();
+                    var method = "GET";
+                    var url = "poulsoft_fetch_item_master.php?sectors="+feed_mill;
+                    //window.open(url);
+                    var asynchronous = true;
+                    oldqty.open(method, url, asynchronous);
+                    oldqty.send();
+                    oldqty.onreadystatechange = function(){
+                        if(this.readyState == 4 && this.status == 200){
+                            var item_opt = this.responseText;
+                            if(item_opt != ""){ $('#itm_names\\['+d+'\\]').append(item_opt); }
+                            update_ebtn_status(0);
+                        }
+                    }
+                }
+                else{ update_ebtn_status(0); }
+            }
+            function fetch_edititem_master(){
+                update_ebtn_status(1);
+                var incr = document.getElementById("incr").value;
+                var feed_mill = document.getElementById("feed_mill").value;
+
+                if(feed_mill != "select"){
+                    var oldqty = new XMLHttpRequest();
+                    var method = "GET";
+                    var url = "poulsoft_fetch_item_master.php?sectors="+feed_mill;
+                    //window.open(url);
+                    var asynchronous = true;
+                    oldqty.open(method, url, asynchronous);
+                    oldqty.send();
+                    oldqty.onreadystatechange = function(){
+                        if(this.readyState == 4 && this.status == 200){
+                            var item_opt = this.responseText;
+                            var s_opt = '<option value="select">-select-</option>';
+                            for(var d = 0;d <= incr;d++){
+                                if(item_opt != ""){
+                                    e_val = "select";
+                                    if(document.getElementById("itm_names["+d+"]")){
+                                        e_val = document.getElementById("itm_names["+d+"]").value;
+                                        removeAllOptions(document.getElementById("itm_names["+d+"]"));
+                                        $('#itm_names\\['+d+'\\]').append(s_opt);
+                                        $('#itm_names\\['+d+'\\]').append(item_opt);
+                                        $('#itm_names\\['+d+'\\]').select2();
+                                        document.getElementById("itm_names["+d+"]").value = e_val;
+                                        $('#itm_names\\['+d+'\\]').select2();
+                                    }
+                                }
+                            }
+                            update_ebtn_status(0);
+                        }
+                    }
+                }
+                else{ update_ebtn_status(0); }
             }
             function calculate_total_cost(){
                 var produced_total = parseFloat(document.getElementById("produced_total").value);
@@ -889,6 +971,10 @@ if($link_active_flag > 0){
                 document.getElementById("input_cost").value = final_amount.toFixed(2);
                 calculate_total_cost(); calculate_wastage();
             }
+            function update_ebtn_status(a){
+                if(parseInt(a) == 1){ document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden"; }
+                else{ document.getElementById("submit").style.visibility = "visible"; document.getElementById("ebtncount").value = "0"; }
+            }
             document.addEventListener("keydown", (e) => { if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function (){ $('#submit').click(); }); } } else{ } });
             function validatename(x) { expr = /^[a-zA-Z0-9 (.&)_-]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, ''); } document.getElementById(x).value = a; }
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }
@@ -897,6 +983,11 @@ if($link_active_flag > 0){
             setInterval(function(){ if(window.screen.availWidth <= 400){ const collection = document.getElementsByClassName("labelrow"); for (let i = 0; i < collection.length; i++) { collection[i].style.display = "inline"; } } else{ const collection = document.getElementsByClassName("labelrow"); for (let i = 0; i < collection.length; i++) { collection[i].style.display = "none"; } } }, 1000);
         </script>
         <?php include "header_foot.php"; ?>
+         <script>
+            //Date Range selection
+            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
+            $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+        </script>
     </body>
 </html>
 

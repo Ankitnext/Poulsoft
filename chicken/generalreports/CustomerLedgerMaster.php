@@ -52,6 +52,21 @@
 	$sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $coaname[$row['code']] = $row['description']; }
 
+    
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE '%CustomerLedgerMaster.php%' AND `field_function` LIKE 'Display Avg Price in Customer Ledger'";
+	$query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query); $avgprc_flag = 0;
+	if($count > 0){
+		while($row = mysqli_fetch_assoc($query)){
+			$avgprc_flag = $row['flag'];
+		}
+	} else{
+		$sql = "INSERT INTO `extra_access`(field_name,field_function,user_access,flag) VALUES('CustomerLedgerMaster.php','Display Avg Price in Customer Ledger','all','1')";
+		$query = mysqli_query($conn,$sql);
+		$avgprc_flag = 1;
+	}
+	if($avgprc_flag == ""){ $avgprc_flag = 0; }
+
+
 	$sql='SHOW COLUMNS FROM `master_reportfields`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
 	while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
 	if(in_array("purcus_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `master_reportfields` ADD `purcus_flag` varchar(300) NULL DEFAULT NULL COMMENT 'Pur-Sale Customer Name' AFTER `vendor_flag`"; mysqli_query($conn,$sql); }
@@ -297,8 +312,8 @@
 											else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<th>Remarks</th>"; $item_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<th>Vehicle</th>"; $item_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<th>Driver</th>"; $item_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
-											else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<th>Sales</th>"; }
-											else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<th>Receipts</th>"; }
+											else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<th>Debit</th>"; }
+											else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<th>Credit</th>"; }
 											else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<th>Balance</th>"; }
 											else{ }
 										}
@@ -812,7 +827,7 @@
 														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$cdns_details[4]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$cdns_details[3]]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "salesup_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;'>Debit Note</td>"; }
+														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;'>".$coaname[$cdns_details[5]]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td></td>"; }
 														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td></td>"; }
 														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td></td>"; }
@@ -871,7 +886,14 @@
 											else if($field_details[$i.":".$active_flag] == "sentwt_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($tscount)."</td>"; }
 											else if($field_details[$i.":".$active_flag] == "mortwt_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($tmcount)."</td>"; }
 											else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($tncount)."</td>"; }
-											else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($result)."</td>"; }
+											else if($field_details[$i.":".$active_flag] == "aweight_flag"){
+												if($avgprc_flag == 1){
+													echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($result)."</td>"; 
+												}else{
+													echo "<td style='padding: 0 5px;text-align:right;'></td>";
+												}
+												 
+												}
 											else if($field_details[$i.":".$active_flag] == "sweight_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($stotal)."</td>"; }
 											else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td></td>"; }
 											else if($field_details[$i.":".$active_flag] == "price_flag"){

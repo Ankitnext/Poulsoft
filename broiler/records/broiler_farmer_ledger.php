@@ -489,7 +489,7 @@ $url = "";
 								echo "<td style='width:110px;text-align:left;'>".$purchases_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$purchases_details[2]."</td>";
                                 echo "<td style='width:100px;text-align:right;font-weight:bold;'></td>";
-                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($purchases_details[3])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>" . number_format_ind(max(0, $purchases_details[3])) . "</td>";
 								echo "<td style='width:70px;text-align:right;'>".number_format_ind($purchases_details[4])."</td>";
                                 echo "<td style='width:70px;text-align:right;'>".number_format_ind($bal)."</td>";
 								

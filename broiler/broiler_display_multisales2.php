@@ -203,6 +203,7 @@ if($link_active_flag > 0){
                                 <thead>
                                     <tr>
                                         <th>Date</th>
+                                        <th>Transaction No.</th>
                                         <th>DC No</th>
                                         <th>Customer</th>
 										<th>Birds</th>
@@ -237,6 +238,7 @@ if($link_active_flag > 0){
                                     ?>
                                     <tr>
 										<td data-sort="<?= strtotime($row['date']) ?>"><?= date('d.m.Y',strtotime($row['date'])) ?></td>
+										<td><?php echo $row['trnum']; ?></td>
 										<td><?php echo $row['billno']; ?></td>
 										<td><?php if($row['sale_type'] == "FormMBSale"){ echo $sector_name[$row['warehouse']]; } else{ echo $vendor_name[$row['vcode']]; } ?></td>
 										<td><?php echo str_replace(".00","",$row['birds']); ?></td>
@@ -312,7 +314,7 @@ if($link_active_flag > 0){
                                 </tbody>
                                 <tfoot>
                                     <tr class="thead2">
-                                        <th colspan="3">Total</th>
+                                        <th colspan="4">Total</th>
                                         <th id="sum-birds"></th>
                                         <th id="sum-quantity"></th>
                                         <th id="sum-avg-wt"></th>
@@ -323,6 +325,15 @@ if($link_active_flag > 0){
                                 </tfoot>
                                 
                             </table>
+                            <!-- <div style="display: flex; justify-content: center;">
+                                <div id="sum-amounts" style="display:flex; flex-direction: column;">
+                                <h2>Total</h2>
+                                <div id="sum-birds"></div>
+                                <div id="sum-quantity"></div>
+                                <div id="sum-avg-wt"></div>
+                                <div id="sum-price"></div>
+                                <div id="sum-amount"></div>
+                            </div> -->
                             </div>
                         </div>
                     </div>
@@ -383,11 +394,13 @@ if($link_active_flag > 0){
 
                         sumBirds += birds;
                         sumQuantity += quantity;
-                        sumAvgWt += avgWt;
-                        sumPrice += price;
+                        //sumAvgWt += avgWt;
+                        //sumPrice += price;
                         sumAmount += amount;
                     });
-
+                    if(parseFloat(sumQuantity) != 0){ sumPrice = parseFloat(sumAmount) / parseFloat(sumQuantity); }
+                    if(parseFloat(sumBirds) != 0){ sumAvgWt = parseFloat(sumQuantity) / parseFloat(sumBirds); }
+                    
                     $('#sum-birds').text(sumBirds.toFixed(2));
                     $('#sum-quantity').text(sumQuantity.toFixed(2));
                     $('#sum-avg-wt').text(sumAvgWt.toFixed(2));

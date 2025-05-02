@@ -112,7 +112,9 @@ if($link_active_flag > 0){
 
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Purchases' AND `field_function` LIKE 'Display Brand Selection Dropdown' AND `flag` = '1' AND (`user_access` LIKE '%$user_code%' || `user_access` LIKE 'all');";
         $query = mysqli_query($conn,$sql); $brand_flag = mysqli_num_rows($query);
-        //if($brand_flag > 0) { echo "Brand Flag"; }
+
+        $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Purchases' AND `field_function` LIKE 'Allow Quantity With Zero or Empty Price' AND `flag` = '1' AND (`user_access` LIKE '%$user_code%' || `user_access` LIKE 'all');";
+        $query = mysqli_query($conn,$sql); $pzero_aflag = mysqli_num_rows($query);
 
         $sql = "SELECT * FROM `broiler_item_brands` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $brand_code = $brand_name = array();
@@ -371,7 +373,7 @@ if($link_active_flag > 0){
                                             <input type="text" name="fre_qty[]" id="fre_qty[<?php echo $i; ?>]" class="form-control" value="<?php echo $fre_qty[$i]; ?>" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id)" onchange="validateamount(this.id);" <?php if((int)$batch_gcflag[$farm_batch[$i]] == 1){ echo "readonly"; } ?>>
                                         </div>
                                         <div class="form-group">
-                                            <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Rate<b style="color:red;">&nbsp;*</b></label>
+                                            <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Rate<?php if((int)$pzero_aflag > 0){ } else{ echo '<b style="color:red;">&nbsp;*</b>'; } ?></label>
                                             <input type="text" name="rate[]" id="rate[<?php echo $i; ?>]" class="form-control" value="<?php echo $rate[$i]; ?>" placeholder="0.00" style="width:80px;" onkeyup="validatenum_rate(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount_rate(this.id);" <?php if((int)$batch_gcflag[$farm_batch[$i]] == 1){ echo "readonly"; } ?>>
                                         </div>
                                         <div class="form-group">
@@ -411,7 +413,7 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="form-group">
                                             <label <?php if($i > 0){ echo 'class="labelrow" style="display:none;"'; } ?>>Sector/Farm<b style="color:red;">&nbsp;*</b></label>
-                                            <select name="warehouse[]" id="warehouse[<?php echo $i; ?>]" class="form-control select2" style="width:110px;" onchange="fetch_active_farmbatch(this.id);">
+                                            <select name="warehouse[]" id="warehouse[<?php echo $i; ?>]" class="form-control select2" style="width:200px;" onchange="fetch_active_farmbatch(this.id);">
                                                 <?php
                                                 if((int)$batch_gcflag[$farm_batch[$i]] == 0){
                                                     foreach($sector_code as $wcode){
@@ -734,6 +736,7 @@ if($link_active_flag > 0){
                 var ocharge_amt = document.getElementById("ocharge_amt").value; if(ocharge_amt == ""){ ocharge_amt = 0; }
                 var incrs = document.getElementById("incr").value;
                 var item_code = warehouse = ""; var rcd_qty = fre_qty = rate = c = 0;
+                var pzero_aflag = '<?php echo $pzero_aflag; ?>'; if(pzero_aflag == ""){ pzero_aflag = 0; }
                 var l = true;
                 if(sup_code.match("select")){
                     alert("Please select Supplier");
@@ -769,7 +772,7 @@ if($link_active_flag > 0){
                                 document.getElementById("rcd_qty["+d+"]").focus();
                                 l = false;
                             }
-                            else if(parseFloat(rcd_qty) > 0 && parseFloat(rate) == 0){
+                            else if(parseInt(pzero_aflag) == 0 && parseFloat(rcd_qty) > 0 && parseFloat(rate) == 0){
                                 alert("Please enter Rate in row:-"+c);
                                 document.getElementById("rate["+d+"]").focus();
                                 l = false;
@@ -807,13 +810,13 @@ if($link_active_flag > 0){
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Sent Qty</label><input type="text" name="snt_qty[]" id="snt_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Rcv Qty<b style="color:red;">&nbsp;*</b></label><input type="text" name="rcd_qty[]" id="rcd_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Free Qty</label><input type="text" name="fre_qty[]" id="fre_qty['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Rate<b style="color:red;">&nbsp;*</b></label><input type="text" name="rate[]" id="rate['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Rate</label><input type="text" name="rate[]" id="rate['+d+']" class="form-control" placeholder="0.00" style="width:80px;" onkeyup="validatenum(this.id);calculate_total_amt(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);" ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Disc. %</label><input type="text" name="dis_per[]" id="dis_per['+d+']" class="form-control" placeholder="%" style="width:80px;" onkeyup="validatenum(this.id);fetch_discount_amount(this.id);"></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Disc. &#8377</label><input type="text" name="dis_amt[]" id="dis_amt['+d+']" class="form-control" placeholder="&#8377" style="width:80px;" onkeyup="validatenum(this.id);fetch_discount_amount(this.id);" onchange="validateamount(this.id);"></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">GST</label><select name="gst_per[]" id="gst_per['+d+']" class="form-control select2" onchange="calculate_total_amt(this.id)" style="width:120px;"><option value="select">select</option><?php foreach($gst_code as $gsts){ $gst_cval = $gsts."@".$gst_value[$gsts]; ?><option value="<?php echo $gst_cval; ?>"><?php echo $gst_name[$gsts]; ?></option><?php } ?></select></div>';
                 //html += '<div class="form-group"><label class="labelrow" style="display:none;">GST &#8377</label><input type="text" name="gst_amt[]'.'" id="gst_amt['+d+']'.'" class="form-control" placeholder="&#8377" style="width:90px;" readonly ></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Amount</label><input type="text" name="item_tamt[]" id="item_tamt['+d+']" class="form-control" placeholder="0.00" style="width:90px;" readonly ></div>';
-                html += '<div class="form-group"><label class="labelrow" style="display:none;">Sector/Farm<b style="color:red;">&nbsp;*</b></label><select name="warehouse[]" id="warehouse['+d+']" class="form-control select2" style="width:110px;" onchange="fetch_active_farmbatch(this.id);"><option value="select">select</option><?php foreach($sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo $sector_name[$whouse_code]; ?></option><?php } ?></select></div>';
+                html += '<div class="form-group"><label class="labelrow" style="display:none;">Sector/Farm<b style="color:red;">&nbsp;*</b></label><select name="warehouse[]" id="warehouse['+d+']" class="form-control select2" style="width:200px;" onchange="fetch_active_farmbatch(this.id);"><option value="select">select</option><?php foreach($sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo $sector_name[$whouse_code]; ?></option><?php } ?></select></div>';
                 html += '<div class="form-group"><label class="labelrow" style="display:none;">Farm Batch</label><select name="farm_batch[]" id="farm_batch['+d+']" class="form-control select2" style="width:180px;"><option value="select">select</option></select></div>';
                 html += '<div class="form-group" id="action['+d+']" style="padding-top: 5px;"><br class="labelrow" style="display:none;" /><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></div>';
                 html += '</div>';

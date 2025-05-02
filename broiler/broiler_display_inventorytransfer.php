@@ -43,6 +43,10 @@ if($link_active_flag > 0){
     else if($aid == 1){ $acount = 1; }
     else{ $acount = 0; }
 
+    //check and fetch date range
+    global $drng_cday; $drng_cday = 1; global $drng_furl; $drng_furl = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+    include "poulsoft_fetch_daterange_master.php";
+
 ?>
 <html lang="en">
     <head>
@@ -328,6 +332,9 @@ if($link_active_flag > 0){
                                             }
                                             else if($row['gc_flag'] == 1){
                                                 echo "<i class='fa fa-lock' style='color:gray;' title='GC processed'></i></a>&ensp;&ensp;";
+                                            }
+                                            else if(strtotime($row['date']) < strtotime($rng_sdate) || strtotime($row['date']) > strtotime($rng_edate)){
+                                                echo "<i class='fa fa-check' style='color:green;' title='Date Entry Range Closed'></i></a>&ensp;&ensp;";
                                             }
                                             else {
                                                 if($edit_flag == 1 && $row['link_trnum'] == ""){

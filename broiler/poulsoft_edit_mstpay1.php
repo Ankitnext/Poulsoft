@@ -30,7 +30,7 @@ if($link_active_flag > 0){
         while($row = mysqli_fetch_assoc($query)){ $type_alist[$row['code']] = $row['code']; }
 
         $type_list = implode("','",$type_alist);
-        $sql = "SELECT * FROM `acc_coa` WHERE `type` IN ('$type_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+        $sql = "SELECT * FROM `acc_coa` WHERE `type` IN ('$type_list') AND `active` = '1' AND `dflag` = '0' AND `visible_flag` = '1' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $acc_code = $acc_name = array();
         while($row = mysqli_fetch_assoc($query)){ $acc_code[$row['code']] = $row['code']; $acc_name[$row['code']] = $row['description']; }
         

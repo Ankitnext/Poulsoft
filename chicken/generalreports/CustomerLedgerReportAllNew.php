@@ -1,633 +1,392 @@
-<?php 
-	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
-	$requested_data = json_decode(file_get_contents('php://input'),true);
-	session_start();
+<?php
+//CustomerLedgerReportAllNew.php
+$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
+$requested_data = json_decode(file_get_contents('php://input'),true);
+session_start();
 	
-	$db = $_SESSION['db'] = $_GET['db'];
-	if($db == ''){ include "../config.php"; include "header_head.php"; include "number_format_ind.php";$dbname = $_SESSION['dbase'];
-		$users_code = $_SESSION['userid']; }
-	else{ include "APIconfig.php"; include "number_format_ind.php"; include "header_head.php"; $dbname = $db;
-		$users_code = $_GET['emp_code'];}
-			
-	$today = date("Y-m-d");
-	$sql = "SELECT * FROM `master_itemfields` WHERE `type` = 'Birds' AND `id` = '1'"; $query = mysqli_query($conn,$sql);
-	while($row = mysqli_fetch_assoc($query)){ $ifwt = $row['wt']; $ifbw = $row['bw']; $ifjbw = $row['jbw']; $ifjbwen = $row['jbwen']; $ifctype = $row['ctype']; }
+$db = $_SESSION['db'] = $_GET['db'];
+if($db == ''){
+    include "../config.php";
+    $dbname = $_SESSION['dbase'];
+    $users_code = $_SESSION['userid'];
 
-    // Logo Flag
-    $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Reports' AND `field_function` LIKE 'Fetch Logo Dynamically' AND `user_access` LIKE 'all' AND `flag` = '1'";
-    $query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
-	if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
+    $form_reload_page = "CustomerLedgerReportAllNew.php";
+}
+else{
+    include "APIconfig.php";
+    $dbname = $db;
+    $users_code = $_GET['emp_code'];
+    $form_reload_page = "CustomerLedgerReportAllNew.php?db=".$db;
+}
+include "number_format_ind.php";
+$file_name = "Customer Balance Report";
+function decimal_adjustments($a,$b){
+    if($a == ""){ $a = 0; }
+    $a = round($a,$b);
+    $c = explode(".",$a);
+    $ed = "";
+    $iv = 0;
+    if($c[1] == ""){ $iv = 1; }
+    else{ $iv = strlen($c[1]); }
+    if($iv == 0){ $iv = 1; }
+    for($d = $iv;$d < $b;$d++){ if($ed == ""){ $ed = "0"; } else{ $ed .= "0"; } }
+    return $a."".$ed;
+}
 
-	$idisplay = ''; $ndisplay = 'style="display:none;"';
-	$cname = $_POST['cname']; $iname = $_POST['iname'];
-	if($cname == "all" || $cname == "select") { $cnames = ""; } else { $cnames = " AND `groupcode` = '$cname'"; }
-	$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE 'C' AND `active` = '1'".$cnames." ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
-	while($row = mysqli_fetch_assoc($query)){
-		$pcode[$row['code']] = $row['code'];
-		$pname[$row['code']] = $row['name'];
-		$cus_mobile[$row['code']] = $row['mobileno'];
-		$obdate[$row['code']] = $row['obdate'];
-		$obtype[$row['code']] = $row['obtype'];
-		$obamt[$row['code']] = $row['obamt'];
-		$creditamt[$row['code']] = $row['creditamt'];
-	}
-	$sql = "SELECT * FROM `item_details` WHERE `active` = '1'"; $query = mysqli_query($conn,$sql);
-	while($row = mysqli_fetch_assoc($query)){ $itemname[$row['code']] = $row['description']; }
-	$fromdate = $_POST['fromdate'];
-	$todate = $_POST['todate'];
-	if($fromdate == ""){ $fromdate = $todate = $today; } else { $fromdate = $_POST['fromdate']; $todate = $_POST['todate']; }
+/*Check for Table Availability*/
+$database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $etn_val = array(); $i = 0;
+$sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $etn_val[$i] = $row1[$table_head]; $i++; }
+if(in_array("main_regions", $etn_val, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.main_regions LIKE poulso6_admin_chickenmaster.main_regions;"; mysqli_query($conn,$sql1); }
 
-	$exoption = "displaypage"; $bwd_aflag = 0;
-	if(isset($_POST['submit'])) { $excel_type = $exoption = $_POST['export']; } else{ $excel_type = "displaypage"; }
-	if(isset($_POST['submit']) == true){
-		$exl_fdate = $_POST['fromdate']; $exl_tdate = $_POST['todate']; $exl_cname = $_POST['cname'];
-		if($_POST['bwd_aflag'] == "on" || $_POST['bwd_aflag'] == 1 || $_POST['bwd_aflag'] == true){ $bwd_aflag = 1; }
-	}
-	else{
-		$exl_fdate = $exl_tdate = $today; $exl_cname =  "all";
-	}
-	$url = "../PHPExcel/Examples/BalanceReportNew-Excel.php?fromdate=".$exl_fdate."&todate=".$exl_tdate."&cname=".$exl_cname;
+//Logo Flag
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Reports' AND `field_function` LIKE 'Fetch Logo Dynamically' AND `user_access` LIKE 'all' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query);
+if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
+
+//Company Details
+$sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'Customer Ledger Report' OR `type` = 'All' ORDER BY `id` DESC";
+$query = mysqli_query($conn,$sql); $logopath = $cdetails = "";
+while($row = mysqli_fetch_assoc($query)){ $logopath = $row['logopath']; $cdetails = $row['cdetails']; $cmpy_fname = $row['fullcname']; }
+
+//Customer Group Details
+$sql = "SELECT * FROM `main_groups` WHERE `gtype` LIKE 'C' AND `active` = '1' ORDER BY `description` ASC";
+$query = mysqli_query($conn,$sql); $cgrp_code = $cgrp_name = array();
+while($row = mysqli_fetch_assoc($query)){ $cgrp_code[$row['code']] = $row['code']; $cgrp_name[$row['code']] = $row['description']; }
+
+$fdate = $tdate = date("Y-m-d"); $cgroups = "all"; $exports = "display"; $bwd_aflag = 0;
+if(isset($_POST['submit']) == true){
+	$fdate = date("Y-m-d",strtotime($_POST['fdate']));
+	$tdate = date("Y-m-d",strtotime($_POST['tdate']));
+	$cgroups = $_POST['cgroups'];
+	$exports = $_POST['exports'];
+	if($_POST['bwd_aflag'] == "on" || $_POST['bwd_aflag'] == 1 || $_POST['bwd_aflag'] == true){ $bwd_aflag = 1; }
+}
+
 ?>
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
-		<script>
-			var exptype = '<?php echo $excel_type; ?>';
-			var url = '<?php echo $url; ?>';
-			if(exptype.match("exportexcel")){
-				window.open(url,'_BLANK');
-			}
-		</script>
-		<style>
-			.thead2 th {
-				top: 0;
-				position: sticky;
-				background-color: #98fb98;
-			}
-			.thead3 th {
-				text-align: center;
-				background-color: #98fb98;
-				border: 0.1vh solid gray;
-			}
-			body{
-				color: black;
-			}
-			.formcontrol {
-				height: 23px;
-				border: 0.1vh solid gray;
-			}
-			.formcontrol:focus {
-				height: 23px;
-				border: 0.1vh solid gray;
-				outline: none;
-			}
-			.tbody1 td {
-				padding-right: 5px;
-				text-align: right;
-			}
-			.tfoot1 {
-				top: 0;
-				position: sticky;
-				background-color: #98fb98;
-				bottom: 0;
-				border: 0.1vh solid gray;
-				z-index: 1;
-			}
-			.tfoot1 th{
-				border: 0.1vh solid gray;
-			}
-			.tfoot2 {
-				background-color: #98fb98;
-				border: 0.1vh solid gray;
-			}
-			.tfoot2 th{
-				border: 0.1vh solid gray;
-			}
-		</style>
+	<head>
+        <?php include "header_head2.php"; ?>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <style>
+            .main-table { white-space: nowrap; }
+            .tbody1{
+                color: black;
+            }
+        </style>
 	</head>
-	<body class="hold-transition skin-blue sidebar-mini">
-	<?php if($exoption == "displaypage" || $exoption == "printerfriendly") { ?>
-		<header align="center">
-			<table align="center" class="reportheadermenu">
-				<tr>
-				<?php
-					if($dlogo_flag > 0) { ?>
-						<td><img src="../<?php echo $logo1; ?>" height="150px"/></td>
-					<?php }
-					else{ 
-					$sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'Sales Invoice' OR `type` = 'All' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql);
-					while($row = mysqli_fetch_assoc($query)){ ?>
-					<td><img src="../<?php echo $row['logopath']; ?>" height="150px"/></td>
-					<td><?php echo $row['cdetails']; ?></td> <?php } }?></td>
-				</tr>
-				<tr>
-					<td align="center" colspan="2">
-						<label style="font-weight:bold;" class="reportheaderlabel">Customer Ledger</label>&ensp;
-						<label class="reportheaderlabel"><b style="color: green;">From Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($fromdate)); ?></label>&ensp;
-						<label class="reportheaderlabel"><b style="color: green;">To Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($todate)); ?></label>
-					</td>
-				</tr>
-			</table>
-		</header>
-	<?php } ?>
-		<section class="content">
-				<div class="col-md-12">
-				<?php if($db == ''){?>
-				<form action="CustomerLedgerReportAllNew.php" method="post" onsubmit="return checkval()" >
-					<?php } else { ?>
-					<form action="CustomerLedgerReportAllNew.php?db=<?php echo $db; ?>" method="post" onsubmit="return checkval()">
-					<?php } ?>
-						<table class="table1" style="min-width:100%;line-height:23px;">
-						<?php if($exoption == "displaypage" || $exoption == "exportpdf") { ?>
-							<thead class="thead1" style="background-color: #98fb98;">
-								<tr>
-									<!--<td style='visibility:hidden;'></td>-->
-									<td colspan="17">
-										<label class="reportselectionlabel">From date</label>&nbsp;
-										<input type="text" name="fromdate" id="datepickers" class="formcontrol" value="<?php echo date("d.m.Y",strtotime($fromdate)); ?>"/>
-									&ensp;&ensp;
-										<label class="reportselectionlabel">To Date</label>&nbsp;
-										<input type="text" name="todate" id="datepickers1" class="formcontrol" value="<?php echo date("d.m.Y",strtotime($todate)); ?>"/>
-									&ensp;&ensp;
-										<label class="reportselectionlabel">Group</label>&nbsp;
-										<select name="cname" id="checkcname" class="form-control select2">
-											<option value="all" selected>-All-</option>
-											<?php
-											$sql = "SELECT * FROM `main_groups` WHERE `gtype` LIKE 'C' AND `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-											while($row = mysqli_fetch_assoc($query)){
-											?>
-												<option value="<?php echo $row['code']; ?>" <?php if($cname == $row['code']){ echo 'selected'; } ?>><?php echo $row['description']; ?></option>
-											<?php
-											}
-											?>
-										</select>&ensp;&ensp;
-										<label class="reportselectionlabel">B/w Days</label>&nbsp;
-										<input type="checkbox" name="bwd_aflag" id="bwd_aflag" <?php if($bwd_aflag == 1){ echo "checked"; } ?> />
-									&ensp;&ensp;
-										<label class="reportselectionlabel">Export To</label>&nbsp;
-										<select name="export" id="export" class="form-control select2">
-											<option <?php if($exoption == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
-											<option <?php if($exoption == "exportexcel") { echo 'selected'; } ?> value="exportexcel">Excel</option>
-											<option <?php if($exoption == "printerfriendly") { echo 'selected'; } ?> value="printerfriendly">Printer friendly</option>
-										</select>&ensp;&ensp;
-										<button type="submit" class="btn btn-warning btn-sm" name="submit" id="submit">Open Report</button>
-									</td>
-								</tr>
-							</thead>
-						<?php }
-						if($exoption == "printerfriendly"){ echo '<thead class="thead3" style="background-color: #98fb98;">'; }
-						else{ echo '<thead class="thead2" style="background-color: #98fb98;">'; }
-						?>
-								<tr>
-									<th id="order">Name</th>
-									<th id="order">Mobile No</th>
-									<th id="order_num">Opening Balance</th>
-									<th id="order_num">Sales Qty</th>
-									<th id="order_num">Sales</th>
-									<th id="order_num">Receipt</th>
-									<th id="order_num">B/w days balance</th>
-									<th id="order_num">Balance</th>
-								</tr>
-							</thead>
-							<tbody class="tbody1" id="myTable" style="background-color: #f4f0ec;">
-							<?php
-								if(isset($_POST['submit']) == true){
-									//if($cname == "" || $cname == "all" || $cname == "select"){
-										$fromdate = $_POST['fromdate'];
-										$todate = $_POST['todate'];
-										if($fromdate == ""){ $fromdate = $todate = $today; } else { $fromdate = date("Y-m-d",strtotime($_POST['fromdate'])); $todate = date("Y-m-d",strtotime($_POST['todate'])); }
-										$cname = $_POST['cname']; $iname = $_POST['iname'];
-										if($cname == "all" || $cname == "select") { $cnames = ""; } else { $cnames = " AND `customercode` = '$cname'"; }
-										
-										
-										//sales invoice
-										$ob_sales = $ob_receipts = $ob_ccn = $ob_cdn = array();
-										$sql = "SELECT * FROM `customer_sales` WHERE `date` < '$fromdate' AND `active` = '1' ORDER BY `date`,`invoice`,`customercode` ASC";
-										$query = mysqli_query($conn,$sql); $old_inv = "";
-										while($row = mysqli_fetch_assoc($query)){
-											if($old_inv != $row['invoice']){
-												$ob_sales[$row['customercode']] = $ob_sales[$row['customercode']] + $row['finaltotal'];
-												$old_inv = $row['invoice'];
-											}
-										}
-										//Customer Receipt
-										$sql = "SELECT * FROM `customer_receipts` WHERE `date` < '$fromdate' AND `active` = '1' ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
-										while($row = mysqli_fetch_assoc($query)){
-											$ob_receipts[$row['ccode']] = $ob_receipts[$row['ccode']] + $row['amount'];
-										}
-										//Customer Returns
-										$ob_returns = array();
-										$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fromdate' AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'";
-										$obquery = mysqli_query($conn,$obsql); while($obrow = mysqli_fetch_assoc($obquery)){ $ob_returns[$obrow['vcode']] += (float)$obrow['amount']; }
+	<body>
+		<section class="content" align="center">
+			<div class="col-md-12" align="center">
+				<form action="<?php echo $form_reload_page; ?>" method="post" onsubmit="return checkval()">
+				    <table <?php if($exports == "print") { echo ' class="main-table"'; } else{ echo ' class="table-sm table-hover main-table2"'; } ?>>
+                        <thead class="thead1">
+                            <tr>
+                                <td colspan="2"><img src="<?php echo "../".$logopath; ?>" height="150px"/></td>
+                                <td colspan="2"><?php echo $cdetails; ?></td>
+                                <td colspan="15" align="center">
+                                    <h3><?php echo $file_name; ?></h3>
+                                    <label><b style="color: green;">From Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($fdate)); ?></label>&ensp;&ensp;
+                                    <label><b style="color: green;">To Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($tdate)); ?></label>
+                                </td>
+                            </tr>
+                        </thead>
+						<?php if($exports == "display" || $exports == "exportpdf") { ?>
+						<thead class="thead1">
+							<tr>
+								<td colspan="19" class="p-1">
+                                    <div class="m-1 p-1 row">
+                                        <div class="form-group" style="width:110px;">
+                                            <label for="fdate">From Date</label>
+                                            <input type="text" name="fdate" id="fdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
+                                        </div>
+                                        <div class="form-group" style="width:110px;">
+                                            <label for="tdate">To Date</label>
+                                            <input type="text" name="tdate" id="tdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
+                                        </div>
+                                        <div class="form-group" style="width:190px;">
+                                            <label for="cgroups">Group</label>
+                                            <select name="cgroups" id="cgroups" class="form-control select2" style="width:180px;">
+                                                <option value="all" <?php if($cgroups == "all"){ echo "selected"; } ?>>-All-</option>
+											    <?php foreach($cgrp_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($cgroups == $scode){ echo "selected"; } ?>><?php echo $cgrp_name[$scode]; ?></option><?php } ?>
+                                            </select>
+                                        </div>
+                                        <div class="form-group" style="width:100px;text-align:center;">
+                                            <label for="bwd_aflag">B/w Days</label><br/>
+                                            <input type="checkbox" name="bwd_aflag" id="bwd_aflag" <?php if($bwd_aflag == 1){ echo "checked"; } ?> />
+                                        </div>
+                                    <!--</div>
+                                    <div class="m-1 p-1 row">-->
+                                        <div class="form-group" style="width:150px;">
+                                            <label>Export</label>
+                                            <select name="exports" id="exports" class="form-control select2" style="width:140px;" onchange="tableToExcel('main_table', '<?php echo $file_name; ?>','<?php echo $file_name; ?>', this.options[this.selectedIndex].value)">
+                                                <option value="display" <?php if($exports == "display"){ echo "selected"; } ?>>-Display-</option>
+                                                <option value="excel" <?php if($exports == "excel"){ echo "selected"; } ?>>-Excel-</option>
+                                                <option value="print" <?php if($exports == "print"){ echo "selected"; } ?>>-Print-</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group" style="width: 210px;">
+                                            <label for="search_table">Search</label>
+                                            <input type="text" name="search_table" id="search_table" class="form-control" style="padding:0;padding-left:2px;width:200px;" />
+                                        </div>
+                                        <div class="form-group">
+                                            <br/><button type="submit" class="btn btn-warning btn-sm" name="submit" id="submit">Open Report</button>
+                                        </div>
+                                    </div>
+								</td>
+							</tr>
+						</thead>
+                    <?php if($exports == "display" || $exports == "exportpdf"){ ?>
+                    </table>
+                    <table class="main-table table-sm table-hover" id="main_table">
+                    <?php } ?>
+						<?php
+                        }
+                        if(isset($_POST['submit']) == true){
+                            $html = $nhtml = $fhtml = '';
 
-										//Customer Mortality
-										$ob_smortality = array();
-										$obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$fromdate' AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'";
-										$obquery = mysqli_query($conn,$obsql); while($obrow = mysqli_fetch_assoc($obquery)){ $ob_smortality[$obrow['ccode']] += (float)$obrow['amount']; }
+                            $html .= '<thead class="thead2" id="head_names">';
 
-										//Customer CrDr Note
-										$sql = "SELECT * FROM `main_crdrnote` WHERE `date` < '$fromdate' AND `mode` IN ('CCN','CDN') AND `active` = '1' ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
-										while($row = mysqli_fetch_assoc($query)){
-											if($row['mode'] == "CCN"){
-												$ob_ccn[$row['ccode']] = $ob_ccn[$row['ccode']] + $row['amount'];
-											}
-											else{
-												$ob_cdn[$row['ccode']] = $ob_cdn[$row['ccode']] + $row['amount'];
-											}
-										}
-										//sales invoice
-										$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `active` = '1' ORDER BY `date`,`invoice`,`customercode` ASC";
-										$query = mysqli_query($conn,$sql); $old_inv = "";
-										while($row = mysqli_fetch_assoc($query)){
-											if($old_inv != $row['invoice']){
-												$bt_sales[$row['customercode']] = $bt_sales[$row['customercode']] + $row['finaltotal'];
-												$old_inv = $row['invoice'];
-											}
-											$bt_sales_qty[$row['customercode']] = $bt_sales_qty[$row['customercode']] + $row['netweight'];
-										}
-										//Customer Receipt
-										$sql = "SELECT * FROM `customer_receipts` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `active` = '1' ORDER BY `ccode` ASC";
-										$query = mysqli_query($conn,$sql);
-										while($row = mysqli_fetch_assoc($query)){
-											$bt_receipts[$row['ccode']] = $bt_receipts[$row['ccode']] + $row['amount'];
-										}
-										//Customer Returns
-										$bt_returns = array();
-										$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'";
-										$obquery = mysqli_query($conn,$obsql); while($obrow = mysqli_fetch_assoc($obquery)){ $bt_returns[$obrow['vcode']] += (float)$obrow['amount']; }
+                            $nhtml .= '<tr>'; $fhtml .= '<tr>';
+                            $nhtml .= '<th>Sl.No.</th>'; $fhtml .= '<th id="order_num">Sl.No.</th>';
+                            $nhtml .= '<th>Name</th>'; $fhtml .= '<th id="order">Name</th>';
+                            $nhtml .= '<th>Mobile No</th>'; $fhtml .= '<th id="order">Mobile No</th>';
+                            $nhtml .= '<th>Opening Balance</th>'; $fhtml .= '<th id="order_num">Opening Balance</th>';
+                            $nhtml .= '<th>Sales Qty</th>'; $fhtml .= '<th id="order_num">Sales Qty</th>';
+                            $nhtml .= '<th>Sales</th>'; $fhtml .= '<th id="order_num">Sales</th>';
+                            $nhtml .= '<th>Receipt</th>'; $fhtml .= '<th id="order_num">Receipt</th>';
+                            $nhtml .= '<th>B/w days balance</th>'; $fhtml .= '<th id="order_num">B/w days balance</th>';
+                            $nhtml .= '<th>Balance</th>'; $fhtml .= '<th id="order_num">Balance</th>';
+                            $nhtml .= '</tr>'; $fhtml .= '</tr>';
 
-										//Customer Mortality
-										$bt_smortality = array();
-										$obsql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'";
-										$obquery = mysqli_query($conn,$obsql); while($obrow = mysqli_fetch_assoc($obquery)){ $bt_smortality[$obrow['ccode']] += (float)$obrow['amount']; }
+                            $html .= $fhtml;
+                            $html .= '</thead>';
 
-										//Customer CrDr Note
-										$sql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `mode` IN ('CCN','CDN') AND `active` = '1' ORDER BY `ccode` ASC";
-										$query = mysqli_query($conn,$sql);
-										while($row = mysqli_fetch_assoc($query)){
-											if($row['mode'] == "CCN"){
-												$bt_ccn[$row['ccode']] = $bt_ccn[$row['ccode']] + $row['amount'];
-											}
-											else{
-												$bt_cdn[$row['ccode']] = $bt_cdn[$row['ccode']] + $row['amount'];
-											}
-										}
-										$ftotal = $ft_ob =  $ft_sq =  $ft_sa =  $ft_rt =  $ft_bb = 0;
-										foreach($pcode as $pcodes){
-											if((int)$bwd_aflag == 0 || (int)$bwd_aflag == 1 && ((float)$bt_sales_qty[$pcodes] > 0 || ((float)$bt_sales[$pcodes] + (float)$bt_cdn[$pcodes]) > 0) || ((float)$bt_receipts[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_ccn[$pcodes]) > 0){
-												echo "<tr>";
-												echo "<td style='text-align:left;'>".$pname[$pcodes]."</td>";
-												echo "<td style='text-align:left;'>".$cus_mobile[$pcodes]."</td>";
-												$ob_cramt = $ob_dramt = $ob_dr = $ob_cr = $ob_fcr = $ob_fdr = $bt_dr = $bt_cr = $bt_fcr = $bt_fdr = $balance = 0;
-												if($obtype[$pcodes] == "Cr"){
-												$ob_cramt = $obamt[$pcodes];
-												}
-												else {
-												$ob_dramt = $obamt[$pcodes];
-												}
-												$ft_ob = $ft_ob + (((float)$ob_sales[$pcodes] + (float)$ob_cdn[$pcodes] + (float)$ob_dramt) - ((float)$ob_receipts[$pcodes] + (float)$ob_returns[$pcodes] + (float)$ob_smortality[$pcodes] + (float)$ob_ccn[$pcodes] + (float)$ob_cramt));
-												$ft_sq = $ft_sq + (float)$bt_sales_qty[$pcodes];
-												$ft_sa = $ft_sa + ((float)$bt_sales[$pcodes] + (float)$bt_cdn[$pcodes]);
-												$ft_rt = $ft_rt + ((float)$bt_receipts[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_ccn[$pcodes]);
-												$ft_bb = $ft_bb + (((float)$bt_sales[$pcodes] + (float)$bt_cdn[$pcodes]) - ((float)$bt_receipts[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_ccn[$pcodes]));
-												
-												echo "<td>".number_format_ind(((float)$ob_sales[$pcodes] + (float)$ob_cdn[$pcodes] + (float)$ob_dramt) - ((float)$ob_receipts[$pcodes] + (float)$ob_returns[$pcodes] + (float)$ob_smortality[$pcodes] + (float)$ob_ccn[$pcodes] + (float)$ob_cramt))."</td>";
-												echo "<td>".number_format_ind($bt_sales_qty[$pcodes])."</td>";
-												echo "<td>".number_format_ind((float)$bt_sales[$pcodes] + (float)$bt_cdn[$pcodes])."</td>";
-												echo "<td>".number_format_ind((float)$bt_receipts[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_ccn[$pcodes])."</td>";
-												echo "<td>".number_format_ind(((float)$bt_sales[$pcodes] + (float)$bt_cdn[$pcodes]) - ((float)$bt_receipts[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_ccn[$pcodes]))."</td>";
-												$ob_dr = (float)$ob_sales[$pcodes] + (float)$ob_cdn[$pcodes] + (float)$ob_dramt;
-												$ob_cr = (float)$ob_receipts[$pcodes] + (float)$ob_returns[$pcodes] + (float)$ob_smortality[$pcodes] + (float)$ob_ccn[$pcodes] + (float)$ob_cramt;
-												if($ob_cr > $ob_dr){
-												$ob_fcr = $ob_cr - $ob_dr;
-												}
-												else{
-												$ob_fdr = $ob_dr - $ob_cr;
-												}
-												$bt_dr = (float)$bt_sales[$pcodes] + (float)$bt_cdn[$pcodes];
-												$bt_cr = (float)$bt_receipts[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_ccn[$pcodes];
-												if($bt_cr > $bt_dr){
-												$bt_fcr = (float)$bt_cr - (float)$bt_dr;
-												}
-												else{
-												$bt_fdr = (float)$bt_dr - (float)$bt_cr;
-												}
-												$balance = ((float)$ob_fdr + (float)$bt_fdr) - ((float)$ob_fcr + (float)$bt_fcr);
-												$ftotal = (float)$ftotal + (float)$balance;
-												if(!empty($creditamt[$pcodes]) && (float)$creditamt[$pcodes] != 0 && (float)$creditamt[$pcodes] < (float)$balance){
-													echo "<td style='color:red;'>".number_format_ind($balance)."</td>";
-												}
-												else{
-													echo "<td>".number_format_ind($balance)."</td>";
-												}
-												
-												echo "</tr>";
-											}
-										}
-										
-									//}
-									//else {
-									//}
-								}
-							?>
-							</tbody>
-							<?php
-							if($exoption == "printerfriendly"){
-								echo '<tfoot class="tfoot2">';
-							}
-							else{
-								echo '<tfoot class="tfoot1">';
-							}
-							?>
-							
-								<tr style="background-color: #98fb98;">
-									<th align="center" colspan="2"><b>Total</b></th>
-									<th style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_ob); ?></th>
-									<th style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_sq); ?></th>
-									<th style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_sa); ?></th>
-									<th style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_rt); ?></th>
-									<th style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_bb); ?></th>
-									<th style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ftotal); ?></th>
-								</tr>
-							</tfoot>
-						</table>
-					</form>
-				</div>
+                            $html .= '<tbody id="tbody1" class="tbody1">';
+                            
+                            $cgrp_fltr = ""; if($cgroups != "all"){ $cgrp_fltr = " AND `groupcode` = '$cgroups'"; }
+                            $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE 'C' AND `active` = '1'".$cgrp_fltr." ORDER BY `name` ASC";
+                            $query = mysqli_query($conn,$sql); $cus_code = $cus_name = $cus_mobile = $obtype = $obamt = $creditamt = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                $cus_code[$row['code']] = $row['code']; $cus_name[$row['code']] = $row['name']; $cus_mobile[$row['code']] = $row['mobileno'];
+                                $creditamt[$row['code']] = $row['creditamt'];
+                                if($row['obtype'] == "Cr"){ $obcramt[$row['code']] = $row['obamt']; $obdramt[$row['code']] = 0; }
+                                else if($row['obtype'] == "Dr"){ $obdramt[$row['code']] = $row['obamt']; $obcram[$row['code']] = 0; }
+                                else{ $obdramt[$row['code']] = $obcramt[$row['code']] = 0; }
+                            }
+                            //Sales
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` <= '$tdate' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice`,`customercode` ASC";
+                            $query = mysqli_query($conn,$sql); $opn_samt = $btw_sqty = $btw_samt = array(); $old_inv1 = "";
+                            while($row = mysqli_fetch_assoc($query)){
+                                if(strtotime($row['date']) < strtotime($fdate)){
+                                    if($old_inv1 != $row['invoice']."@".$row['customercode']){
+                                        $old_inv1 = $row['invoice']."@".$row['customercode'];
+                                        $opn_samt[$row['customercode']] += (float)$row['finaltotal'];
+                                    }
+                                }
+                                else{
+                                    if($old_inv1 != $row['invoice']."@".$row['customercode']){
+                                        $old_inv1 = $row['invoice']."@".$row['customercode'];
+                                        $btw_samt[$row['customercode']] += (float)$row['finaltotal'];
+                                    }
+                                    $btw_sqty[$row['customercode']] = $btw_sqty[$row['customercode']] + $row['netweight'];
+                                }
+                            }
+                            //Receipt
+                            $sql = "SELECT * FROM `customer_receipts` WHERE `date` <= '$tdate' AND `vtype` = 'C' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); $opn_crct = $btw_crct = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                if(strtotime($row['date']) < strtotime($fdate)){
+                                    $opn_crct[$row['ccode']] += (float)$row['amount'];
+                                }
+                                else{
+                                    $btw_crct[$row['ccode']] += (float)$row['amount'];
+                                }
+                            }
+
+                            //Customer Crdr
+                            $sql = "SELECT * FROM `main_crdrnote` WHERE `date` <= '$tdate' AND `mode` IN ('CCN','CDN') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); $opn_ccdn = $opn_cccn = $btw_ccdn = $btw_cccn = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                if(strtotime($row['date']) < strtotime($fdate)){
+                                    if($row['mode'] == "CDN"){ $opn_ccdn[$row['ccode']] += (float)$row['amount']; }
+                                    else if($row['mode'] == "CCN"){ $opn_cccn[$row['ccode']] += (float)$row['amount']; } else{ }
+                                }
+                                else{
+                                    if($row['mode'] == "CDN"){ $btw_ccdn[$row['ccode']] += (float)$row['amount']; }
+                                    else if($row['mode'] == "CCN"){ $btw_cccn[$row['ccode']] += (float)$row['amount']; } else{ }
+                                }
+                            }
+                            
+                            //Sales Return
+                            $sql = "SELECT * FROM `main_itemreturns` WHERE `date` <= '$tdate' AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); $opn_csrtn = $btw_csrtn = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                if(strtotime($row['date']) < strtotime($fdate)){
+                                    $opn_csrtn[$row['vcode']] += (float)$row['amount'];
+                                }
+                                else{
+                                    $btw_csrtn[$row['vcode']] += (float)$row['amount'];
+                                }
+                            }
+
+                            //Customer Mortality
+                            $sql = "SELECT * FROM `main_mortality` WHERE `date` <= '$tdate' AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`code`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); $opn_csmort = $btw_csmort = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                if(strtotime($row['date']) < strtotime($fdate)){
+                                    $opn_csmort[$row['ccode']] += (float)$row['amount'];
+                                }
+                                else{
+                                    $btw_csmort[$row['ccode']] += (float)$row['amount'];
+                                }
+                            }
+
+                            $slno = $ft_obal = $ft_sqty = $ft_samt = $ft_ramt = $ft_bamt = $ft_camt = 0;
+                            foreach($cus_code as $ccode){
+                                //Calculate Openings
+                                $o_dr = 0; if(!empty($obdramt[$ccode]) && (float)$obdramt[$ccode] != ""){ $o_dr = (float)$obdramt[$ccode]; }
+                                $o_cr = 0; if(!empty($obcramt[$ccode]) && (float)$obcramt[$ccode] != ""){ $o_cr = (float)$obcramt[$ccode]; }
+                                $o_samt = 0; if(!empty($opn_samt[$ccode]) && (float)$opn_samt[$ccode] != ""){ $o_samt = (float)$opn_samt[$ccode]; }
+                                $o_cdn = 0; if(!empty($opn_ccdn[$ccode]) && (float)$opn_ccdn[$ccode] != ""){ $o_cdn = (float)$opn_ccdn[$ccode]; }
+                                $o_rct = 0; if(!empty($opn_crct[$ccode]) && (float)$opn_crct[$ccode] != ""){ $o_rct = (float)$opn_crct[$ccode]; }
+                                $o_ccn = 0; if(!empty($opn_cccn[$ccode]) && (float)$opn_cccn[$ccode] != ""){ $o_ccn = (float)$opn_cccn[$ccode]; }
+                                $o_srtn = 0; if(!empty($opn_csrtn[$ccode]) && (float)$opn_csrtn[$ccode] != ""){ $o_srtn = (float)$opn_csrtn[$ccode]; }
+                                $o_cmort = 0; if(!empty($opn_csmort[$ccode]) && (float)$opn_csmort[$ccode] != ""){ $o_cmort = (float)$opn_csmort[$ccode]; }
+                                $o_bal = 0;
+                                $o_bal = (((float)$o_samt + (float)$o_cdn + (float)$o_dr) - ((float)$o_rct + (float)$o_ccn + (float)$o_srtn + (float)$o_cmort + (float)$o_cr));
+
+                                //Calculate B/w
+                                $b_sqty = 0; if(!empty($btw_sqty[$ccode]) && (float)$btw_sqty[$ccode] != ""){ $b_sqty = (float)$btw_sqty[$ccode]; }
+                                $b_samt = 0; if(!empty($btw_samt[$ccode]) && (float)$btw_samt[$ccode] != ""){ $b_samt = (float)$btw_samt[$ccode]; }
+                                $b_rct = 0; if(!empty($btw_crct[$ccode]) && (float)$btw_crct[$ccode] != ""){ $b_rct = (float)$btw_crct[$ccode]; }
+                                $b_cdn = 0; if(!empty($btw_ccdn[$ccode]) && (float)$btw_ccdn[$ccode] != ""){ $b_cdn = (float)$btw_ccdn[$ccode]; }
+                                $b_ccn = 0; if(!empty($btw_cccn[$ccode]) && (float)$btw_cccn[$ccode] != ""){ $b_ccn = (float)$btw_cccn[$ccode]; }
+                                $b_srtn = 0; if(!empty($btw_csrtn[$ccode]) && (float)$btw_csrtn[$ccode] != ""){ $b_srtn = (float)$btw_csrtn[$ccode]; }
+                                $b_cmort = 0; if(!empty($btw_csmort[$ccode]) && (float)$btw_csmort[$ccode] != ""){ $b_cmort = (float)$btw_csmort[$ccode]; }
+
+                                $t_samt = (float)$b_samt + (float)$b_cdn;
+                                $t_ramt = (float)$b_rct + (float)$b_ccn + (float)$b_srtn + (float)$b_cmort;
+                                $t_bamt = (float)$t_samt - (float)$t_ramt;
+                                $c_bamt = (((float)$o_bal + (float)$t_samt) - (float)$t_ramt);
+
+                                if((int)$bwd_aflag == 0 && (float)$c_bamt != 0 || (int)$bwd_aflag == 1 && (float)$t_samt != 0 && (float)$c_bamt != 0 || (int)$bwd_aflag == 1 && (float)$t_ramt != 0 && (float)$c_bamt != 0){
+                                    $slno++;
+                                    $cname = $cus_name[$ccode];
+                                    $cmobl = $cus_mobile[$ccode];
+
+                                    $html .= '<tr>';
+                                    $html .= '<td style="text-align:center;">'.$slno.'</td>';
+                                    $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cname.'</td>';
+                                    $html .= '<td>'.$cmobl.'</td>';
+                                    $html .= '<td style="text-align:right;">'.number_format_ind($o_bal).'</td>';
+                                    $html .= '<td style="text-align:right;">'.number_format_ind($b_sqty).'</td>';
+                                    $html .= '<td style="text-align:right;">'.number_format_ind($t_samt).'</td>';
+                                    $html .= '<td style="text-align:right;">'.number_format_ind($t_ramt).'</td>';
+                                    $html .= '<td style="text-align:right;">'.number_format_ind($t_bamt).'</td>';
+                                    $html .= '<td style="text-align:right;">'.number_format_ind($c_bamt).'</td>';
+                                    $html .= '</tr>';
+
+                                    $ft_obal += (float)$o_bal;
+                                    $ft_sqty += (float)$b_sqty;
+                                    $ft_samt += (float)$t_samt;
+                                    $ft_ramt += (float)$t_ramt;
+                                    $ft_bamt += (float)$t_bamt;
+                                    $ft_camt += (float)$c_bamt;
+                                }
+                            }
+                            $html .= '</tbody>';
+
+                            $html .= '<thead class="tfoot1">';
+                            $html .= '<tr style="color:blue;">';
+                            $html .= '<th colspan="3">Total</th>';
+                            $html .= '<th style="text-align:right;">'.number_format_ind($ft_obal).'</th>';
+                            $html .= '<th style="text-align:right;">'.number_format_ind($ft_sqty).'</th>';
+                            $html .= '<th style="text-align:right;">'.number_format_ind($ft_samt).'</th>';
+                            $html .= '<th style="text-align:right;">'.number_format_ind($ft_ramt).'</th>';
+                            $html .= '<th style="text-align:right;">'.number_format_ind($ft_bamt).'</th>';
+                            $html .= '<th style="text-align:right;">'.number_format_ind($ft_camt).'</th>';
+                            $html .= '</tr>';
+                            $html .= '</thead>';
+
+                            echo $html;
+                        }
+                        ?>
+					</table>
+				</form>
+			</div>
 		</section>
-		<script type="text/javascript" lahguage="javascript">
-			function checkval(){
-				var a = document.getElementById("checkcname").value;
-				if(a.match("select") || a.match("-select-")){
-					alert("Please select customer ..!");
-					return false;
-				}
-				else {
-					return true;
-				}
-			}
-			function sortTable(n) {
-			  var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-			  table = document.getElementById("myTable");
-			  switching = true;
-			  //Set the sorting direction to ascending:
-			  dir = "asc"; 
-			  /*Make a loop that will continue until
-			  no switching has been done:*/
-			  while (switching) {
-				//start by saying: no switching is done:
-				switching = false;
-				rows = table.rows;
-				/*Loop through all table rows (except the
-				first, which contains table headers):*/
-				for (i = 1; i < (rows.length - 1); i++) {
-				  //start by saying there should be no switching:
-				  shouldSwitch = false;
-				  /*Get the two elements you want to compare,
-				  one from current row and one from the next:*/
-				  x = rows[i].getElementsByTagName("TD")[n];
-				  y = rows[i + 1].getElementsByTagName("TD")[n];
-				  /*check if the two rows should switch place,
-				  based on the direction, asc or desc:*/
-				  if (dir == "asc") {
-					if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-					  //if so, mark as a switch and break the loop:
-					  shouldSwitch= true;
-					  break;
-					}
-				  } else if (dir == "desc") {
-					/*if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-					  //if so, mark as a switch and break the loop:
-					  shouldSwitch = true;
-					  break;
-					}*/
-					if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-					  //if so, mark as a switch and break the loop:
-					  shouldSwitch= true;
-					  break;
-					}
-				  }
-				}
-				if (shouldSwitch) {
-				  /*If a switch has been marked, make the switch
-				  and mark that a switch has been done:*/
-				  rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-				  switching = true;
-				  //Each time a switch is done, increase this count by 1:
-				  switchcount ++;
-				  
-				} else {
-				  /*If no switching has been done AND the direction is "asc",
-				  set the direction to "desc" and run the while loop again.*/
-				  if (switchcount == 0 && dir == "asc") {
-					dir = "desc";
-					switching = true;
-				  }
-				}
-			  }
-			}
-            
-			function convertDate(d) {
-				var p = d.split(".");
-				return (p[2]+p[1]+p[0]);
-		}
-function table_sort() {
-		console.log("test");
-  const styleSheet = document.createElement('style');
-  styleSheet.innerHTML = `
-        .order-inactive span {
-            visibility:hidden;
-        }
-        .order-inactive:hover span {
-            visibility:visible;
-        }
-        .order-active span {
-            visibility: visible;
-        }
-    `;
-  document.head.appendChild(styleSheet);
+        <script>
+            function checkval() {
+                var cgroups = document.getElementById("cgroups").value;
+                var l = true;
+                if(cgroups == "select"){
+                    alert("Kindly select customer Group");
+                    l = false;
+                }
+                
+                if(l == true){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+        </script>
+        <script src="sort_table_columns_wsno.js"></script>
+        <script src="searchbox.js"></script>
+        <script type="text/javascript">
+            function tableToExcel(table, name, filename, chosen){
+                if(chosen === 'excel'){
+                    cdate_format1();
+                    document.getElementById("head_names").innerHTML = "";
+                    var html = '';
+                    html += '<?php echo $nhtml; ?>';
+                    $('#head_names').append(html);
+                    
+                    var table = document.getElementById("main_table");
+                    var workbook = XLSX.utils.book_new();
+                    var worksheet = XLSX.utils.table_to_sheet(table);
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+                    XLSX.writeFile(workbook, filename+".xlsx");
+                    
+                    document.getElementById("head_names").innerHTML = "";
+                    var html = '';
+                    html += '<?php echo $fhtml; ?>';
+                    document.getElementById("head_names").innerHTML = html;
+                    
+                    $('#exports').select2();
+                    document.getElementById("exports").value = "display";
+                    $('#exports').select2();
 
-  document.querySelectorAll('#order').forEach(th_elem => {
-	console.log("test1");
-
-    let asc = true;
-    const span_elem = document.createElement('span');
-    span_elem.style = "font-size:0.8rem; margin-left:0.5rem";
-    span_elem.innerHTML = "▼";
-    th_elem.appendChild(span_elem);
-    th_elem.classList.add('order-inactive');
-
-    const index = Array.from(th_elem.parentNode.children).indexOf(th_elem)
-    th_elem.addEventListener('click', (e) => {
-      document.querySelectorAll('#order').forEach(elem => {
-        elem.classList.remove('order-active')
-        elem.classList.add('order-inactive')
-      });
-      th_elem.classList.remove('order-inactive');
-      th_elem.classList.add('order-active');
-
-      if (!asc) {
-        th_elem.querySelector('span').innerHTML = '▲';
-      } else {
-        th_elem.querySelector('span').innerHTML = '▼';
-      }
-      const arr = Array.from(th_elem.closest("table").querySelectorAll('tbody tr'));
-      arr.sort((a, b) => {
-        const a_val = a.children[index].innerText;
-        const b_val = b.children[index].innerText;
-        return (asc) ? a_val.localeCompare(b_val) : b_val.localeCompare(a_val)
-      });
-      arr.forEach(elem => {
-        th_elem.closest("table").querySelector("tbody").appendChild(elem)
-      });
-      asc = !asc;
-    })
-
-	
-
-  });
-}
-function table_sort3() {
-		console.log("test");
-  const styleSheet = document.createElement('style');
-  styleSheet.innerHTML = `
-        .order-inactive span {
-            visibility:hidden;
-        }
-        .order-inactive:hover span {
-            visibility:visible;
-        }
-        .order-active span {
-            visibility: visible;
-        }
-    `;
-  document.head.appendChild(styleSheet);
-
-  document.querySelectorAll('#order_date').forEach(th_elem => {
-	console.log("test1");
-
-    let asc = true;
-    const span_elem = document.createElement('span');
-    span_elem.style = "font-size:0.8rem; margin-left:0.5rem";
-    span_elem.innerHTML = "▼";
-    th_elem.appendChild(span_elem);
-    th_elem.classList.add('order-inactive');
-
-    const index = Array.from(th_elem.parentNode.children).indexOf(th_elem)
-    th_elem.addEventListener('click', (e) => {
-      document.querySelectorAll('#order_date').forEach(elem => {
-        elem.classList.remove('order-active')
-        elem.classList.add('order-inactive')
-      });
-      th_elem.classList.remove('order-inactive');
-      th_elem.classList.add('order-active');
-
-      if (!asc) {
-        th_elem.querySelector('span').innerHTML = '▲';
-      } else {
-        th_elem.querySelector('span').innerHTML = '▼';
-      }
-      const arr = Array.from(th_elem.closest("table").querySelectorAll('tbody tr'));
-      arr.sort((a, b) => {
-        const a_val = convertDate(a.children[index].innerText);
-        const b_val = convertDate(b.children[index].innerText);
-        return (asc) ? a_val.localeCompare(b_val) : b_val.localeCompare(a_val)
-      });
-      arr.forEach(elem => {
-        th_elem.closest("table").querySelector("tbody").appendChild(elem)
-      });
-      asc = !asc;
-    })
-
-	
-
-  });
-}
-
-function convertNumber(d) {
-				var p = intval(d) ;
-				return (p);
-			}
-
-function table_sort2() {
-		console.log("test");
-  const styleSheet = document.createElement('style');
-  styleSheet.innerHTML = `
-        .order-inactive span {
-            visibility:hidden;
-        }
-        .order-inactive:hover span {
-            visibility:visible;
-        }
-        .order-active span {
-            visibility: visible;
-        }
-    `;
-  document.head.appendChild(styleSheet);
-
-  document.querySelectorAll('#order_num').forEach(th_elem => {
-	console.log("test1");
-
-    let asc = true;
-    const span_elem = document.createElement('span');
-    span_elem.style = "font-size:0.8rem; margin-left:0.5rem";
-    span_elem.innerHTML = "▼";
-    th_elem.appendChild(span_elem);
-    th_elem.classList.add('order-inactive');
-
-    const index = Array.from(th_elem.parentNode.children).indexOf(th_elem)
-    th_elem.addEventListener('click', (e) => {
-      document.querySelectorAll('#order_num').forEach(elem => {
-        elem.classList.remove('order-active')
-        elem.classList.add('order-inactive')
-      });
-      th_elem.classList.remove('order-inactive');
-      th_elem.classList.add('order-active');
-
-      if (!asc) {
-        th_elem.querySelector('span').innerHTML = '▲';
-      } else {
-        th_elem.querySelector('span').innerHTML = '▼';
-      }
-      
-      var arr = Array.from(th_elem.closest("table").querySelectorAll('tbody tr'));
-      arr.sort((a, b) => {
-        const a_val = a.children[index].innerText;    
-        if(isNaN(a_val)){
-        a_val1 = a_val.split(',').join(''); }
-        else {
-            a_val1 = a_val; }
-        const b_val = b.children[index].innerText;
-        if(isNaN(b_val)){
-        b_val1 = b_val.split(',').join('');}
-        else {
-            b_val1 = b_val; }
-        return (asc) ? b_val1 - a_val1:  a_val1 - b_val1 
-      });
-      arr.forEach(elem => {
-        th_elem.closest("table").querySelector("tbody").appendChild(elem)
-      });
-      asc = !asc;
-    })
-
-	
-
-  });
-}
-
-table_sort();
-table_sort2();
-table_sort3();
-		</script>
-		<?php if($exoption == "displaypage" || $exoption == "exportpdf") { ?><footer align="center" style="margin-top:50px;"><?php $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $finish = $time; $total_time = round(($finish - $start), 4); echo "Loaded in ".$total_time." seconds."; ?></footer> <?php } ?>
-		<script src="../loading_page_out.js"></script>
-		<?php
-			if($cname == ""){
-				
-			}
-			else {
-				echo "<script> sortTable(0); </script>";
-			}
-		?>
+                    cdate_format2();
+                    table_sort();
+                    table_sort2();
+                    table_sort3();
+                }
+                else{ }
+            }
+            function cdate_format1() {
+                const dateCells = document.querySelectorAll('#main_table .dates');
+                var adate = [];
+                dateCells.forEach(cell => {
+                    let originalString = cell.textContent;
+                    adate = []; adate = originalString.split(".");
+                    cell.textContent = adate[2]+"-"+adate[1]+"-"+adate[0];
+                });
+            }
+            function cdate_format2() {
+                const dateCells = document.querySelectorAll('#main_table .dates');
+                var adate = [];
+                dateCells.forEach(cell => {
+                    let originalString = cell.textContent;
+                    adate = []; adate = originalString.split("-");
+                    cell.textContent = adate[2]+"."+adate[1]+"."+adate[0];
+                });
+            }
+        </script>
+		<?php if($exports == "display" || $exports == "exportpdf") { ?><footer align="center" style="margin-top:50px;"><?php $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $finish = $time; $total_time = round(($finish - $start), 4); echo "Loaded in ".$total_time." seconds."; ?></footer> <?php } ?>
+		<?php include "header_foot2.php"; ?>
 	</body>
 	
 </html>
-<?php include "header_foot.php"; ?>

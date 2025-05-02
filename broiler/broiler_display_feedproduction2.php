@@ -36,6 +36,8 @@ if($link_active_flag > 0){
     if($user_type == "S"){ $acount = 1; }
     else if($aid == 1){ $acount = 1; }
     else{ $acount = 0; }
+
+    c
 ?>
 <html lang="en">
     <head>
@@ -182,6 +184,9 @@ if($link_active_flag > 0){
                                             }
                                             else if($row['gc_flag'] == 1){
                                                 echo "<i class='fa fa-lock' style='color:gray;' title='GC processed'></i></a>";
+                                            }
+                                            else if(strtotime($row['date']) < strtotime($rng_sdate) || strtotime($row['date']) > strtotime($rng_edate)){
+                                                echo "<i class='fa fa-check' style='color:green;' title='Date Entry Range Closed'></i></a>&ensp;&ensp;";
                                             }
                                             else {
                                                 if($edit_flag == 1){

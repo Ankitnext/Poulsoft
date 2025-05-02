@@ -36,6 +36,10 @@ if($link_active_flag > 0){
         }
     }
     if($acount == 1){
+        //check and fetch date range
+        global $drng_cday; $drng_cday = 1; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+        include "poulsoft_fetch_daterange_master.php";
+
         $today = date("d.m.Y");
         $sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_cunit[$row['code']] = $row['cunits']; }
@@ -147,7 +151,7 @@ if($link_active_flag > 0){
                                         </thead>
                                         <tbody id="row_body">
                                             <tr>
-                                                <td><input type="text" name="date[]" id="date[0]" class="form-control datepicker" style="width:80px;" value="<?php echo date('d.m.Y'); ?>" onchange="check_medvac_masterprices(this.id);" readonly /></td>
+                                                <td><input type="text" name="date[]" id="date[0]" class="form-control range_picker" style="width:80px;" value="<?php echo date('d.m.Y'); ?>" onchange="check_medvac_masterprices(this.id);" readonly /></td>
                                                 <td><input type="text" name="dcno[]" id="dcno[0]" class="form-control" style="width:60px;" /></td>
                                                 <td><select name="code[]" id="code[0]" class="form-control select2" style="width:130px;" onchange="fetch_stock_master(this.id);check_medvac_masterprices(this.id);fetch_itemuom(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></td>
                                                 <td><input type="text" name="uom[]" id="uom[0]" class="form-control" style="width:80px;" readonly /></td>
@@ -316,7 +320,7 @@ if($link_active_flag > 0){
                 var este_flag = '<?php echo $este_flag; ?>';
 
                 html += '<tr id="row_no['+d+']">';
-                html += '<td><input type="text" name="date[]" id="date['+d+']" class="form-control datepicker" style="width:80px;" value="<?php echo date('d.m.Y'); ?>" onchange="check_medvac_masterprices(this.id);" readonly /></td>';
+                html += '<td><input type="text" name="date[]" id="date['+d+']" class="form-control range_picker" style="width:80px;" value="<?php echo date('d.m.Y'); ?>" onchange="check_medvac_masterprices(this.id);" readonly /></td>';
                 html += '<td><input type="text" name="dcno[]" id="dcno['+d+']" class="form-control" style="width:60px;" /></td>';
                 html += '<td><select name="code[]" id="code['+d+']" class="form-control select2" style="width:130px;" onchange="fetch_stock_master(this.id);check_medvac_masterprices(this.id);fetch_itemuom(this.id);"><option value="select">select</option><?php foreach($item_code as $prod_code){ ?><option value="<?php echo $prod_code; ?>"><?php echo $item_name[$prod_code]; ?></option><?php } ?></select></td>';
                 html += '<td><input type="text" name="uom[]" id="uom['+d+']" class="form-control" style="width:80px;" readonly /></td>';
@@ -341,7 +345,11 @@ if($link_active_flag > 0){
                 html += '</tr>';
                 $('#row_body').append(html);
                 $('.select2').select2();
-                $( ".datepicker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", maxDate: today, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+                //Date Range selection
+                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
+                $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+                
+                //$( ".datepicker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", maxDate: today, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
             }
             function destroy_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -458,6 +466,11 @@ if($link_active_flag > 0){
 			function validatemobile(x) { expr = /^[0-9]*$/; var a = document.getElementById(x).value; if(a.length > 10){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9]/g, ''); } document.getElementById(x).value = a; }
 			function validateamount(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(2); document.getElementById(x).value = b; }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
+        </script>
+        <script>
+            //Date Range selection
+            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
+            $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
         </script>
         <?php include "header_foot.php"; ?>
     </body>

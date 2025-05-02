@@ -296,8 +296,8 @@
 											else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<th>Remarks</th>"; $item_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<th>Vehicle</th>"; $item_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<th>Driver</th>"; $item_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
-											else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<th>Purchase</th>"; }
-											else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<th>Payments</th>"; }
+											else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<th>Debit</th>"; }
+											else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<th>Credit</th>"; }
 											else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<th>Running Balance</th>"; }
 											else{ }
 										}

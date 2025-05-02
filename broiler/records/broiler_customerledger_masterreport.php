@@ -94,6 +94,19 @@ for ($i = 0; $i <= 30; $i++) {
     $fsizes[$i . "px"] = $i . "px";
 }
 
+/*Check for Table Availability*/
+$database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
+$sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+if(in_array("broiler_sales", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_sales LIKE poulso6_admin_broiler_broilermaster.broiler_sales;"; mysqli_query($conn,$sql1); }
+if(in_array("broiler_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_receipts LIKE poulso6_admin_broiler_broilermaster.broiler_receipts;"; mysqli_query($conn,$sql1); }
+if(in_array("broiler_itemreturns", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_itemreturns LIKE poulso6_admin_broiler_broilermaster.broiler_itemreturns;"; mysqli_query($conn,$sql1); }
+if(in_array("broiler_crdrnote", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_crdrnote LIKE poulso6_admin_broiler_broilermaster.broiler_crdrnote;"; mysqli_query($conn,$sql1); }
+if(in_array("account_contranotes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.account_contranotes LIKE poulso6_admin_broiler_broilermaster.account_contranotes;"; mysqli_query($conn,$sql1); }
+if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_transitloss LIKE poulso6_admin_broiler_broilermaster.broiler_transitloss;"; mysqli_query($conn,$sql1); }
+if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_voucher_notes LIKE poulso6_admin_broiler_broilermaster.broiler_voucher_notes;"; mysqli_query($conn,$sql1); }
+if(in_array("master_payments", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_payments LIKE poulso6_admin_broiler_broilermaster.master_payments;"; mysqli_query($conn,$sql1); }
+if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_receipts LIKE poulso6_admin_broiler_broilermaster.master_receipts;"; mysqli_query($conn,$sql1); }
+
 $i = 0;
 
 /*Master Report Format*/
@@ -1227,7 +1240,7 @@ else {
             
                 <?php
                 $old_inv = "";
-                $opening_sales = $opening_receipts = $opening_ccn = $opening_cdn = $opening_cntcr = $opening_cntdr = $opening_returns = $opening_tloss = $rb_amt = 0;
+                $opening_sales = $opening_receipts = $opening_payments = $opening_ccn = $opening_cdn = $opening_cntcr = $opening_cntdr = $opening_returns = $opening_tloss = $rb_amt = 0;
                 if ($count65 > 0) {
                     $sql_record = "SELECT * FROM `broiler_sales` WHERE `date` < '$fdate' AND `vcode` = '$vendors' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn, $sql_record);
@@ -1254,6 +1267,28 @@ else {
                     if ($transaction_count > 0) {
                         while ($row = mysqli_fetch_assoc($query)) {
                             $opening_receipts += (float)$row['amount'];
+                        }
+                    }
+                    $sql_record = "SELECT * FROM `master_receipts` WHERE `date` < '$fdate' AND `to_account` = '$vendors' AND `t_type` IN ('Customer Receipt') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn, $sql_record);
+                    $transaction_count = 0;
+                    if (!empty($query)) {
+                        $transaction_count = mysqli_num_rows($query);
+                    }
+                    if ($transaction_count > 0) {
+                        while ($row = mysqli_fetch_assoc($query)) {
+                            $opening_receipts += (float)$row['amount'];
+                        }
+                    }
+                    $sql_record = "SELECT * FROM `master_payments` WHERE `date` < '$fdate' AND `to_account` = '$vendors' AND `t_type` IN ('Customer Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn, $sql_record);
+                    $transaction_count = 0;
+                    if (!empty($query)) {
+                        $transaction_count = mysqli_num_rows($query);
+                    }
+                    if ($transaction_count > 0) {
+                        while ($row = mysqli_fetch_assoc($query)) {
+                            $opening_payments += (float)$row['amount'];
                         }
                     }
                 }
@@ -1329,7 +1364,7 @@ else {
                     $ob_dramt = (float)$obamt[$vendors];
                 }
 
-                $ob_rcv = (float)$opening_sales + (float)$opening_cdn + (float)$opening_cntdr + (float)$ob_dramt;
+                $ob_rcv = (float)$opening_sales + (float)$opening_payments + (float)$opening_cdn + (float)$opening_cntdr + (float)$ob_dramt;
                 $ob_pid = (float)$opening_receipts + (float)$opening_returns + (float)$opening_ccn + (float)$opening_cntcr + (float)$opening_tloss + (float)$ob_cramt;
 
                 $cr_amt = $dr_amt = $rb_amt = 0;
@@ -1481,7 +1516,7 @@ else {
                 echo "<tbody class='tbody1' id = 'tbody1'>";
 
                 $key_code = "";
-                $sale_info = $receipt_info = $return_info = $ccn_info = $cdn_info = $inv_count = $contra_cr = $contra_dr = $tloss_info = $tloss_amt = $tloss_count = array();
+                $sale_info = $receipt_info = $payment_info = $return_info = $ccn_info = $cdn_info = $inv_count = $contra_cr = $contra_dr = $tloss_info = $tloss_amt = $tloss_count = array();
                 if ($count65 > 0) {
                     $sql_record = "SELECT * FROM `broiler_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `vcode` = '$vendors' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn, $sql_record);
@@ -1516,6 +1551,32 @@ else {
                             $i++;
                             $key_code = $row['date'] . "@" . $i;
                             $receipt_info[$key_code] = $row['trnum'] . "@" . $row['date'] . "@" . $row['ccode'] . "@" . $row['docno'] . "@" . $row['mode'] . "@" . $row['method'] . "@" . $row['amount'] . "@" . $row['remarks'] . "@" . $row['warehouse'] . "@" . $row['addedemp'] . "@" . $row['addedtime'] . "@" . $row['updatedemp'] . "@" . $row['updatedtime'];
+                        }
+                    }
+                    $sql_record = "SELECT * FROM `master_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `to_account` = '$vendors' AND `t_type` IN ('Customer Receipt') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn, $sql_record);
+                    $transaction_count = 0;
+                    if (!empty($query)) {
+                        $transaction_count = mysqli_num_rows($query);
+                    }
+                    if ($transaction_count > 0) {
+                        while ($row = mysqli_fetch_assoc($query)) {
+                            $i++;
+                            $key_code = $row['date'] . "@" . $i;
+                            $receipt_info[$key_code] = $row['trnum']."@".$row['date']."@".$row['to_account']."@".$row['billno']."@".$row['mode']."@".$row['from_account']."@".$row['amount']."@".$row['remarks']."@".$row['sector']."@".$row['addedemp']."@".$row['addedtime']."@".$row['updatedemp']."@".$row['updatedtime'];
+                        }
+                    }
+                    $sql_record = "SELECT * FROM `master_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `to_account` = '$vendors' AND `t_type` IN ('Customer Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn, $sql_record);
+                    $transaction_count = 0;
+                    if (!empty($query)) {
+                        $transaction_count = mysqli_num_rows($query);
+                    }
+                    if ($transaction_count > 0) {
+                        while ($row = mysqli_fetch_assoc($query)) {
+                            $i++;
+                            $key_code = $row['date'] . "@" . $i;
+                            $payment_info[$key_code] = $row['trnum']."@".$row['date']."@".$row['to_account']."@".$row['billno']."@".$row['mode']."@".$row['from_account']."@".$row['amount']."@".$row['remarks']."@".$row['sector']."@".$row['addedemp']."@".$row['addedtime']."@".$row['updatedemp']."@".$row['updatedtime'];
                         }
                     }
                 }
@@ -1603,6 +1664,7 @@ else {
 
                 $sale_ccount = sizeof($sale_info);
                 $receipt_ccount = sizeof($receipt_info);
+                $payment_ccount = sizeof($payment_info);
                 $return_ccount = sizeof($return_info);
                 $ccn_ccount = sizeof($ccn_info);
                 $cdn_ccount = sizeof($cdn_info);
@@ -2096,6 +2158,191 @@ else {
                                     echo "<td></td>";
                                 }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                                     echo "<td>".$vendor_ccode[$receipt_details[2]]."</td>";
+                                } else {
+                                }
+                            }
+                        }
+                    }
+
+                    // Payment Entries
+                    for ($a = 0; $a <= $payment_ccount; $a++) {
+                        if (!empty($payment_info[$adate . "@" . $a])) {
+                            $pay_details = array(); $pay_details = explode("@", $payment_info[$adate . "@" . $a]);
+
+                            $rcode = $rname = $bcode = $bname = $lcode = $lname = $fbname = $fcode = $mname = $mmname = "";
+                            $fcode = $pay_details[8];
+                            if (!empty($farm_region[$fcode])) {
+                                $rcode = $farm_region[$fcode];
+                                if (!empty($region_name[$rcode])) {
+                                    $rname = $region_name[$rcode];
+                                }
+                            }
+                            if (!empty($farm_branch[$fcode])) {
+                                $bcode = $farm_branch[$fcode];
+                                if (!empty($branch_name[$bcode])) {
+                                    $bname = $branch_name[$bcode];
+                                }
+                            }
+                            if (!empty($farm_line[$fcode])) {
+                                $lcode = $farm_line[$fcode];
+                                if (!empty($line_name[$lcode])) {
+                                    $lname = $line_name[$lcode];
+                                }
+                            }
+
+                            if (!empty($mode_code[$pay_details[4]])) {
+                                $mname = $mode_name[$pay_details[4]];
+                            }
+                            if (!empty($coa_name[$pay_details[5]])) {
+                                $mmname = $coa_name[$pay_details[5]];
+                            }
+
+                            $bt_sale_amt += (float)$pay_details[6];
+                            $dr_amt += (float)$pay_details[6];
+                            $rb_amt = (float)round($rb_amt,5) + (float)round($pay_details[6],5);
+
+                            $bt_rct_amt += (float)$pay_details[6];
+                            $cr_amt += (float)$pay_details[6];
+                            $rb_amt = (float)round($rb_amt,5) - (float)round($pay_details[6],5);
+
+                            echo "<tr>";
+                            for ($i = 1; $i <= $col_count; $i++) {
+                                $key_id = "A:1:" . $i;
+
+                                if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_trnum") {
+                                    echo "<td  style='text-align:left;' title='Transaction No.'>" . $pay_details[0] . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_link_trnum") {
+                                    echo "<td  style='text-align:left;' title='Linked Transaction'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_date") {
+                                    echo "<td  style='text-align:left;' title='Date'>" . date('d.m.Y', strtotime($pay_details[1])) . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_name") {
+                                    echo "<td  style='text-align:left;' title='Customer Name'>" . $vendor_name[$pay_details[2]] . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_billno") {
+                                    echo "<td  style='text-align:left;' title='Doc No.'>" . $pay_details[3] . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_itemname") {
+                                    echo "<td  style='text-align:left;' title='Item Name'>" . $mname . " - " . $mmname . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_birds") {
+                                    echo "<td  style='text-align:left;' title='Birds'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_snt_qty") {
+                                    echo "<td  style='text-align:left;' title='Sent Qty'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_mort_qty") {
+                                    echo "<td  style='text-align:left;' title='Mort Qty'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_cull_qty") {
+                                    echo "<td  style='text-align:left;' title='Cull Qty'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_rcd_qty") {
+                                    echo "<td  style='text-align:left;' title='Quantity'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_fre_qty") {
+                                    echo "<td  style='text-align:left;' title='Free Qty'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_itemprice") {
+                                    echo "<td  style='text-align:left;' title='Item Price'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_dis_per") {
+                                    echo "<td  style='text-align:left;' title='Discount %'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_dis_amt") {
+                                    echo "<td  style='text-align:left;' title='Discount Amt'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_gst_per") {
+                                    echo "<td  style='text-align:left;' title='GST %'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_gst_amt") {
+                                    echo "<td  style='text-align:left;' title='GST Amt'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_tcds_per") {
+                                    echo "<td  style='text-align:left;' title='TCS %'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_tcds_amt") {
+                                    echo "<td  style='text-align:left;' title='TCS Amt'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_itemamount") {
+                                    echo "<td  style='text-align:left;' title='Item Amount'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_freight_type") {
+                                    echo "<td  style='text-align:left;' title='Freight Type'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_freight_amt") {
+                                    echo "<td  style='text-align:left;' title='Freight Amt'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_freight_pay_type") {
+                                    echo "<td  style='text-align:left;' title='Freight Pay Type'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_freight_pay_acc") {
+                                    echo "<td  style='text-align:left;' title='Freight Pay Account'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_freight_acc") {
+                                    echo "<td  style='text-align:left;' title='Freight Account'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_round_off") {
+                                    echo "<td  style='text-align:left;' title='Round Off'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_finl_amt") {
+                                    echo "<td  style='text-align:right;' title='Invoice Amount'>" . number_format_ind($pay_details[6]) . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_avg_price") {
+                                    echo "<td  style='text-align:left;' title='Avg Price'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_avg_wt") {
+                                    echo "<td  style='text-align:left;' title='Avg Weight'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_profit") {
+                                    echo "<td  style='text-align:left;' title='Profit'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_remarks") {
+                                    echo "<td  style='text-align:left;' title='Remarks'>" . $pay_details[7] . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_warehouse") {
+                                    if (!empty($sector_name[$fcode])) {
+                                        echo "<td  style='text-align:left;' title='Sector/Warehouse'>" . $sector_name[$fcode] . "</td>";
+                                    } else {
+                                        echo "<td  style='text-align:left;' title='Sector/Warehouse'></td>";
+                                    }
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_farm_batch") {
+                                    echo "<td  style='text-align:left;' title='Batch Name'>" . $fbname . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_supervisor_code") {
+                                    echo "<td  style='text-align:left;' title='Supervisor Name'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_bag_code") {
+                                    echo "<td  style='text-align:left;' title='Bag Name'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_bag_count") {
+                                    echo "<td  style='text-align:left;' title='Bag Count'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_batch_no") {
+                                    echo "<td  style='text-align:left;' title='Batch No'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_exp_date") {
+                                    echo "<td  style='text-align:left;' title='Expiry Date'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_vehicle_code") {
+                                    echo "<td  style='text-align:left;' title='Vehicle No.'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_driver_code") {
+                                    echo "<td  style='text-align:left;' title='Driver Name'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_sale_type") {
+                                    echo "<td  style='text-align:left;' title='Sale Type'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_gc_flag") {
+                                    echo "<td  style='text-align:left;' title='GC Flag'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_addedemp") {
+                                    if (!empty($emp_name[$pay_details[9]])) {
+                                        echo "<td  style='text-align:left;' title='Added By'>" . $emp_name[$pay_details[9]] . "</td>";
+                                    } else {
+                                        echo "<td  style='text-align:left;' title='Added By'></td>";
+                                    }
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_addedtime") {
+                                    echo "<td  style='text-align:left;' title='Added Time'>" . date('d.m.Y h:i:sA', strtotime($pay_details[10])) . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_updatedemp") {
+                                    if (!empty($emp_name[$pay_details[11]])) {
+                                        echo "<td  style='text-align:left;' title='Edited By'>" . $emp_name[$pay_details[11]] . "</td>";
+                                    } else {
+                                        echo "<td  style='text-align:left;' title='Edited By'></td>";
+                                    }
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_updatedtime") {
+                                    echo "<td  style='text-align:left;' title='Edited Time'>" . date('d.m.Y h:i:sA', strtotime($pay_details[12])) . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_latitude") {
+                                    echo "<td  style='text-align:left;' title='Sale Latitude'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_longitude") {
+                                    echo "<td  style='text-align:left;' title='Sale Longitude'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "Customer_sale_location") {
+                                    echo "<td  style='text-align:left;' title='Sale Location'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_imei") {
+                                    echo "<td  style='text-align:left;' title='IMEI'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_mob_flag") {
+                                    echo "<td  style='text-align:left;' title='Mobile Flag'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_sale_image") {
+                                    echo "<td  style='text-align:left;' title='Sale Image'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "region_name") {
+                                    echo "<td  style='text-align:left;' title='Region Name'>" . $rname . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "branch_name") {
+                                    echo "<td  style='text-align:left;' title='Branch Name'>" . $bname . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name") {
+                                    echo "<td  style='text-align:left;' title='Line Name'>" . $lname . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_debit") {
+                                    echo "<td  style='text-align:right;' title='Cr'></td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_credit") {
+                                    echo "<td  style='text-align:left;' title='Dr'>" . number_format_ind($pay_details[6]) . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_runningbalance") {
+                                    echo "<td  style='text-align:right;' title='Balance'>" . number_format_ind($rb_amt) . "</td>";
+                                } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "transaction_type") {
+                                    echo "<td  style='text-align:left;' title='Type'>Receipts</td>";
+                                }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") {
+                                    echo "<td></td>";
+                                }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
+                                    echo "<td>".$vendor_ccode[$pay_details[2]]."</td>";
                                 } else {
                                 }
                             }

@@ -36,6 +36,10 @@ if($link_active_flag > 0){
         }
     }
     if($acount == 1){
+        //check and fetch date range
+        global $drng_cday; $drng_cday = 1; global $drng_furl; $drng_furl = str_replace("_edit_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+        include "poulsoft_fetch_daterange_master.php";
+
         $sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%medicine%' OR `description` LIKE '%Vaccine%' OR `description` LIKE '%bio%' OR `description` LIKE '%Water Soluble%') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
         $query = mysqli_query($conn,$sql); $icat_code = "";
 		while($row = mysqli_fetch_assoc($query)){ if($icat_code == ""){ $icat_code = $row['code']; } else{ $icat_code = $icat_code."','".$row['code']; } }
@@ -170,7 +174,7 @@ if($link_active_flag > 0){
                                     <div class="row">
                                         <div class="form-group">
                                             <label>Date<b style="color:red;">&nbsp;*</b></label>
-							                <input type="text" name="date" id="date" class="form-control datepicker" style="width:100px;" value="<?php echo date('d.m.Y',strtotime($date)); ?>" onchange="broiler_check_futuredate();" />
+							                <input type="text" name="date" id="date" class="form-control range_picker" style="width:100px;" value="<?php echo date('d.m.Y',strtotime($date)); ?>" onchange="broiler_check_futuredate();" />
                                         </div>
                                         <div class="form-group">
                                             <label>Dc No.</label>
@@ -464,6 +468,11 @@ if($link_active_flag > 0){
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }
 			function validateamount(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(5); document.getElementById(x).value = b; }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
+        </script>
+         <script>
+            //Date Range selection
+            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
+            $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
         </script>
         <?php include "header_foot.php"; ?>
     </body>

@@ -63,7 +63,14 @@ $sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users_code' AND `active`
 $query = mysqli_query($conn,$sql); $loc_access = ""; $adm_aflag = 0;
 while($row = mysqli_fetch_assoc($query)){ $loc_access = $row['loc_access']; if((int)$row['supadmin_access'] == 1 || (int)$row['admin_access'] == 1){ $adm_aflag = 1; } }
 
-$sql = "SELECT * FROM `chicken_employee` WHERE `desig_code` IN ('$desig_list') AND `dflag`= '0' ORDER BY `name` ASC";
+//Customer Details
+$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
+$query = mysqli_query($conn,$sql); $csup_alist = $carea_alist = array();
+while($row = mysqli_fetch_assoc($query)){ $csup_alist[$row['supr_code']] = $row['supr_code']; $carea_alist[$row['area_code']] = $row['area_code']; }
+
+//Supervisor Details
+$supv_list = implode("','",$csup_alist);
+$sql = "SELECT * FROM `chicken_employee` WHERE `code` IN ('$supv_list') AND `dflag`= '0' ORDER BY `name` ASC";
 $query = mysqli_query($conn,$sql); $csupr_code = $csupr_name = array();
 while($row = mysqli_fetch_assoc($query)){ $csupr_code[$row['code']] = $row['code']; $csupr_name[$row['code']] = $row['name']; }
 
@@ -83,8 +90,14 @@ $sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description`
 $query = mysqli_query($conn,$sql); $item_code = $item_name = $item_cunits = array();
 while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_cunits[$row['code']] = $row['cunits']; }
 
-$sql = "SELECT * FROM `main_areas` WHERE `active` = '1' ORDER BY `description` ASC";
-$query = mysqli_query($conn,$sql); $area_code = $area_name = $item_cunits = array();
+//Customer Details
+$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
+$query = mysqli_query($conn,$sql); $csup_alist = $carea_alist = array();
+while($row = mysqli_fetch_assoc($query)){ $csup_alist[$row['supr_code']] = $row['supr_code']; $carea_alist[$row['area_code']] = $row['area_code']; }
+
+//Area Details
+$area_list = implode("','",$carea_alist);
+$sql = "SELECT * FROM `main_areas` WHERE `code` IN ('$area_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";$query = mysqli_query($conn,$sql); $area_code = $area_name = $item_cunits = array();
 while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code']; $area_name[$row['code']] = $row['description']; }
 
 //Fetch User Details
@@ -104,16 +117,20 @@ while($row = mysqli_fetch_assoc($query)){ $font_id[$row['id']] = $row['id']; if(
 if(sizeof($font_id) > 0){ $font_fflag = 1; } else { $font_fflag = 0; }
 for($i = 0;$i <= 30;$i++){ $font_sizes[$i."px"] = $i."px"; }
 
-$fdate = date("Y-m-d"); $areas = $cust = $suvrs =  "all"; $no_weeks = ""; $fstyles = $fsizes = "default"; $exports = "display";
+$fdate = date("Y-m-d"); $cust = $supervisors =  "all"; $no_weeks = "12"; $fstyles = $fsizes = "default"; $exports = "display"; $area_acode = $item_acode = array(); $area_acode["all"] = "all"; $item_acode["all"] = "all"; $area_fltr = $item_fltr = ""; $aa_flag = $it_flag = 0;
 if(isset($_POST['submit']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
-    $area_code = $_POST['area_code'];
+    // $areas = $_POST['areas'];
+    $area_acode = array(); foreach($_POST['areas'] as $t1){ $area_acode[$t1] = $t1; if($t1 == "all" || $t1 == ""){ $area_acode["all"] = "all"; $aa_flag = 1; } }
+    $item_acode = array(); foreach($_POST['items'] as $t1){ $item_acode[$t1] = $t1; if($t1 == "all" || $t1 == ""){ $item_acode["all"] = "all"; $it_flag = 1; } }
     $no_weeks = $_POST['no_weeks'];
-    $cust = $_POST['cus_code'];
-    $suv_code = $_POST['suv_code'];
+    $cust = $_POST['cust'];
+    $supervisors = $_POST['supervisors'];
     $fstyles = $_POST['fstyles'];
     $fsizes = $_POST['fsizes'];
     $exports = $_POST['exports'];
+    if($aa_flag == 0){ $area_list = implode("','",$area_acode); $area_fltr = " AND `area_code` IN ('$area_list')"; }
+    if($it_flag == 0){ $item_list = implode("','",$item_acode); $item_fltr = " AND `itemcode` IN ('$item_list')"; }
 }
 ?>
 <html>
@@ -162,24 +179,37 @@ if(isset($_POST['submit']) == true){
                                             <input type="text" name="no_weeks" id="no_weeks" class="form-control" value="<?php echo $no_weeks; ?>" onkeyup="validatenum(this.id);" style="padding:0;padding-left:2px;width:100px;" />
                                         </div>
                                         <div class="form-group" style="width:290px;">
-                                            <label for="cus_code">Customer</label>
-                                            <select name="cus_code" id="cus_code" class="form-control select2" style="width:280px;">
+                                            <label for="cust">Customer</label>
+                                            <select name="cust" id="cust" class="form-control select2" style="width:280px;">
                                                 <option value="all" <?php if($cust == "all"){ echo "selected"; } ?>>-All-</option>
 											    <?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($cust == $scode){ echo "selected"; } ?>><?php echo $cus_name[$scode]; ?></option><?php } ?>
                                             </select>
                                         </div>
                                         <div class="form-group" style="width:190px;">
-                                            <label for="suv_code">Supervisor</label>
-                                            <select name="suv_code" id="suv_code" class="form-control select2" style="width:180px;">
-                                                <option value="all" <?php if($suvrs == "all"){ echo "selected"; } ?>>-All-</option>
-											    <?php foreach($csupr_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($suvrs == $scode){ echo "selected"; } ?>><?php echo $csupr_name[$scode]; ?></option><?php } ?>
+                                            <label>Supervisor</label>
+                                            <select name="supervisors" id="supervisors" class="form-control select2" style="width:180px;" onchange="fetch_careas();">
+                                                <option value="all" <?php if($supervisors == "all"){ echo "selected"; } ?>>-All-</option>
+                                                <?php foreach($csupr_code as $gcode){ if($csupr_name[$gcode] != ""){ ?>
+                                                <option value="<?php echo $gcode; ?>" <?php if($supervisors == $gcode){ echo "selected"; } ?>><?php echo $csupr_name[$gcode]; ?></option>
+                                                <?php } } ?>
                                             </select>
                                         </div>
                                         <div class="form-group" style="width:190px;">
-                                            <label for="areas">Area</label>
-                                            <select name="sectors" id="sectors" class="form-control select2" style="width:180px;">
-                                                <option value="all" <?php if($areas == "all"){ echo "selected"; } ?>>-All-</option>
-											    <?php foreach($area_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($areas == $scode){ echo "selected"; } ?>><?php echo $area_name[$scode]; ?></option><?php } ?>
+                                            <label>Area</label>
+                                            <select name="areas[]" id="areas" class="form-control select2" style="width:180px;" multiple >
+                                                <option value="all" <?php foreach($area_acode as $areas){ if($areas == "all"){ echo "selected"; } } ?>>-All-</option>
+                                                <?php foreach($area_code as $gcode){ if($area_name[$gcode] != ""){ ?>
+                                                <option value="<?php echo $gcode; ?>" <?php foreach($area_acode as $areas){ if($areas == $gcode){ echo "selected"; } } ?>><?php echo $area_name[$gcode]; ?></option>
+                                                <?php } } ?>
+                                            </select>
+                                        </div>
+                                        <div class="form-group" style="width:190px;">
+                                            <label>Item</label>
+                                            <select name="items[]" id="items" class="form-control select2" style="width:180px;" multiple >
+                                                <option value="all" <?php foreach($item_acode as $items){ if($items == "all"){ echo "selected"; } } ?>>-All-</option>
+                                                <?php foreach($item_code as $gcode){ if($item_name[$gcode] != ""){ ?>
+                                                <option value="<?php echo $gcode; ?>" <?php foreach($item_acode as $items){ if($items == $gcode){ echo "selected"; } } ?>><?php echo $item_name[$gcode]; ?></option>
+                                                <?php } } ?>
                                             </select>
                                         </div>
                                         <?php if((int)$font_fflag == 1){ ?>
@@ -224,10 +254,6 @@ if(isset($_POST['submit']) == true){
 						<?php
                         }
                         if(isset($_POST['submit']) == true){
-                            $sql = "SELECT * FROM `main_access` WHERE `empcode` = '$cust' AND `active` = '1'";
-                            $query = mysqli_query($conn,$sql); $cash_coa = $bank_coa = "";
-                            while($row = mysqli_fetch_assoc($query)){ $cash_coa = $row['cash_coa']; $bank_coa = $row['bank_coa']; }
-                            
                             $sdate = $edate = $min_sdate = $max_sdate = ""; $week_no = array(); $fdate1 = $fdate;
                             for($i = 1; $i<= $no_weeks; $i++){
                                 $sdate = $fdate1;
@@ -240,32 +266,41 @@ if(isset($_POST['submit']) == true){
                                 if($max_sdate == "" || strtotime($max_sdate) <= strtotime($edate)){ $max_sdate = $edate; }
                             }
                             
-                            $html = '';
+                            $html = $nhtml = $fhtml = '';
+
+                            $html .= '<thead class="thead2" id="head_names">';
                             $html .= '<tr>';
                             $html .= '<th style="text-align:center;"></th>';
                             $html .= '<th style="text-align:center;"></th>';
                             for($i = 1; $i<=$no_weeks; $i++){
                                 $data = array();
                                 $data = explode("@",$week_no[$i]);
-                                $html .= '<th colspan="2">'.date("d.m.y",strtotime($data[0]))."-".date("d.m.y",strtotime($data[1])).'</th>';
+                                $html .= '<th colspan="1">'.date("d.m.y",strtotime($data[0]))."-</br>".date("d.m.y",strtotime($data[1])).'</th>';
                             }
                             $html .= '<th style="text-align:center;" colspan="2">Total</th>';
                             $html .= '</tr>';
 
-                            $html .= '<tr>';
-                            $html .= '<th style="text-align:center;">Sl.No.</th>';
-                            $html .= '<th style="text-align:center;">Customer</th>';
+                            $nhtml .= '<tr >'; $fhtml .= '<tr >';
+                            $nhtml .= '<th style="text-align:center;">Sl.No.</th>'; $fhtml .= '<th style="text-align:center; id="order">Sl.No.</th>';
+                            $nhtml .= '<th style="text-align:center;">Customer</th>'; $fhtml .= '<th style="text-align:center;" id="order">Customer</th>';
 
                             for($i = 1; $i <= $no_weeks; $i++) {
-                                $html .= '<th style="text-align:center;">Sale Qty</th>';
-                                $html .= '<th style="text-align:center;">Sale Amount</th>';
+                                $nhtml .= '<th style="text-align:center;">Sale Qty</th>'; $fhtml .= '<th style="text-align:center;" id="order_num">Sale Qty</th>';
+                               // $html .= '<th style="text-align:center;">Sale Amount</th>';
                             }
-                            $html .= '<th style="text-align:center;" >Sale Qty</th>';
-                            $html .= '<th style="text-align:center;" >Sale Amount</th>';
-                            $html .= '</tr>';
+                            $nhtml .= '<th style="text-align:center;" >Sale Qty</th>'; $fhtml .= '<th style="text-align:center;" id="order_num">Sale Qty</th>';
+                           // $html .= '<th style="text-align:center;" >Sale Amount</th>';
+                            $nhtml .= '<th style="text-align:center;" >Average Qty</th>'; $fhtml .= '<th style="text-align:center;" id="order_num">Average Qty</th>';
+                            $nhtml .= '</tr>';
+                            $fhtml .= '</tr>';
 
-                            $supr_fltr = ""; if($suvrs != "all"){ $supr_fltr = " AND `supr_code` = '$suvrs'"; }
-                            $area_fltr = ""; if($areas != "all"){ $area_fltr = " AND `area_code` = '$areas'"; }
+                            $html .= $fhtml;
+                            $html .= '</thead>';
+
+                            $html .= '<tbody class="tbody1">';
+
+                            $supr_fltr = ""; if($supervisors != "all"){ $supr_fltr = " AND `supr_code` = '$supervisors'"; }
+                           // $area_fltr = ""; if($areas != "all"){ $area_fltr = " AND `area_code` = '$areas'"; }".$item_fltr."
                             $cus_fltr = ""; if($cust != "all"){ $cus_fltr = " AND `code` = '$cust'"; }
 
                             //Customer Details
@@ -275,7 +310,7 @@ if(isset($_POST['submit']) == true){
                             
                             $cus_list = implode("','",$cus_alist);
                             //Week Wise Sales
-                            $sql = "SELECT * FROm `customer_sales` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `customercode` IN ('$cus_list') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            $sql = "SELECT * FROm `customer_sales` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `customercode` IN ('$cus_list') AND `active` = '1'".$item_fltr." AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
                             $query = mysqli_query($conn,$sql); $sql_qty = $sql_amt = array(); $old_inv = "";
                             while($row = mysqli_fetch_assoc($query)){
                                 foreach($week_no as $key => $value){
@@ -287,9 +322,8 @@ if(isset($_POST['submit']) == true){
                                     }
                                 }
                             }
-
                             $tsale_amt = 0; $slno = 0;
-                            foreach($cus_code as $c_code){
+                            foreach($cus_alist as $c_code){
                                 $slno++; $rsale_qty = $rsale_amt = 0;
                                 $html .= '<tr>';
                                 $html .= '<td>'.$slno.'</td>';
@@ -299,23 +333,31 @@ if(isset($_POST['submit']) == true){
 
                                     // Add the current week's values to the totals
                                     $rsale_qty += (float)$sql_qty[$key];
-                                    $rsale_amt += (float)$sql_amt[$key];
-
+                                    //$rsale_amt += (float)$sql_amt[$key];
+                                    if (!empty($sql_qty[$key]) && $sql_qty[$key] > 0) {
+                                        //$rsale_qty += (float)$sql_qty[$key];
+                                        $valid_weeks++; // Count valid weeks
+                                    }
                                     $html .= '<td style="text-align:right;">'.number_format_ind(round($sql_qty[$key],2)).'</td>';
-                                    $html .= '<td style="text-align:right;">'.number_format_ind(round($sql_amt[$key],2)).'</td>';
-
-                                   
-                                    
+                                   // $html .= '<td style="text-align:right;">'.number_format_ind(round($sql_amt[$key],2)).'</td>';
                                 }
+                                // Calculate average based on valid weeks only
+                                // $avg_sale_qty = ($valid_weeks > 0) ? (float)$rsale_qty / (float)$valid_weeks : 0;
+                                 $avg_sale_qty =  (float)$rsale_qty / (float)$no_weeks ;
                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($rsale_qty,2)).'</td>';
-                                $html .= '<td style="text-align:right;">'.number_format_ind(round($rsale_amt,2)).'</td>';
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($avg_sale_qty,2)).'</td>';
+                               // $html .= '<td style="text-align:right;">'.number_format_ind(round($rsale_amt,2)).'</td>';
                                 $html .= '</tr>';
 
+                                
                                 $tsale_qty += $rsale_qty;  // Accumulate overall totals
                                 $tsale_amt += $rsale_amt;
+                                $tavg_qty += $avg_sale_qty;
                             }
+                               $html .= '</tbody>';
                                 // Add totals row
-                                $html .= '<tr class="thead2">';
+                                $html .= '<thead class="tfoot1">';
+                                $html .= '<tr >';
                                 $html .= '<th colspan="2">Total</th>';
 
                                 for ($i = 1; $i <= $no_weeks; $i++) {
@@ -324,20 +366,20 @@ if(isset($_POST['submit']) == true){
                                     foreach ($cus_code as $c_code) {
                                         $key = $c_code . "@" . $i;
                                         $week_qty += (float)$sql_qty[$key];  // Summing up the quantity for this week
-                                        $week_amt += (float)$sql_amt[$key];  // Summing up the amount for this week
+                                        $aweek_qty = (float)$sql_qty[$key]/$i;  // Summing up the quantity for this week
+                                        //$week_amt += (float)$sql_amt[$key];  // Summing up the amount for this week
                                     }
-
                                     $html .= '<th style="text-align:right;">' . number_format_ind(round($week_qty, 2)) . '</th>';
-                                    $html .= '<th style="text-align:right;">' . number_format_ind(round($week_amt, 2)) . '</th>';
+                                   // $html .= '<th style="text-align:right;">' . number_format_ind(round($aweek_qty, 2)) . '</th>';
+                                   // $html .= '<th style="text-align:right;">' . number_format_ind(round($week_amt, 2)) . '</th>';
                                 }
-
                                 // Output the overall total for all weeks
                                 $html .= '<th style="text-align:right;">' . number_format_ind(round($tsale_qty, 2)) . '</th>';
-                                $html .= '<th style="text-align:right;">' . number_format_ind(round($tsale_amt, 2)) . '</th>';
+                                $html .= '<th style="text-align:right;">' . number_format_ind(round($tavg_qty, 2)) . '</th>';
+                               // $html .= '<th style="text-align:right;">' . number_format_ind(round($tsale_amt, 2)) . '</th>';
                                 $html .= '</tr>';
-
+                                $html .= '</thead>';
                                 echo $html;
-                            
                         }
                         ?>
 					</table>
@@ -365,7 +407,26 @@ if(isset($_POST['submit']) == true){
                     return false;
                 }
             }
+            function fetch_careas(){
+                var supervisors = document.getElementById("supervisors").value;
+                removeAllOptions(document.getElementById("areas"));
+                //if(supervisors == "" || supervisors == "select"){ } else{}
+                var fetch_areas = new XMLHttpRequest();
+                var method = "GET";
+                var url = "chicken_fetch_customer_areas.php?supervisors="+supervisors+"&type=from_emp";
+                //window.open(url);
+                var asynchronous = true;
+                fetch_areas.open(method, url, asynchronous);
+                fetch_areas.send();
+                fetch_areas.onreadystatechange = function(){
+                    if (this.readyState == 4 && this.status == 200) {
+                        var area_list = this.responseText;
+                        $('#areas').append(area_list);
+                    }
+                }
+            }
         </script>
+         <script src="sort_table_columns.js"></script>
         <script src="searchbox.js"></script>
         <script type="text/javascript">
             function tableToExcel(table, name, filename, chosen){
@@ -400,10 +461,12 @@ if(isset($_POST['submit']) == true){
                     cell.textContent = adate[2]+"."+adate[1]+"."+adate[0];
                 });
             }
+            function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
             function validatenum(x){ expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }
         </script>
 		<?php if($exports == "display" || $exports == "exportpdf") { ?><footer align="center" style="margin-top:50px;"><?php $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $finish = $time; $total_time = round(($finish - $start), 4); echo "Loaded in ".$total_time." seconds."; ?></footer> <?php } ?>
 		<?php include "header_foot2.php"; ?>
+        <script src="../handle_ebtn_as_tbtn.js"></script>
 	</body>
 	
 </html>

@@ -43,7 +43,7 @@ if($link_active_flag > 0){
         $query = mysqli_query($conn,$sql); $sec_hcode = "";
 		while($row = mysqli_fetch_assoc($query)){ $sec_hcode = $row['code']; }
 
-		$sql = "SELECT * FROM `acc_coa` WHERE `ctype` LIKE '%CASH%' OR `ctype` LIKE '%BANK%' AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+		$sql = "SELECT * FROM `acc_coa` WHERE (`ctype` LIKE '%CASH%' OR `ctype` LIKE '%BANK%') AND `active` = '1' AND `dflag` = '0'AND `visible_flag` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){ $coa_code[$row['code']] = $row['code']; $coa_name[$row['code']] = $row['description']; }
 
         $sql = "SELECT * FROM `location_branch` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
@@ -172,13 +172,12 @@ if($link_active_flag > 0){
                             document.getElementById("tcoa["+j+"]").focus();
                             k = false;
                         }
-                        // Check if the selected values are the same
-                        else if (b !== "select" && c !== "select" && b === c) {
-                            alert("The selected values in From CoA and To CoA cannot be the same in row : " + l);
-                            document.getElementById("tcoa[" + j + "]").value = "select"; // Reset the tcoa dropdown
+                        else if (b == c) {
+                            alert("From CoA and To CoA cannot be the same in row : " + l);
+                            document.getElementById("tcoa[" + j + "]").value = "select"; // Reset To CoA dropdown
                             document.getElementById("tcoa[" + j + "]").focus();
                             k = false;
-                        }
+                        } 
                         else if(d == 0 || d == "" || d.lenght == 0){
                             alert("Please Enter Amount in row : "+l);
                             document.getElementById("amount["+j+"]").focus();
