@@ -950,7 +950,7 @@ else{
                     if (!table.nodeType) table = document.getElementById(table)
                     var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
                     var link = document.createElement("a");
-                    link.download = filename+".xlsx";
+                    link.download = filename+".xls";
                     link.href = uri + base64(format(template, ctx));
                     link.click();
                     
@@ -964,7 +964,6 @@ else{
                 }
                 else{ }
             }
-            
         </script>
         <script>
             function fetch_item_list(){

@@ -34,6 +34,9 @@ if($access_error_flag == 0){
     $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
     while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'chicken_display_generalpurchase6.php' AND `field_function` LIKE 'Display Supplier Balance' AND `user_access` LIKE 'all' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $bal_flag = mysqli_num_rows($query);
+
 ?>
     <html>
         <head>
@@ -78,6 +81,7 @@ if($access_error_flag == 0){
                                 <thead>
                                     <tr>
                                         <th style="width:100px;">Supplier<b style="color:red;">&nbsp;*</b></th>
+                                        <?php if((int)$bal_flag == 1){ echo '<th style="width: 150px;padding-right:10px;"><label>Balance</label></th>'; } ?>
                                         <th>Item<b style="color:red;">&nbsp;*</b></th>
                                         <?php if((int)$jals_flag == 1){ echo "<th>Jals</th>"; } ?>
                                         <?php if((int)$birds_flag == 1){ echo "<th>Birds</th>"; } ?>
@@ -93,7 +97,8 @@ if($access_error_flag == 0){
                                 </thead>
                                 <tbody id="row_body">
                                     <tr style="margin:5px 0px 5px 0px;">
-                                        <td><select name="vcode[]" id="vcode[0]" class="form-control select2" style="width:250px;"><option value="select">-select-</option><?php foreach($sup_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $sup_name[$scode]; ?></option><?php } ?></select></td>
+                                        <td><select name="vcode[]" id="vcode[0]" class="form-control select2" style="width:250px;" onchange="fetchbalance(this.id);"><option value="select">-select-</option><?php foreach($sup_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $sup_name[$scode]; ?></option><?php } ?></select></td>
+                                        <?php if($bal_flag == 1){ echo '<td  style= "width: 80px;padding-right:10px;"><input type="text" style="width: 80px;" name="balc[]" id="balc[0]" class="form-control" /></td>'; } ?>
                                         <td><select name="itemcode[]" id="itemcode[0]" class="form-control select2" style="width:180px;" onchange="update_row_fields();"><option value="select">select</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>
                                         <?php
                                         if((int)$jals_flag == 1){ echo '<td><input type="text" name="jals[]" id="jals[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_count(this.id);calculate_total_amt();" /></td>'; }
@@ -223,13 +228,15 @@ if($access_error_flag == 0){
                     d++; var html = '';
                     document.getElementById("incr").value = d;
 
+                    var bal_flag = '<?php echo $bal_flag; ?>';
                     var jals_flag = '<?php echo $jals_flag; ?>';
                     var birds_flag = '<?php echo $birds_flag; ?>';
                     var tweight_flag = '<?php echo $tweight_flag; ?>';
                     var eweight_flag = '<?php echo $eweight_flag; ?>';
 
                     html += '<tr id="row_no['+d+']">';
-                    html += '<td><select name="vcode[]" id="vcode['+d+']" class="form-control select2" style="width:250px;"><option value="select">-select-</option><?php foreach($sup_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $sup_name[$scode]; ?></option><?php } ?></select></td>';
+                    html += '<td><select name="vcode[]" id="vcode['+d+']" class="form-control select2" style="width:250px;" onchange="fetchbalance(this.id);"><option value="select">-select-</option><?php foreach($sup_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $sup_name[$scode]; ?></option><?php } ?></select></td>';
+                    if(parseInt(bal_flag) > 0){ html+= '<td style="width: 100px;padding-right:10px;"><input type="text" name="balc[]" id="balc['+c+']" style="width: 100px;" class="form-control"></td>'; }
                     html += '<td><select name="itemcode[]" id="itemcode['+d+']" class="form-control select2" style="width:180px;" onchange="update_row_fields();"><option value="select">select</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>';
                     if(parseInt(jals_flag) == 1){ html += '<td><input type="text" name="jals[]" id="jals['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_count(this.id);calculate_total_amt();" /></td>'; }
                     if(parseInt(birds_flag) == 1){ html += '<td><input type="text" name="birds[]" id="birds['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_count(this.id);calculate_total_amt();" /></td>'; }
@@ -342,6 +349,39 @@ if($access_error_flag == 0){
                         }
                     }
                     calculate_total_amt();
+                }
+                function fetchbalance(a){
+                    var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                    var bal_flag = '<?php echo $bal_flag; ?>';
+                    if(parseFloat(bal_flag) > 0){
+                        var e = document.getElementById("vcode["+d+"]").value;
+                        var f = e.split("@");
+                        var g = f[0];
+                        if(!e.match("select")){
+                            var prices = new XMLHttpRequest();
+                            var method = "GET";
+                            var url = "chicken_supplier_balances.php?vendors="+g+"&row_cnt="+d;
+                            var asynchronous = true;
+                            prices.open(method, url, asynchronous);
+                            prices.send();
+                            prices.onreadystatechange = function(){
+                                if(this.readyState == 4 && this.status == 200){
+                                    var res = this.responseText;
+                                    var info = res.split("[@$&]");
+                                    var rows = info[0];
+                                    var balance = info[1];
+                                    //alert(res);  
+                                    if(balance == null || balance == "") {
+                                        document.getElementById("balc["+rows+"]").value = "0.00";
+                                    }
+                                    else {
+                                        document.getElementById("balc["+rows+"]").value = balance;
+                                    }
+                                }
+                            }
+                        }
+                        else { }
+                    }
                 }
                 function filter_group_suppliers(a){
                     if(a == "groups"){

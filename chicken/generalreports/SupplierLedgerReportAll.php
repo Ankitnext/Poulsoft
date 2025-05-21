@@ -212,12 +212,14 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 						<?php } ?>
 						<thead class="thead2" style="background-color: #98fb98;">
 							<tr>
+								<th rowspan="1"></th>
 								<th rowspan="2">Name</th>
 								<th rowspan="2">Opening Balance</th>
 								<th colspan="3">Selected Period</th>
 								<th rowspan="2">Balance</th>
 							</tr>
 							<tr>
+								<th>Sl No.</th>
 								<th>Purchase Qty</th>
 								<th>Purchase</th>
 								<th>Payments</th>
@@ -354,10 +356,10 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 											$bt_sdn[$row['ccode']] = $row['amount'];
 										}
 									}
-									$ftotal = $ft_ob =  $ft_sq =  $ft_sa =  $ft_rt =  $ft_bb = 0;
+									$ftotal = $ft_ob =  $ft_sq =  $ft_sa =  $ft_rt =  $ft_bb = 0; $sl = 1;
 									foreach ($pcode as $pcodes) {
-										echo "<tr>";
-										echo "<td style='text-align:left;'>" . $pname[$pcodes] . "</td>";
+
+										
 										$ob_cramt = $ob_dramt = $ob_dr = $ob_cr = $ob_fcr = $ob_fdr = $bt_dr = $bt_cr = $bt_fcr = $bt_fdr = $balance = 0;
 										if ($obtype[$pcodes] == "Cr") {
 											$ob_dramt = $obamt[$pcodes];
@@ -370,10 +372,12 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 										$ft_rt = $ft_rt + ((float)$bt_payments[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_sdn[$pcodes]);
 										$ft_bb = $ft_bb + (((float)$bt_purchases[$pcodes] + (float)$bt_scn[$pcodes]) - ((float)$bt_payments[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_sdn[$pcodes]));
 
-										echo "<td>" . number_format_ind(((float)$ob_purchases[$pcodes] + (float)$ob_scn[$pcodes] + (float)$ob_dramt) - ((float)$ob_payments[$pcodes] + (float)$ob_returns[$pcodes] + (float)$ob_smortality[$pcodes] + (float)$ob_sdn[$pcodes] + (float)$ob_cramt)) . "</td>";
-										echo "<td>" . $bt_purchases_qty[$pcodes] . "</td>";
-										echo "<td>" . number_format_ind((float)$bt_purchases[$pcodes] + (float)$bt_scn[$pcodes]) . "</td>";
-										echo "<td>" . number_format_ind((float)$bt_payments[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_sdn[$pcodes]) . "</td>";
+										$opn_bal = ((float)$ob_purchases[$pcodes] + (float)$ob_scn[$pcodes] + (float)$ob_dramt) - ((float)$ob_payments[$pcodes] + (float)$ob_returns[$pcodes] + (float)$ob_smortality[$pcodes] + (float)$ob_sdn[$pcodes] + (float)$ob_cramt);
+										$pur_chqty = $bt_purchases_qty[$pcodes];
+										$pur_cha = (float)$bt_purchases[$pcodes] + (float)$bt_scn[$pcodes];
+										$pay_ment = (float)$bt_payments[$pcodes] + (float)$bt_returns[$pcodes] + (float)$bt_smortality[$pcodes] + (float)$bt_sdn[$pcodes];
+
+										
 										//echo "<td>".number_format_ind(($bt_purchases[$pcodes] + $bt_scn[$pcodes]) - ($bt_payments[$pcodes] + $bt_sdn[$pcodes]))."</td>";
 										$ob_dr = (float)$ob_purchases[$pcodes] + (float)$ob_scn[$pcodes] + (float)$ob_dramt;
 										$ob_cr = (float)$ob_payments[$pcodes] + (float)$ob_returns[$pcodes] + (float)$ob_smortality[$pcodes] + (float)$ob_sdn[$pcodes] + (float)$ob_cramt;
@@ -392,8 +396,19 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 										$balance = ((float)$ob_fdr + (float)$bt_fdr) - ((float)$ob_fcr + (float)$bt_fcr);
 										//echo "<br/>".$ob_fdr."+".$bt_fdr."-".$ob_fcr."+".$bt_fcr;
 										$ftotal = (float)$ftotal + (float)$balance;
+
+										if((float)$balance != 0 || (float)$pur_cha != 0 && (float)$balance != 0 || (float)$pay_ment != 0 && (float)$balance != 0){
+
+										echo "<tr>";
+										echo "<td style='text-align:left;'>" . $sl++ . "</td>";
+										echo "<td style='text-align:left;'>" . $pname[$pcodes] . "</td>";
+										echo "<td>" . number_format_ind($opn_bal) . "</td>";
+										echo "<td>" . $pur_chqty . "</td>";
+										echo "<td>" . number_format_ind($pur_cha) . "</td>";
+										echo "<td>" . number_format_ind($pay_ment) . "</td>";
 										echo "<td>" . number_format_ind($balance) . "</td>";
 										echo "</tr>";
+										}
 									}
 								} else {
 								}
@@ -402,7 +417,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 						</tbody>
 						<thead>
 							<tr class="foottr" style="background-color: #98fb98;">
-								<td align="center"><b>Total</b></td>
+								<td align="center" colspan="2"><b>Total</b></td>
 								<td style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_ob); ?></td>
 								<td style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_sq); ?></td>
 								<td style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_sa); ?></td>

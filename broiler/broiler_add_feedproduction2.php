@@ -1,6 +1,7 @@
 <?php
 //broiler_add_feedproduction2.php
 include "newConfig.php";
+include "broiler_generate_trnum_details.php";
 date_default_timezone_set("Asia/Kolkata");
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $ccid = $_SESSION['feedproduction2'];
 $uri = explode("/",$_SERVER['REQUEST_URI']); $href = $uri[1];
@@ -36,6 +37,13 @@ if($link_active_flag > 0){
         }
     }
     if($acount == 1){
+        $date = date("Y-m-d");
+        //Generate Transaction No.
+        $incr = 0; $prefix = $trnum = $fyear = "";
+        $trno_dt1 = generate_transaction_details($date,"feed_prod","FMP","display",$_SESSION['dbase']);
+        $trno_dt2 = explode("@",$trno_dt1);
+        $incr = $trno_dt2[0]; $prefix = $trno_dt2[1]; $trnum = $trno_dt2[2]; $fyear = $trno_dt2[3];
+        
          //check and fetch date range
         global $drng_cday; $drng_cday = 1; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
         include "poulsoft_fetch_daterange_master.php";

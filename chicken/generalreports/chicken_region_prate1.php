@@ -153,6 +153,7 @@ if(isset($_POST['submit']) == true){
                             $html .= '<thead class="thead2" id="head_names">';
 
                             $nhtml .= '<tr>'; $fhtml .= '<tr>';
+                            $nhtml .= '<th>Sl No.</th>'; $fhtml .= '<th id="order">Sl No.</th>';
                             $nhtml .= '<th>Date</th>'; $fhtml .= '<th id="order_date">Date</th>';
                             $nhtml .= '<th>Region</th>'; $fhtml .= '<th id="order">Region</th>';
                             $nhtml .= '<th>Item</th>'; $fhtml .= '<th id="order">Item</th>';
@@ -165,7 +166,7 @@ if(isset($_POST['submit']) == true){
                             $html .= '<tbody class="tbody1">';
                             
                             $sql = "SELECT * FROM `main_dailypaperrate` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$rgn_fltr."".$item_fltr." AND `active` = '1' AND `dflag` = '0' AND `trtype` LIKE '%region_paperrate%' ORDER BY `date`,`id` ASC";
-                            $query = mysqli_query($conn, $sql);
+                            $query = mysqli_query($conn, $sql); $sl = 1;
                             while($row = mysqli_fetch_assoc($query)){
                                 $date = date("d.m.Y",strtotime($row['date']));
                                 $rname = $region_name[$row['cgroup']];
@@ -173,6 +174,7 @@ if(isset($_POST['submit']) == true){
                                 $prate = $row['new_price'];
 
                                 $html .= '<tr>';
+                                $html .= '<td>'.$sl++.'</td>';
                                 $html .= '<td class="dates">'.$date.'</td>';
                                 $html .= '<td>'.$rname.'</td>';
                                 $html .= '<td>'.$iname.'</td>';
@@ -183,7 +185,7 @@ if(isset($_POST['submit']) == true){
 
                             $html .= '<thead class="tfoot1">';
                             $html .= '<tr>';
-                            $html .= '<th colspan="4"></th>';
+                            $html .= '<th colspan="5"></th>';
                             $html .= '</tr>';
                             $html .= '</thead>';
 

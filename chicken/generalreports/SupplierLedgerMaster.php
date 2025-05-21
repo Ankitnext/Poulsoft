@@ -188,13 +188,13 @@
 				<tr>
 				<?php
 					if($dlogo_flag > 0) { ?>
-						<td><img src="../<?php echo $logo1; ?>" height="150px"/></td>
+						<td style='font-size:medium;'><img src="../<?php echo $logo1; ?>" height="150px"/></td>
 					<?php }
 					else{ 
 					$sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'Purchase Invoice' OR `type` = 'All' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql);
 					while($row = mysqli_fetch_assoc($query)){ $company_name = $row['sname']; $qr_img_path = $row['qr_img_path']; ?>
-					<td><img src="../<?php echo $row['logopath']; ?>" height="150px"/></td>
-					<td><?php echo $row['cdetails']; ?></td> <?php } }?>
+					<td style='font-size:medium;'><img src="../<?php echo $row['logopath']; ?>" height="150px"/></td>
+					<td style='font-size:medium;'><?php echo $row['cdetails']; ?></td> <?php } }?>
 					<td align="center">
 						<h3>Supplier Ledger</h3>
 						<?php
@@ -207,7 +207,7 @@
 						<label class="reportheaderlabel"><b style="color: green;">From Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($fromdate)); ?></label>&ensp;&ensp;&ensp;&ensp;
 						<label class="reportheaderlabel"><b style="color: green;">To Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($todate)); ?></label>
 					</td>
-					<td>
+					<td style='font-size:medium;'>
 					
 					</td>
 				</tr>
@@ -274,7 +274,7 @@
 										$active_flag = 1;
 										for($i = 1;$i <= $col_count;$i++){
 											//if(empty($field_details[$i.":".$active_flag]) || $field_details[$i.":".$active_flag] == ""){ } else{ echo "<br/>".$field_details[$i.":".$active_flag]."@".$i; }
-											if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<th>Date</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
+											if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<th >Date</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<th>Invoice</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<th>Book Invoice</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<th>Supplier</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
@@ -350,13 +350,13 @@
 										
 										if($ob_rcv >= $ob_pid){
 											echo "<tr>";
-											echo "<td colspan='".$prev_bal_col."' style='font-weight:bold;'>Previous Balance</td>";
-											for($i = 1;$i <= $item_det_col;$i++){ echo "<td></td>"; }
+											echo "<td colspan='".$prev_bal_col."' style='font-weight:bold;font-size:medium;'>Previous Balance</td>";
+											for($i = 1;$i <= $item_det_col;$i++){ echo "<td style='font-size:medium;'></td>"; }
 											
 											for($i = 1;$i <= $col_count;$i++){
-												if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-weight:bold;'>".number_format_ind($ob_rcv - $ob_pid)."</td>"; }
-												else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td></td>"; }
-												else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-weight:bold;'>".number_format_ind($ob_rcv - $ob_pid)."</td>"; }
+												if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-weight:bold;font-size:medium;'>".number_format_ind($ob_rcv - $ob_pid)."</td>"; }
+												else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+												else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-weight:bold;font-size:medium;'>".number_format_ind($ob_rcv - $ob_pid)."</td>"; }
 											}
 											echo "</tr>";
 											$rb_amt = $rb_amt + ($ob_rcv - $ob_pid);
@@ -365,13 +365,13 @@
 										}
 										else{
 											echo "<tr>";
-											echo "<td colspan='".$prev_bal_col."' style='font-weight:bold;'>Previous Balance</td>";
-											for($i = 1;$i <= $item_det_col;$i++){ echo "<td></td>"; }
+											echo "<td colspan='".$prev_bal_col."' style='font-weight:bold;font-size:medium;'>Previous Balance</td>";
+											for($i = 1;$i <= $item_det_col;$i++){ echo "<td style='font-size:medium;'></td>"; }
 											
 											for($i = 1;$i <= $col_count;$i++){
-												if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td></td>"; }
-												else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-weight:bold;'>".number_format_ind($ob_rcv - $ob_pid)."</td>"; }
-												else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-weight:bold;'>".number_format_ind($ob_rcv - $ob_pid)."</td>"; }
+												if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+												else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-weight:bold;font-size:medium;'>".number_format_ind($ob_rcv - $ob_pid)."</td>"; }
+												else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-weight:bold;font-size:medium;'>".number_format_ind($ob_rcv - $ob_pid)."</td>"; }
 											}
 											echo "</tr>";
 											$rb_amt = $rb_amt + ($ob_rcv - $ob_pid);
@@ -486,31 +486,31 @@
 															}else{
 																$avg_wt = 0;
 															}
-															if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($purchases_details[0]))."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$purchases_details[1]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$purchases_details[2]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$sup_name[$purchases_details[3]]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;'>".$sbrh_name[$purchases_details[23]]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;'>".$cname."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;'>".$item_name[$purchases_details[7]]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td>".number_format_ind($purchases_details[4])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td>".str_replace(".00","",number_format_ind($purchases_details[8]))."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td>".number_format_ind($purchases_details[5])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td>".number_format_ind($purchases_details[6])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td>".number_format_ind($purchases_details[9])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td>".number_format_ind($avg_wt)."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "prate_flag"){ $prate_index = $purchases_details[0]."@".$cus_group[$purchases_details[3]]; echo "<td>".number_format_ind($prates[$prate_index])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td>".$purchases_details[10]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($purchases_details[11])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;'>".$sector_name[$purchases_details[16]]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;'>".$purchases_details[20]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td>".$purchases_details[21]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td>".$purchases_details[22]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td>".$purchases_details[18]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td rowspan='$sii_count[$exi_inv]'>".number_format_ind($slc_tcdsamt[$purchases_details[1]])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td rowspan='$sii_count[$exi_inv]'>".number_format_ind($slc_finaltotal[$purchases_details[1]])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td rowspan='$sii_count[$exi_inv]'></td>"; }
-															else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td rowspan='$sii_count[$exi_inv]'>".number_format_ind($rb_amt)."</td>"; }
+															if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td style='font-size:medium;'>".date("d.m.Y",strtotime($purchases_details[0]))."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$purchases_details[1]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$purchases_details[2]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sup_name[$purchases_details[3]]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sbrh_name[$purchases_details[23]]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$cname."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$item_name[$purchases_details[7]]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[4])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td style='font-size:medium;'>".str_replace(".00","",number_format_ind($purchases_details[8]))."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[5])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[6])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[9])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($avg_wt)."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "prate_flag"){ $prate_index = $purchases_details[0]."@".$cus_group[$purchases_details[3]]; echo "<td style='font-size:medium;'>".number_format_ind($prates[$prate_index])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='font-size:medium;'>".$purchases_details[10]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[11])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sector_name[$purchases_details[16]]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$purchases_details[20]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td style='font-size:medium;'>".$purchases_details[21]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td style='font-size:medium;'>".$purchases_details[22]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td style='font-size:medium;'>".$purchases_details[18]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td style='font-size:medium;' rowspan='$sii_count[$exi_inv]'>".number_format_ind($slc_tcdsamt[$purchases_details[1]])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;' rowspan='$sii_count[$exi_inv]'>".number_format_ind($slc_finaltotal[$purchases_details[1]])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;' rowspan='$sii_count[$exi_inv]'></td>"; }
+															else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;' rowspan='$sii_count[$exi_inv]'>".number_format_ind($rb_amt)."</td>"; }
 															else{ }
 														}
 													}
@@ -521,27 +521,27 @@
 															}else{
 																$avg_wt = 0;
 															}
-															if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($purchases_details[0]))."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$purchases_details[1]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$purchases_details[2]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$sup_name[$purchases_details[3]]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;'>".$sbrh_name[$purchases_details[23]]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;'>".$cname."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;'>".$item_name[$purchases_details[7]]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td>".number_format_ind($purchases_details[4])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td>".str_replace(".00","",number_format_ind($purchases_details[8]))."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td>".number_format_ind($purchases_details[5])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td>".number_format_ind($purchases_details[6])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td>".number_format_ind($purchases_details[9])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td>".number_format_ind($avg_wt)."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "prate_flag"){ $prate_index = $purchases_details[0]."@".$cus_group[$purchases_details[3]]; echo "<td>".number_format_ind($prates[$prate_index])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td>".$purchases_details[10]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($purchases_details[11])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;'>".$sector_name[$purchases_details[16]]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;'>".$purchases_details[20]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td>".$purchases_details[21]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td>".$purchases_details[22]."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td>".$purchases_details[18]."</td>"; }
+															if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td style='font-size:medium;'>".date("d.m.Y",strtotime($purchases_details[0]))."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$purchases_details[1]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$purchases_details[2]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sup_name[$purchases_details[3]]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sbrh_name[$purchases_details[23]]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$cname."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$item_name[$purchases_details[7]]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[4])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td style='font-size:medium;'>".str_replace(".00","",number_format_ind($purchases_details[8]))."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[5])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[6])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[9])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($avg_wt)."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "prate_flag"){ $prate_index = $purchases_details[0]."@".$cus_group[$purchases_details[3]]; echo "<td style='font-size:medium;'>".number_format_ind($prates[$prate_index])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='font-size:medium;'>".$purchases_details[10]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($purchases_details[11])."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sector_name[$purchases_details[16]]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$purchases_details[20]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td style='font-size:medium;'>".$purchases_details[21]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td style='font-size:medium;'>".$purchases_details[22]."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td style='font-size:medium;'>".$purchases_details[18]."</td>"; }
 															else{ }
 														}
 													}
@@ -572,31 +572,31 @@
 													$frt_famt = (float)$frt_famt + (float)$payments_details[10];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($payments_details[1]))."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$payments_details[0]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$payments_details[3]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$sup_name[$payments_details[2]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;'>".$coaname[$payments_details[5]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($payments_details[10])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;'>".$sector_name[$payments_details[13]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;'>".$payments_details[14]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td>".number_format_ind($payments_details[10])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td>".number_format_ind($rb_amt)."</td>"; }
+														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td style='font-size:medium;'>".date("d.m.Y",strtotime($payments_details[1]))."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$payments_details[0]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$payments_details[3]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sup_name[$payments_details[2]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$coaname[$payments_details[5]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($payments_details[10])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sector_name[$payments_details[13]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$payments_details[14]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($payments_details[10])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($rb_amt)."</td>"; }
 														else{ }
 													}
 													echo "</tr>";
@@ -616,31 +616,31 @@
 													$frt_famt = (float)$frt_famt + (float)$return_details[10];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($return_details[1]))."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$return_details[0]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$return_details[3]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$return_details[2]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;'>".$item_name[$return_details[4]]."</td>"; }
+														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td style='font-size:medium;'>".date("d.m.Y",strtotime($return_details[1]))."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$return_details[0]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$return_details[3]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$cus_name[$return_details[2]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$item_name[$return_details[4]]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td style='text-align:right;'>".number_format_ind($return_details[5])."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td style='text-align:right;'>".str_replace(".00","",number_format_ind($return_details[6]))."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
 														else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='text-align:right;'>".number_format_ind($return_details[7])."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='text-align:right;'>".number_format_ind($return_details[8])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td></td>"; }
+														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td style='font-size:medium;'></td>"; }
 														else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='text-align:right;'>".number_format_ind($return_details[9])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($return_details[10])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;'>".$sector_name[$return_details[11]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td>".number_format_ind($return_details[10])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td>".number_format_ind($rb_amt)."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($return_details[10])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sector_name[$return_details[11]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($return_details[10])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($rb_amt)."</td>"; }
 														else{ }
 													}
 													echo "</tr>";
@@ -663,31 +663,31 @@
 													$frt_famt = (float)$frt_famt + (float)$smort_details[9];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($smort_details[2]))."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$smort_details[0]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$smort_details[4]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$smort_details[3]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;'>".$item_name[$smort_details[5]]."</td>"; }
+														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td style='font-size:medium;'>".date("d.m.Y",strtotime($smort_details[2]))."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$smort_details[0]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$smort_details[4]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$cus_name[$smort_details[3]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$item_name[$smort_details[5]]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td style='text-align:right;'></td>"; }
 														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td style='text-align:right;'>".str_replace(".00","",number_format_ind($smort_details[6]))."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
 														else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='text-align:right;'>".number_format_ind($smort_details[7])."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='text-align:right;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td></td>"; }
+														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td style='font-size:medium;'></td>"; }
 														else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='text-align:right;'>".number_format_ind($smort_details[8])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($smort_details[9])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td>".$smort_details[10]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td>".number_format_ind($smort_details[9])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td>".number_format_ind($rb_amt)."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($smort_details[9])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='font-size:medium;'>".$smort_details[10]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($smort_details[9])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($rb_amt)."</td>"; }
 														else{ }
 													}
 													echo "</tr>";
@@ -709,31 +709,31 @@
 													$fct_famt = $fct_famt + (float)$ccns_details[7];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($ccns_details[2]))."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$ccns_details[1]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$ccns_details[4]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$sup_name[$ccns_details[3]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td>Credit Note</td>"; }
-														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($ccns_details[7])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;'>".$sector_name[$ccns_details[11]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;'>".$ccns_details[12]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td>".number_format_ind($ccns_details[7])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td>".number_format_ind($rb_amt)."</td>"; }
+														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td style='font-size:medium;'>".date("d.m.Y",strtotime($ccns_details[2]))."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$ccns_details[1]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$ccns_details[4]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sup_name[$ccns_details[3]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='font-size:medium;'>Credit Note</td>"; }
+														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($ccns_details[7])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sector_name[$ccns_details[11]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$ccns_details[12]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($ccns_details[7])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($rb_amt)."</td>"; }
 														else{ }
 													}
 													echo "</tr>";
@@ -753,31 +753,31 @@
 													$fdt_famt = $fdt_famt + (float)$cdns_details[7];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($cdns_details[2]))."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$cdns_details[1]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$cdns_details[4]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$sup_name[$cdns_details[3]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;'></td>"; }
-														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td>Debit Note</td>"; }
-														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($cdns_details[7])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;'>".$sector_name[$cdns_details[11]]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;'>".$cdns_details[12]."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td>".number_format_ind($cdns_details[7])."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td>".number_format_ind($rb_amt)."</td>"; }
+														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td style='font-size:medium;'>".date("d.m.Y",strtotime($cdns_details[2]))."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$cdns_details[1]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$cdns_details[4]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sup_name[$cdns_details[3]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<td style='text-align:left;font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<td style='font-size:medium;'>Debit Note</td>"; }
+														else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($cdns_details[7])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$sector_name[$cdns_details[11]]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='text-align:left;font-size:medium;'>".$cdns_details[12]."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($cdns_details[7])."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($rb_amt)."</td>"; }
 														else{ }
 													}
 													echo "</tr>";
@@ -808,18 +808,18 @@
 												else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($tecount)."</td>"; }
 												else if($field_details[$i.":".$active_flag] == "nweight_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($tncount)."</td>"; }
 												else if($field_details[$i.":".$active_flag] == "aweight_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($avg_wt)."</td>"; }
-												else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td></td>"; }
-												else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td>".number_format_ind($price2)."</td>"; }
+												else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td style='font-size:medium;'></td>"; }
+												else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($price2)."</td>"; }
 												else if($field_details[$i.":".$active_flag] == "tcds_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($ft_tcds)."</td>"; }
-												else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td>".number_format_ind($tdcount)."</td>"; }
+												else if($field_details[$i.":".$active_flag] == "discount_flag"){ echo "<td style='font-size:medium;'>".number_format_ind($tdcount)."</td>"; }
 												else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($tacount + $fdt_famt + $fct_famt + $frt_famt)."</td>"; }
-												else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td></td>"; }
-												else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td></td>"; }
-												else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td></td>"; }
-												else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td></td>"; }
+												else if($field_details[$i.":".$active_flag] == "sector_flag"){ echo "<td style='font-size:medium;'></td>"; }
+												else if($field_details[$i.":".$active_flag] == "remarks_flag"){ echo "<td style='font-size:medium;'></td>"; }
+												else if($field_details[$i.":".$active_flag] == "vehicle_flag"){ echo "<td style='font-size:medium;'></td>"; }
+												else if($field_details[$i.":".$active_flag] == "driver_flag"){ echo "<td style='font-size:medium;'></td>"; }
 												else if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($fst_famt + $fct_famt)."</td>"; }
 												else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($frt_famt + $fdt_famt)."</td>"; }
-												else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td></td>"; }
+												else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'></td>"; }
 												else{ }
 											}
 											?>
@@ -830,7 +830,7 @@
 											for($i = 1;$i <= $col_count;$i++){
 												if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind(($fst_famt + $fct_famt) + $ob_rev_amt)."</td>"; }
 												else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind(($frt_famt + $fdt_famt) + $ob_pid_amt)."</td>"; }
-												else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td></td>"; }
+												else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'></td>"; }
 												else{ }
 											}
 											?>
@@ -840,9 +840,9 @@
 											<?php
 												if(number_format_ind(($fst_famt + $fct_famt) + $ob_rev_amt) == number_format_ind(($frt_famt + $fdt_famt) + $ob_pid_amt)){
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td>0.00</td>"; }
-														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td></td>"; }
+														if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;'>0.00</td>"; }
+														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'></td>"; }
 														else{ }
 													}
 												}
@@ -850,17 +850,17 @@
 													$famt = (($fst_famt + $fct_famt) + $ob_rev_amt) - (($frt_famt + $fdt_famt) + $ob_pid_amt);
 													for($i = 1;$i <= $col_count;$i++){
 														if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($famt)."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td></td>"; }
-														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td></td>"; }
+														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='font-size:medium;'></td>"; }
+														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'></td>"; }
 														else{ }
 													}
 												}
 												else {
 													$famt = (($fst_famt + $fct_famt) + $ob_rev_amt) - (($frt_famt + $fdt_famt) + $ob_pid_amt);
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td></td>"; }
+														if($field_details[$i.":".$active_flag] == "cr_flag"){ echo "<td style='font-size:medium;'></td>"; }
 														else if($field_details[$i.":".$active_flag] == "dr_flag"){ echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($famt)."</td>"; }
-														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td></td>"; }
+														else if($field_details[$i.":".$active_flag] == "rb_flag"){ echo "<td style='font-size:medium;'></td>"; }
 														else{ }
 													}
 												}
@@ -882,8 +882,8 @@
 					<td colspan="2"><?php if($note_flag == 1){ echo '<footer align="center" style="margin-top:50px;">'.$disclaimer.'</footer>'; } ?></td>
 				</tr>
 				<tr>
-					<td><?php if($vsign_flag == 1){ echo '<center><br/><br/>'.$company_name.'<br/><br/>........................................</center>'; } ?></td>
-					<td><?php if($csign_flag == 1){ echo '<center><br/><br/>'.$sup_name[$sname].'<br/><br/>........................................</center>'; } ?></td>
+					<td style='font-size:medium;'><?php if($vsign_flag == 1){ echo '<center><br/><br/>'.$company_name.'<br/><br/>........................................</center>'; } ?></td>
+					<td style='font-size:medium;'><?php if($csign_flag == 1){ echo '<center><br/><br/>'.$sup_name[$sname].'<br/><br/>........................................</center>'; } ?></td>
 				</tr>
 				<?php
 					if($qr_img_flag == 1){

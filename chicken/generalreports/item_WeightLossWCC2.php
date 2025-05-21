@@ -173,6 +173,7 @@
 							<?php } ?>
 							<thead>
 								<tr>
+									<td colspan='1' style='text-align:center;font-weight:bold;background-color: #98fb98;'></td>
 									<td colspan='2' style='text-align:center;font-weight:bold;background-color: #98fb98;'>Date</td>
 									<td colspan='2' style='text-align:center;font-weight:bold;background-color: #98fb98;'>Item</td>
 									<td colspan='2' style='text-align:center;font-weight:bold;background-color: #98fb98;'>Opening</td>
@@ -189,7 +190,7 @@
 							</thead>
 							<thead>
 								<tr style='font-weight:bold;background-color: #98fb98;'>
-									<td colspan="2"></td><td colspan="2"></td>
+									<td colspan="1">Sl&nbsp;No.<td colspan="2"></td><td colspan="2"></td>
 									<td>Quantity</td><td>Amount</td>
 									<td>Quantity</td><td>Amount</td>
 									<td>Quantity</td><td>Amount</td>
@@ -463,7 +464,7 @@
 											$rv_amt[$obcode] = $rv_amt[$obcode] + $row['amount'];
 										}
 										$tob_birds = $tp_birds = $ts_birds = $tm_birds = $tc_birds = $ta_birds = $tob_qty = $tob_amt = $tp_qty = $tp_amt = $ts_qty = $ts_amt = $tmrt_qty = $tmrt_amt = $tc_qty = $tc_amt = 
-										$ta_qty = $ta_amt = $tw_qty = $tw_amt = $te_amt =  $tr_amt =  $tm_amt = 0; $olddate = "";
+										$sl = 1; $ta_qty = $ta_amt = $tw_qty = $tw_amt = $te_amt =  $tr_amt =  $tm_amt = 0; $olddate = "";
 										foreach($mainfilter as $mf){
 											$obl_amt = $id = 0;
 											//echo "<br/>".
@@ -502,6 +503,7 @@
 											}
 											else{
 												echo "<tr>";
+												    echo "<td colspan='1'>".$sl++."</td>";
 													echo "<td colspan='2'>".date("d.m.Y",strtotime($dates))."</td>";
 													echo "<td colspan='2'>".$itemnames[$icodes]."</td>";
 													//echo "<td align='right'>".str_replace(".00","",number_format_ind($opn_birds[$pre_code]))."</td>";
@@ -712,7 +714,7 @@
 										}
 										
 										echo "<tr style='font-weight:bold;'>";
-											echo "<td colspan='4' style='font-weight:bold;text-align:center;'>Grand Total</td>";
+											echo "<td colspan='5' style='font-weight:bold;text-align:center;'>Grand Total</td>";
 											//echo "<td align='right'>".str_replace(".00","",number_format_ind($tob_birds))."</td>";
 											echo "<td align='right'>".number_format_ind($tob_qty)."</td>";
 											echo "<td align='right'>".number_format_ind($tob_amt)."</td>";

@@ -199,6 +199,7 @@
                             $html .= '<thead class="thead2" id="head_names">';
 
                             $nhead_html .= '<tr>';
+                            $nhead_html .= '<th>Sl No.</th>';
                             $nhead_html .= '<th>Date</th>';
                             $nhead_html .= '<th>Trnum</th>';
                             $nhead_html .= '<th>Item</th>';
@@ -210,6 +211,7 @@
                             $nhead_html .= '</tr>';
 
                             $fhead_html .= '<tr>';
+                            $fhead_html .= '<th id="order">Sl No.</th>';
                             $fhead_html .= '<th id="order_date">Date</th>';
                             $fhead_html .= '<th id="order">Trnum</th>';
                             $fhead_html .= '<th id="order">Item</th>';
@@ -226,7 +228,7 @@
                             $html .= '<tbody class="tbody1">';
                             
                             $sql = "SELECT * FROM `item_closingstock` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$item_filter."".$sector_filter." AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum` ASC";
-                            $query = mysqli_query($conn,$sql); $tot_qty = $tot_amt = 0;
+                            $query = mysqli_query($conn,$sql); $tot_qty = $tot_amt = 0; $sl = 1;
                             while($row = mysqli_fetch_assoc($query)){
                                 $date = date("d.m.Y",strtotime($row['date']));
                                 $trnum = $row['trnum'];
@@ -238,6 +240,7 @@
                                 $sname = $sector_name[$row['warehouse']];
 
                                 $html .= '<tr>';
+                                $html .= '<td style="text-align:left;">'.$sl++.'</td>';
                                 $html .= '<td style="text-align:left;">'.$date.'</td>';
                                 $html .= '<td style="text-align:left;">'.$trnum.'</td>';
                                 $html .= '<td style="text-align:left;">'.$iname.'</td>';
@@ -255,7 +258,7 @@
                             $html .= '</tbody>';
                             $html .= '<tfoot class="tfoot1">';
                             $html .= '<tr>';
-                            $html .= '<th style="text-align:left;" colspan="3">Grand Total</th>';
+                            $html .= '<th style="text-align:left;" colspan="4">Grand Total</th>';
                             $html .= '<th style="text-align:right;">'.number_format_ind($tot_qty).'</th>';
                             $html .= '<th style="text-align:right;"></th>';
                             $html .= '<th style="text-align:right;">'.number_format_ind($tot_amt).'</th>';

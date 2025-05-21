@@ -64,6 +64,9 @@
 	$query = mysqli_query($conn,$sql); $cnt = mysqli_num_rows($query);
 	if((int)$cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $daiw_flag = $row['flag']; } } else{ $sql = "INSERT INTO `extra_access` (`id`, `field_name`, `field_function`, `field_value`, `user_access`, `flag`) VALUES (NULL, 'Receipt Transaction', 'Display Amount in words', NULL, 'all', '1');"; mysqli_query($conn,$sql); $daiw_flag = 1; }
 	if($daiw_flag == ""){ $daiw_flag = 1; }
+
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'cus_displayreceiptsm.php' AND `field_function` LIKE 'Display Customer Balance' AND `user_access` LIKE 'all' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $bal_flag = mysqli_num_rows($query);
 ?>
 <html>
 	<head>
@@ -184,6 +187,7 @@
 										<thead>
 											<tr style="line-height:30px;">
 												<th><label>Customer<b style="color:red;">&nbsp;*</b></label></th>
+												<?php if((int)$bal_flag == 1){ echo '<th style="width: 150px;padding-right:10px;"><label>Balance</label></th>'; } ?>
 												<th><label>Amount<b style="color:red;">&nbsp;*</b></label></th>
 												<?php if((int)$daiw_flag == 1){ echo '<th><label>Amount in Words<b style="color:red;">&nbsp;*</b></label></th>'; } ?>
 												<?php if((int)$dccni_flag == 1){ ?><th><label>Discount</label></th><?php } ?>
@@ -194,7 +198,8 @@
 											</tr>
 										</thead>
 											<tr style="line-height:30px;">
-												<td><select name="pname[]" id="pname[0]" class="form-control select2" style="width:200px;"> <option value="select">select</option> <?php foreach($cus_code as $fcode){ ?> <option value="<?php echo $fcode; ?>"><?php echo $cus_name[$fcode]; ?></option> <?php } ?> </select></td>
+												<td><select name="pname[]" id="pname[0]" class="form-control select2" style="width:200px;" onchange="fetchbalance(this.id);"> <option value="select">select</option> <?php foreach($cus_code as $fcode){ ?> <option value="<?php echo $fcode; ?>"><?php echo $cus_name[$fcode]; ?></option> <?php } ?> </select></td>
+												<?php if($bal_flag == 1){ echo '<td  style= "width: 80px;padding-right:10px;"><input type="text" style="width: 80px;" name="balc[]" id="balc[0]" class="form-control" /></td>'; } ?>
 												<td><input type="text" name="amount[]" id="amount[0]" class="form-control" value="" onkeyup="validatenum(this.id);granttotalamount();getamountinwords(this.id);"></td>
 												<?php if((int)$daiw_flag == 1){ ?><td style="visibility:visible;"><textarea name="gtamtinwords[]" id="gtamtinwords[0]" class="form-control" style="width:180px;" readonly ></textarea></td> <?php } ?>
 												<?php if((int)$dccni_flag == 1){ ?><td><input type="text" name="discount_amt[]" id="discount_amt[0]" class="form-control" value="" onkeyup="validatenum(this.id);granttotalamount();getamountinwords(this.id);"></td><?php } ?>
@@ -267,12 +272,14 @@
 				document.getElementById("addval["+c+"]").style.visibility = "hidden";
 				document.getElementById("rmval["+c+"]").style.visibility = "hidden";
 				c++;
+				var bal_flag = '<?php echo $bal_flag; ?>';
 				var daiw_flag = '<?php echo $daiw_flag; ?>';
 				var dccni_flag = '<?php echo $dccni_flag; ?>';
 				var secs_dflag = '<?php echo $secs_dflag; ?>';
 				var html = '';
 				html+= '<tr style="line-height:30px;">';
-					html+= '<td><select name="pname[]" id="pname['+c+']" class="form-control select2" style="width:200px;"> <option value="select">select</option> <?php foreach($cus_code as $fcode){ ?> <option value="<?php echo $fcode; ?>"><?php echo $cus_name[$fcode]; ?></option> <?php } ?> </select></td>';
+					html+= '<td><select name="pname[]" id="pname['+c+']" class="form-control select2" style="width:200px;" onchange="fetchbalance(this.id);"> <option value="select">select</option> <?php foreach($cus_code as $fcode){ ?> <option value="<?php echo $fcode; ?>"><?php echo $cus_name[$fcode]; ?></option> <?php } ?> </select></td>';
+					if(parseInt(bal_flag) > 0){ html+= '<td style="width: 100px;padding-right:10px;"><input type="text" name="balc[]" id="balc['+c+']" style="width: 100px;" class="form-control"></td>'; }
 					html+= '<td><input type="text" name="amount[]" id="amount['+c+']" class="form-control" value="" onkeyup="validatenum(this.id);granttotalamount();getamountinwords(this.id);"></td>';
 					if(parseFloat(daiw_flag) == 1){
 						html+= '<td style="visibility:visible;"><textarea name="gtamtinwords[]" id="gtamtinwords['+c+']" class="form-control" style="width:180px;" readonly ></textarea></td>';
@@ -303,6 +310,39 @@
 				document.getElementById("tno").value = s;
 				document.getElementById("gtamt").value = l;
 			}
+			function fetchbalance(a){
+                    var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                    var bal_flag = '<?php echo $bal_flag; ?>';
+                    if(parseFloat(bal_flag) > 0){
+                        var e = document.getElementById("pname["+d+"]").value;
+                        var f = e.split("@");
+                        var g = f[0];
+                        if(!e.match("select")){
+                            var prices = new XMLHttpRequest();
+                            var method = "GET";
+                            var url = "chicken_customer_balances.php?vendors="+g+"&row_cnt="+d;
+                            var asynchronous = true;
+                            prices.open(method, url, asynchronous);
+                            prices.send();
+                            prices.onreadystatechange = function(){
+                                if(this.readyState == 4 && this.status == 200){
+                                    var res = this.responseText;
+                                    var info = res.split("[@$&]");
+                                    var rows = info[0];
+                                    var balance = info[1];
+                                    //alert(res);  
+                                    if(balance == null || balance == "") {
+                                        document.getElementById("balc["+rows+"]").value = "0.00";
+                                    }
+                                    else {
+                                        document.getElementById("balc["+rows+"]").value = balance;
+                                    }
+                                }
+                            }
+                        }
+                        else { }
+                    }
+                }
 			function redirection_page(){ window.location.href = "cus_displayreceiptsm.php"; }
 			function validatename(x) { expr = /^[a-zA-Z0-9 (.&)_-]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, ''); } document.getElementById(x).value = a; }
 			function validatenum(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } if(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } document.getElementById(x).value = a; }

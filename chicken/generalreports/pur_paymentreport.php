@@ -193,6 +193,7 @@
 							</thead>
 						<?php } ?>
 							<thead class="thead2" style="background-color: #98fb98;">
+								<th>Sl No.</th>
 								<th>Date</th>
 								<th>Supplier</th>
 								<th>transaction No.</th>
@@ -220,9 +221,10 @@
 								$sequence = "SELECT * FROM `pur_payments` WHERE `date` >= '$fromdate' AND `date` <= '$todate'";
 								$flags = " AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date` ASC";
 								$sql = $sequence."".$cnames."".$inames."".$wnames."".$pmode."".$pcoa."".$flags;
-								$query = mysqli_query($conn,$sql); $tamt1 = $ttcds_amt = 0;
+								$query = mysqli_query($conn,$sql); $tamt1 = $ttcds_amt = 0; $sl = 1;
 								while($row = mysqli_fetch_assoc($query)){
 									echo "<tr>";
+									echo "<td style='text-align:left;'>".$sl++."</td>";
 									echo "<td>".date("d.m.Y",strtotime($row['date']))."</td>";
 									echo "<td style='text-align:left;'>".$pname[$row['ccode']]."</td>";
 									echo "<td style='text-align:left;'>".$row['trnum']."</td>";
@@ -253,7 +255,7 @@
 								}
 							?>
 								<tr class="foottr" style="background-color: #98fb98;">
-									<td colspan="6" align="center"><b>Grand Total</b></td>
+									<td colspan="7" align="center"><b>Grand Total</b></td>
 									<?php
 									if((int)$dtcds_flag == 1){
 										echo "<td>".number_format_ind($tamt1)."</td>";

@@ -199,6 +199,7 @@
 							</thead>
 						<?php } ?>
 							<thead class="thead2" style="background-color: #98fb98;">
+								<th>Sl No.</th>
 								<th>Date</th>
 								<th>Transaction No.</th>
 								<th>Dc No.</th>
@@ -222,9 +223,10 @@
 								$flags = " AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`id` ASC";
 								$sql = $sequence."".$inames."".$fwnames."".$twnames."".$usr_code."".$flags;
 								$query = mysqli_query($conn,$sql);
-								$totalamt = 0;
+								$totalamt = 0; $sl = 1;
 								while($row = mysqli_fetch_assoc($query)){
 									echo "<tr>";
+									echo "<td style='text-align:left;'>".$sl++."</td>";
 									echo "<td>".date("d.m.Y",strtotime($row['date']))."</td>";
 									echo "<td style='text-align:left;'>".$row['trnum']."</td>";
 									echo "<td style='text-align:left;'>".$row['dcno']."</td>";
@@ -248,7 +250,7 @@
 								}
 							?>
 								<tr class="foottr" style="background-color: #98fb98;">
-									<td colspan="6" align="center"><b>Grand Total</b></td>
+									<td colspan="7" align="center"><b>Grand Total</b></td>
 									<td><?php echo number_format_ind($tbirds); ?></td>
 									<td><?php echo number_format_ind($tnetweight); ?></td>
 									<td></td>

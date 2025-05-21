@@ -282,6 +282,7 @@
 							</thead>
 						<?php } ?>
 							<thead class="thead2" style="background-color: #98fb98;">
+								<th>Sl No.</th>
 								<th>Date</th>
 								<th>Customer</th>
 								<th>Invoice</th>
@@ -338,13 +339,14 @@
 										$usr_code = " AND `addedemp` = '".$_POST['ucode']."'";
 										//$usr_code = "";
 									}
-									$tbirds = $tjals = $ttotalweight = $temptyweight = $tnetweight = $tdiscountamt = $ttaxamount = $ttotalamt = 0;
+									$sl = 1; $tbirds = $tjals = $ttotalweight = $temptyweight = $tnetweight = $tdiscountamt = $ttaxamount = $ttotalamt = 0;
 									$sequence = "SELECT * FROM `customer_sales` WHERE `date` >= '$fromdate' AND `date` <= '$todate'";
 									$flags = " AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`updated` ASC";
 									$sql = $sequence."".$cnames."".$inames."".$wnames."".$usr_code."".$addedemp."".$flags;
 									$query = mysqli_query($conn,$sql);
 									while($row = mysqli_fetch_assoc($query)){
 										echo "<tr>";
+										echo "<td style='text-align:left;'>".$sl++."</td>";
 										echo "<td>".date("d.m.Y",strtotime($row['date']))."</td>";
 										echo "<td style='text-align:left;'>".$cus_name[$row['customercode']]."</td>";
 										echo "<td style='text-align:left;'>".$row['invoice']."</td>";
@@ -390,7 +392,7 @@
 									}
 								?>
 									<tr class="foottr" style="background-color: #98fb98;">
-										<td colspan="5" align="center"><b>Grand Total</b></td>
+										<td colspan="6" align="center"><b>Grand Total</b></td>
 										<td <?php if($ifjbwen == 1 || $ifjbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><?php echo number_format_ind($tjals); ?></td>
 										<td <?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><?php echo number_format_ind($tbirds); ?></td>
 										<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><?php echo number_format_ind($ttotalweight); ?></td>

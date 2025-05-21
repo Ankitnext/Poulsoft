@@ -96,6 +96,12 @@
                         $query = mysqli_query($conn,$sql); $item_code = $item_name = array();
 						while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; }
 
+						$sql = "SELECT * FROM `chicken_supplier_branch` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+						$query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query); $br_name = array();
+						while($row = mysqli_fetch_assoc($query)){
+							 $br_name[$row['code']] = $row['description'];
+						 }
+
 						$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `trtype` = 'PST' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `id` DESC";
 						$query = mysqli_query($conn,$sql); $link_trnum = $link_vname = array();
 						while($row = mysqli_fetch_assoc($query)){ $link_trnum[$row['link_trnum']] = $row['link_trnum']; }
@@ -104,9 +110,11 @@
 							$tno_list = implode("','", $link_trnum);
 							$sql = "SELECT * FROM `pur_purchase` WHERE `invoice` IN ('$tno_list') AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `id` DESC";
 							$query = mysqli_query($conn,$sql); 
-							while($row = mysqli_fetch_assoc($query)){ $link_vname[$row['invoice']] = $ven_name[$row['vendorcode']]; }
+							while($row = mysqli_fetch_assoc($query)){ $link_vname[$row['invoice']] = $ven_name[$row['vendorcode']]; $link_brname[$row['invoice']] = $br_name[$row['supbrh_code']];  }
 	
 						}
+
+						
 
 						$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `trtype` = 'PST' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `id` DESC";
 						$query = mysqli_query($conn,$sql);
@@ -117,6 +125,7 @@
 									<tr>
 										<th>Date</th>
 										<th>Supplier</th>
+										<th>Branch</th>
 										<th>P. Invoice</th>
 										<th>Customer</th>
 										<th>Invoice</th>
@@ -132,6 +141,7 @@
 										<tr>
 											<td><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
 											<td><?php echo $link_vname[$row['link_trnum']]; ?></td>
+											<td><?php echo $link_brname[$row['link_trnum']]; ?></td>
 											<td><?php echo $row['link_trnum']; ?></td>
 											<td><?php echo $ven_name[$row['customercode']]; ?></td>
 											<td><?php echo $row['invoice']; ?></td>

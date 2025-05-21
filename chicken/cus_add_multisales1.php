@@ -98,6 +98,9 @@
 	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Sale Transaction' AND `field_function` LIKE 'Multiple Sale-1: DC No and Stock Fetch from Purchase' AND `user_access` LIKE 'all' AND `flag` = '1'";
 	$query = mysqli_query($conn,$sql); $pur_dcf_flag = mysqli_num_rows($query);
 
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'cus_displaymultisales.php' AND `field_function` LIKE 'Display Customer Balance' AND `user_access` LIKE 'all' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $bal_flag = mysqli_num_rows($query);
+
 	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Sale Transaction' AND `field_function` LIKE 'Display: Invoice Number'";
 	$query = mysqli_query($conn,$sql); $cnt = mysqli_num_rows($query);
 	if((int)$cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $dinv_flag = $row['flag']; } } else{ $sql = "INSERT INTO `extra_access` (`id`, `field_name`, `field_function`, `field_value`, `user_access`, `flag`) VALUES (NULL, 'Sale Transaction', 'Display: Invoice Number', NULL, 'all', '0');"; mysqli_query($conn,$sql); $dinv_flag = 0; }
@@ -293,6 +296,7 @@
 											<tr style="line-height:30px;">
 												<?php if((int)$dinv_flag == 1){ echo '<th style="width: 150px;padding-right:10px;"><label>Invoice</label></th>'; } ?>
 												<th style="width: 150px;padding-right:10px;"><label>Customer<b style="color:red;">&nbsp;*</b></label></th>
+												<?php if((int)$bal_flag == 1){ echo '<th style="width: 150px;padding-right:10px;"><label>Balance</label></th>'; } ?>
 												<th style="width: 120px;padding-right:10px;"><label>Item<b style="color:red;">&nbsp;*</b></label></th>
 												<?php
 													if($ifjbwen == 1 || $ifjbw == 1){
@@ -317,16 +321,17 @@
 											</tr>
 											<tr style="margin:5px 0px 5px 0px;" id="row_id[0]">
 												<?php if((int)$dinv_flag == 1){ echo '<td style="width: 150px;padding-right:10px;">'.$code.'</td>'; } ?>
-												<td style="width: 150px;padding-right:10px;"><select name="cnames[]" id="cnames[0]" class="form-control select2"  style="width: 150px;" onchange="fetchoutstanding(this.id);fetchprice(this.id);"><option value="select">-select-</option><?php foreach($cus_code as $cc){ ?><option value="<?php echo $cus_code[$cc]."@".$cus_name[$cc]; ?>"><?php echo $cus_name[$cc]; ?></option><?php } ?></select></td>
+												<td style="width: 150px;padding-right:10px;"><select name="cnames[]" id="cnames[0]" class="form-control select2"  style="width: 150px;" onchange="fetchoutstanding(this.id);fetchprice(this.id);fetchbalance(this.id);"><option value="select">-select-</option><?php foreach($cus_code as $cc){ ?><option value="<?php echo $cus_code[$cc]."@".$cus_name[$cc]; ?>"><?php echo $cus_name[$cc]; ?></option><?php } ?></select></td>
+												<?php if($bal_flag == 1){ echo '<td  style= "width: 80px;padding-right:10px;"><input type="text" style="width: 80px;" name="balc[]" id="balc[0]" class="form-control" /></td>'; } ?>
 												<td style="width: 120px;padding-right:10px;"><select name="scat[]" id="scat[0]" class="form-control select2"  style="width: 120px;" onchange="calculatetotal(this.id);fetchprice(this.id);fetch_jbcnt(this.id);"><?php foreach($itype as $ic){ ?><option value="<?php echo $itype[$ic]."@".$itypes[$ic]; ?>"><?php echo $itypes[$ic]; ?></option><?php } ?></select></td>
 
 												<td <?php if($ifjbwen == 1 || $ifjbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;" name="jval[]" id="jval[0]" value="" class="form-control" onchange="validatebirds(this.id);calculatetotal(this.id);calfinaltotal();emptyval();" onkeyup="validatebirds(this.id);calculate_birds(this.id);" /></td>
 
 												<td <?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;" name="bval[]" id="bval[0]" value="" class="form-control" onkeyup="validatebirds(this.id);" onchange="validatebirds(this.id);calculatetotal(this.id);calfinaltotal();" /></td>
 
-												<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;" name="wval[]" id="wval[0]" value="" class="form-control" onchange="validateamount(this.id)" onkeyup="validatenum(this.id);calculatetotal(this.id);calfinaltotal();" /></td>
+												<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;" name="wval[]" id="wval[0]" value="" class="form-control" onchange="validateamount(this.id)" onkeyup="validatenum(this.id);calculatetotal(this.id);calnetweight(this.id);calfinaltotal();" /></td>
 
-												<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;" name="ewval[]" id="ewval[0]" value="" class="form-control" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);calculatetotal(this.id);calfinaltotal();" /></td>
+												<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;" name="ewval[]" id="ewval[0]" value="" class="form-control" onkeyup="validatenum(this.id);calnetweight(this.id);" onchange="validateamount(this.id);calculatetotal(this.id);calfinaltotal();" /></td>
 
 												<td style="width: 80px;padding-right:10px;"><input type="text" name="nwval[]" id="nwval[0]" style="width: 80px;" value="" class="form-control" onchange="validateamount(this.id);" onkeyup="validatenum(this.id);calculatetotal(this.id);calfinaltotal();" /></td>
 												<td style="width: 80px;padding-right:10px;"><input type="text" name="iprice[]" id="iprice[0]" style="width: 80px;" class="form-control" onchange="validateamount(this.id);calculatetotal(this.id);" onkeyup="validatenum(this.id);calculatetotal(this.id);calfinaltotal();" <?php if($slae_rate_edit_flag == 0){ echo "readonly"; } ?> ></td>
@@ -525,16 +530,16 @@
 										document.getElementById("nwval["+j+"]").focus();
 										l = false;
 									}
-									// else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
-									// 	alert("Please Enter the price in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
-									// else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
-									// 	alert("Please Re-Enter the price again to get the amount in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
+									else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
+										alert("Please Enter the price in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
+									else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
+										alert("Please Re-Enter the price again to get the amount in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
 									else {
 										l = true;
 									}
@@ -556,16 +561,16 @@
 										document.getElementById("nwval["+j+"]").focus();
 										l = false;
 									}
-									// else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
-									// 	alert("Please Enter the price in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
-									// else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
-									// 	alert("Please Re-Enter the price again to get the amount in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
+									else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
+										alert("Please Enter the price in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
+									else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
+										alert("Please Re-Enter the price again to get the amount in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
 									else {
 										l = true;
 									}
@@ -581,7 +586,7 @@
 							if(l == true){
 								var c = document.getElementById("scat["+j+"]").value;
 								var k = j; k++;
-								var e = document.getElementById("jval["+j+"]").value;
+								//var e = document.getElementById("jval["+j+"]").value;
 								var g = document.getElementById("nwval["+j+"]").value; if(g == ""){ g = 0; }
 								var h = document.getElementById("iprice["+j+"]").value; if(h == ""){ h = 0; }
 								var r = document.getElementById("tamt["+j+"]").value;
@@ -598,26 +603,26 @@
 										document.getElementById("scat["+j+"]").focus();
 										l = false;
 									}
-									else if(e.length == 0 || e == ""){
+									/*else if(e.length == 0 || e == ""){
 										alert("Please select No. of Jals in row: "+k);
 										document.getElementById("jval["+j+"]").focus();
 										l = false;
-									}
+									}*/
 									else if(g.length == 0 || g == 0 || g == ""){
 										alert("Please Enter the net weight in row: "+k);
 										document.getElementById("nwval["+j+"]").focus();
 										l = false;
 									}
-									// else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
-									// 	alert("Please Enter the price in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
-									// else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
-									// 	alert("Please Re-Enter the price again to get the amount in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
+									else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
+										alert("Please Enter the price in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
+									else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
+										alert("Please Re-Enter the price again to get the amount in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
 									else {
 										l = true;
 									}
@@ -639,16 +644,16 @@
 										document.getElementById("nwval["+j+"]").focus();
 										l = false;
 									}
-									// else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
-									// 	alert("Please Enter the price in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
-									// else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
-									// 	alert("Please Re-Enter the price again to get the amount in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
+									else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
+										alert("Please Enter the price in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
+									else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
+										alert("Please Re-Enter the price again to get the amount in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
 									else {
 										l = true;
 									}
@@ -664,9 +669,9 @@
 							if(l == true){
 								var c = document.getElementById("scat["+j+"]").value;
 								var k = j; k++;
-								var e = document.getElementById("jval["+j+"]").value;
-								var f = document.getElementById("wval["+j+"]").value;
-								var p = document.getElementById("ewval["+j+"]").value;
+								//var e = document.getElementById("jval["+j+"]").value;
+								//var f = document.getElementById("wval["+j+"]").value;
+								//var p = document.getElementById("ewval["+j+"]").value;
 								var g = document.getElementById("nwval["+j+"]").value; if(g == ""){ g = 0; }
 								var h = document.getElementById("iprice["+j+"]").value; if(h == ""){ h = 0; }
 								var r = document.getElementById("tamt["+j+"]").value;
@@ -683,7 +688,12 @@
 										document.getElementById("scat["+j+"]").focus();
 										l = false;
 									}
-									else if(e.length == 0 || e == ""){
+									else if(g.length == 0 || g == 0 || g == ""){
+										alert("Please Enter the net weight in row: "+k);
+										document.getElementById("nwval["+j+"]").focus();
+										l = false;
+									}
+									/*else if(e.length == 0 || e == ""){
 										alert("Please select No. of Jals in row: "+k);
 										document.getElementById("jval["+j+"]").focus();
 										l = false;
@@ -697,17 +707,17 @@
 										alert("Please Enter the Empty weight in row: "+k);
 										document.getElementById("ewval["+j+"]").focus();
 										l = false;
+									}*/
+									else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
+										alert("Please Enter the price in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
 									}
-									// else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
-									// 	alert("Please Enter the price in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
-									// else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
-									// 	alert("Please Re-Enter the price again to get the amount in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
+									else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
+										alert("Please Re-Enter the price again to get the amount in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
 									else {
 										l = true;
 									}
@@ -729,16 +739,16 @@
 										document.getElementById("nwval["+j+"]").focus();
 										l = false;
 									}
-									// else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
-									// 	alert("Please Enter the price in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
-									// else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
-									// 	alert("Please Re-Enter the price again to get the amount in row: "+k);
-									// 	document.getElementById("iprice["+j+"]").focus();
-									// 	l = false;
-									// }
+									else if(h.length == 0 && sale_price_flag == 0 || h == 0 && sale_price_flag == 0 || h == "" && sale_price_flag == 0){
+										alert("Please Enter the price in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
+									else if(r.length == 0 && sale_price_flag == 0 || r == 0 && sale_price_flag == 0 || r == "" && sale_price_flag == 0){
+										alert("Please Re-Enter the price again to get the amount in row: "+k);
+										document.getElementById("iprice["+j+"]").focus();
+										l = false;
+									}
 									else {
 										l = true;
 									}
@@ -810,6 +820,7 @@
 				var iincr = document.getElementById("iincr").value;
 				iincr = parseInt(iincr) + parseInt(c);
 				var prx = '<?php echo $pfx; ?>';
+				var bal_flag = '<?php echo $bal_flag; ?>';
 				var tcdr_flag = '<?php echo $tcdr_flag; ?>'; if(tcdr_flag == ""){ tcdr_flag = 0; }
 				if(parseInt(iincr) < 10){ iincr = '000'+parseInt(iincr); } else if(parseInt(iincr) >= 10 && parseInt(iincr) < 100){ iincr = '00'+parseInt(iincr); } else if(parseInt(iincr) >= 100 && parseInt(iincr) < 1000){ iincr = '0'+parseInt(iincr); } else { }
 				var code = "S"+prx+"-"+iincr;
@@ -819,17 +830,18 @@
 				if(parseInt(dinv_flag) == 1){
 					html += '<td style="width: 150px;padding-right:10px;">'+code+'</td>'
 				}
-				html+= '<td style="width: 150px;padding-right:10px;"><select name="cnames[]" id="cnames['+c+']" class="form-control select" style="width: 150px;" onchange="fetchoutstanding(this.id);fetchprice(this.id);"><option value="select">-select-</option><?php foreach($cus_code as $cc){ ?><option value="<?php echo $cus_code[$cc]."@".$cus_name[$cc]; ?>"><?php echo $cus_name[$cc]; ?></option><?php } ?></select></td>';
+				html+= '<td style="width: 150px;padding-right:10px;"><select name="cnames[]" id="cnames['+c+']" class="form-control select" style="width: 150px;" onchange="fetchoutstanding(this.id);fetchprice(this.id);fetchbalance(this.id);"><option value="select">-select-</option><?php foreach($cus_code as $cc){ ?><option value="<?php echo $cus_code[$cc]."@".$cus_name[$cc]; ?>"><?php echo $cus_name[$cc]; ?></option><?php } ?></select></td>';
 
+				if(parseInt(bal_flag) > 0){ html+= '<td style="width: 100px;padding-right:10px;"><input type="text" name="balc[]" id="balc['+c+']" style="width: 100px;" class="form-control"></td>'; }
 				html+= '<td style="width: 120px;padding-right:10px;"><select name="scat[]" id="scat['+c+']" class="form-control select" style="width: 120px;" onchange="calculatetotal(this.id);fetchprice(this.id);fetch_jbcnt(this.id);"><?php foreach($itype as $ic){ ?><option value="<?php echo $itype[$ic]."@".$itypes[$ic]; ?>"><?php echo $itypes[$ic]; ?></option><?php } ?></select></td>';
 
 				html+= '<td <?php if($ifjbwen == 1 || $ifjbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;"  name="jval[]" id="jval['+c+']" value="" class="form-control" onkeyup="validatebirds(this.id);calculate_birds(this.id);" onchange="validatebirds(this.id);calculatetotal(this.id);calfinaltotal();emptyval();" /></td>';
 
 				html+= '<td <?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;"  name="bval[]" id="bval['+c+']" value="" class="form-control" onkeyup="validatebirds(this.id);" onchange="validatebirds(this.id);calculatetotal(this.id);calfinaltotal();" /></td>';
 
-				html+= '<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;"  name="wval[]" id="wval['+c+']" value="" class="form-control" onchange="validateamount(this.id);" onkeyup="validatenum(this.id);calculatetotal(this.id);calfinaltotal();" /></td>';
+				html+= '<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;"  name="wval[]" id="wval['+c+']" value="" class="form-control" onchange="validateamount(this.id);" onkeyup="validatenum(this.id);calculatetotal(this.id);calnetweight(this.id);calfinaltotal();" /></td>';
 
-				html+= '<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;"  name="ewval[]" id="ewval['+c+']" value="" class="form-control" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);calculatetotal(this.id);calfinaltotal();" /></td>';
+				html+= '<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" style="width: 80px;"  name="ewval[]" id="ewval['+c+']" value="" class="form-control" onkeyup="validatenum(this.id);calnetweight(this.id);" onchange="validateamount(this.id);calculatetotal(this.id);calfinaltotal();" /></td>';
 
 				html+= '<td style="width: 80px;padding-right:10px;"><input type="text" style="width: 80px;" name="nwval[]" id="nwval['+c+']" value="" class="form-control" onchange="validateamount(this.id);" onkeyup="calculatetotal(this.id);calfinaltotal();" /></td>';
 				html+= '<td style="width: 80px;padding-right:10px;"><input type="text" style="width: 80px;" name="iprice[]" id="iprice['+c+']" class="form-control" onchange="validateamount(this.id);calculatetotal(this.id);" onkeyup="validatenum(this.id);calculatetotal(this.id);calfinaltotal();" <?php if($slae_rate_edit_flag == 0){ echo "readonly"; } ?>></td>';
@@ -947,6 +959,16 @@
 					var bval = parseFloat(jval) * parseFloat(jbird_cnt); if(bval == ""){ bval = 0; }
 					document.getElementById("bval["+d+"]").value = parseInt(bval);
                 }
+            }
+			function calnetweight(a){
+				var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+               var wval = document.getElementById("wval["+d+"]").value;
+			   var eval = document.getElementById("ewval["+d+"]").value;
+			   console.log(wval,eval);
+			   if(wval == ""){ wval = 0; }
+			   if(eval == ""){ eval = 0; }
+			   var res = parseFloat(wval) - parseFloat(eval);
+			   document.getElementById("nwval["+d+"]").value = res;
             }
 			function calculatetotal(aa){
                 var ab = aa.split("["); var ad = ab[1].split("]"); var ac = ad[0];
@@ -1127,6 +1149,39 @@
 					}
 				}
 				else { }
+			}
+			function fetchbalance(a){
+				var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+				var bal_flag = '<?php echo $bal_flag; ?>';
+				if(parseFloat(bal_flag) > 0){
+					var e = document.getElementById("cnames["+d+"]").value;
+					var f = e.split("@");
+					var g = f[0];
+					if(!e.match("select")){
+						var prices = new XMLHttpRequest();
+						var method = "GET";
+						var url = "chicken_customer_balances.php?vendors="+g+"&row_cnt="+d;
+						var asynchronous = true;
+						prices.open(method, url, asynchronous);
+						prices.send();
+						prices.onreadystatechange = function(){
+							if(this.readyState == 4 && this.status == 200){
+								var res = this.responseText;
+								var info = res.split("[@$&]");
+								var rows = info[0];
+								var balance = info[1];
+								//alert(res);  
+								if(balance == null || balance == "") {
+									document.getElementById("balc["+rows+"]").value = "0.00";
+								}
+								else {
+									document.getElementById("balc["+rows+"]").value = balance;
+								}
+							}
+						}
+					}
+					else { }
+				}
 			}
 			function calfinaltotal(){
 				var a = document.getElementById("itemfields").value;

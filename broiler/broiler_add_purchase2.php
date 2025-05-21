@@ -553,11 +553,11 @@ if($link_active_flag > 0){
                                 document.getElementById("rcd_qty["+d+"]").focus();
                                 l = false;
                             }
-                            else if(parseFloat(rcd_qty) > 0 && parseFloat(rate) == 0){
-                                alert("Please enter Rate in row:-"+c);
-                                document.getElementById("rate["+d+"]").focus();
-                                l = false;
-                            }
+                            // else if(parseFloat(rcd_qty) > 0 && parseFloat(rate) == 0){
+                            //     alert("Please enter Rate in row:-"+c);
+                            //     document.getElementById("rate["+d+"]").focus();
+                            //     l = false;
+                            // }
                             else if(warehouse.match("select")){
                                 alert("Please select Sector/Farm in row:-"+c);
                                 document.getElementById("warehouse["+d+"]").focus();
@@ -565,9 +565,9 @@ if($link_active_flag > 0){
                             }
                             else{ }
 
-                            if(parseFloat(rate) < 2){
-                                rate_count++;
-                            }
+                            // if(parseFloat(rate) < 2){
+                            //     rate_count++;
+                            // }
                         }
                     }
                 }

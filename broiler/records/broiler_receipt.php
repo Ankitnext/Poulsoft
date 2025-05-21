@@ -238,7 +238,7 @@ if(isset($_POST['submit_report']) == true){
                                         <?php } } ?>
                                     </select>
                                 </div>
-                                 <div class="m-2 form-group">
+                                <div class="m-2 form-group">
                                     <label>Customer Line</label>
                                     <select name="cline" id="cline" class="form-control select2">
                                         <option value="all" <?php if($clines == "all"){ echo "selected"; } ?>>-All-</option>

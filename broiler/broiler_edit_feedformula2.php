@@ -149,7 +149,7 @@ if($link_active_flag > 0){
                                         <div class="col-md-2">
                                             <div class="form-group">
                                                 <?php if($c == 0){ echo '<label>Item<b style="color:red;">&nbsp;*</b></label>'; } ?>
-                                                <select name="item_code[]" id="item_code[<?php echo $c; ?>]" class="form-control select2" style="width: 100%;" onchange="fetch_item_unit(this.id)">
+                                                <select name="item_code[]" id="item_code[<?php echo $c; ?>]" class="form-control select2" style="width: 100%;" onchange="fetch_item_unit(this.id);fetch_item_avg_price(this.id);">
                                                     <option value="select">select</option>
                                                     <?php
                                                     foreach($item_code as $icode){
@@ -323,7 +323,7 @@ if($link_active_flag > 0){
                 
                 html+= '<div class="row" id="row_no['+d+']">';
                 html+= '<div class="col-md-2"></div>';
-                html+= '<div class="col-md-2"><div class="form-group"><select name="item_code[]" id="item_code['+d+']" class="form-control select2" style="width: 100%;" onchange="fetch_item_unit(this.id)"><option value="select">select</option><?php foreach($item_code as $icode){ ?><option value="<?php echo $icode; ?>"><?php echo $item_name[$icode]; ?></option><?php } ?></select></div></div>';
+                html+= '<div class="col-md-2"><div class="form-group"><select name="item_code[]" id="item_code['+d+']" class="form-control select2" style="width: 100%;" onchange="fetch_item_unit(this.id);fetch_item_avg_price(this.id);"><option value="select">select</option><?php foreach($item_code as $icode){ ?><option value="<?php echo $icode; ?>"><?php echo $item_name[$icode]; ?></option><?php } ?></select></div></div>';
                 html+= '<div class="col-md-1"><div class="form-group"><input type="text" name="unit_code[]" id="unit_code['+d+']" class="form-control" readonly ></div></div>';
                 html+= '<div class="col-md-1"><div class="form-group"><input type="text" name="item_qty[]" id="item_qty['+d+']" class="form-control" onkeyup="validatenum(this.id);calculatetotal(); val_amt();" onchange="validateamount(this.id)" ></div></div>';
                 html+= '<div class="col-md-1"><div class="form-group"><input type="text" name="rate[]" id="rate['+d+']" class="form-control" onkeyup="validatenum(this.id);calculatetotal(); val_amt();" onchange="validateamount(this.id)" ></div></div>';
@@ -378,14 +378,18 @@ if($link_active_flag > 0){
            
             function calculatetotal(){
                 var a = document.getElementById("incr").value;
-                var c = 0;
+                var c = f = 0;
                 for(var b = 0;b <= a;b++){
                     d = document.getElementById("item_qty["+b+"]").value;
+                    e = document.getElementById("rate["+b+"]").value;
                     if(d.length == 0 || d == 0 || d == "NaN" || d == "0.00"){ d = 0; }
+                    if(e.length == 0 || e == 0 || e == "NaN" || e == "0.00"){ e = 0; }
                     c = c + parseFloat(d);
+                    f = f + parseFloat(e);
                 }
                 document.getElementById("total_qty").value = c.toFixed(3);
-                // calculatetotal_amt();
+                document.getElementById("total_rate").value = f.toFixed(3);
+                 //calculatetotal_amt();
             }
             function calculatetotal_rate(){
                 var a = document.getElementById("incr").value;
@@ -407,6 +411,33 @@ if($link_active_flag > 0){
                     c = c + parseFloat(d);
                 }
                 document.getElementById("total_amt").value = c.toFixed(3);
+            }
+            function fetch_item_avg_price(a){
+                var mill_code = document.getElementById("mill_code").value;
+                var date = document.getElementById("date").value;
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                var items = document.getElementById(a).value;
+                var fetch_items = new XMLHttpRequest();
+				var method = "GET";
+				var url = "broiler_fetch_itemstockmaster_lsfi.php?sector="+mill_code+"&item_code="+items+"&date="+date+"&row_count="+d+"&trtype=FeedProduction";
+                //window.open(url);
+				var asynchronous = true;
+				fetch_items.open(method, url, asynchronous);
+				fetch_items.send();
+				fetch_items.onreadystatechange = function(){
+					if(this.readyState == 4 && this.status == 200){
+						var item_price = this.responseText;
+                        var item_details = item_price.split("@");
+                        var avg_prc = item_details[1]; if(avg_prc == ""){ avg_prc = 0; }
+                        if(parseFloat(item_details[0]) <= 0 || parseFloat(item_details[1]) <= 0){
+                            document.getElementById("rate["+item_details[3]+"]").value = parseFloat(avg_prc).toFixed(2);
+                        }
+                        else{
+                            document.getElementById("rate["+item_details[3]+"]").value = parseFloat(avg_prc).toFixed(2);
+                        }
+                        val_amt();
+                    }
+                }
             }
             document.addEventListener("keydown", (e) => { if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function (){ $('#submit').click(); }); } } else{ } });
             function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }

@@ -73,6 +73,11 @@ else{
 $query = mysqli_query($conns,$sql); $usr_code = $usr_name = array();
 while($row = mysqli_fetch_assoc($query)){ $usr_code[$row['empcode']] = $row['empcode']; $usr_name[$row['empcode']] = $row['username']; }
 
+// Default date
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'chicken_weekly_cussales1_nb.php' AND `field_function` = 'sec_default date' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $dt_flag = mysqli_num_rows($query); 
+while($row = mysqli_fetch_assoc($query)){ if($dt_flag > 0) { $fdate = date("Y-m-d",strtotime($row['field_value'])); } }
+//if($dt_flag > 0) { }
 //Font-Styles
 $sql = "SELECT * FROM `font_style_master` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `font_name1` ASC";
 $query = mysqli_query($conn,$sql); $font_id = $font_name = array();
@@ -80,7 +85,7 @@ while($row = mysqli_fetch_assoc($query)){ $font_id[$row['id']] = $row['id']; if(
 if(sizeof($font_id) > 0){ $font_fflag = 1; } else { $font_fflag = 0; }
 for($i = 0;$i <= 30;$i++){ $font_sizes[$i."px"] = $i."px"; }
 
-$fdate = date("Y-m-d"); $sectors = $cuss = "select"; $fstyles = $fsizes = "default"; $exports = "display"; $no_weeks = 12;
+if($dt_flag > 0) { } else { $fdate = date("Y-m-d"); } $sectors = $cuss = "select"; $fstyles = $fsizes = "default"; $exports = "display"; $no_weeks = 12;
 if(isset($_POST['submit']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
     $cuss = $_POST['cus_code'];
@@ -182,6 +187,8 @@ if (isset($_POST['pre'])) {
 											    <?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($cuss == $scode){ echo "selected"; } ?>><?php echo $cus_name[$scode]; ?></option><?php } ?>
                                             </select>
                                         </div>
+                                       
+                                         
                                        <button type="submit" name="next" style="border: none; background: none; padding: 0;">
                                              <i class="fa fa-arrow-right" style="font-size: 18px; color: blue;margin-top:8px;"></i>
                                          </button> &nbsp;&nbsp;
@@ -258,7 +265,6 @@ if (isset($_POST['pre'])) {
                             $html .= '</tr>';
 
                             $sdate = $edate = $min_sdate = $max_sdate = ""; $week_no = array(); $fdate1 = $fdate;
-                          //  echo $no_weeks;
                             for($i = 1; $i<= $no_weeks; $i++){
                                 $sdate = $fdate1;
                                 $edate = date("Y-m-d", strtotime($sdate . ' + 6 days'));
@@ -285,7 +291,6 @@ if (isset($_POST['pre'])) {
                                     if($max_rdate == "" || strtotime($max_rdate) <= strtotime($edate)){ $max_rdate = $edate; }
                                 }
                             }
-                           // echo "<br/>".$min_sdate."@".$max_sdate;
                             $sql1 = "SELECT * FROM `main_contactdetails` WHERE `code` LIKE '$cuss'";
                             $query = mysqli_query($conn,$sql1); $obcramt = $obdramt = 0;
                             while($row = mysqli_fetch_assoc($query)){
@@ -302,44 +307,15 @@ if (isset($_POST['pre'])) {
                             if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ $orct += (float)$row['tamt']; } }
                             $sql = "SELECT SUM(amount) as tamt,mode FROM `main_crdrnote` WHERE  `date` < '$min_sdate' AND `ccode` LIKE '$cuss' AND `mode` IN ('CCN','CDN') AND `active` = '1' GROUP BY `mode` ORDER BY `mode` ASC"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
                             if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ if($row['mode'] == "CDN") { $ocdn += (float)$row['tamt']; } else { $occn += (float)$row['tamt']; } } }
-                            $obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$min_sdate' AND `ccode` = '$cuss' AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $obquery = mysqli_query($conn,$obsql); $otcount = mysqli_num_rows($query);
-                            if($otcount > 0){ while($obrow = mysqli_fetch_assoc($obquery)){ $omortality += (float)$obrow['amount']; } }
-                            $obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$min_sdate' AND `vcode` = '$cuss' AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $obquery = mysqli_query($conn,$obsql); $otcount = mysqli_num_rows($query);
-                            if($otcount > 0){ while($obrow = mysqli_fetch_assoc($obquery)){ $oreturns += (float)$obrow['amount']; } }
+                            $sql = "SELECT * FROM `main_mortality` WHERE `date` < '$min_sdate' AND `ccode` = '$cuss' AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
+                            if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ $omortality += (float)$row['amount']; } }
+                            $sql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$min_sdate' AND `vcode` = '$cuss' AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
+                            if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ $oreturns += (float)$row['amount']; } }
                             
                             $sales = $oinv + $ocdn + $obdramt;
                             $receipts = $orct + $omortality + $oreturns + $occn + $obcramt;
                             $balance = $sales - $receipts;
 
-                            
-
-                            //Week Wise Sales
-                            $sql = "SELECT * FROm `main_crdrnote` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `ccode` LIKE '$cuss' AND `mode` IN ('CCN','CDN') AND `active` = '1' GROUP BY `mode` ORDER BY `mode` ASC";
-                            $query = mysqli_query($conn,$sql); $ccdnn = $sql_amt = array(); $old_inv = "";
-                            while($row = mysqli_fetch_assoc($query)){
-                                foreach($week_no as $key => $value){
-                                    $data1 = array(); $data1 = explode("@",$value);
-                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
-                                        //$sql_qty[$key] += (float)$row['netweight'];
-                                        //$mort_amt[$key] += (float)$row['amount'];
-                                        if($row['mode'] == "CDN") { $ccdnn[$row] += (float)$row['tamt']; } else { $cccnn += (float)$row['tamt']; }
-                                       // if($old_inv != $row['invoice']){ $mort_amt[$key] += (float)$row['amount']; $old_inv = $row['invoice']; }
-                                    }
-                                }
-                            }
-                            //Week Wise Mortality
-                            $sql = "SELECT * FROm `main_mortality` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `ccode` LIKE '$cuss' AND `active` = '1' AND `dflag` = '0'";
-                            $query = mysqli_query($conn,$sql); $sql_qty = $mort_amt = array(); $old_inv = "";
-                            while($row = mysqli_fetch_assoc($query)){
-                                foreach($week_no as $key => $value){
-                                    $data1 = array(); $data1 = explode("@",$value);
-                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
-                                        //$sql_qty[$key] += (float)$row['netweight'];
-                                        $mort_amt[$key] += (float)$row['amount'];
-                                       // if($old_inv != $row['invoice']){ $mort_amt[$key] += (float)$row['amount']; $old_inv = $row['invoice']; }
-                                    }
-                                }
-                            }
                             //Week Wise Sales
                             $sql = "SELECT * FROm `customer_sales` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `customercode` LIKE '$cuss' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
                             $query = mysqli_query($conn,$sql); $sql_qty = $sql_amt = array(); $old_inv = "";
@@ -352,15 +328,70 @@ if (isset($_POST['pre'])) {
                                     }
                                 }
                             }
+                            //Week Wise Debit Note
+                            $sql = "SELECT * FROm `main_crdrnote` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `ccode` LIKE '$cuss' AND `mode` IN ('CDN') AND `active` = '1' ORDER BY `mode` ASC";
+                            $query = mysqli_query($conn,$sql);
+                            while($row = mysqli_fetch_assoc($query)){
+                                foreach($week_no as $key => $value){
+                                    $data1 = array(); $data1 = explode("@",$value);
+                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
+                                        $sql_amt[$key] += (float)$row['amount'];
+                                    }
+                                }
+                            }
+
+                            //Week Wise Receipt
+                            $sql = "SELECT * FROm `customer_receipts` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `ccode` LIKE '$cuss' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum` ASC";
+                            $query = mysqli_query($conn,$sql); $frct_amt = array(); $old_inv = ""; $key2 = 0;
+                            while($row = mysqli_fetch_assoc($query)){
+                                foreach($week_no as $key => $value){
+                                    $data1 = array(); $data1 = explode("@",$value);
+                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){$key2 = (int)$key - 1;
+                                        $frct_amt[$key] += (float)$row['amount'];
+
+                                    }
+                                }
+                            }
+                            //Week Wise CrDr Note
+                            $sql = "SELECT * FROm `main_crdrnote` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `ccode` LIKE '$cuss' AND `mode` IN ('CCN') AND `active` = '1' ORDER BY `mode` ASC";
+                            $query = mysqli_query($conn,$sql);
+                            while($row = mysqli_fetch_assoc($query)){
+                                foreach($week_no as $key => $value){
+                                    $data1 = array(); $data1 = explode("@",$value);
+                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
+                                        $frct_amt[$key] += (float)$row['amount'];
+                                    }
+                                }
+                            }
+                            //Week Wise Mortality
+                            $sql = "SELECT * FROm `main_mortality` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `ccode` LIKE '$cuss' AND `active` = '1' AND `dflag` = '0'";
+                            $query = mysqli_query($conn,$sql); $mort_amt = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                foreach($week_no as $key => $value){
+                                    $data1 = array(); $data1 = explode("@",$value);
+                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
+                                        $frct_amt[$key] += (float)$row['amount'];
+                                    }
+                                }
+                            }
+                            //Week Wise Sale Return
+                            $sql = "SELECT * FROm `main_itemreturns` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `mode` = 'customer' AND `vcode` LIKE '$cuss' AND `active` = '1' AND `dflag` = '0'";
+                            $query = mysqli_query($conn,$sql); $mort_amt = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                foreach($week_no as $key => $value){
+                                    $data1 = array(); $data1 = explode("@",$value);
+                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
+                                        $frct_amt[$key] += (float)$row['amount'];
+                                    }
+                                }
+                            }
 
                             //Week Wise Receipt
                             $sql = "SELECT * FROm `customer_receipts` WHERE `date` >= '$min_rdate' AND `date` <= '$max_rdate' AND `ccode` LIKE '$cuss' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum` ASC";
-                           // echo $sql;
                             $query = mysqli_query($conn,$sql); $rct_amt = array(); $old_inv = ""; $key2 = 0;
                             while($row = mysqli_fetch_assoc($query)){
                                 foreach($week_no2 as $key => $value){
                                     $data1 = array(); $data1 = explode("@",$value);
-                                   // print_r($data1);
                                     if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
                                         $key2 = (int)$key - 1;
                                         $rct_amt[$key2] += (float)$row['amount'];
@@ -368,53 +399,54 @@ if (isset($_POST['pre'])) {
                                     }
                                 }
                             }
-                           //  print_r($rct_amt);
-                            //Week Wise Sale Return
-                            $sql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$min_sdate' AND `date` <= '$max_sdate' AND `mode` = 'customer' AND `vcode` LIKE '$cuss' AND `active` = '1' AND `dflag` = '0'";
-                           // echo $sql;
-                            $query = mysqli_query($conn,$sql); $item_return = 0; $ret_amt = array(); $key3 = 0;
+                            //Week Wise CrDr Note
+                            $sql = "SELECT * FROm `main_crdrnote` WHERE `date` >= '$min_rdate' AND `date` <= '$max_rdate' AND `ccode` LIKE '$cuss' AND `mode` IN ('CCN') AND `active` = '1' ORDER BY `mode` ASC";
+                            $query = mysqli_query($conn,$sql);
                             while($row = mysqli_fetch_assoc($query)){
-                                foreach($week_no as $key => $value){
+                                foreach($week_no2 as $key => $value){
+                                    $data1 = array(); $data1 = explode("@",$value);
+                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
+                                        $key2 = (int)$key - 1;
+                                        $rct_amt[$key2] += (float)$row['amount'];
+                                    }
+                                }
+                            }
+                            //Week Wise Mortality
+                            $sql = "SELECT * FROm `main_mortality` WHERE `date` >= '$min_rdate' AND `date` <= '$max_rdate' AND `ccode` LIKE '$cuss' AND `active` = '1' AND `dflag` = '0'";
+                            $query = mysqli_query($conn,$sql); $mort_amt = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                foreach($week_no2 as $key => $value){
+                                    $data1 = array(); $data1 = explode("@",$value);
+                                    if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
+                                        $key2 = (int)$key - 1;
+                                        $rct_amt[$key2] += (float)$row['amount'];
+                                    }
+                                }
+                            }
+                            //Week Wise Sale Return
+                            $sql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$min_rdate' AND `date` <= '$max_rdate' AND `mode` = 'customer' AND `vcode` LIKE '$cuss' AND `active` = '1' AND `dflag` = '0'";
+                            $query = mysqli_query($conn,$sql); $ret_amt = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                foreach($week_no2 as $key => $value){
                                     $data1 = array(); $data1 = explode("@",$value);
                                      if(strtotime($row['date']) >= strtotime($data1[0]) && strtotime($row['date']) <= strtotime($data1[1])){
-                                        $ret_amt[$key] += (float)$row['amount'];
-                                        $ret_qty[$key] += (float)$row['quantity'];
+                                        $key2 = (int)$key - 1;
+                                        $ret_amt[$key2] += (float)$row['amount'];
+                                        $ret_qty[$key2] += (float)$row['quantity'];
                                     }
                                 }
                             }
       
                             $tsale_amt = 0;
                             foreach($week_no as $key => $value){
-                                if((int)$key == 1){ $ob_amt = $balance; } else{ $ob_amt = $cls_bal; }
+                                if((int)$key == 1){ $ob_amt = $balance; $rct_amt[$key] += (float)$frct_amt[$key]; } else{ $ob_amt = $cls_bal; }
                                 $data1 = array(); $data1 = explode("@",$value);
 
                                 $week_amt = $cls_bal = 0;
-                                $week_amt = ((float)$sql_amt[$key] - (float)$rct_amt[$key]) ;
-                               // $cls_bal = (((float)$ob_amt + (float)$sql_amt[$key]) - (float)$rct_amt[$key] - (float)$ret_amt[$key] );
-                               // $cls_bal = (((float)$ob_amt + (float)$sql_amt[$key]) - (float)$rct_amt[$key] );
-                               // $cls_bal = (((float)$ob_amt + (float)$sql_amt[$key]+ (float)$ccdnn[$key]) - (float)$rct_amt[$key] - (float)$ret_amt[$key] - (float)$ret_amt[$key] );
-                                //$cls_bal = $cbalance;
-                                //if((int)$key == 1){ $cls_bal = $cbalance; } else{ $cls_bal = $cbalance; }
+                                $week_amt = (((float)$sql_amt[$key]) - ((float)$rct_amt[$key] + (float)$ret_amt[$key])); if((float)$week_amt < 0){ $week_amt = 0; }
+                                $cls_bal = (((float)$ob_amt + (float)$sql_amt[$key]) - ((float)$rct_amt[$key] + (float)$ret_amt[$key]));
+                                
                                 $mt_date = date("Y-m_d",strtotime($data1[1]));
-
-                                 //Date Wise 1st week Closing Balanc[]
-                             $old_inv = ""; $cinv = $crct = $ccdn = $cccn = $cmortality = $creturns = 0;
-                             $sql = "SELECT invoice,finaltotal FROM `customer_sales` WHERE `date` <= '$mt_date' AND `customercode` LIKE '$cuss' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `invoice` ASC"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
-                             if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ if($old_inv != $row['invoice']){ $cinv += (float)$row['finaltotal']; $old_inv = $row['invoice']; } } }
-                             $sql = "SELECT SUM(amount) as tamt FROM `customer_receipts` WHERE  `date` <= '$mt_date' AND `ccode` LIKE '$cuss' AND `active` = '1'"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
-                             if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ $crct += (float)$row['tamt']; } }
-                             $sql = "SELECT SUM(amount) as tamt,mode FROM `main_crdrnote` WHERE  `date` <= '$mt_date' AND `ccode` LIKE '$cuss' AND `mode` IN ('CCN','CDN') AND `active` = '1' GROUP BY `mode` ORDER BY `mode` ASC"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
-                             if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ if($row['mode'] == "CDN") { $ccdn += (float)$row['tamt']; } else { $cccn += (float)$row['tamt']; } } }
-                             $obsql = "SELECT * FROM `main_mortality` WHERE `date` <= '$mt_date' AND `ccode` = '$cuss' AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $obquery = mysqli_query($conn,$obsql); $otcount = mysqli_num_rows($query);
-                             if($otcount > 0){ while($obrow = mysqli_fetch_assoc($obquery)){ $cmortality += (float)$obrow['amount']; } }
-                             $obsql = "SELECT * FROM `main_itemreturns` WHERE `date` <= '$mt_date' AND `vcode` = '$cuss' AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $obquery = mysqli_query($conn,$obsql); $otcount = mysqli_num_rows($query);
-                             if($otcount > 0){ while($obrow = mysqli_fetch_assoc($obquery)){ $creturns += (float)$obrow['amount']; } }
-                             
-                             $csales = $cinv + $ccdn + $obdramt;
-                             $creceipts = $crct + $cmortality + $creturns + $cccn + $obcramt;
-                             $cbalance = $csales - $creceipts;
-
-                               $cls_bal = $cbalance;
 
                                 $slno++;
                                 $price = 0; if((float)$isale_qty[$key] != 0){ $price = (float)$isale_amt[$key] / (float)$isale_qty[$key]; }

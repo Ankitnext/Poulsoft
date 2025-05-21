@@ -1,8 +1,10 @@
 <?php
-//chicken_mortality_report.php
+//item_WeightLossWCC2_ta.php
 $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 $requested_data = json_decode(file_get_contents('php://input'),true);
 session_start();
+
+include "../broiler_check_tableavailability.php";
 	
 $db = $_SESSION['db'] = $_GET['db'];
 if($db == ''){
@@ -10,13 +12,13 @@ if($db == ''){
     $dbname = $_SESSION['dbase'];
     $users_code = $_SESSION['userid'];
 
-    $form_reload_page = "chicken_mortality_report.php";
+    $form_reload_page = "item_WeightLossWCC2_ta.php";
 }
 else{
     include "APIconfig.php";
     $dbname = $db;
     $users_code = $_GET['emp_code'];
-    $form_reload_page = "chicken_mortality_report.php?db=".$db;
+    $form_reload_page = "item_WeightLossWCC2_ta.php?db=".$db;
 }
 include "number_format_ind.php";
 
@@ -32,7 +34,7 @@ function decimal_adjustments($a,$b){
     for($d = $iv;$d < $b;$d++){ if($ed == ""){ $ed = "0"; } else{ $ed .= "0"; } }
     return $a."".$ed;
 }
-$file_name = "MORTALITY REPORT";
+$file_name = "Weight Loss with Chicken Conversion Report";
 
 /*Check for Column Availability*/
 $sql='SHOW COLUMNS FROM `main_contactdetails`'; $query = mysqli_query($conn,$sql); $ecn_val = array(); $i = 0;
@@ -127,6 +129,11 @@ while($row = mysqli_fetch_assoc($query)){ $font_id[$row['id']] = $row['id']; if(
 if(sizeof($font_id) > 0){ $font_fflag = 1; } else { $font_fflag = 0; }
 for($i = 0;$i <= 30;$i++){ $font_sizes[$i."px"] = $i."px"; }
 
+// if($count53 > 0){
+    $sql = "SELECT * FROM `master_itemfields` WHERE `type` = 'Birds' AND `id` = '1'"; $query = mysqli_query($conn,$sql);
+    while($row = mysqli_fetch_assoc($query)){ $ifwt = $row['wt']; $ifbw = $row['bw']; $ifjbw = $row['jbw']; $ifjbwen = $row['jbwen']; $ifctype = $row['ctype']; $ifwlmba = $row['wlmba']; }
+// }
+
 $today = date("Y-m-d");
 $sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $itemcodes[$row['code']] = $row['code']; $itemnames[$row['code']] = $row['description']; }
@@ -135,26 +142,34 @@ while($row = mysqli_fetch_assoc($query)){ $officecode[$row['code']] = $row['code
 $fromdate = $_POST['fromdate']; if($fromdate == ""){ $fromdate = $today; } else { $fromdate = $_POST['fromdate']; }
 $todate = $_POST['todate']; if($todate == ""){ $todate = $today; } else { $todate = $_POST['todate']; }
 
-$fdate = $tdate = date("Y-m-d"); $cust = $supervisors = $sectors = $types =  "all"; $no_weeks = "12"; $fstyles = $fsizes = "default"; $exports = "display"; $area_acode = $item_acode = array(); $area_acode["all"] = "all"; $item_acode["all"] = "all"; $area_fltr = $item_fltr = ""; $aa_flag = $it_flag = 0;
+$icats = $icode = ""; $c = 0; if($ifwlmba == 0){ $icname = 'Broiler Birds'; } else { $icname = '%Birds'; }
+$sql = "SELECT * FROM `item_category` WHERE `description` LIKE '$icname'"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ if($icats == ""){ $icats = "'".$row['code']."'"; } else { $icats = $icats.",'".$row['code']."'"; } }
+
+$sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%milk%'"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ if($icats == ""){ $icats = "'".$row['code']."'"; } else { $icats = $icats.",'".$row['code']."'"; } }
+//echo $icats;
+ $sql = "SELECT * FROM `item_details` WHERE `category` IN ($icats)"; $query = mysqli_query($conn,$sql); $idetail = $idetail_name = array();
+while($row = mysqli_fetch_assoc($query)){  $idetail[$row['code']] = $row['code'];  $idetail_name[$row['code']] = $row['description']; } 
+
+$fdate = $tdate = date("Y-m-d"); $items = $wname = $sectors = $idetails =  "all"; $no_weeks = "12"; $fstyles = $fsizes = "default"; $exports = "display"; $area_acode = $item_acode = array(); $area_acode["all"] = "all"; $item_acode["all"] = "all"; $area_fltr = $item_fltr = ""; $aa_flag = $it_flag = 0;
 if(isset($_POST['submit']) == true){
-    $fdate = date("Y-m-d",strtotime($_POST['fdate']));
-    $tdate = date("Y-m-d",strtotime($_POST['tdate']));
-    // $areas = $_POST['areas'];
-    $area_acode = array(); foreach($_POST['areas'] as $t1){ $area_acode[$t1] = $t1; if($t1 == "all" || $t1 == ""){ $area_acode["all"] = "all"; $aa_flag = 1; } }
-    $item_acode = array(); foreach($_POST['items'] as $t1){ $item_acode[$t1] = $t1; if($t1 == "all" || $t1 == ""){ $item_acode["all"] = "all"; $it_flag = 1; } }
-    // $no_weeks = $_POST['no_weeks'];
+   
+
     $cust = $_POST['cust'];
-    $supervisors = $_POST['supervisors'];
     $sectors = $_POST['sectors'];
-    $types = $_POST['types'];
+  
+    $wname = $_POST['sectors'];
+    $idetail = $_POST['iname'];
     $fstyles = $_POST['fstyles'];
     $fsizes = $_POST['fsizes'];
     $exports = $_POST['exports'];
-    if($aa_flag == 0){ $area_list = implode("','",$area_acode); $area_fltr = " AND `area_code` IN ('$area_list')"; }
-    if($it_flag == 0){ $item_list = implode("','",$item_acode); $item_fltr = " AND `itemcode` IN ('$item_list')"; }
+    
+    if($idetail == "all") { $idetails = $iftdetails = ""; } else if($idetail == "") { $idetails = $iftdetails = ""; } else { $idetails = " AND `itemcode` = '$idetail'"; $iftdetails = " AND `code` LIKE '$idetail'"; }
+    if($wname == "") { $wnames = $wfnames = $wtnames = ""; } else if($wname == "all") { $wnames = $wfnames = $wtnames = ""; } else { $wnames = " AND `warehouse` = '$wname'"; $wfnames = " AND `fromwarehouse` LIKE '$wname'"; $wtnames = " AND `towarehouse` LIKE '$wname'"; }
 }
-if(isset($_POST['submit']) == true) { $wname = $_POST['wname']; } else { $wname = "select"; } if($wname == "select") { $wnames = $wfnames = $wtnames = ""; } else if($wname == "all") { $wnames = $wfnames = $wtnames = ""; } else { $wnames = " AND `warehouse` = '$wname'"; $wfnames = " AND `fromwarehouse` LIKE '$wname'"; $wtnames = " AND `towarehouse` LIKE '$wname'"; }
-if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idetail == "all"; } if($idetail == "all") { $idetails = $iftdetails = ""; } else if($idetail == "") { $idetails = $iftdetails = ""; } else { $idetails = " AND `itemcode` = '$idetail'"; $iftdetails = " AND `code` LIKE '$idetail'"; }
+// if(isset($_POST['submit']) == true) { $wname = $_POST['wname']; } else { $wname = "select"; } if($wname == "select") { $wnames = $wfnames = $wtnames = ""; } else if($wname == "all") { $wnames = $wfnames = $wtnames = ""; } else { $wnames = " AND `warehouse` = '$wname'"; $wfnames = " AND `fromwarehouse` LIKE '$wname'"; $wtnames = " AND `towarehouse` LIKE '$wname'"; }
+// if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idetail == "all"; } if($idetail == "all") { $idetails = $iftdetails = ""; } else if($idetail == "") { $idetails = $iftdetails = ""; } else { $idetails = " AND `itemcode` = '$idetail'"; $iftdetails = " AND `code` LIKE '$idetail'"; }
 
 ?>
 <html>
@@ -196,55 +211,37 @@ if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idet
                                     <div class="m-1 p-1 row">
                                         <div class="form-group" style="width:110px;">
                                             <label for="fdate">From Date</label>
-                                            <input type="text" name="fdate" id="fdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
+                                            <input type="text" name="fromdate" id="datepickers1" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($fromdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
                                         </div>
                                         <div class="form-group" style="width:110px;">
                                             <label for="tdate">To Date</label>
-                                            <input type="text" name="tdate" id="tdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
+                                            <input type="text" name="todate" id="datepickers" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($todate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
                                         </div>
-                                        <div class="form-group" style="width:110px;">
-                                            <label for="types">Type</label>
-                                            <select name="types" id="types" class="form-control select2" style="width:110px;">
-                                                <option value="all" <?php if($types == "all"){ echo "selected"; } ?>>-All-</option>
-                                                <option value="customer" <?php if($types == "customer"){ echo "selected"; } ?>>-Customer-</option>
-                                                <option value="supplier" <?php if($types == "supplier"){ echo "selected"; } ?>>-Supplier-</option>
-                                                <option value="sector" <?php if($types == "sector"){ echo "selected"; } ?>>-Sector-</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group" style="width:280px;">
-                                            <label for="cust">Vendor</label>
-                                            <select name="cust" id="cust" class="form-control select2" style="width:280px;">
-                                                <option value="all" <?php if($cust == "all"){ echo "selected"; } ?>>-All-</option>
-											    <?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($cust == $scode){ echo "selected"; } ?>><?php echo $cus_name[$scode]; ?></option><?php } ?>
-                                            </select>
-                                        </div>
+                                       
                                         <div class="form-group" style="width:190px;">
-                                            <label for="supervisors">Supervisor</label>
-                                            <select name="supervisors" id="supervisors" class="form-control select2" style="width:180px;" onchange="fetch_careas();">
-                                                <option value="all" <?php if($supervisors == "all"){ echo "selected"; } ?>>-All-</option>
-                                                <?php foreach($csupr_code as $gacode){ if($csupr_name[$gacode] != ""){ ?>
-                                                <option value="<?php echo $gacode; ?>" <?php if($supervisors == $gacode){ echo "selected"; } ?>><?php echo $csupr_name[$gacode]; ?></option>
-                                                <?php } } ?>
-                                            </select>
+                                        <?php if($ifwlmba == 1){ ?>		
+											<label class="reportselectionlabel">Item Description</label>&nbsp;
+											<select name="iname" id="iname" class="form-control select2">
+												<option value="all">-All-</option>
+												<?php
+													$icats = $icode = ""; $c = 0; if($ifwlmba == 0){ $icname = 'Broiler Birds'; } else { $icname = '%Birds'; }
+													$sql = "SELECT * FROM `item_category` WHERE `description` LIKE '$icname'"; $query = mysqli_query($conn,$sql);
+													while($row = mysqli_fetch_assoc($query)){ if($icats == ""){ $icats = "'".$row['code']."'"; } else { $icats = $icats.",'".$row['code']."'"; } }
+
+													$sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%milk%'"; $query = mysqli_query($conn,$sql);
+													while($row = mysqli_fetch_assoc($query)){ if($icats == ""){ $icats = "'".$row['code']."'"; } else { $icats = $icats.",'".$row['code']."'"; } }
+													//echo $icats;
+													$sql = "SELECT * FROM `item_details` WHERE `category` IN ($icats)"; $query = mysqli_query($conn,$sql);
+													while($row = mysqli_fetch_assoc($query)){
+												?>
+														<option <?php if($idetail == $row['code']) { echo 'selected'; } ?> value="<?php echo $row['code']; ?>"><?php echo $row['description']; ?></option>
+												<?php
+													}
+												?>
+											</select>&ensp;&ensp;
+										<?php } ?>		
                                         </div>
-                                        <div class="form-group" style="width:190px;">
-                                            <label for="areas">Area</label>
-                                            <select name="areas[]" id="areas" class="form-control select2" style="width:180px;" multiple >
-                                                <option value="all" <?php foreach($area_acode as $areas){ if($areas == "all"){ echo "selected"; } } ?>>-All-</option>
-                                                <?php foreach($area_code as $gcode){ if($area_name[$gcode] != ""){ ?>
-                                                <option value="<?php echo $gcode; ?>" <?php foreach($area_acode as $areas){ if($areas == $gcode){ echo "selected"; } } ?>><?php echo $area_name[$gcode]; ?></option>
-                                                <?php } } ?>
-                                            </select>
-                                        </div>
-                                        <div class="form-group" style="width:190px;">
-                                            <label for="items">Item</label>
-                                            <select name="items[]" id="items" class="form-control select2" style="width:180px;" multiple >
-                                                <option value="all" <?php foreach($item_acode as $items){ if($items == "all"){ echo "selected"; } } ?>>-All-</option>
-                                                <?php foreach($item_code as $gicode){ if($item_name[$gicode] != ""){ ?>
-                                                <option value="<?php echo $gicode; ?>" <?php foreach($item_acode as $items){ if($items == $gicode){ echo "selected"; } } ?>><?php echo $item_name[$gicode]; ?></option>
-                                                <?php } } ?>
-                                            </select>
-                                        </div>
+                                        
                                         <div class="form-group" style="width:190px;">
                                             <label for="sectors">Warehouse</label>
                                             <select name="sectors" id="sectors" class="form-control select2" style="width:180px;">
@@ -302,12 +299,12 @@ if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idet
                             $fhtml .= '<tr>';
                             $nhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;">Date</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_date">Date</th>';
                             $nhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Items</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Items</th>';
-                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Opening</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order">Opening</th>';
-                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Purchases/Transfer IN</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Purchases/Transfer IN</th>';
-                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Sales/Transfer OUT</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Sales/Transfer OUT</th>';
-                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Mortality</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Mortality</th>';
-                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Closing</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Closing</th>';
-                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Actual Closing</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Actual Closing</th>';
+                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Opening</th>'; $fhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order">Opening</th>';
+                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Purchases/Transfer IN</th>'; $fhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Purchases/Transfer IN</th>';
+                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Sales/Transfer OUT</th>'; $fhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Sales/Transfer OUT</th>';
+                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Mortality</th>'; $fhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Mortality</th>';
+                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Closing</th>'; $fhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Closing</th>';
+                            $nhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Actual Closing</th>'; $fhtml .= '<th colspan="3" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Actual Closing</th>';
                             $nhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Weight Loss %</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order_num">Weight Loss %</th>';
                             $nhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Spent(Expense)</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order">Spent(Expense)</th>';
                             $nhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" >Margin</th>'; $fhtml .= '<th colspan="2" style="text-align:center;font-weight:bold;background-color: #98fb98;" id="order">Margin</th>';
@@ -649,10 +646,11 @@ if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idet
                             else{
 
                                 $html .= '<tr>';
-                                $html .= '<td>'.date("d.m.Y",strtotime($row['date'])).'</td>';
-                                $html .= '<td>'.$$itemnames[$icodes].'</td>';
+                                $html .= '<td colspan="2">'.date("d.m.Y",strtotime($dates)).'</td>';
+                                $html .= '<td colspan="2">'.$itemnames[$icodes].'</td>';
                                 $html .= '<td>'.str_replace(".00","",number_format_ind($opn_birds[$pre_code])).'</td>';
                                 $html .= '<td>'.number_format_ind($openingdetails[$pre_code]).'</td>';
+                                $html .= '<td>'.number_format_ind($obl_amt).'</td>';
                                 $tob_birds += (float)$opn_birds[$pre_code];
                                 $tob_qty = $tob_qty + $openingdetails[$pre_code];
                                 $tob_amt = $tob_amt + $obl_amt;
@@ -712,8 +710,8 @@ if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idet
                                $html .= '<td style="text-align:right;">'.number_format_ind(round($p_amt,2)).'</td>';
                                
                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(((float)$inv_birds[$id] + (float)$tou_birds[$id]))).'</td>';
-                               if($itemnames[$icodes] == "Broiler Birds"){ $html .= '<td style="text-align:right;"><a href="$link" target="_BLANK">'.number_format_ind($s_qty).'</a></td>';
-                                $html .= '<td style="text-align:right;">'.number_format_ind(round($s_qty,2)).'</td>';
+                               if($itemnames[$icodes] == "Broiler Birds"){ $html .= '<td style="text-align:right;"><a href="$link" target="_BLANK">'.number_format_ind($s_qty).'</a></td>'; }
+                               else { $html .= '<td style="text-align:right;">'.number_format_ind(round($s_qty,2)).'</td>'; }
                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($s_amt,2)).'</td>';
                                 
                                 $html .= '<td>'.str_replace(".00","",number_format_ind($mort_birds[$id])).'</td>';
@@ -731,7 +729,8 @@ if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idet
                                 $html .= '<td>'.number_format_ind($w_per)."%(".number_format_ind($w_qty).')</td>';
                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($w_amt,2)).'</td>';
                                 if($olddate == $dates){
-                                    $m_amt = (($inv_amt[$id] + $tou_amt[$id]) - (($pur_amt[$id] + $tin_amt[$id] + $obl_amt) - $a_amt));
+                                    $m_amt = 0;
+                                    $m_amt = ($inv_amt[$id] - (($pur_amt[$id] + $obl_amt) - $a_amt));
                                     $tm_amt = $tm_amt + $m_amt;
                                      $html .= '<td align="right" colspan="2">'.number_format_ind($m_amt).'</td>';
                                 }
@@ -739,7 +738,8 @@ if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idet
                                     $e_amt = $pv_amt[$dates];
                                     //$r_amt = $rv_amt[$dates];
                                     $r_amt = 0;
-                                    $m_amt = (($inv_amt[$id] + $tou_amt[$id]) - (($pur_amt[$id] + $tin_amt[$id] + $obl_amt) - $a_amt)) - ($pv_amt[$dates] - $rv_amt[$dates]);
+                                    $m_amt = 0;
+                                    $m_amt = ($inv_amt[$id] - (($pur_amt[$id] + $obl_amt) - $a_amt)) - ($pv_amt[$dates] - $rv_amt[$dates]);
                                     
                                     $te_amt = $te_amt + $e_amt;
                                     $tr_amt = $tr_amt + $r_amt;
@@ -750,12 +750,109 @@ if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idet
                                     $olddate = $dates;
                                 }
                             }
-
-                               // $html .= '<td style="text-align:right;">'.number_format_ind(round($rsale_amt,2)).'</td>';
-                                $html .= '</tr>';
-                            }
-                        }
+                            else {
+                                $p_qty = $pur_qty[$id] + $tin_qty[$id];
+                                $p_amt = $pur_amt[$id] + $tin_amt[$id];
+                                $s_qty = $inv_qty[$id] + $tou_qty[$id];
+                                $s_amt = $inv_amt[$id] + $tou_amt[$id];
+                                //echo "<script>alert('$pur_qty[$id]---->$tin_qty[$id]');</script>";
+                                $tp_qty = $tp_qty + $p_qty; $tp_amt = $tp_amt + $p_amt;
+                                $ts_qty = $ts_qty + $s_qty; $ts_amt = $ts_amt + $s_amt;
                                 
+                                if(number_format_ind($openingdetails[$pre_code]) == "0.00"){ $openingdetails[$pre_code] = 0; }
+                                if(number_format_ind($pur_qty[$id]) == "0.00"){ $pur_qty[$id] = 0; }
+                                if(number_format_ind($tin_qty[$id]) == "0.00"){ $tin_qty[$id] = 0; }
+                                if(number_format_ind($inv_qty[$id]) == "0.00"){ $inv_qty[$id] = 0; }
+                                if(number_format_ind($tou_qty[$id]) == "0.00"){ $tou_qty[$id] = 0; }
+                                if(number_format_ind(((float)$pur_qty[$id] + (float)$tin_qty[$id] + (float)$openingdetails[$pre_code])) == number_format_ind(((float)$inv_qty[$id] + (float)$tou_qty[$id]))){
+                                    $c_qty = $c_amt = $w_qty = 0;
+                                }
+                                else{
+                                    $c_bds = (((float)$pur_birds[$id] + (float)$tin_birds[$id] + $opn_birds[$pre_code]) - ((float)$inv_birds[$id] + (float)$tou_birds[$id] + (float)$mort_birds[$id]));
+                                    $c_qty = ((float)$pur_qty[$id] + (float)$tin_qty[$id] + (float)$openingdetails[$pre_code]) - ((float)$inv_qty[$id] + (float)$tou_qty[$id] + (float)$mrt_qty);
+                                    $c_amt = $act_price * (($pur_qty[$id] + $tin_qty[$id] + $openingdetails[$pre_code]) - ((float)$inv_qty[$id] + (float)$tou_qty[$id] + (float)$mrt_qty));
+                                    $w_qty = $openingdetails[$id] - (($pur_qty[$id] + $tin_qty[$id] + $openingdetails[$pre_code]) - ((float)$inv_qty[$id] + (float)$tou_qty[$id] + (float)$mrt_qty));
+                                }
+
+                                $tmrt_qty += (float)$mrt_qty; $tmrt_amt += (float)$mrt_amt;
+                                
+                                $tc_qty = $tc_qty + $c_qty; $tc_amt = $tc_amt + $c_amt;
+                                
+                                $a_bds = $opn_birds[$id];
+                                $a_qty = $openingdetails[$id];
+                                $a_amt = $openingdetailsp[$id] * $a_qty;
+                                
+                                $ta_qty = $ta_qty + $a_qty; $ta_amt = $ta_amt + $a_amt;
+                                if(($p_qty + $openingdetails[$pre_code]) > 0){ $w_per = ($w_qty / ($p_qty + $openingdetails[$pre_code])) * 100; } else{ $w_per = 0; }
+                                $for_avg_w_per = $for_avg_w_per + $w_per;
+                                $wfc = $wfc + 1;
+                                if((float)$openingdetailsp[$id] != 0){
+                                    $w_amt = $openingdetailsp[$id] * ($openingdetails[$id] - (($pur_qty[$id] + $tin_qty[$id] + $openingdetails[$pre_code]) -($inv_qty[$id] + $tou_qty[$id])));
+                                }
+                                else{
+                                    $w_amt = $pur_price[$id] * ($openingdetails[$id] - (($pur_qty[$id] + $tin_qty[$id] + $openingdetails[$pre_code]) - ($inv_qty[$id] + $tou_qty[$id])));
+                                }
+                                
+                                $tp_birds += ((float)$pur_birds[$id] + (float)$tin_birds[$id]);
+                                $ts_birds += ((float)$inv_birds[$id] + (float)$tou_birds[$id]);
+                                $tm_birds += (float)$mort_birds[$id];
+                                $tc_birds += (float)$c_bds;
+                                $ta_birds += (float)$a_bds;
+
+                                $tw_qty = $tw_qty + $w_qty; $tw_amt = $tw_amt + $w_amt;
+                                
+                                
+                                $link = "cus_chickensaleswithconreport.php?fromdate=$dates&todate=$dates&cname=all&iname=all&wname=all&ucode=all";
+
+                                $html .= '<td>'.str_replace(".00","",number_format_ind(((float)$pur_birds[$id] + (float)$tin_birds[$id]))).'</td>';
+                                // $html .= '<td>'.$cus_name[$row['ccode']].'</td>';
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($p_qty,2)).'</td>';
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($p_amt,2)).'</td>';
+                                
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(((float)$inv_birds[$id] + (float)$tou_birds[$id]))).'</td>';
+                                if($itemnames[$icodes] == "Broiler Birds"){ $html .= '<td style="text-align:right;"><a href="$link" target="_BLANK">'.number_format_ind($s_qty).'</a></td>'; }
+                                else { $html .= '<td style="text-align:right;">'.number_format_ind(round($s_qty,2)).'</td>'; }
+                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($s_amt,2)).'</td>';
+                                 
+                                 $html .= '<td>'.str_replace(".00","",number_format_ind($mort_birds[$id])).'</td>';
+                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($mrt_qty,2)).'</td>';
+                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($mrt_amt,2)).'</td>';
+                                 
+                                 $html .= '<td>'.str_replace(".00","",number_format_ind($c_bds)).'</td>';
+                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($c_qty,2)).'</td>';
+                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($c_amt,2)).'</td>';
+                                 
+                                 $html .= '<td>'.str_replace(".00","",number_format_ind($a_bds)).'</td>';
+                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($a_qty,2)).'</td>';
+                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($a_amt,2)).'</td>';
+                                 
+                                 $html .= '<td>'.number_format_ind($w_per)."%(".number_format_ind($w_qty).')</td>';
+                                 $html .= '<td style="text-align:right;">'.number_format_ind(round($w_amt,2)).'</td>';
+                                 if($olddate == $dates){
+                                    $m_amt = (($inv_amt[$id] + $tou_amt[$id]) - (($pur_amt[$id] + $tin_amt[$id] + $obl_amt) - $a_amt));
+									$tm_amt = $tm_amt + $m_amt;
+                                     $html .= '<td align="right" colspan="2">'.number_format_ind($m_amt).'</td>';
+                                }
+                                else {
+                                    $e_amt = $pv_amt[$dates];
+                                    //$r_amt = $rv_amt[$dates];
+                                    $r_amt = 0;
+                                    $m_amt = (($inv_amt[$id] + $tou_amt[$id]) - (($pur_amt[$id] + $tin_amt[$id] + $obl_amt) - $a_amt)) - ($pv_amt[$dates] - $rv_amt[$dates]);
+                                     
+                                    $te_amt = $te_amt + $e_amt;
+                                    $tr_amt = $tr_amt + $r_amt;
+                                    $tm_amt = $tm_amt + $m_amt;
+                                    
+                                    $html .= '<td rowspan="'.$v_count.'" align="right" colspan="2">'.number_format_ind($e_amt).'</td>';
+                                    $html .= '<td  align="right" colspan="2">'.number_format_ind($m_amt).'</td>';
+                                    $olddate = $dates;
+                                }
+
+                            }
+                            // $html .= '<td style="text-align:right;">'.number_format_ind(round($rsale_amt,2)).'</td>';
+                            $html .= '</tr>';
+                            }
+                        }     
                                 
                                 
                             
@@ -793,7 +890,7 @@ if(isset($_POST['submit']) == true) { $idetail = $_POST['iname']; } else { $idet
                                 $html .= '</thead>';
                                 
                                 echo $html;
-                            }
+                            
                         }
                         ?>
 					</table>

@@ -29,7 +29,14 @@ $i = 0; foreach($_POST['amount'] as $amounts){ $amount[$i] = $amounts; $i++; }
 
 $ssize = sizeof($item_code);
 for($i = 0;$i < $ssize;$i++){
-    $sql = "INSERT INTO `broiler_feed_formula` (incr,prefix,code,description,formula_item_code,date,mill_code,item_code,unit_code,item_qty,total_qty,rate,total_rate,amount,total_amt,flag,active,dflag,addedemp,addedtime,updatedtime) VALUES ('$incr','$prefix','$code','$description','$formula_item_code','$date','$mill_code','$item_code[$i]','$unit_code[$i]','$item_qty[$i]','$total_qty','$rate[$i]','$total_rate','$amount[$i]','$total_amt','0','1','0','$addedemp','$addedtime','$addedtime')";
+    if($item_qty[$i] == ""){ $item_qty[$i] = 0; }
+    if($rate[$i] == ""){ $rate[$i] = 0; }
+    if($amount[$i] == ""){ $amount[$i] = 0; }
+    if($total_qty == ""){ $total_qty = 0; }
+    if($total_rate == ""){ $total_rate = 0; }
+    if($total_amt == ""){ $total_amt = 0; }
+    $sql = "INSERT INTO `broiler_feed_formula` (incr,prefix,code,description,formula_item_code,date,mill_code,item_code,unit_code,item_qty,total_qty,rate,total_rate,amount,total_amt,flag,active,dflag,addedemp,addedtime,updatedtime) VALUES 
+    ('$incr','$prefix','$code','$description','$formula_item_code','$date','$mill_code','$item_code[$i]','$unit_code[$i]','$item_qty[$i]','$total_qty','$rate[$i]','$total_rate','$amount[$i]','$total_amt','0','1','0','$addedemp','$addedtime','$addedtime')";
     if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { }
 }
 header('location:broiler_display_feedformula2.php?ccid='.$ccid);

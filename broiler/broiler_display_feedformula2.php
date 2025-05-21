@@ -103,7 +103,7 @@ if($link_active_flag > 0){
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['id'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;
-                                            $copy_url = "broiler_copy_feedformula.php?utype=copy&id=".$id;
+                                            $copy_url = "broiler_copy_feedformula2.php?utype=copy&id=".$id;
                                             $delete_url = $delete_link."?utype=delete&id=".$id;
                                             $print_url = $print_link."?utype=print&id=".$id;
                                             $authorize_url = $update_link."?utype=authorize&id=".$id;

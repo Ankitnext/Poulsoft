@@ -223,6 +223,7 @@
 							</thead>
 						<?php } ?>
 							<thead class="thead2" style="background-color: #98fb98;">
+								<th>Sl No.</th>
 								<th>Date</th>
 								<th>Customer</th>
 								<th>Supplier</th>
@@ -270,7 +271,7 @@
 									while($row = mysqli_fetch_assoc($query)){ $ltno_vname[$row['invoice']] = $pname[$row['customercode']]; }
 								}	
 
-								$tbirds = $tjals = $ttotalweight = $temptyweight = $tnetweight = $tdiscountamt = $ttaxamount = $ttcdsamt = $ttotalamt = 0; $old_inv = "";
+								$tbirds = $tjals = $ttotalweight = $temptyweight = $tnetweight = $tdiscountamt = $ttaxamount = $ttcdsamt = $ttotalamt = 0; $old_inv = ""; $sl = 1;
 								$sequence = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate'".$cus_fltr;
 								$flags = " AND `active` = '1'  AND `tdflag` = '0' AND `pdflag` = '0' $upload_filter  ORDER BY `date`,`invoice` ASC";
 								$sql = $sequence."".$cnames."".$inames."".$wnames."".$flags;
@@ -284,6 +285,7 @@
 										$link = ""; $link = "https://".$_SERVER['SERVER_NAME']."/AndroidApp_API/clientimages/".$client.'/purchaseimages/'.str_replace(' ', '%20',$row['purchase_image']); $file_list[$link] = $link;
 									}
 									echo "<tr>";
+									echo "<td style='text-align:left;'>".$sl++."</td>";
 									echo "<td>".date("d.m.Y",strtotime($row['date']))."</td>";
 									echo "<td style='text-align:left;'>".$ltno_vname[$row['link_trnum']]."</td>";
 									echo "<td style='text-align:left;'>".$pname[$row['vendorcode']]."</td>";
@@ -348,7 +350,7 @@
 								}
 							?>
 								<tr class="foottr" style="background-color: #98fb98;">
-									<td colspan="6" align="center"><b>Grand Total</b></td>
+									<td colspan="7" align="center"><b>Grand Total</b></td>
 									<td <?php if($ifjbwen == 1 || $ifjbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><?php echo str_replace(".00","",number_format_ind($tjals)); ?></td>
 									<td <?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><?php echo str_replace(".00","",number_format_ind($tbirds)); ?></td>
 									<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><?php echo number_format_ind($ttotalweight); ?></td>

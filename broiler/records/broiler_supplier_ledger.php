@@ -63,17 +63,26 @@ if(isset($_POST['submit_report']) == true){
 	$url = "../PHPExcel/Examples/broiler_supplier_ledger-Excel.php?fromdate=".$fdate."&todate=".$tdate."&vendors=".$vendors;
 }
 
+
 /*Check for Table Availability*/
 $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
 $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
 if(in_array("broiler_purchases", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_purchases LIKE poulso6_admin_broiler_broilermaster.broiler_purchases;"; mysqli_query($conn,$sql1); }
 if(in_array("broiler_payments", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_payments LIKE poulso6_admin_broiler_broilermaster.broiler_payments;"; mysqli_query($conn,$sql1); }
+if(in_array("master_payments", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_payments LIKE poulso6_admin_broiler_broilermaster.master_payments;"; mysqli_query($conn,$sql1); }
 if(in_array("broiler_itemreturns", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_itemreturns LIKE poulso6_admin_broiler_broilermaster.broiler_itemreturns;"; mysqli_query($conn,$sql1); }
 if(in_array("broiler_crdrnote", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_crdrnote LIKE poulso6_admin_broiler_broilermaster.broiler_crdrnote;"; mysqli_query($conn,$sql1); }
 if(in_array("account_contranotes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.account_contranotes LIKE poulso6_admin_broiler_broilermaster.account_contranotes;"; mysqli_query($conn,$sql1); }
 if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_voucher_notes LIKE poulso6_admin_broiler_broilermaster.broiler_voucher_notes;"; mysqli_query($conn,$sql1); }
+if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_receipts LIKE poulso6_admin_broiler_broilermaster.master_receipts;"; mysqli_query($conn,$sql1); }
+
 
 ?>
+<style>
+ @page {
+            size: landscape; /* Try portrait or landscape */
+        }
+    </style>
 <html>
     <head>
         <title>Poulsoft Solutions</title>
@@ -170,7 +179,7 @@ if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CR
 
             $nhtml .= '<tr align="center">';
             $nhtml .= '<td colspan="4" align="center"><img src="'.$logo_path.'" height="110px"/></td>';
-            $nhtml .= '<th colspan="5" align="center">'.$cdetails.'<h5>'.$file_name.'</h5></th>';
+            $nhtml .= '<th colspan="8" align="center">'.$cdetails.'<h5>'.$file_name.'</h5></th>';
             $nhtml .= '</tr>';
 
             $nhtml .= '<th>Date</th>'; $fhtml .= '<th>Date</th>';
@@ -216,6 +225,10 @@ if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CR
                     if($transaction_count > 0){ while($row = mysqli_fetch_assoc($query)){ if($old_inv != $row['trnum']){ $osup_frtamt += (float)$row['freight_amt']; $old_inv = $row['trnum']; } } }
                     
                     $sql_record = "SELECT * FROM `broiler_payments` WHERE `date` < '$fdate' AND `ccode` = '$vendors' AND `vtype` IN ('Supplier') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){ while($row = mysqli_fetch_assoc($query)){ $opening_payments += (float)$row['amount']; } }
+
+                    $sql_record = "SELECT * FROM `master_payments` WHERE `date` < '$fdate' AND `to_account` = '$vendors' AND `t_type` IN ('Supplier Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){ while($row = mysqli_fetch_assoc($query)){ $opening_payments += (float)$row['amount']; } }
 
@@ -325,6 +338,24 @@ if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CR
                         }
                     }
 
+                    $sql_record = "SELECT * FROM `master_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `to_account` = '$vendors' AND `t_type` IN ('Supplier Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $i = 0; $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){
+                        while($row = mysqli_fetch_assoc($query)){
+                            $i++; $key_code = $row['date']."@".$i;
+                            $payment_info[$key_code] = $row['incr']."@".$row['prefix']."@".$row['trnum']."@".$row['date']."@".$row['to_account']."@".$row['billno']."@".$row['mode']."@".$row['from_account']."@".$row['amount']."@".$row['amtinwords']."@".$row['t_type']."@".$row['sector']."@".$row['remarks']."@".$row['sms_sent']."@".$row['whapp_sent']."@".$row['flag']."@".$row['active']."@".$row['dflag']."@".$row['addedemp']."@".$row['addedtime']."@".$row['updatedemp']."@".$row['updatedtime']."@".$row['c10']."@".$row['c20']."@".$row['c50']."@".$row['c100']."@".$row['c500']."@".$row['c2000']."@".$row['ccoins']."@".$row['c200'];
+                        }
+                    }
+
+                    $sql_record = "SELECT * FROM `master_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `to_account` = '$vendors' AND `t_type` IN ('Supplier Receipt') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $transaction_count = 0; $i = 0; $rct_info = array(); if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){
+                        while($row = mysqli_fetch_assoc($query)){
+                            $i++; $key_code = $row['date']."@".$i;
+                            $rct_info[$key_code] = $row['incr']."@".$row['prefix']."@".$row['trnum']."@".$row['date']."@".$row['to_account']."@".$row['billno']."@".$row['mode']."@".$row['from_account']."@".$row['amount']."@".$row['amtinwords']."@".$row['t_type']."@".$row['sector']."@".$row['remarks']."@".$row['sms_sent']."@".$row['whapp_sent']."@".$row['flag']."@".$row['active']."@".$row['dflag']."@".$row['addedemp']."@".$row['addedtime']."@".$row['updatedemp']."@".$row['updatedtime']."@".$row['c10']."@".$row['c20']."@".$row['c50']."@".$row['c100']."@".$row['c500']."@".$row['c2000']."@".$row['ccoins']."@".$row['c200'];
+                        }
+                    }
+
                     $sql_record = "SELECT * FROM `broiler_itemreturns` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `vcode` = '$vendors' AND `type` IN ('Supplier') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql_record); $i = 0; $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){
@@ -404,6 +435,7 @@ if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CR
                     $ccr_ccount = sizeof($contra_cr);
                     $vcr_ccount = sizeof($between_vcr);
                     $vdr_ccount = sizeof($between_vdr);
+                    $rct_ccount = sizeof($rct_info);
 
                     $exist_inv = $exist_finv = ""; $tot_pur_qty = $tot_pamt = $tot_gst = $tot_tds = $tot_pur_amt = $bt_pur_amt = $bt_pay_amt = 0;
                     for ($currentDate = strtotime($fdate); $currentDate <= strtotime($tdate); $currentDate += (86400)) {
@@ -535,6 +567,43 @@ if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CR
                                 echo "<td style='width:130px;text-align:left;'>".$sector_name[$payment_details[11]]."</td>";
                                 echo "<td style='width:130px;text-align:left;'></td>";
                                 echo "<td style='width:130px;text-align:left;'>".$payment_details[12]."</td>";
+								echo "<td style='width:70px;text-align:left;'></td>";
+                                echo "</tr>";
+                            }
+                        }
+
+                         // receipt Entries
+                        for($i = 0;$i <=$rct_ccount;$i++){
+                            if(!empty($rct_info[$date_asc."@".$i])){
+                                $rct_details = array(); $rct_details = explode("@",$rct_info[$date_asc."@".$i]);
+                                echo "<tr>";
+								echo "<td style='width:93px;' class='dates'>".date("d.m.Y",strtotime($rct_details[3]))."</td>";
+								echo "<td style='width:110px;text-align:left;'>".$rct_details[2]."</td>";
+								echo "<td style='width:70px;text-align:left;'>".$rct_details[5]."</td>";
+								echo "<td style='width:70px;text-align:left;'>Receipts</td>";
+								//echo "<td style='width:130px;text-align:left;'>".$vendor_name[$payment_details[4]]."</td>";
+								//echo "<td style='width:130px;text-align:left;'>".$mode_name[$payment_details[6]]."</td>";
+								echo "<td style='width:110px;text-align:left;'>".$coa_name[$rct_details[7]]."</td>";
+                                echo "<td style='width:130px;text-align:left;'></td>";
+                                echo "<td style='width:130px;text-align:left;'></td>";
+								echo "<td style='width:110px;text-align:right;'></td>";
+								echo "<td style='width:110px;text-align:right;'></td>";
+								echo "<td style='width:110px;text-align:right;'>".number_format_ind($rct_details[8])."</td>";
+                                echo "<td style='width:100px;text-align:right;'></td>";
+                                echo "<td style='width:100px;text-align:right;'></td>";
+                                echo "<td style='width:100px;text-align:right;'></td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($rct_details[8])."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
+                                $bt_pur_amt = $bt_pur_amt + $rct_details[8];
+                               // $bt_pay_amt = $bt_pay_amt + $rct_details[8];
+                               // $ob_pid_amt = $ob_pid_amt + $rct_details[8];
+                                $rb_amt = $rb_amt + $rct_details[8];
+                                $ob_rev_amt = $ob_rev_amt + $rct_details[8];
+                                if(number_format_ind(round($ob_rev_amt,5)) == number_format_ind(round($ob_pid_amt,5))){ $rb_amt = 0; }
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($rb_amt)."</td>";
+                                echo "<td style='width:130px;text-align:left;'>".$sector_name[$rct_details[11]]."</td>";
+                                echo "<td style='width:130px;text-align:left;'></td>";
+                                echo "<td style='width:130px;text-align:left;'>".$rct_details[12]."</td>";
 								echo "<td style='width:70px;text-align:left;'></td>";
                                 echo "</tr>";
                             }

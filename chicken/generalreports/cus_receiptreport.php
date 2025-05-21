@@ -223,6 +223,7 @@
 						<?php } ?>
 						<thead class="thead2">
                             <tr>
+								<th id='order'>Sl No.</th>
 								<th id='order_date'>Date</th>
 								<th id='order'>Customer</th>
 								<th id='order'>Transaction No.</th>
@@ -270,7 +271,7 @@
                             $html .= '<tbody class="tbody1">';
                             
                             $sql = "SELECT * FROM `customer_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$cus_filter."".$mode_filter."".$coa_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum` ASC";
-                            $query = mysqli_query($conn,$sql); $tccoins = $tc10 = $tc20 = $tc50 = $tc100 = $tc200 = $tc500 = $tc2000 = $tot_amount = 0;
+                            $query = mysqli_query($conn,$sql); $sl = 1; $tccoins = $tc10 = $tc20 = $tc50 = $tc100 = $tc200 = $tc500 = $tc2000 = $tot_amount = 0;
                             while($row = mysqli_fetch_assoc($query)){
                                 $date = date("d.m.Y",strtotime($row['date']));
                                 $vname = $cus_name[$row['ccode']];
@@ -284,6 +285,7 @@
                                 $uname = $user_name[$row['addedemp']];
 
                                 $html .= '<tr>';
+                                $html .= '<td>'.$sl++.'</td>';
                                 $html .= '<td>'.$date.'</td>';
                                 $html .= '<td>'.$vname.'</td>';
                                 $html .= '<td>'.$trnum.'</td>';
@@ -319,7 +321,7 @@
                             $html .= '</tbody>';
                             $html .= '<tfoot class="tfoot1">';
                             $html .= '<tr>';
-                            $html .= '<th colspan="6">Grand Total</th>';
+                            $html .= '<th colspan="7">Grand Total</th>';
                             $html .= '<th class="text-right">'.number_format_ind($tot_amount).'</th>';
                             if($dflag == 1){
                                 $html .= '<th class="text-right">'.number_format_ind($tccoins).'</th>';
