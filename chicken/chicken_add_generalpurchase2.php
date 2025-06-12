@@ -76,6 +76,10 @@ if($access_error_flag == 0){
     //$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'chicken_display_generalpurchase2.php' AND `field_function` LIKE 'Add Voucher in Purchase screen' AND `user_access` LIKE 'all' AND `flag` = '1'";
     //$query = mysqli_query($conn,$sql); $avou_flag = mysqli_num_rows($query); $avou_flag = 1;
 
+     //check and fetch date range
+    global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    include "poulsoft_fetch_daterange_master.php";
+
     $colspan = 13;
 ?>
     <html>
@@ -99,11 +103,11 @@ if($access_error_flag == 0){
                         <div class="row">
                             <div class="form-group" style="width:110px;">
                                 <label for="date">Date<b style="color:red;">&nbsp;*</b></label>
-                                <input type="text" name="date" id="date" class="form-control pur_datepickers" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly />
+                                <input type="text" name="date" id="date" class="form-control range_picker" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly />
                             </div>
                             <div class="form-group" style="width:190px;">
                                 <label>Warehouse/Vehicle<b style="color:red;">&nbsp;*</b></label>
-                                <select name="warehouse" id="warehouse" class="form-control select2" style="width:180px;">
+                                <select name="warehouse" id="warehouse" class="form-control select2" style="width:180px;" onchange="fetch_vehwise_details(this.id)">
                                     <option value="select">select</option>
                                     <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $sector_name[$scode]; ?></option><?php } ?>
                                 </select>
@@ -128,6 +132,14 @@ if($access_error_flag == 0){
                                 <label>Advance</label>
                                 <input type="text" name="vadv_amt" id="vadv_amt" class="form-control text-right" style="width:100px;" onkeyup="validate_num(this.id);calculate_total_amt2();" />
                             </div>
+                             <div class="form-group" style="width:110px;">
+                                <label>Price Per KM</label>
+                                <input type="text" name="price_perkm" id="price_perkm" class="form-control text-right" style="width:100px;" readonly/>
+                            </div>
+                             <div class="form-group" style="width:110px;">
+                                <label>Total Amount</label>
+                                <input type="text" name="price_perkm_total" id="price_perkm_total" class="form-control text-right" style="width:100px;" readonly/>
+                            </div>
                             <div class="form-group" style="width:30px;visibility:hidden;">
                                 <label for="trnum">TP</label>
                                 <input type="text" name="tcds_per" id="tcds_per" class="form-control text-right" value="<?php echo $tcds_per; ?>" style="width:100px;" readonly />
@@ -141,7 +153,7 @@ if($access_error_flag == 0){
                                     </tr>
                                     <tr>
                                         <th>Supplier<b style="color:red;">&nbsp;*</b></th>
-                                        <th>Dc.No.</th>
+                                        <th>BillBookNo.</th>
                                         <th>Item<b style="color:red;">&nbsp;*</b></th>
                                         <?php if((int)$jals_flag == 1){ $colspan++; echo "<th>Jals</th>"; } ?>
                                         <?php if((int)$birds_flag == 1){ $colspan++; echo "<th>Birds</th>"; } ?>
@@ -162,7 +174,7 @@ if($access_error_flag == 0){
                                 <tbody id="row_body">
                                     <tr style="margin:5px 0px 5px 0px;">
                                         <td><select name="vcode[]" id="vcode[0]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($sup_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $sup_name[$scode]; ?></option><?php } ?></select></td>
-                                        <td><input type="text" name="bookinvoice[]" id="bookinvoice[0]" class="form-control" style="width:50px;" /></td>
+                                        <td><input type="text" name="bookinvoice[]" id="bookinvoice[0]" class="form-control" style="width:80px;" /></td>
                                         <td><select name="icode[]" id="icode[0]" class="form-control select2" style="width:180px;" onchange="update_row_fields(this.id);"><option value="select">-select-</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>
                                         <?php
                                         if((int)$jals_flag == 1){ echo '<td><input type="text" name="jals[]" id="jals[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_count(this.id);calculate_total_amt();" /></td>'; }
@@ -173,7 +185,7 @@ if($access_error_flag == 0){
                                         <td><input type="text" name="nweight[]" id="nweight[0]" class="form-control text-right" style="width:60px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" /></td>
                                         <td><input type="text" name="price[]" id="price[0]" class="form-control text-right" style="width:60px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" /></td>
                                         <td><input type="text" name="item_amt[]" id="item_amt[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>
-                                        <td style="width:50px;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk[0]" onchange="calculate_total_amt();" checked/></td>
+                                        <td style="width:50px;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk[0]" onchange="calculate_total_amt();" /></td>
                                         <td><input type="text" name="tcds_amt[]" id="tcds_amt[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>
                                         <td><input type="text" name="finaltotal[]" id="finaltotal[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>
                                         <td><textarea name="remarks[]" id="remarks[0]" class="form-control" style="width:150px;height:25px;"></textarea></td>
@@ -287,7 +299,7 @@ if($access_error_flag == 0){
                                 <table style="width:auto;">
                                     <thead>
                                         <tr>
-                                            <th colspan="4" style="background-color:#d1ffe4;color:#00722f;text-align:center;">Labour Attendance & Advance Details</th>
+                                            <th colspan="4" style="background-color:#d1ffe4;color:#00722f;text-align:center;">Labour Advance Details</th>
                                         </tr>
                                     <thead>
                                         <tr style="text-align:left;">
@@ -302,7 +314,7 @@ if($access_error_flag == 0){
                                     <tbody id="row_body3">
                                         <tr id="row_no3[0]">
                                             <td><select name="emp_scode[]" id="emp_scode[0]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($driver_code as $acode){ ?><option value="<?php echo $acode; ?>"><?php echo $driver_name[$acode]; ?></option><?php } ?></select></td>
-                                            <td style="text-align:center;"><input type="checkbox" name="supr_flag[]" id="supr_flag[0]" onchange="calculate_empsal_amt2();" /></td>
+                                            <td style="text-align:center;"><input type="checkbox" name="supr_flag[0]" id="supr_flag[0]" onchange="calculate_empsal_amt2();" /></td>
                                             <td><input type="text" name="emps_amt[]" id="emps_amt[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_empsal_amt2();" onchange="validate_amount(this.id);" /></td>
                                             <th><textarea name="remarks3[]" id="remarks3[0]" class="form-control" style="width:150px;height:28px;"></textarea></th>
                                             <td id="action3[0]"><a href="javascript:void(0);" id="addrow3[0]" onclick="create_row3(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
@@ -349,9 +361,29 @@ if($access_error_flag == 0){
                 </form>
             </div>
             <script>
+                //Date Range selection
+                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 function return_back(){
                     window.location.href = "chicken_display_generalpurchase2.php";
                 }
+                function fetch_vehwise_details(a){
+                var typevalue = document.getElementById(a).value;
+                console.log(typevalue);
+                var fetch_fltrs = new XMLHttpRequest();
+                var method = "GET";
+                var url = "fetch_vehwise_details.php?wcode="+typevalue//window.open(url);
+                var asynchronous = true;
+                fetch_fltrs.open(method, url, asynchronous);
+                fetch_fltrs.send();
+                fetch_fltrs.onreadystatechange = function(){
+                    if(this.readyState == 4 && this.status == 200){  
+                          var rate =   this.responseText;
+                          document.getElementById("price_perkm").value = rate; //total_kms
+                        //   var totkms = document.getElementById("price_perkm").value;
+                        //   console.log(totkms);
+                    }
+                }
+            }
                 function checkval(){
                     document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
                     var date = document.getElementById("date").value;
@@ -409,38 +441,22 @@ if($access_error_flag == 0){
                             }
                         }
                     }
-                    /*
                     if(l == true){
-                        var fcoa_amt = document.getElementById("fcoa_amt").value; if(fcoa_amt == ""){ fcoa_amt = 0; }
-                        var tamount = document.getElementById("tamount").value; if(tamount == ""){ tamount = 0; }
-                        if(parseFloat(fcoa_amt) > 0 || parseFloat(tamount) > 0){
-                            var fcoa = document.getElementById("fcoa").value;
-                            if(fcoa == "select" || fcoa == ""){
-                                alert("Please select CoA account");
-                                document.getElementById("fcoa").focus();
-                                l = false;
-                            }
-                            else{
-                                var tcoa = ""; var tcoa_amt = 0;
-                                var incr2 = document.getElementById("incr2").value;
-                                for(var d = 0;d <= incr2;d++){
-                                    if(l == true){
-                                        c = d + 1;
-                                        tcoa = document.getElementById("tcoa["+d+"]").value;
-                                        tcoa_amt = document.getElementById("tcoa_amt["+d+"]").value; if(tcoa_amt == ""){ tcoa_amt = 0; }
-                                        if(parseFloat(tcoa_amt) > 0 && tcoa == "" || parseFloat(tcoa_amt) > 0 && tcoa == "select"){
-                                            alert("Please select expense Type");
-                                            document.getElementById("tcoa["+d+"]").focus();
-                                            l = false;
-                                        }
-                                        else{ }
-                                    }
-                                    else{ }
+                        var tcoa = ""; var tcoa_amt = 0;
+                        var incr2 = document.getElementById("incr2").value;
+                        for(var d = 0;d <= incr2;d++){
+                            if(l == true){
+                                c = d + 1;
+                                tcoa = document.getElementById("tcoa["+d+"]").value;
+                                tcoa_amt = document.getElementById("tcoa_amt["+d+"]").value; if(tcoa_amt == ""){ tcoa_amt = 0; }
+                                if(parseFloat(tcoa_amt) > 0 && tcoa == "" || parseFloat(tcoa_amt) > 0 && tcoa == "select"){
+                                    alert("Please select expense Type in row: "+c);
+                                    document.getElementById("tcoa["+d+"]").focus();
+                                    l = false;
                                 }
                             }
                         }
                     }
-                    
                     if(l == true){
                         var incr3 = document.getElementById("incr3").value;
                         var c = 0;
@@ -458,16 +474,7 @@ if($access_error_flag == 0){
                             }
                             else{ }
                         }
-                        if(l == true){
-                            var emp_sacc = document.getElementById("emp_sacc").value;
-                            var tot_empsal_amt =document.getElementById("tot_empsal_amt").value; if(tot_empsal_amt == ""){ tot_empsal_amt = 0; }
-                            if(parseFloat(tot_empsal_amt) > 0 && emp_sacc == "select"){
-                                alert("Please select Employee Salary Account");
-                                document.getElementById("emp_sacc").focus();
-                                l = false;
-                            }
-                        }
-                    }*/
+                    }
                     if(l == true){
                         return true;
                     }
@@ -507,7 +514,7 @@ if($access_error_flag == 0){
 
                     html += '<tr id="row_no['+d+']">';
                     html += '<td><select name="vcode[]" id="vcode['+d+']" class="form-control select2" style="width:180px;" onchange="update_row_fields(this.id);"><option value="select">-select-</option><?php foreach($sup_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $sup_name[$scode]; ?></option><?php } ?></select></td>';
-                    html += '<td><input type="text" name="bookinvoice[]" id="bookinvoice['+d+']" class="form-control" style="width:50px;" /></td>';
+                    html += '<td><input type="text" name="bookinvoice[]" id="bookinvoice['+d+']" class="form-control" style="width:80px;" /></td>';
                     html += '<td><select name="icode[]" id="icode['+d+']" class="form-control select2" style="width:180px;" onchange="update_row_fields(this.id);"><option value="select">-select-</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>';
                     if(parseInt(jals_flag) == 1){ html += '<td><input type="text" name="jals[]" id="jals['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_count(this.id);calculate_total_amt();" /></td>'; }
                     if(parseInt(birds_flag) == 1){ html += '<td><input type="text" name="birds[]" id="birds['+d+']" class="form-control text-right" style="width:50px;" onkeyup="validate_count(this.id);calculate_total_amt();" /></td>'; }
@@ -516,7 +523,7 @@ if($access_error_flag == 0){
                     html += '<td><input type="text" name="nweight[]" id="nweight['+d+']" class="form-control text-right" style="width:60px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" /></td>';
                     html += '<td><input type="text" name="price[]" id="price['+d+']" class="form-control text-right" style="width:60px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" /></td>';
                     html += '<td><input type="text" name="item_amt[]" id="item_amt['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>';
-                    html += '<td style="width:50px;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_total_amt();" checked/></td>';
+                    html += '<td style="width:50px;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_total_amt();" /></td>';
                     html += '<td><input type="text" name="tcds_amt[]" id="tcds_amt['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>';
                     html += '<td><input type="text" name="finaltotal[]" id="finaltotal['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt();" onchange="validate_amount(this.id);" readonly /></td>';
                     html += '<td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="width:150px;height:25px;"></textarea></td>';
@@ -694,7 +701,7 @@ if($access_error_flag == 0){
                     document.getElementById("incr3").value = d;
                     html += '<tr id="row_no3['+d+']">';
                     html += '<td><select name="emp_scode[]" id="emp_scode['+d+']" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($driver_code as $acode){ ?><option value="<?php echo $acode; ?>"><?php echo $driver_name[$acode]; ?></option><?php } ?></select></td>';
-                    html += '<td style="text-align:center;"><input type="checkbox" name="supr_flag[]" id="supr_flag['+d+']" onchange="calculate_empsal_amt2();" /></td>';
+                    html += '<td style="text-align:center;"><input type="checkbox" name="supr_flag['+d+']" id="supr_flag['+d+']" onchange="calculate_empsal_amt2();" /></td>';
                     html += '<td><input type="text" name="emps_amt[]" id="emps_amt['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_empsal_amt2();" onchange="validate_amount(this.id);" /></td>';
                     html += '<th><textarea name="remarks3[]" id="remarks3['+d+']" class="form-control" style="width:150px;height:28px;"></textarea></th>';
                     html += '<td id="action3['+d+']"><a href="javascript:void(0);" id="addrow3['+d+']" onclick="create_row3(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow3['+d+']" onclick="destroy_row3(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
@@ -740,6 +747,11 @@ if($access_error_flag == 0){
                     var to_kms = document.getElementById("to_kms").value; if(to_kms == ""){ to_kms = 0; }
                     var total_kms = parseFloat(to_kms) - parseFloat(from_kms); if(total_kms == ""){ total_kms = 0; }
                     document.getElementById("total_kms").value = parseFloat(total_kms).toFixed(2);
+
+                    var totkms =  parseFloat(total_kms).toFixed(2);
+                    var rateperkm = document.getElementById("price_perkm").value;
+                    document.getElementById("price_perkm_total").value = totkms*rateperkm;
+
                 }
                 function calculate_empsal_amt2(){
                     var incr3 = document.getElementById("incr3").value;
@@ -797,6 +809,10 @@ if($access_error_flag == 0){
 		    <script src="chick_validate_basicfields.js"></script>
             <?php include "header_foot1.php"; ?>
 		    <script src="handle_ebtn_as_tbtn.js"></script>
+            <script>
+                //Date Range selection
+                $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+            </script>
         </body>
     </html>
 <?php

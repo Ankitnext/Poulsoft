@@ -38,24 +38,25 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition sidebar-mini">
         <?php
         if($acount == 1){
+            /*Check for Table Availability*/
+            $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
+            $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+            if(in_array("dataentry_daterange_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.dataentry_daterange_master LIKE poulso6_admin_broiler_broilermaster.dataentry_daterange_master;"; mysqli_query($conn,$sql1); }
+            
             //Check Column Availability
             $sql='SHOW COLUMNS FROM `account_vouchers`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
             if(in_array("cheque_no", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `account_vouchers` ADD `cheque_no` VARCHAR(300) NULL DEFAULT NULL AFTER `dcno`"; mysqli_query($conn,$sql); }
-            
-            $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
-            $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-            if(in_array("master_payments", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_payments LIKE poulso6_admin_broiler_broilermaster.master_payments;"; mysqli_query($conn,$sql1); }
-            if(in_array("master_generator", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_generator LIKE poulso6_admin_broiler_broilermaster.master_generator;"; mysqli_query($conn,$sql1); }
-            if(in_array("prefix_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.prefix_master LIKE poulso6_admin_broiler_broilermaster.prefix_master;"; mysqli_query($conn,$sql1); }
-            if(in_array("broiler_printview_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_printview_master LIKE poulso6_admin_broiler_broilermaster.broiler_printview_master;"; mysqli_query($conn,$sql1); }
-            if(in_array("dataentry_daterange_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.dataentry_daterange_master LIKE poulso6_admin_broiler_broilermaster.dataentry_daterange_master;"; mysqli_query($conn,$sql1); }
             
             //Check Column Availability
             $sql='SHOW COLUMNS FROM `account_summary`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
             if(in_array("cheque_no", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `account_summary` ADD `cheque_no` VARCHAR(300) NULL DEFAULT NULL AFTER `dc_no`"; mysqli_query($conn,$sql); }
             
+            //check and fetch date range
+            global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+            include "poulsoft_fetch_daterange_master.php";
+
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
@@ -102,10 +103,10 @@ if($link_active_flag > 0){
                         <form action="<?php echo $url; ?>" method="post">
                                 <div class="row">
                                     <div class="col-md-2">
-                                        <div class="form-group"><label for="fdate">From Date: </label><input type="text" class="form-control datepicker" name="fdate" id="fdate" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>"></div>
+                                        <div class="form-group"><label for="fdate">From Date: </label><input type="text" class="form-control rc_datepicker" name="fdate" id="fdate" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>"></div>
                                     </div>
                                     <div class="col-md-2">
-                                        <div class="form-group"><label for="tdate">To Date: </label><input type="text" class="form-control datepicker" name="tdate" id="tdate" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>"></div>
+                                        <div class="form-group"><label for="tdate">To Date: </label><input type="text" class="form-control rc_datepicker" name="tdate" id="tdate" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>"></div>
                                     </div>
                                     <div class="col-md-2"><br/>
                                         <button type="submit" name="submit" id="submit" class="btn btn-success btn-sm">Submit</button>
@@ -163,6 +164,9 @@ if($link_active_flag > 0){
                                             }
                                             else if($row['gc_flag'] == 1){
                                                 echo "<i class='fa fa-lock' style='color:gray;' title='GC processed'></i></a>";
+                                            }
+                                            else if(strtotime($row['date']) < strtotime($rng_sdate) || strtotime($row['date']) > strtotime($rng_edate)){
+                                                echo "<i class='fa fa-check' style='color:green;' title='Date Entry Range Closed'></i></a>&ensp;&ensp;";
                                             }
                                             else {
                                                 if($edit_flag == 1){

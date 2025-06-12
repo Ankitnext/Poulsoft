@@ -93,7 +93,7 @@
 												<?php if($jals_flag == 1) { echo '<td><input name="jalqty[]" id="jalqty[0]" class="form-control" value="0" /></td>'; } ?>
 												<?php if($birds_flag == 1) { echo '<td><input name="birdqty[]" id="birdqty[0]" class="form-control" value="0" /></td>'; } ?>
 												<td><input name="qty[]" id="qty[0]" class="form-control" value="0" /></td>
-												<td><input type="text" name="price[]" id="price[0]" class="form-control" value="0" onkeyup="granttotalamount()"></td>
+												<td><input type="text" name="price[]" id="price[0]" class="form-control" value="0" onkeyup=""></td>
 												<td><select name="tsector[]" id="tsector[0]" class="form-control select2" style="width:120px;"> <option value="select">select</option> <?php foreach($wcode as $fcode){ ?> <option value="<?php echo $wcode[$fcode]; ?>"><?php echo $wdesc[$fcode]; ?></option> <?php } ?> </select></td>
 												<td><textarea name="remark[]" id="remark[0]" class="form-control" style="width:120px;height: 23px;"></textarea></td>
 												<td style="width: 100%;"><a href="JavaScript:Void(0);" name="addval[]" id="addval[0]" onclick="rowgen()"><i class="fa fa-plus"></i></a>&ensp;&ensp;<a href="JavaScript:Void(0);" name="rmval[]" id="rmval[0]" onclick="rowdes()" style="visibility:hidden;"><i class="fa fa-minus" style="color:red;"></i></a></td>

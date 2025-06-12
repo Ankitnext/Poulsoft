@@ -46,6 +46,10 @@ if($link_active_flag > 0){
             if(in_array("broiler_printview_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_printview_master LIKE poulso6_admin_broiler_broilermaster.broiler_printview_master;"; mysqli_query($conn,$sql1); }
             if(in_array("dataentry_daterange_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.dataentry_daterange_master LIKE poulso6_admin_broiler_broilermaster.dataentry_daterange_master;"; mysqli_query($conn,$sql1); }
             
+            //check and fetch date range
+            global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+            include "poulsoft_fetch_daterange_master.php";
+
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
@@ -93,6 +97,10 @@ if($link_active_flag > 0){
                 $i++;
             }
             $pc = $i - 1;
+
+            $rem_flag = 0;
+            $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'poulsoft_display_mstpay1.php' AND `field_function` = 'Payment Remark' AND `user_access` LIKE 'all' AND `flag` = '1'";
+            $query = mysqli_query($conn,$sql); $rem_flag = mysqli_num_rows($query);
         ?>
         <div class="m-0 p-0 wrapper">
             <section class="m-0 p-0 content">
@@ -133,6 +141,7 @@ if($link_active_flag > 0){
 										<th>Account</th>
 										<th>description</th>
 										<th>Amount</th>
+										<?php if($rem_flag > 0) { ?><th>Remarks</th> <?php } ?>
 										<th>Cost Center</th>
 										<th>Action</th>
                                     </tr>
@@ -153,6 +162,9 @@ if($link_active_flag > 0){
 
                                         $sql = "SELECT * FROM `inv_sectors` WHERE `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $sector_name = array();
+                                        while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
+
+                                        $sql = "SELECT * FROM `location_branch` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
                                         while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
 
                                         $delete_url = $delete_link."?utype=delete&trnum=";
@@ -178,11 +190,15 @@ if($link_active_flag > 0){
 										<td><?php echo $vfcc_name[$row['from_account']]; ?></td>
 										<td><?php echo $vfcc_name[$row['to_account']]; ?></td>
 										<td style="text-align:right;"><?php echo round($row['amount'],5); ?></td>
+										<?php if($rem_flag > 0) { ?><td><?php echo $row['remarks']; } ?></td>
 										<td><?php echo $sector_name[$row['sector']]; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
                                                 echo "<i class='fa fa-check' style='color:green;' title='Authorized'></i></a>";
+                                            }
+                                            else if(strtotime($row['date']) < strtotime($rng_sdate)){
+                                                echo "<i class='fa fa-check' style='color:green;' title='Date Entry Range Closed'></i></a>";
                                             }
                                             else {
                                                 if($edit_flag == 1){

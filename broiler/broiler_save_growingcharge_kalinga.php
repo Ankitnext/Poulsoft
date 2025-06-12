@@ -45,6 +45,7 @@ if(in_array("actual_medicine_price", $existing_col_names, TRUE) == ""){ $sql = "
 if(in_array("schema_id", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `broiler_rearingcharge` ADD `schema_id` VARCHAR(200) NULL DEFAULT NULL COMMENT 'Schema Id' AFTER `branch_code`"; mysqli_query($conn,$sql); }
 if(in_array("farmer_receipt_deduction", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `broiler_rearingcharge` ADD `farmer_receipt_deduction` DECIMAL(20,5) NOT NULL DEFAULT '0' COMMENT 'Farmer Receipt Amount' AFTER `farmer_sale_deduction`"; mysqli_query($conn,$sql); }
 
+
 $sql = "SELECT * FROM `item_category`"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){
     $icat_iac[$row['code']] = $row['iac'];

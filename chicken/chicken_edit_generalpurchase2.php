@@ -65,6 +65,10 @@ if($access_error_flag == 0){
     //$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'chicken_display_generalpurchase2.php' AND `field_function` LIKE 'Add Voucher in Purchase screen' AND `user_access` LIKE 'all' AND `flag` = '1'";
     //$query = mysqli_query($conn,$sql); $avou_flag = mysqli_num_rows($query); $avou_flag = 1;
 
+     //check and fetch date range
+    global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    include "poulsoft_fetch_daterange_master.php";
+
     $colspan = 13;
 ?>
     <html>
@@ -146,15 +150,17 @@ if($access_error_flag == 0){
 
                     $from_location = $row['from_location'];
                     $to_location = $row['to_location'];
-                    $from_kms = round($row['from_kms'],2);
-                    $to_kms = round($row['to_kms'],2);
-                    $total_kms = round($row['total_kms'],2);
-                    $fcoa_amt = round($row['advance_amt'],2);
-                    $balance_amt = round($row['balance_amt'],2);
+                    $from_kms = $row['from_kms']; if($from_kms == ""){ $from_kms = 0; }
+                    $to_kms = $row['to_kms']; if($to_kms == ""){ $to_kms = 0; }
+                    $total_kms = $row['total_kms']; if($total_kms == ""){ $total_kms = 0; }
+                    $fcoa_amt = $row['advance_amt']; if($fcoa_amt == ""){ $fcoa_amt = 0; }
+                    $balance_amt = $row['balance_amt']; if($balance_amt == ""){ $balance_amt = 0; }
+                    $total_kms_price = $row['veh_amt']; if($total_kms_price == ""){  $total_kms_price = 0; }
+                    $price_per_km = $row['veh_rate']; if($price_per_km == ""){ $price_per_km = 0; }
                 }
-                
                 $acc_list = implode("','",$driver_code);
                 $sql = "SELECT * FROM `acc_vouchers` WHERE `link_trnum` = '$ids' AND `tcoa` IN ('$acc_list') AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `id` ASC";
+
                 $query = mysqli_query($conn,$sql); $trnum3 = ""; $supr_flag = $sup_eamt = $dcoa_alist = array();
                 while($row = mysqli_fetch_assoc($query)){
                     $trnum3 = $row['trnum'];
@@ -168,6 +174,16 @@ if($access_error_flag == 0){
                     $dcoa_alist[$row['tcoa']] = $row['tcoa'];
                     $remarks3[$row['tcoa']] = $row['remarks'];
                 }
+                
+                $sql = "SELECT * FROM `acc_vouchers` WHERE `link_trnum` = '$ids'";
+                $query = mysqli_query($conn,$sql);
+                while($row = mysqli_fetch_assoc($query)){
+                    $total_kms_price2 = $row['veh_amt']; 
+                    $price_per_km2 = $row['veh_rate']; 
+                    $from_kms = $row['from_kms']; if($from_kms == ""){ $from_kms = 0; }
+                    $to_kms = $row['to_kms']; if($to_kms == ""){ $to_kms = 0; }
+                    $total_kms = $row['total_kms']; if($total_kms == ""){ $total_kms = 0; }
+                }
             }
             ?>
             <div class="card border-secondary mb-3">
@@ -177,11 +193,11 @@ if($access_error_flag == 0){
                         <div class="row">
                             <div class="form-group" style="width:110px;">
                                 <label for="date">Date<b style="color:red;">&nbsp;*</b></label>
-                                <input type="text" name="date" id="date" class="form-control pur_datepickers" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly />
+                                <input type="text" name="date" id="date" class="form-control range_picker" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly />
                             </div>
                             <div class="form-group" style="width:190px;">
                                 <label>Warehouse/Vehicle<b style="color:red;">&nbsp;*</b></label>
-                                <select name="warehouse" id="warehouse" class="form-control select2" style="width:180px;">
+                                <select name="warehouse" id="warehouse" class="form-control select2" style="width:180px;" onchange="fetch_vehwise_details(this.id)">
                                     <option value="select">select</option>
                                     <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($warehouse == $scode){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
                                 </select>
@@ -192,19 +208,27 @@ if($access_error_flag == 0){
                             </div>-->
                             <div class="form-group" style="width:110px;">
                                 <label>Start KMs</label>
-                                <input type="text" name="from_kms" id="from_kms" class="form-control text-right" value="<?php echo $from_kms; ?>" style="width:100px;" onkeyup="validate_num(this.id);calculate_tot_kms();" />
+                                <input type="text" name="from_kms" id="from_kms" class="form-control text-right" value="<?php echo round($from_kms,5); ?>" style="width:100px;" onkeyup="validate_num(this.id);calculate_tot_kms();" />
                             </div>
                             <div class="form-group" style="width:110px;">
                                 <label>End KMs</label>
-                                <input type="text" name="to_kms" id="to_kms" class="form-control text-right" value="<?php echo $to_kms; ?>" style="width:100px;" onkeyup="validate_num(this.id);calculate_tot_kms();" />
+                                <input type="text" name="to_kms" id="to_kms" class="form-control text-right" value="<?php echo round($to_kms,5); ?>" style="width:100px;" onkeyup="validate_num(this.id);calculate_tot_kms();" />
                             </div>
                             <div class="form-group" style="width:110px;">
                                 <label>Total KMs</label>
-                                <input type="text" name="total_kms" id="total_kms" class="form-control text-right" value="<?php echo $total_kms; ?>" style="width:100px;" readonly />
+                                <input type="text" name="total_kms" id="total_kms" class="form-control text-right" value="<?php echo round($total_kms,5); ?>" style="width:100px;" readonly />
                             </div>
                             <div class="form-group" style="width:110px;">
                                 <label>Advance</label>
                                 <input type="text" name="vadv_amt" id="vadv_amt" class="form-control text-right" value="<?php echo $vadv_amt; ?>" style="width:100px;" onkeyup="validate_num(this.id);calculate_total_amt2();" />
+                            </div>
+                             <div class="form-group" style="width:110px;">
+                                <label>Price Per KM</label>
+                                <input type="text" name="price_perkm" id="price_perkm" class="form-control text-right" value="<?php echo $price_per_km; ?>"  style="width:100px;" readonly/>
+                            </div>
+                             <div class="form-group" style="width:110px;">
+                                <label>Total Amount</label>
+                                <input type="text" name="price_perkm_total" id="price_perkm_total" class="form-control text-right" value="<?php echo $total_kms_price; ?>" style="width:100px;" readonly/>
                             </div>
                             <div class="form-group" style="width:30px;visibility:hidden;">
                                 <label for="trnum">TP</label>
@@ -219,7 +243,7 @@ if($access_error_flag == 0){
                                     </tr>
                                     <tr>
                                         <th>Supplier<b style="color:red;">&nbsp;*</b></th>
-                                        <th>Dc.No.</th>
+                                        <th>BillBookNo.</th>
                                         <th>Item<b style="color:red;">&nbsp;*</b></th>
                                         <?php if((int)$jals_flag == 1){ $colspan++; echo "<th>Jals</th>"; } ?>
                                         <?php if((int)$birds_flag == 1){ $colspan++; echo "<th>Birds</th>"; } ?>
@@ -344,47 +368,61 @@ if($access_error_flag == 0){
                                         </tr>
                                     </thead>
                                     <tbody id="row_body2">
-                                        <?php $vincr = 0; foreach($acc_acode as $acode){ ?>
+                                        <?php $vincr = 0; foreach($acc_acode as $acode){  $acc_disp = array(); $acc_disp[$acode] = $acode;
+                                              if (in_array($acode, $tcoa_alist)) { $amt1 = $tcoa_amt[$acode]; $rem1 = $remarks2[$acode]; } else { $amt1 = ''; $rem1 = ''; }
+                                            ?>
                                         <tr id="row_no2[<?php echo $vincr; ?>]">
                                             <td><select name="tcoa[]" id="tcoa[<?php echo $vincr; ?>]" class="form-control select2" style="width:180px;"><option value="<?php echo $acode; ?>"><?php echo $acc_aname[$acode]; ?></option></select></td>
-                                            <td><input type="text" name="tcoa_amt[]" id="tcoa_amt[<?php echo $vincr; ?>]" class="form-control text-right" value="<?php echo $acc_aamt[$acode]; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt2();" onchange="validate_amount(this.id);" /></td>
-                                            <th><textarea name="remarks2[]" id="remarks2[<?php echo $vincr; ?>]" class="form-control" style="width:150px;height:28px;"><?php echo $acc_arm2[$acode]; ?></textarea></th>
+                                            <td><input type="text" name="tcoa_amt[]" id="tcoa_amt[<?php echo $vincr; ?>]" class="form-control text-right" value="<?php echo $amt1; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt2();" onchange="validate_amount(this.id);" /></td>
+                                            <th><textarea name="remarks2[]" id="remarks2[<?php echo $vincr; ?>]" class="form-control" style="width:150px;height:28px;"><?php echo $rem1; ?></textarea></th>
                                             <td></td>
                                         </tr>
                                         <?php
                                         $vincr++;
                                         }
-                                        if(sizeof($tcoa_alist) > 0){
-                                            $incr2 = sizeof($tcoa_alist) - 1; $c = 0;
-                                            foreach($tcoa_alist as $acode){
-                                            ?>
-                                            <tr id="row_no2[<?php echo $vincr; ?>]">
-                                                <td><select name="tcoa[]" id="tcoa[<?php echo $vincr; ?>]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($acc_code as $ccode){ ?><option value="<?php echo $ccode; ?>" <?php if($acode == $ccode){ echo "selected"; } ?>><?php echo $acc_name[$ccode]; ?></option><?php } ?></select></td>
-                                                <td><input type="text" name="tcoa_amt[]" id="tcoa_amt[<?php echo $vincr; ?>]" class="form-control text-right" value="<?php echo $tcoa_amt[$acode]; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt2();" onchange="validate_amount(this.id);" /></td>
-                                                <th><textarea name="remarks2[]" id="remarks2[<?php echo $vincr; ?>]" class="form-control" style="width:150px;height:28px;"><?php echo $remarks2[$acode]; ?></textarea></th>
-                                                <?php
-                                                if($c == $incr2){ echo '<td id="action2['.$vincr.']" style="padding-top: 5px;visibility:visible;">'; }
-                                                else{ echo '<td id="action2['.$vincr.']" style="padding-top: 5px;visibility:hidden;">'; }
-                                                echo '<a href="javascript:void(0);" id="addrow2['.$vincr.']" onclick="create_row2(this.id);"><i class="fa fa-plus"></i></a>&ensp;';
-                                                if($c > 0){ echo '<a href="javascript:void(0);" id="deductrow2['.$vincr.']" onclick="destroy_row2(this.id);"><i class="fa fa-minus" style="color:red;"></i></a>'; }
-                                                echo '</td>';
+                                      //  if (sizeof($tcoa_alist) > 0) {
+                                            $incr2 = sizeof($acc_code) - 1;
+                                            $c = 0;
+                                            foreach ($acc_code as $index => $ccode) {
+                                                if (in_array($ccode, $tcoa_alist)) {
+                                                    $acode = $ccode;
+                                                    $amt = isset($tcoa_amt[$acode]) ? $tcoa_amt[$acode] : ''; 
+                                                    $remark = isset($remarks2[$acode]) ? $remarks2[$acode] : '';
+                                                } else {
+                                                    $acode = $ccode; $amt = ''; $remark = ''; 
+                                                }
                                                 ?>
-                                            </tr>
-                                        <?php
-                                            $vincr++; $c++;
+                                                <tr id="row_no2[<?php echo $vincr; ?>]">
+                                                    <td>
+                                                        <select name="tcoa[]" id="tcoa[<?php echo $vincr; ?>]" class="form-control select2" style="width:180px;">
+                                                            <option value="select">-select-</option>
+                                                            <?php foreach ($acc_code as $ccode) { ?>
+                                                                <option value="<?php echo $ccode; ?>" <?php if ($acode == $ccode) { echo "selected"; } ?>>
+                                                                    <?php echo $acc_name[$ccode]; ?>
+                                                                </option>
+                                                            <?php } ?>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="tcoa_amt[]" id="tcoa_amt[<?php echo $vincr; ?>]" class="form-control text-right" value="<?php echo $amt; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt2();" onchange="validate_amount(this.id);" />
+                                                    </td>
+                                                    <th>
+                                                        <textarea name="remarks2[]" id="remarks2[<?php echo $vincr; ?>]" class="form-control" style="width:150px;height:28px;"><?php echo $remark; ?></textarea>
+                                                    </th>
+                                                    <?php
+                                                        if($c == $incr2){ echo '<td id="action2['.$vincr.']" style="padding-top: 5px;visibility:visible;">'; }
+                                                        else{ echo '<td id="action2['.$vincr.']" style="padding-top: 5px;visibility:hidden;">'; }
+                                                        echo '<a href="javascript:void(0);" id="addrow2['.$vincr.']" onclick="create_row2(this.id);"><i class="fa fa-plus"></i></a>&ensp;';
+                                                        if($c > 0){ echo '<a href="javascript:void(0);" id="deductrow2['.$vincr.']" onclick="destroy_row2(this.id);"><i class="fa fa-minus" style="color:red;"></i></a>'; }
+                                                        echo '</td>';
+                                                    ?>
+                                                </tr>
+                                                <?php
+                                                $vincr++; 
+                                                $c++;
                                             }
-                                        }
-                                        else{
-                                        ?>
-                                        <tr id="row_no2[<?php echo $vincr; ?>]">
-                                            <td><select name="tcoa[]" id="tcoa[<?php echo $vincr; ?>]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($acc_code as $acode){ ?><option value="<?php echo $acode; ?>"><?php echo $acc_name[$acode]; ?></option><?php } ?></select></td>
-                                            <td><input type="text" name="tcoa_amt[]" id="tcoa_amt[<?php echo $vincr; ?>]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_total_amt2();" onchange="validate_amount(this.id);" /></td>
-                                            <th><textarea name="remarks2[]" id="remarks2[<?php echo $vincr; ?>]" class="form-control" style="width:150px;height:28px;"></textarea></th>
-                                            <td id="action2[<?php echo $vincr; ?>]"><a href="javascript:void(0);" id="addrow2[<?php echo $vincr; ?>]" onclick="create_row2(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
-                                        </tr>
-                                        <?php
-                                        $vincr++;
-                                        }
+                                     //   }
+                                       
                                         ?>
                                     </tbody>
                                     <tfoot>
@@ -428,7 +466,7 @@ if($access_error_flag == 0){
                                             ?>
                                             <tr id="row_no3[<?php echo $c; ?>]">
                                                 <td><select name="emp_scode[]" id="emp_scode[<?php echo $c; ?>]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($driver_code as $ccode){ ?><option value="<?php echo $ccode; ?>" <?php if($acode == $ccode){ echo "selected"; } ?>><?php echo $driver_name[$ccode]; ?></option><?php } ?></select></td>
-                                                <td style="text-align:center;"><input type="checkbox" name="supr_flag[]" id="supr_flag[<?php echo $c; ?>]" onchange="calculate_empsal_amt2();" <?php if((int)$supr_flag[$acode] == 1){ echo "checked"; } ?> /></td>
+                                                <td style="text-align:center;"><input type="checkbox" name="supr_flag[<?php echo $c; ?>]" id="supr_flag[<?php echo $c; ?>]" onchange="calculate_empsal_amt2();" <?php if((int)$supr_flag[$acode] == 1){ echo "checked"; } ?> /></td>
                                                 <td><input type="text" name="emps_amt[]" id="emps_amt[<?php echo $c; ?>]" class="form-control text-right" value="<?php echo $emps_amt[$acode]; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_empsal_amt2();" onchange="validate_amount(this.id);" /></td>
                                                 <th><textarea name="remarks3[]" id="remarks3[<?php echo $c; ?>]" class="form-control" style="width:150px;height:28px;"><?php echo $remarks3[$acode]; ?></textarea></th>
                                                 <?php
@@ -448,7 +486,7 @@ if($access_error_flag == 0){
                                         ?>
                                         <tr id="row_no3[0]">
                                             <td><select name="emp_scode[]" id="emp_scode[0]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($driver_code as $acode){ ?><option value="<?php echo $acode; ?>"><?php echo $driver_name[$acode]; ?></option><?php } ?></select></td>
-                                            <td style="text-align:center;"><input type="checkbox" name="supr_flag[]" id="supr_flag[0]" onchange="calculate_empsal_amt2();" /></td>
+                                            <td style="text-align:center;"><input type="checkbox" name="supr_flag[0]" id="supr_flag[0]" onchange="calculate_empsal_amt2();" /></td>
                                             <td><input type="text" name="emps_amt[]" id="emps_amt[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_empsal_amt2();" onchange="validate_amount(this.id);" /></td>
                                             <th><textarea name="remarks3[]" id="remarks3[0]" class="form-control" style="width:150px;height:28px;"></textarea></th>
                                             <td id="action3[0]"><a href="javascript:void(0);" id="addrow3[0]" onclick="create_row3(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
@@ -507,9 +545,51 @@ if($access_error_flag == 0){
                 </form>
             </div>
             <script>
+                 //Date Range selection
+                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 function return_back(){
                     window.location.href = "chicken_display_generalpurchase2.php";
                 }
+                 function fetch_vehwise_details(a){
+                var typevalue = document.getElementById(a).value;
+                console.log(typevalue);
+                var fetch_fltrs = new XMLHttpRequest();
+                var method = "GET";
+                var url = "fetch_vehwise_details.php?wcode="+typevalue//window.open(url);
+                var asynchronous = true;
+                fetch_fltrs.open(method, url, asynchronous);
+                fetch_fltrs.send();
+                fetch_fltrs.onreadystatechange = function(){
+                    if(this.readyState == 4 && this.status == 200){  
+                          var rate =   this.responseText;
+                          document.getElementById("price_perkm").value = rate; //total_kms
+                        //   var totkms = document.getElementById("price_perkm").value;
+                        //   console.log(totkms);
+                    }
+                }
+            }
+
+            window.onload = function() {
+            // Get the element by ID and trigger the function
+            var typevalue = document.getElementById('warehouse').value;
+            console.log(typevalue);
+                var fetch_fltrs = new XMLHttpRequest();
+                var method = "GET";
+                var url = "fetch_vehwise_details.php?wcode="+typevalue//window.open(url);
+                var asynchronous = true;
+                fetch_fltrs.open(method, url, asynchronous);
+                fetch_fltrs.send();
+                fetch_fltrs.onreadystatechange = function(){
+                    if(this.readyState == 4 && this.status == 200){  
+                          var rate =   this.responseText;
+                          document.getElementById("price_perkm").value = rate; //total_kms
+                          var totkms = document.getElementById("total_kms").value;
+                          var tamt = rate * totkms;
+                          document.getElementById("price_perkm_total").value = tamt;
+                    }
+                }
+        };
+            
                 function checkval(){
                     document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";
                     var date = document.getElementById("date").value;
@@ -565,6 +645,40 @@ if($access_error_flag == 0){
                                 }
                                 else{ }
                             }
+                        }
+                    }
+                    if(l == true){
+                        var tcoa = ""; var tcoa_amt = 0;
+                        var incr2 = document.getElementById("incr2").value;
+                        for(var d = 0;d <= incr2;d++){
+                            if(l == true){
+                                c = d + 1;
+                                tcoa = document.getElementById("tcoa["+d+"]").value;
+                                tcoa_amt = document.getElementById("tcoa_amt["+d+"]").value; if(tcoa_amt == ""){ tcoa_amt = 0; }
+                                if(parseFloat(tcoa_amt) > 0 && tcoa == "" || parseFloat(tcoa_amt) > 0 && tcoa == "select"){
+                                    alert("Please select expense Type in row: "+c);
+                                    document.getElementById("tcoa["+d+"]").focus();
+                                    l = false;
+                                }
+                            }
+                        }
+                    }
+                    if(l == true){
+                        var incr3 = document.getElementById("incr3").value;
+                        var c = 0;
+                        for(var d = 0;d <= incr3;d++){
+                            if(l == true){
+                                c = d + 1;
+                                emp_scode = document.getElementById("emp_scode["+d+"]").value;
+                                emps_amt = document.getElementById("emps_amt["+d+"]").value; if(emps_amt == ""){ emps_amt = 0; }
+                                if(parseFloat(emps_amt) > 0 && emp_scode == "" || parseFloat(emps_amt) > 0 && emp_scode == "select"){
+                                    alert("Please select Employee in row: "+c);
+                                    document.getElementById("emp_scode["+d+"]").focus();
+                                    l = false;
+                                }
+                                else{ }
+                            }
+                            else{ }
                         }
                     }
                     if(l == true){
@@ -796,7 +910,7 @@ if($access_error_flag == 0){
                     document.getElementById("incr3").value = d;
                     html += '<tr id="row_no3['+d+']">';
                     html += '<td><select name="emp_scode[]" id="emp_scode['+d+']" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($driver_code as $acode){ ?><option value="<?php echo $acode; ?>"><?php echo $driver_name[$acode]; ?></option><?php } ?></select></td>';
-                    html += '<td style="text-align:center;"><input type="checkbox" name="supr_flag[]" id="supr_flag['+d+']" onchange="calculate_empsal_amt2();" /></td>';
+                    html += '<td style="text-align:center;"><input type="checkbox" name="supr_flag['+d+']" id="supr_flag['+d+']" onchange="calculate_empsal_amt2();" /></td>';
                     html += '<td><input type="text" name="emps_amt[]" id="emps_amt['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_empsal_amt2();" onchange="validate_amount(this.id);" /></td>';
                     html += '<th><textarea name="remarks3[]" id="remarks3['+d+']" class="form-control" style="width:150px;height:28px;"></textarea></th>';
                     html += '<td id="action3['+d+']"><a href="javascript:void(0);" id="addrow3['+d+']" onclick="create_row3(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow3['+d+']" onclick="destroy_row3(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
@@ -846,6 +960,10 @@ if($access_error_flag == 0){
                     var to_kms = document.getElementById("to_kms").value; if(to_kms == ""){ to_kms = 0; }
                     var total_kms = parseFloat(to_kms) - parseFloat(from_kms); if(total_kms == ""){ total_kms = 0; }
                     document.getElementById("total_kms").value = parseFloat(total_kms).toFixed(2);
+
+                    var totkms =  parseFloat(total_kms).toFixed(2);
+                    var rateperkm = document.getElementById("price_perkm").value;
+                    document.getElementById("price_perkm_total").value = totkms*rateperkm;
                 }
                 function calculate_empsal_amt2(){
                     var incr3 = document.getElementById("incr3").value;
@@ -910,6 +1028,10 @@ if($access_error_flag == 0){
 		    <script src="chick_validate_basicfields.js"></script>
             <?php include "header_foot1.php"; ?>
 		    <script src="handle_ebtn_as_tbtn.js"></script>
+            <script>
+                //Date Range selection
+                $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+            </script>
         </body>
     </html>
 <?php

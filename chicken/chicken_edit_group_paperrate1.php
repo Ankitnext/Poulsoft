@@ -16,6 +16,9 @@ if($access_error_flag == 0){
     $query = mysqli_query($conn,$sql); $group_code = $group_name = array();
     while($row = mysqli_fetch_assoc($query)){ $group_code[$row['code']] = $row['code']; $group_name[$row['code']] = $row['description']; }
 
+     //check and fetch date range
+    global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    include "poulsoft_fetch_daterange_master.php";
 ?>
     <html>
         <head>
@@ -48,7 +51,7 @@ if($access_error_flag == 0){
                                 </thead>
                                 <tbody id="row_body">
                                     <tr style="margin:5px 0px 5px 0px;">
-                                        <td><input type="text" name="date" id="date" class="form-control prate_datepickers" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly /></td>
+                                        <td><input type="text" name="date" id="date" class="form-control range_picker" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly /></td>
                                         <td><select name="cgroup" id="cgroup" class="form-control select2" style="width:180px;"><option value="all">-All-</option><?php foreach($group_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($scode == $cgroup){ echo "selected"; } ?>><?php echo $group_name[$scode]; ?></option><?php } ?></select></td>
                                         <td><select name="code" id="code" class="form-control select2" style="width:180px;"><option value="all">-All-</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($scode == $code){ echo "selected"; } ?>><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>
                                         <td><input type="text" name="new_price" id="new_price" class="form-control text-right" value="<?php echo $new_price; ?>" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" /></td>
@@ -76,6 +79,8 @@ if($access_error_flag == 0){
                 </form>
             </div>
             <script>
+                //Date Range selection
+                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 function return_back(){
                     window.location.href = "chicken_display_group_paperrate1.php";
                 }
@@ -116,6 +121,10 @@ if($access_error_flag == 0){
 		    <script src="chick_validate_basicfields.js"></script>
             <?php include "header_foot1.php"; ?>
             <script src="handle_ebtn_as_tbtn.js"></script>
+            <script>
+                //Date Range selection
+                $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+            </script>
         </body>
     </html>
 <?php

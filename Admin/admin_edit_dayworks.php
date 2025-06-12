@@ -53,6 +53,7 @@ if($link_active_flag > 0){
         $sql = "SELECT * FROM `emp_daily_works` WHERE `id` = '$ids' AND `dflag` = '0'";
         $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){          
+            $idk = $row['id'];
             $date = $row['date'];
             $tic_no = $row['tic_no'];
             $mod_type = $row['mod_type'];
@@ -61,9 +62,6 @@ if($link_active_flag > 0){
             $gdate = $row['gdate'];
             $fl_type = $row['fl_type'];
             $fl_link = $row['fl_link'];
-            $purdoc_path1 = $row['file_path'];
-            $purdoc_path2 = $row['file_path2'];
-            $purdoc_path3 = $row['file_path3'];
             $wdate = $row['wdate'];
             $t_taken = $row['t_taken'];
             $statuses = $row['statuses'];
@@ -81,7 +79,7 @@ if($link_active_flag > 0){
                         <div class="card-body">
                             <div class="col-md-12">
                                 <form action="admin_modify_dayworks.php" method="post" role="form" onsubmit="return checkval()">
-                                    <div class="row">
+                                <div class="row">
                                        <div class="form-group" style="width:120px;">
                                             <label for="date">Date</label>
                                             <input type="text" name="date" id="date" class="form-control datepicker" value="<?php echo $date; ?>" style="width:110px;" onchange="" readonly />
@@ -140,54 +138,21 @@ if($link_active_flag > 0){
                                         </div>&ensp;
                                         <div class="form-group col-md-1" style="">
                                             <label>Status<b style="color:red;">&ensp;*</b></label>
-                                            <input type="text" name="status" id="status" class="form-control" value="<?php echo $status; ?>" >
+                                            <input type="text" name="status" id="status" class="form-control" value="<?php echo $statuses; ?>" >
                                         </div>&ensp;
                                         <div class="form-group col-md-1" style="">
                                             <label>Remarks<b style="color:red;">&ensp;*</b></label>
                                             <textarea name="remarks" id="remarks" class="form-control" style="padding:0;width:150px;height:28px;" onkeyup="validatename(this.id);"><?php echo $remarks; ?></textarea>
+
                                         </div>&ensp;
-                                        <div class="form-group" style="width:200px;">
-                                            <label>Attach Document-1</label>
-                                            <input type="file" name="pur_doc_1" id="pur_doc_1" class="form-control1" onchange="show_delete_btn(this.id,'clearButton')" style="width:180px;">
-                                            <i class="fa fa-close" style="color:red;visibility:hidden;" title="delete" id="clearButton" onclick="clear_file(this.id, 'pur_doc_1')"></i>
-                                            <span id="r1">    
-                                            <?php if($purdoc_path1 != ""){ echo "<br/><span >".basename(parse_url($purdoc_path1, PHP_URL_PATH))."</span>"; ?> 
-                                                <a href='javascript:void(0)' id='<?php echo $id; ?>' value='<?php echo $id; ?>' onclick='check_delete(this.id,"Reference Document-1","purdoc_path1","r1")'>
-                                                &nbsp;&nbsp; <i class='fa fa-trash' style='color:red;' title='delete'></i>
-                                                </a>
-                                            <?php } ?>
-                                        
-                                            </span>
-                                        </div>
-                                        <div class="form-group" style="width:200px;">
-                                            <label>Attach Document-2</label>
-                                            <input type="file" name="pur_doc_2" id="pur_doc_2" class="form-control1" onchange="show_delete_btn(this.id,'clearButton1')" style="width:180px;">
-                                            <i class='fa fa-close' style='color:red; visibility: hidden;' title='delete' id="clearButton1" onclick="clear_file(this.id,'pur_doc_2')"></i>
-                                            <span id='r2'>
-                                            <?php if($purdoc_path2 != ""){ echo "<br/><span >".basename(parse_url($purdoc_path2, PHP_URL_PATH))."</span>"; ?> 
-                                                <a href='javascript:void(0)' id='<?php echo $id; ?>' value='<?php echo $id; ?>' onclick='check_delete(this.id,"Reference Document-2","purdoc_path2","r2")'>
-                                                &nbsp;&nbsp; <i class='fa fa-trash' style='color:red;' title='delete'></i>
-                                                </a>
-                                            <?php } ?>
-                                            </span>
-                                        </div>
-                                        <div class="form-group" style="width:200px;">
-                                            <label>Attach Document-3</label>
-                                            <input type="file" name="pur_doc_3" id="pur_doc_3" class="form-control1" onchange="show_delete_btn(this.id,'clearButton2')" style="width:180px;">
-                                            <i class='fa fa-close' style='color:red; visibility: hidden;' title='delete' id="clearButton2" onclick="clear_file(this.id,'pur_doc_3')"></i>
-                                            <span id='r3'>
-                                            <?php if($purdoc_path3 != ""){ echo "<br/><span>".basename(parse_url($purdoc_path3, PHP_URL_PATH))."</span>"; ?>
-                                                <a href='javascript:void(0)' id='<?php echo $id; ?>' value='<?php echo $id; ?>' onclick='check_delete(this.id,"Reference Document-3","purdoc_path3","r3")'>
-                                                &nbsp;&nbsp; <i class='fa fa-trash' style='color:red;' title='delete'></i>
-                                                </a>
-                                            <?php } ?>
-                                            </span>
-                                        </div>
-                                    </div>
                                     <div class="row">
                                         <div class="form-group col-md-1" style="visibility:hidden;">
                                             <label>Incr<b style="color:red;">&ensp;*</b></label>
                                             <input type="text" name="incr" id="incr" class="form-control" value="" >
+                                        </div>
+                                        <div class="form-group col-md-1" style="visibility:hidden;">
+                                            <label>Id<b style="color:red;">&ensp;*</b></label>
+                                            <input type="idvalue" name="idvalue" id="idvalue" class="form-control" value="<?php echo $idk; ?>" >
                                         </div>
                                         <div class="form-group col-md-1" style="visibility:hidden;">
                                             <label>ECount<b style="color:red;">&nbsp;*</b></label>
@@ -292,37 +257,6 @@ if($link_active_flag > 0){
                     return false;
                 }
 			}
-            function check_delete(a,b,c,d){
-                var trnum = a;
-                var reference = b;
-                var column = c;
-                console.log(trnum);
-                console.log(reference);
-                console.log(column);
-                var confirmation = confirm("Are you sure you want to delete "+reference+" ?");
-                if (confirmation) {
-                    //alert('Successfully deleted');
-                    var fetch_fltrs = new XMLHttpRequest();
-                    var method = "GET";
-                    var url = "broiler_delete_refdoc1.php?trnum="+trnum+"&colm="+column+"&type=purchase"
-                    //window.open(url);
-                    var asynchronous = true;
-                    fetch_fltrs.open(method, url, asynchronous);
-                    fetch_fltrs.send();
-                    fetch_fltrs.onreadystatechange = function(){
-                        if(this.readyState == 4 && this.status == 200){  
-                           // var res = this.responseText; 
-                           // alert(res);   
-                            var spanElement = document.getElementById(d);
-                            if (spanElement) {
-                                spanElement.style.display = "none";
-                            }
-                        }
-                    }
-                } else {
-                    console.log("Delete action canceled");
-                }
-            }
             function update_ebtn_status(a){
                 if(parseInt(a) == 1){
                     document.getElementById("ebtncount").value = "1";

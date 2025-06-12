@@ -174,8 +174,15 @@ if(isset($_POST['submit']) == true){
                                 else if($row['obtype'] == "Dr"){ $obdramt[$row['code']] = $row['obamt']; $obcram[$row['code']] = 0; }
                                 else{ $obdramt[$row['code']] = $obcramt[$row['code']] = 0; }
                             }
+                            $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'CustomerLedgerReportAllNew.php' AND `field_function` LIKE 'Purchase Sale Sorting' AND `user_access` LIKE 'all' AND `flag` = '1'";
+                            $query = mysqli_query($conn,$sql); $sltr_flag = mysqli_num_rows($query); //$avou_flag = 1;
+                            
                             //Sales
+                            if($sltr_flag > 0){ 
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` <= '$tdate' AND `trtype` NOT IN ('PST') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice`,`customercode` ASC";
+                            } else {
                             $sql = "SELECT * FROM `customer_sales` WHERE `date` <= '$tdate' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice`,`customercode` ASC";
+                            }
                             $query = mysqli_query($conn,$sql); $opn_samt = $btw_sqty = $btw_samt = array(); $old_inv1 = "";
                             while($row = mysqli_fetch_assoc($query)){
                                 if(strtotime($row['date']) < strtotime($fdate)){

@@ -109,6 +109,10 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
 
 $i = 0;
 
+$sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){  $group_access_code = $row['cgroup_access']; }
+if($group_access_code == "all" || $group_access_code == ""){ $group_access_filter1 = ""; } else{ $group_access_list = implode("','", explode(",",$group_access_code)); $group_access_filter1 = " AND `code` IN ('$group_access_list')"; $group_access_filter2 = " AND `groupcode` IN ('$group_access_list')"; }
+
 /*Master Report Format*/
 $href = explode("/", $_SERVER['REQUEST_URI']);
 $field_href = explode("?", $href[2]);
@@ -242,7 +246,7 @@ if ($count4 > 0) {
     }
 }
 if ($count98 > 0) {
-    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `dflag` = '0' ORDER BY `name` ASC";
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `dflag` = '0'".$group_access_filter2." ORDER BY `name` ASC";
     $query = mysqli_query($conn, $sql);
     while ($row = mysqli_fetch_assoc($query)) {
         $vendor_code[$row['code']] = $row['code'];
@@ -899,15 +903,10 @@ else {
                             }
                             echo '<input type="checkbox" class="hide_show" id="customer_shipping_address" onclick="update_masterreport_status(this.id);" ' . $checked . '><span>Shipping Address    </span>';
                            
-                        }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "customer_ccode") {
-                            if (!empty($act_col_numbs[$key_id])) {
-                                $checked = "checked";
-                            } else {
-                                $checked = "";
-                            }
-                            echo '<input type="checkbox" class="hide_show" id="customer_ccode" onclick="update_masterreport_status(this.id);" ' . $checked . '><span>Customer Code </span>';
-                           
-                        } else {
+                        }
+                        else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "customer_ccode") { if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else { $checked = ""; } echo '<input type="checkbox" class="hide_show" id="customer_ccode" onclick="update_masterreport_status(this.id);" ' . $checked . '><span>Customer Code </span>'; }
+                        else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "batch_code") { if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else { $checked = ""; } echo '<input type="checkbox" class="hide_show" id="batch_code" onclick="update_masterreport_status(this.id);" ' . $checked . '><span>Batch Code </span>'; }
+                        else {
                         }
                     }
                     ?>
@@ -1221,12 +1220,10 @@ else {
                             if ($fbc > $i) {
                                 $fbh++;
                             }
-                        }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
-                            echo "<th id='order'>Customer Code</th>";
-                            if ($fbc > $i) {
-                                $fbh++;
-                            }
-                        } else {
+                        }
+                        else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode"){ echo "<th id='order'>Customer Code</th>"; if ($fbc > $i) { $fbh++; } }
+                        else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<th id='order'>Batch Code</th>"; if ($fbc > $i) { $fbh++; } }
+                        else {
                         }
                     }
                 }
@@ -1505,9 +1502,10 @@ else {
                             echo "<td></td>";
                         }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") {
                             echo "<td></td>";
-                        }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
-                            echo "<td></td>";
-                        } else {
+                        }
+                        else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") { echo "<td></td>"; }
+                        else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code") { echo "<td></td>"; }
+                        else {
                         }
                     }
                     echo "</tr>";
@@ -1568,7 +1566,7 @@ else {
                     }
                     $sql_record = "SELECT * FROM `master_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `to_account` = '$vendors' AND `t_type` IN ('Customer Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn, $sql_record);
-                    $transaction_count = 0;
+                    $transaction_count = 0; $i = 0;
                     if (!empty($query)) {
                         $transaction_count = mysqli_num_rows($query);
                     }
@@ -1676,7 +1674,7 @@ else {
                 $bt_sale_amt = $bt_rct_amt = $tot_birds = $tot_rqty = $tot_iamt = $tot_tcds_amt = 0;
                 for ($cdate = strtotime($fdate); $cdate <= strtotime($tdate); $cdate += (86400)) {
                     $adate = date('Y-m-d', $cdate);
-
+                    
                     //Sale Entries
                     for ($a = 0; $a <= $sale_ccount; $a++) {
                         if (!empty($sale_info[$adate . "@" . $a])) {
@@ -1896,9 +1894,10 @@ else {
                                         echo "<td  style='text-align:left;' title='Type' rowspan=" . $inv_count[$sales_details[0]] . ">Sales Invoice</td>";
                                     }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") {
                                         echo "<td  style='text-align:left;' title='Sale Image' rowspan=" . $inv_count[$sales_details[0]] . ">" . $sales_details[51] . "</td>";
-                                    }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
-                                        echo "<td  style='text-align:left;' title='Sale Image' rowspan=" . $vendor_ccode[$sales_details[3]] . "</td>";
-                                    } else {
+                                    }
+                                    else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") { echo "<td  style='text-align:left;' title='Sale Image'></td>"; }
+                                    else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code") { echo "<td  style='text-align:left;' title='Batch Code'>".$sales_details[32]."</td>"; }
+                                    else {
                                     }
                                 }
                                 echo "</tr>";
@@ -1973,9 +1972,10 @@ else {
                                         echo "<td  style='text-align:left;' title='Line Name'>" . $lname . "</td>";
                                     } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") {
                                         echo "<td></td>";
-                                    } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
-                                        echo "<td>".$vendor_ccode[$sales_details[3]]."</td>";
-                                    }else {
+                                    }
+                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode"){ echo "<td>".$vendor_ccode[$sales_details[3]]."</td>"; }
+                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td>".$sales_details[32]."</td>"; }
+                                    else {
                                     }
                                 }
                                 echo "</tr>";
@@ -2156,9 +2156,10 @@ else {
                                     echo "<td  style='text-align:left;' title='Type'>Receipts</td>";
                                 }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") {
                                     echo "<td></td>";
-                                }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
-                                    echo "<td>".$vendor_ccode[$receipt_details[2]]."</td>";
-                                } else {
+                                }
+                                else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode"){ echo "<td>".$vendor_ccode[$receipt_details[2]]."</td>"; }
+                                else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                                else {
                                 }
                             }
                         }
@@ -2201,9 +2202,9 @@ else {
                             $dr_amt += (float)$pay_details[6];
                             $rb_amt = (float)round($rb_amt,5) + (float)round($pay_details[6],5);
 
-                            $bt_rct_amt += (float)$pay_details[6];
-                            $cr_amt += (float)$pay_details[6];
-                            $rb_amt = (float)round($rb_amt,5) - (float)round($pay_details[6],5);
+                            //$bt_rct_amt += (float)$pay_details[6];
+                            //$cr_amt += (float)$pay_details[6];
+                            //$rb_amt = (float)round($rb_amt,5) - (float)round($pay_details[6],5);
 
                             echo "<tr>";
                             for ($i = 1; $i <= $col_count; $i++) {
@@ -2343,7 +2344,9 @@ else {
                                     echo "<td></td>";
                                 }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                                     echo "<td>".$vendor_ccode[$pay_details[2]]."</td>";
-                                } else {
+                                }
+                                else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                                else {
                                 }
                             }
                         }
@@ -2517,7 +2520,9 @@ else {
                                     echo "<td></td>";
                                 } else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                                     echo "<td>". $vendor_ccode[$return_details[3]]."</td>";
-                                } else {
+                                }
+                                else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                                else {
                                 }
                             }
                         }
@@ -2691,7 +2696,9 @@ else {
                                     echo "<td></td>";
                                 }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                                     echo "<td>".$vendor_ccode[$ccn_details[3]]."</td>";
-                                } else {
+                                }
+                                else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                                else {
                                 }
                             }
                         }
@@ -2865,7 +2872,9 @@ else {
                                     echo "<td></td>";
                                 }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                                     echo "<td>".$vendor_ccode[$cdn_details[3]]."</td>";
-                                } else {
+                                }
+                                else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                                else {
                                 }
                             }
                         }
@@ -3039,7 +3048,9 @@ else {
                                     echo "<td></td>";
                                 }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                                     echo "<td></td>";
-                                } else {
+                                }
+                                else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                                else {
                                 }
                             }
                         }
@@ -3134,6 +3145,7 @@ else {
                                 else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "transaction_type") { echo "<td  style='text-align:left;' title='Type'>Contra Dr Note</td>"; }
                                 else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") { echo "<td></td>"; }
                                 else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") { echo "<td></td>"; }
+                                else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
                                 else { }
                             }
                         }
@@ -3225,6 +3237,7 @@ else {
                                     else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "transaction_type") { echo "<td  style='text-align:left;' title='Type'>Transit Loss</td>"; }
                                     else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") { echo "<td></td>"; }
                                     else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") { echo "<td>".$vendor_ccode[$tls_details[3]]."</td>"; }
+                                    else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
                                     else { }
                                 }
                             }
@@ -3293,6 +3306,7 @@ else {
                                     else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "transaction_type") { echo "<td  style='text-align:left;' title='Type'>Transit Loss</td>"; }
                                     else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") { echo "<td></td>"; }
                                     else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") { echo "<td>".$vendor_ccode[$tls_details[3]]."</td>"; }
+                                    else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
                                     else { }
                                 }
                             }
@@ -3430,7 +3444,9 @@ else {
                             echo "<td></td>";
                         }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                             echo "<td></td>";
-                        }else {
+                        }
+                        else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                        else {
                         }
                     }
                     echo "</tr>";
@@ -3568,7 +3584,9 @@ else {
                             echo "<td></td>";
                         }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                             echo "<td></td>";
-                        } else {
+                        }
+                        else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                        else {
                         }
                     }
                     echo "</tr>";
@@ -3714,9 +3732,12 @@ else {
                             echo "<td></td>";
                         }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_shipping_address") {
                             echo "<td></td>";
-                        }else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
+                        }
+                        else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "customer_ccode") {
                             echo "<td></td>";
-                        } else {
+                        }
+                        else if (!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td></td>"; }
+                        else {
                         }
                     }
                     echo "</tr>";

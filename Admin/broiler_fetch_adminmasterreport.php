@@ -13,6 +13,7 @@ $mfl_col_name[$row_incr] = "date"; $row_incr++;
 $mfl_col_name[$row_incr] = "trnum"; $row_incr++;
 $mfl_col_name[$row_incr] = "vendor_name"; $row_incr++;
 $mfl_col_name[$row_incr] = "item_name"; $row_incr++;
+$mfl_col_name[$row_incr] = "item_hsncode"; $row_incr++;
 $mfl_col_name[$row_incr] = "transaction_type"; $row_incr++;
 $mfl_col_name[$row_incr] = "gst_amount"; $row_incr++;
 $mfl_col_name[$row_incr] = "discount_amount"; $row_incr++;
@@ -81,6 +82,7 @@ $mfl_col_name[$row_incr] = "customer_avg_wt"; $row_incr++;
 $mfl_col_name[$row_incr] = "customer_profit"; $row_incr++;
 $mfl_col_name[$row_incr] = "customer_remarks"; $row_incr++;
 $mfl_col_name[$row_incr] = "customer_warehouse"; $row_incr++;
+$mfl_col_name[$row_incr] = "batch_code"; $row_incr++;
 $mfl_col_name[$row_incr] = "customer_farm_batch"; $row_incr++;
 $mfl_col_name[$row_incr] = "customer_farm_mnuname"; $row_incr++;
 $mfl_col_name[$row_incr] = "customer_batch_mnuname"; $row_incr++;
@@ -356,6 +358,10 @@ $mfl_col_name[$row_incr] = "feedin_farm_per"; $row_incr++;
 $mfl_col_name[$row_incr] = "feedin_count"; $row_incr++;
 $mfl_col_name[$row_incr] = "feedin_per"; $row_incr++;
 $mfl_col_name[$row_incr] = "feedconsumed_count"; $row_incr++;
+$mfl_col_name[$row_incr] = "feedconsumed_item1"; $row_incr++;
+$mfl_col_name[$row_incr] = "feedconsumed_count1"; $row_incr++;
+$mfl_col_name[$row_incr] = "feedconsumed_item2"; $row_incr++;
+$mfl_col_name[$row_incr] = "feedconsumed_count2"; $row_incr++;
 $mfl_col_name[$row_incr] = "feedcumconsumed_count"; $row_incr++;
 $mfl_col_name[$row_incr] = "feedconsumed_per"; $row_incr++;
 $mfl_col_name[$row_incr] = "feedconsumed_bags"; $row_incr++;
@@ -420,6 +426,20 @@ $mfl_col_name[$row_incr] = "total_rearing_charges"; $row_incr++;
 $mfl_col_name[$row_incr] = "farmer_tds_amount"; $row_incr++;
 $mfl_col_name[$row_incr] = "other_deduction"; $row_incr++;
 $mfl_col_name[$row_incr] = "farmer_payable"; $row_incr++;
+
+$mfl_col_name[$row_incr] = "farmer_sale_deduction"; $row_incr++;
+$mfl_col_name[$row_incr] = "total_incentives"; $row_incr++;
+$mfl_col_name[$row_incr] = "avgwt_incentive_amt"; $row_incr++;
+
+$mfl_col_name[$row_incr] = "sales_incentive_avgwt"; $row_incr++;
+$mfl_col_name[$row_incr] = "mortality_deduction"; $row_incr++;
+$mfl_col_name[$row_incr] = "total_amount_payable"; $row_incr++;
+
+$mfl_col_name[$row_incr] = "other_incentive"; $row_incr++;
+$mfl_col_name[$row_incr] = "tds_amt"; $row_incr++;
+$mfl_col_name[$row_incr] = "mortality_incentive_amt"; $row_incr++;
+
+
 $mfl_col_name[$row_incr] = "final_farmer_payable"; $row_incr++;
 $mfl_col_name[$row_incr] = "paid_to_farmer"; $row_incr++;
 $mfl_col_name[$row_incr] = "pl_on_fmrpay"; $row_incr++;

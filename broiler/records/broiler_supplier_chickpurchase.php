@@ -182,7 +182,7 @@ if(isset($_POST['submit_report']) == true){
                 $html = '';
                 $html .= '<thead class="thead3" id="head_names">';
                 $html .= '<tr style="text-align:center;" align="center">';
-                $html .= '<th style="text-align:center;" id="order_date">Date</th>'; 
+                $html .= '<th style="text-align:center;" id="order_date">Date</th>';
                 $html .= '<th style="text-align:center;" id="order_date">Received Date</th>';
                 $html .= '<th style="text-align:center;" id="order">Supplier</th>';
                 $html .= '<th style="text-align:center;" id="order">Dc. No.</th>';
@@ -197,6 +197,7 @@ if(isset($_POST['submit_report']) == true){
                 $html .= '<th style="text-align:center;" id="order_num">Amount</th>';
                 $html .= '<th style="text-align:center;" id="order_num">Vehicle No</th>';
                 $html .= '<th style="text-align:center;" id="order_num">Farm/Warehouse</th>';
+                $html .= '<th style="text-align:center;" id="order_num">Batch Code</th>';
                 $html .= '<th style="text-align:center;" id="order_num">Batch No.</th>';
                 $html .= '<th style="text-align:center;" id="order_num">Remarks</th>';
                 $html .= '<th style="text-align:center;" id="order_num">Upload Status</th>';
@@ -229,6 +230,7 @@ if(isset($_POST['submit_report']) == true){
                     $item_tamt = $row['item_tamt'];
                     if(!empty($vehicle_name[$row['vehicle_code']])){ $tname = $vehicle_name[$row['vehicle_code']]; } else{ $tname = $row['vehicle_code']; }
                     $sname = $farm_name[$row['warehouse']];
+                    $batch_c = $row['farm_batch'];
                     $batch_n = $batch_name[$row['farm_batch']];
                     $remarks = $row['remarks'];
 
@@ -255,6 +257,7 @@ if(isset($_POST['submit_report']) == true){
                     $html .= '<td style="text-align:right;">'.number_format_ind($item_tamt).'</td>';
                     $html .= '<td style="text-align:left;">'.$tname.'</td>';
                     $html .= '<td style="text-align:left;">'.$sname.'</td>';
+                    $html .= '<td style="text-align:left;">'.$batch_c.'</td>';
                     $html .= '<td style="text-align:left;">'.$batch_n.'</td>';
                     $html .= '<td style="text-align:left;">'.$remarks.'</td>';
                     if((int)$file_count > 0){ $html .= '<td style="text-align:left;">Uploaded</td>'; } else{ $html .= '<td style="text-align:left;">Not Uploaded</td>'; }
@@ -278,6 +281,7 @@ if(isset($_POST['submit_report']) == true){
                 $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind($t_nqty)).'</th>';
                 $html .= '<th style="text-align:right;">'.number_format_ind($avg_prc).'</th>';
                 $html .= '<th style="text-align:right;">'.number_format_ind($t_iamt).'</th>';
+                $html .= '<th style="text-align:left;"></th>';
                 $html .= '<th style="text-align:left;"></th>';
                 $html .= '<th style="text-align:left;"></th>';
                 $html .= '<th style="text-align:left;"></th>';

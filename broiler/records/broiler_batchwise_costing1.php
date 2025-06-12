@@ -190,7 +190,7 @@ if(isset($_POST['submit_report']) == true){
             $nhtml .= '<th>Medicine Issued</th>'; $fhtml .= '<th id="order_num">Medicine Issued</th>';
             $nhtml .= '<th>Rate</th>'; $fhtml .= '<th id="order_num">Rate</th>';
             $nhtml .= '<th>Amount</th>'; $fhtml .= '<th id="order_num">Amount</th>';
-            $nhtml .= '<th>Admin Cost</th>'; $fhtml .= '<th id="order_num">Admin Cost</th>';
+            // $nhtml .= '<th>Admin Cost</th>'; $fhtml .= '<th id="order_num">Admin Cost</th>';
             $nhtml .= '<th>Production Cost</th>'; $fhtml .= '<th id="order_num">Production Cost</th>';
             $nhtml .= '<th>Sale (Birds Qty)</th>'; $fhtml .= '<th id="order_num">Sale (Birds Qty)</th>';
             $nhtml .= '<th>Sale (Weight)</th>'; $fhtml .= '<th id="order_num">Sale (Weight)</th>';
@@ -420,7 +420,7 @@ if(isset($_POST['submit_report']) == true){
                     $sale_amt = 0; if(!empty($csale_amt[$bcode]) && (float)$csale_amt[$bcode] != 0){ $sale_amt = $csale_amt[$bcode];}
                     $sale_prc = 0; if((float)($sale_qty) != 0){ $sale_prc = (float)$sale_amt / (float)$sale_qty; }
 
-                    $prd_cost = (float)$ad_sprc + (float)$ch_amt + (float)$fd_amt + (float)$mv_amt;
+                    $prd_cost = (float)$ch_amt + (float)$fd_amt + (float)$mv_amt;
 
                     $profit_loss = (float)$sale_amt - (float)$prd_cost;
 
@@ -437,7 +437,7 @@ if(isset($_POST['submit_report']) == true){
                     $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mv_qty,5))).'</td>';
                     $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mv_prc,5))).'</td>';
                     $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mv_amt,5))).'</td>';
-                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($ad_sprc,5))).'</td>';
+                    // $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($ad_sprc,5))).'</td>';
                     $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($prd_cost,5))).'</td>';
                     $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($csale_no,5))).'</td>';
                     $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($sale_qty,5))).'</td>';
@@ -456,7 +456,7 @@ if(isset($_POST['submit_report']) == true){
                     $tmv_qty += (float)$mv_qty;
                     $tmv_prc += (float)$mv_prc;
                     $tmv_amt += (float)$mv_amt;
-                    $tad_sprc += (float)$ad_sprc;
+                    // $tad_sprc += (float)$ad_sprc;
                     $tprd_cost += (float)$prd_cost;
                     $tsale_qty += (float)$sale_qty;
                     $tcsale_no += (float)$csale_no;
@@ -478,7 +478,7 @@ if(isset($_POST['submit_report']) == true){
                 $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmv_qty,5))).'</th>';
                 $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmv_prc,5))).'</th>';
                 $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmv_amt,5))).'</th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tad_sprc,5))).'</th>';
+                // $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tad_sprc,5))).'</th>';
                 $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tprd_cost,5))).'</th>';
                 $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tsale_qty,5))).'</th>';
                 $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tcsale_no,5))).'</th>';

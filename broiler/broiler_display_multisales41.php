@@ -32,6 +32,15 @@ if($link_active_flag > 0){
     $sale_print1 = 0;
     $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'broiler_display_multisales4.php' AND `field_function` = 'Sale Invoice Format-1' AND `user_access` LIKE 'all' AND `flag` = '1'";
     $query = mysqli_query($conn,$sql); $sale_print1 = mysqli_num_rows($query);
+
+    $cline_flag = 0;
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'broiler_display_multisales41.php' AND `field_function` = 'Bird Sales' AND `user_access` LIKE 'all' AND `flag` = '1'";
+    $query = mysqli_query($conn,$sql); $cline_flag = mysqli_num_rows($query);
+    
+    $trnum_flag = 0;
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'broiler_display_multisales41.php' AND `field_function` = 'Fetch trnum' AND `user_access` LIKE 'all' AND `flag` = '1'";
+    $query = mysqli_query($conn,$sql); $trnum_flag = mysqli_num_rows($query);
+    
 ?>
 <html lang="en">
     <head>
@@ -114,7 +123,8 @@ if($link_active_flag > 0){
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>DC No</th>
+                                        <?php if($trnum_flag > 0){ ?><th>trnum</th> <?php } else { ?>
+                                        <th>DC No</th> <?php } ?>
                                         <th>Customer</th>
 										<th>Birds</th>
 										<th>Quantity</th>
@@ -122,6 +132,7 @@ if($link_active_flag > 0){
 										<th>Price</th>
 										<th>Amount</th>
 										<th>Farm/Warehouse</th>
+										<?php if($cline_flag > 0) { ?><th>Line Name</th> <?php } ?>
 										<th>Action</th>
                                     </tr>
                                 </thead>
@@ -129,27 +140,46 @@ if($link_active_flag > 0){
                                     <?php
                                         $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $item_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; }
-                                        $sql = "SELECT * FROM `main_contactdetails`"; $query = mysqli_query($conn,$sql); $vendor_name = array();
-                                        while($row = mysqli_fetch_assoc($query)){ $vendor_name[$row['code']] = $row['name']; }
+
+                                        $sql = "SELECT * FROM `breeder_cus_lines` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+                                        while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code']; $cline_name[$row['code']] = $row['description']; }
+
+                                        $sql = "SELECT * FROM `main_contactdetails`"; $query = mysqli_query($conn,$sql); $vendor_name = $vendor_clcode = array();
+                                        while($row = mysqli_fetch_assoc($query)){ $vendor_name[$row['code']] = $row['name']; $vendor_clcode[$row['code']] = $cline_name[$row['cline_code']];}
+
                                         $sql = "SELECT * FROM `inv_sectors`"; $query = mysqli_query($conn,$sql); $sector_name = array();
                                         while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
-                                        $sql = "SELECT * FROM `broiler_farm`"; $query = mysqli_query($conn,$sql);
-                                        while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
+
+                                        $sql = "SELECT * FROM `location_line` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+                                        while($row = mysqli_fetch_assoc($query)){ $line_code[$row['code']] = $row['code']; $line_name[$row['code']] = $row['description']; }
+
+                                        $sql = "SELECT * FROM `broiler_farm`"; $query = mysqli_query($conn,$sql); $sector_lname = array();
+                                        while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; $sector_lname[$row['code']] = $line_name[$row['line_code']]; }
+
+                                         $sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%Broiler Birds%' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $bcodes = ""; $broiler_acodes = array();
+                                        while($row = mysqli_fetch_assoc($query)){  $broiler_acodes[$row['code']] = $row['code']; }
                                         
+                                        $broiler_codes = implode("','",$broiler_acodes);
+                                        $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$broiler_codes') AND `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $item_name1 = $item_code1 = $broiler_bds = array(); 
+                                        while($row = mysqli_fetch_assoc($query)){ $item_code1[$row['code']] = $row['code']; $item_name1[$row['code']] = $row['description']; $broiler_bds[] = $row['code']; }
+                                        $broiler_bds_str = "'" . implode("','", $broiler_bds) . "'";
+                                        
+                                       
                                         $delete_url = $delete_link."?utype=delete&trnum=";
-                                        $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0; // AND `sale_type` IN ('FormMBSale','CusMBSale')
+                                        $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `icode` IN ($broiler_bds_str) AND `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0; // AND `sale_type` IN ('FormMBSale','CusMBSale')
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['trnum'];
                                             $edit_url = $edit_link."?utype=edit&trnum=".$id;
-                                           // $print_url = $print_link."?utype=print&trnum=".$id;
+                                           // $print_url = $print_link."?utype=print&trnum=".$id; 
                                            $print_url = "print/Examples/broiler_print_multisales3.php?id=".$row['date']."@".$row['vcode']."@inv";
+                                           $print_url1 = "print/Examples/broiler_print_multisales3_shanza.php?id=".$row['date']."@".$row['vcode']."@inv";
                                            $print_url2 = "print/Examples/broiler_saleinvoice.php?id=".$row['trnum']."@inv";
                                            $print_url3 = "print/Examples/broiler_saleinvoice1.php?id=".$row['trnum']."@inv";
                                            $print_url4 = "print/Examples/broiler_saleinvoice_tallyformat.php?id=".$row['trnum']."@inv";
                                     ?>
                                     <tr>
 										<td data-sort="<?= strtotime($row['date']) ?>"><?= date('d.m.Y',strtotime($row['date'])) ?></td>
-										<td><?php echo $row['billno']; ?></td>
+										<td><?php if($trnum_flag > 0){ echo $id; }else{ echo $row['billno']; }?></td>
 										<td><?php if($row['sale_type'] == "FormMBSale"){ echo $sector_name[$row['warehouse']]; } else{ echo $vendor_name[$row['vcode']]; } ?></td>
 										<td><?php echo str_replace(".00","",$row['birds']); ?></td>
 										<td><?php echo $row['rcd_qty']; ?></td>
@@ -163,8 +193,9 @@ if($link_active_flag > 0){
                                         }
                                         ?></td>
 										<td><?php echo $row['rate']; ?></td>
-										<td><?php echo $row['item_tamt']; ?></td>
+                                        <td><?php echo number_format(round($row['item_tamt']), 2, '.', ''); ?></td>
 										<td><?php echo $sector_name[$row['warehouse']]; ?></td>
+										<?php if($cline_flag > 0) { ?><td><?php echo $sector_lname[$row['warehouse']]; ?></td> <?php } ?>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
@@ -198,6 +229,7 @@ if($link_active_flag > 0){
                                             }
                                             if($print_flag == 1){
                                                 echo "<a href='".$print_url."' target='_BLANK'><i class='fa fa-print' style='color:black;' title='Print'></i></a>&ensp;&ensp;";
+                                                echo "<a href='".$print_url1."' target='_BLANK'><i class='fa fa-print' style='color:black;' title='Print'></i></a>&ensp;&ensp;";
                                             }
                                             if($sale_print1 > 0){
                                                 echo "<a href='".$print_url2."' target='_BLANK'><i class='fa fa-print' style='color:brown;' title='Print'></i></a>&ensp;&ensp;";

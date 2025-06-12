@@ -12,6 +12,14 @@
         while($row = mysqli_fetch_assoc($query)){ $gp_id = $cid = $_SESSION['pursale1'] = $row['childid']; }
     }
 
+	$sql = "SELECT * FROM `main_contactdetails` WHERE `active` = '1' ORDER BY `name` ASC";
+	$query = mysqli_query($conn,$sql); $cus_code = $cus_name = $sup_code = $sup_name = array();
+	while($row = mysqli_fetch_assoc($query)){
+		if($row['contacttype'] == "C" || $row['contacttype'] == "S&C"){ $cus_code[$row['code']] = $row['code']; $cus_name[$row['code']] = $row['name']; } else{ }
+		if($row['contacttype'] == "S" || $row['contacttype'] == "S&C"){ $sup_code[$row['code']] = $row['code']; $sup_name[$row['code']] = $row['name']; } else{ }
+	}
+	$cus_list = implode("','",$cus_code);
+
 	$sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `activate` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $gp_link[$row['childid']] = $row['href']; }
 
@@ -37,22 +45,26 @@
 		$sql = "SELECT * FROM `dataentry_daterange` WHERE `type` = 'Sales' OR `type` = 'all' AND `active` = '1' ORDER BY `type` ASC"; $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $days = $row['days']; }
 		if($days == ""){ $from_date = date('d.m.Y'); } else{ $from_date = date('d.m.Y', strtotime('-'.$days.' days')); }
 	}
-
+    $cnamess = ""; $tslocs = $cid."-locs";
 	if(isset($_POST['bdates']) == true){
 		$pbdates = $_POST['bdates'];
+		$cnamess = $_POST['cnames'];
 		$bdates = explode(" - ",$_POST['bdates']);
 		$fdate = date("Y-m-d",strtotime($bdates[0]));
 		$tdate = date("Y-m-d",strtotime($bdates[1]));
 		$_SESSION['ps1fdate'] = $fdate;
 		$_SESSION['ps1tdate'] = $tdate;
 		$_SESSION['ps1pbdate'] = $pbdates;
+		$_SESSION[$tslocs] = $cnamess;
 	}
 	else {
-		$fdate = $tdate = date("Y-m-d");
+		$fdate = $tdate = date("Y-m-d"); $cnamess = "all";
+		$cnamess = $_POST['cnames'];
 		$pbdates = date("d.m.Y")." - ".date("d.m.Y");
 		if(!empty($_SESSION['ps1fdate'])){ $fdate = $_SESSION['ps1fdate']; }
 		if(!empty($_SESSION['ps1tdate'])){ $tdate = $_SESSION['ps1tdate']; }
 		if(!empty($_SESSION['ps1pbdate'])){ $pbdates = $_SESSION['ps1pbdate']; }
+		if(!empty($_SESSION[$tslocs])){ $cnamess = $_SESSION[$tslocs]; }
 	}
 ?>
 <html>
@@ -67,16 +79,21 @@
 		</section><br/>
 		<div class="row" style="margin: 10px 10px 0 10px;">
 		<form action="<?php echo $href."?cid=".$cid; ?>" method="post">
-			<div align="left" class="col-md-6">
+			<div align="left" class="col-md-5">
 				<div class="input-group"><div class="input-group-addon">Date: </div><input type="text" class="form-control pull-right" name="bdates" id="reservation" value="<?php echo $pbdates; ?>"></div>
 			</div>
-			<div align="left" class="col-md-2">
+			<div class="col-md-1">
+				<div class="input-group"><div class="input-group-addon">Customer: </div>
+				<select name="cnames" id="cnames" class="form-control select2" style="width: 150px;"><option value="all" style="display: flex;justify-content: center;">-Select-</option><?php foreach($cus_code as $cc){ ?><option value="<?php echo $cc; ?>" <?php if($cc == $cnamess){ echo "selected";} ?>><?php echo $cus_name[$cc]; ?></option><?php } ?></select></div>
+			</div>
+			<div align="right" class="col-md-2">
 				<div class="input-group"><button class="btn btn-success btn-sm" name="submit" id="submit" type="submit">Submit</button></div>
 			</div>
 		</form>
 		<div align="right">
 			<?php if($edt_flag == 1){ ?><button type="button" class="btn btn-info" id="editpage" value="chicken_edit_pursale1m.php" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> Edit-Multiple</button><?php } ?>
 			<?php if($add_flag == 1){ ?><button type="button" class="btn btn-warning" id="addpage" value="<?php echo $add_link; ?>" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> ADD</button><?php } ?>
+			
 		</div>
 		</div>
 		<section class="content">
@@ -114,9 +131,9 @@
 	
 						}
 
-						
+						$cname_fltr = ""; if($cnamess == "all"){ $cname_fltr = "AND `customercode` IN ('$cus_list')";} else { $cname_fltr = "AND `customercode` = '$cnamess'";}
 
-						$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `trtype` = 'PST' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `id` DESC";
+						$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$cname_fltr." AND `trtype` = 'PST' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `id` DESC";
 						$query = mysqli_query($conn,$sql);
 					?>
 						<div class="box-body">

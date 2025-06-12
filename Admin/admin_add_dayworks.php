@@ -103,16 +103,16 @@ if($link_active_flag > 0){
                                             </thead>
                                             <tbody id="tbody">
                                                 <tr>
-                                                    <td><input type="text" name="tic_no[]" id="tic_no[0]" class="form-control" value="" ></td>
+                                                    <td ><input type="text" name="tic_no[]" id="tic_no[0]" class="form-control" value="" style="width:127px;"></td>
                                                     <td><select name="mod_type[]" id="mod_type[0]" class="form-control select2" style="width:180px;"><option value="select">select</option><option value="CTS">-CTS-</option><option value="BTS">-BTS-</option></select></td>
-                                                    <td><input type="text" name="cl_name[]" id="cl_name[0]" class="form-control" value="" ></td>
+                                                    <td ><input type="text" name="cl_name[]" id="cl_name[0]" class="form-control" value="" style="width:127px;"></td>
                                                     <td><select name="wok_type[]" id="wok_type[0]" class="form-control select2" style="width:180px;"><option value="select">select</option><option value="new">-New-</option><option value="modify">-Modified-</option><option value="problem">-Problems-</option></select></td>
                                                     <td><input type="text" name="gdate[]" id="gdate[0]" class="form-control datepicker" value="<?php echo $date; ?>" style="width:110px;" onchange="" readonly /></td>
                                                     <td><select name="fl_type[]" id="fl_type[0]" class="form-control select2" style="width:180px;"><option value="select">select</option><option value="Master">-Master-</option><option value="Transaction">-Transaction-</option><option value="Reports">-Reports-</option></select></td>
-                                                    <td><input type="text" name="fl_link[]" id="fl_link[0]" class="form-control" value="" ></td>
+                                                    <td ><input type="text" name="fl_link[]" id="fl_link[0]" class="form-control" value="" style="width:127px;"></td>
                                                     <td><input type="text" name="wdate[]" id="wdate[0]" class="form-control datepicker" value="<?php echo $date; ?>" style="width:110px;" onchange="" readonly /></td>
-                                                    <td><input type="text" name="t_taken[]" id="t_taken[0]" class="form-control" value="" ></td>
-                                                    <td><input type="text" name="statuses[]" id="statuses[0]" class="form-control" value="" ></td>
+                                                    <td ><input type="text" name="t_taken[]" id="t_taken[0]" class="form-control" value="" style="width:127px;"></td>
+                                                    <td><input type="text" name="statuses[]" id="statuses[0]" class="form-control" value=""  style="width:127px;"></td>
                                                     <td><textarea name="remarks[]" id="remarks[0]" class="form-control" style="padding:0;width:150px;height:28px;" onkeyup="validatename(this.id);"></textarea></td>
                                                     <td><input type="file" name="logo_image[0]" id="image[0]" class="form-control"/></td>
                                                     <td><input type="file" name="logo_image2[0]" id="image2[0]" class="form-control"/></td>

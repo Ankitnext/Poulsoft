@@ -41,9 +41,15 @@
 	if($cname == "all") { $cnames = ""; } else { $cnames = " AND `vendorcode` = '$cname'"; }
 	if($iname == "all") { $inames = ""; } else { $inames = " AND `itemcode` = '$iname'"; }
 	if($wname == "all") { $wnames = ""; } else { $wnames = " AND `warehouse` = '$wname'"; }
+
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'pur_purchasereport.php' AND `field_function` LIKE 'Purchase Sale Sorting' AND `user_access` LIKE 'all' AND `flag` = '1'";
+    $query = mysqli_query($conn,$sql); $sltr_flag = mysqli_num_rows($query); //$avou_flag = 1;
+	// if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
+
 	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Reports' AND `field_function` LIKE 'Fetch Logo Dynamically' AND `user_access` LIKE 'all' AND `flag` = '1'";
     $query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
 	if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
+
 	//echo "<script> alert('$ifjbwen'); </script>";
 	$sql = "SELECT * FROM `main_reportfields` WHERE `field` LIKE 'Purchase Report' AND `active` = '1'"; $query = mysqli_query($conn,$sql); $lg_count = mysqli_num_rows($query);
 	if($lg_count > 0){ while($row = mysqli_fetch_assoc($query)){ $prate_flag = $row['prate']; $vehicle_flag = $row['vehicle_flag']; } } else{ $prate_flag = $vehicle_flag = 0; }
@@ -271,8 +277,17 @@
 									while($row = mysqli_fetch_assoc($query)){ $ltno_vname[$row['invoice']] = $pname[$row['customercode']]; }
 								}	
 
+								$sql = "SELECT * FROM `customer_sales` WHERE `trtype` IN ('PST') ORDER BY `date`,`invoice` ASC";
+								$query = mysqli_query($conn,$sql); $sl_trnum = array();
+								while($row = mysqli_fetch_assoc($query)){ $sl_trnum[$row['invoice']] = $row['invoice']; }
+								$sl_trlist = implode("','", $sl_trnum);
+
 								$tbirds = $tjals = $ttotalweight = $temptyweight = $tnetweight = $tdiscountamt = $ttaxamount = $ttcdsamt = $ttotalamt = 0; $old_inv = ""; $sl = 1;
+								if($sltr_flag > 0 ){
+								$sequence = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate'".$cus_fltr." AND `link_trnum` NOT IN ('$sl_trlist')";
+								} else {
 								$sequence = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate'".$cus_fltr;
+								}
 								$flags = " AND `active` = '1'  AND `tdflag` = '0' AND `pdflag` = '0' $upload_filter  ORDER BY `date`,`invoice` ASC";
 								$sql = $sequence."".$cnames."".$inames."".$wnames."".$flags;
 								$query = mysqli_query($conn,$sql);

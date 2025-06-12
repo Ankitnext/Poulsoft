@@ -41,7 +41,7 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition sidebar-mini">
         <?php
         if($acount == 1){
-            $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
+            $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array(); $tickett_status = "all";
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
                 $gp_id = $row['parentid'];
@@ -62,12 +62,13 @@ if($link_active_flag > 0){
             if(!empty($upd_acc[$gp_id."U"])){ $update_flag = 1; $update_link = $gp_link[$gp_id."U"]; } else { $update_link = ""; $update_flag = 0; }
             
             if($_SERVER['REMOTE_ADDR'] != "49.205.135.183"){
-                $fsdate = $cid."-fdate"; $tsdate = $cid."-tdate"; $psdate = $cid."-pdate"; $btype = $cid."-type";
+                $fsdate = $cid."-fdate"; $tsdate = $cid."-tdate"; $psdate = $cid."-pdate"; $btype = $cid."-type"; 
                 if(isset($_POST['submit']) == true){
                     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
                     $tdate = date("Y-m-d",strtotime($_POST['tdate']));
                     $pdate = date("Y-m-d",strtotime($_POST['pdate']));
                     $based_on = $_POST['based_on'];
+                    $tickett_status = $_POST['tickett_status']; if($tickett_status == "all"){ $status_filter = ""; } else{ $status_filter = " AND `ticket_status` = '$tickett_status'"; }
                     $_SESSION[$fsdate] = $fdate;
                     $_SESSION[$tsdate] = $tdate;
                     $_SESSION[$psdate] = $pdate;
@@ -98,6 +99,9 @@ if($link_active_flag > 0){
             else{
                 $ticket_filter = "";
             }
+
+            $sql = "SELECT * FROM `ticket_work_status` WHERE `active` = '1'"; $query = mysqli_query($conn,$sql);
+            while($row = mysqli_fetch_assoc($query)){ $status_name[$row['description']] = $row['description']; }
         ?>
         <div class="m-0 p-0 wrapper">
             <section class="m-0 p-0 content">
@@ -123,6 +127,14 @@ if($link_active_flag > 0){
                                             <div class="row">
                                                 <div class="form-group" style="width:100px;"><label for="fdate">From Date: </label><input type="text" class="form-control datepicker" name="fdate" id="fdate" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="width:90px;" readonly ></div>
                                                 <div class="form-group" style="width:100px;"><label for="tdate">To Date: </label><input type="text" class="form-control datepicker" name="tdate" id="tdate" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="width:90px;" readonly ></div>
+                                                <div class="form-group" style="width:100px;"><label for="tickett_status">Status: </label> 
+                                                    <select name="tickett_status" id="tickett_status" class="form-control select2">
+                                                        <option value="all" <?php if($tickett_status == "all"){ echo "selected"; } ?>>-All-</option>
+                                                        <?php foreach($status_name as $sname){ if($sname != ""){ ?>
+                                                        <option value="<?php echo $sname; ?>" <?php if($tickett_status == $sname){ echo "selected"; } ?>><?php echo $sname; ?></option>
+                                                        <?php } } ?>
+                                                    </select>
+                                                </div>
                                                 <div class="form-group" style="width:100px;"><br/><button type="submit" name="submit" id="submit" class="btn btn-success btn-sm">Submit</button></div>
                                             </div>
                                             </div>
@@ -179,7 +191,7 @@ if($link_active_flag > 0){
                                          $sql = "SELECT * FROM `log_useraccess` WHERE `account_access` = 'ATS'"; $query = mysqli_query($conns,$sql);
                                          while($row = mysqli_fetch_assoc($query)){ $usr_code[$row['empcode']] = $row['empcode']; $usr_name[$row['empcode']] = $row['username']; }                                         
 
-                                        $sql = "SELECT * FROM `ticket_management_system` WHERE `dflag` = '0'".$ticket_filter." ORDER BY `id` DESC"; $query = mysqli_query($sconn,$sql); $c = 0; //`addedemp` = '$user_code' OR `assignee` LIKE '$user_code' AND 
+                                        $sql = "SELECT * FROM `ticket_management_system` WHERE `dflag` = '0'".$ticket_filter."".$status_filter." ORDER BY `id` DESC"; $query = mysqli_query($sconn,$sql); $c = 0; //`addedemp` = '$user_code' OR `assignee` LIKE '$user_code' AND 
                                         while($row = mysqli_fetch_assoc($query)){
                                             $id = $row['trnum'];
                                             $edit_url = $edit_link."?utype=edit&id=".$id;

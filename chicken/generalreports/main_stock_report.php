@@ -33,8 +33,24 @@
 	$sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; $item_code[$row['code']] = $row['code']; $item_category[$row['code']] = $row['category']; $item_unit[$row['code']] = $row['cunits']; }
 
-	$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-	while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; $sector_code[$row['code']] = $row['code']; }
+    $sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users_code' AND `active` = '1' AND `dflag` = '0'";
+    $query = mysqli_query($conn,$sql); $loc_access = ""; $adm_aflag = 0;
+    while($row = mysqli_fetch_assoc($query)){ $loc_access = $row['loc_access']; if((int)$row['supadmin_access'] == 1 || (int)$row['admin_access'] == 1){ $adm_aflag = 1; } }
+
+    //Sector Access Filter
+    if($loc_access == "" || $loc_access == "all"){ $sec_fltr = ""; }
+    else{
+        $loc1 = explode(",",$loc_access); $loc_list = "";
+        foreach($loc1 as $loc2){ if($loc_list = ""){ $loc_list = $loc2; } else{ $loc_list = $loc_list."','".$loc2; } }
+        $sec_fltr = " AND `code` IN ('$loc_list')";
+    }
+    //Sector Details
+    $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1'".$sec_fltr." ORDER BY `description` ASC";
+    $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
+    while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
+    $sec_list = implode("','",$sector_code);
+	// $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+	// while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; $sector_code[$row['code']] = $row['code']; }
 	
 	if(isset($_POST['submit']) == true){
 		$fromdate = $_POST['fromdate'];
@@ -196,6 +212,8 @@
                                         <th>Unit</th>
                                         <th>Opening</th>
                                         <th>Purchase/Transfer In</th>
+                                        <th>Mortality</th>
+                                        <th>Shortage</th>
                                         <th>Transferout</th>
                                         <th>Sold</th>
                                         <th>Sale Return</th>
@@ -339,6 +357,57 @@
                                         $item_asort_array[$obrow['itemcode']] = $obrow['itemcode'];
                                         $sector_asort_array[$obrow['warehouse']] = $obrow['warehouse'];
 									}
+
+                                    //Mortality Opening
+                                    $key_index = ""; $open_stock_mmrtn_sector_qty = $open_stock_mmrtn_item_qty = array();
+                                    $obsql = "SELECT itemcode,warehouse,SUM(quantity) as quantity FROM `main_mortality` WHERE `date` < '$fdate'".$itemcode_filter."".$warehouse_filter." AND `active` = '1' AND `dflag` = '0' AND (`ccode` IN ('$sec_list') OR `warehouse` IN ('$sec_list')) GROUP BY `itemcode`,`warehouse` ORDER BY `itemcode`,`warehouse` ASC";
+									$obquery = mysqli_query($conn,$obsql); $old_inv = "";
+									while($obrow = mysqli_fetch_assoc($obquery)){
+                                        //item and sector wise total quantity
+                                        $key_index = $obrow['itemcode']."@".$obrow['warehouse'];
+                                        $open_stock_mmrtn_sector_qty[$key_index] = $obrow['quantity'];
+                                        
+                                        //item wise total quantity
+                                        $key_index = $obrow['itemcode'];
+                                        $open_stock_mmrtn_item_qty[$key_index] = $open_stock_mmrtn_item_qty[$key_index] + $obrow['quantity'];
+                                        
+                                        $item_asort_array[$obrow['itemcode']] = $obrow['itemcode'];
+                                        $sector_asort_array[$obrow['warehouse']] = $obrow['warehouse'];
+									}
+
+                                     //Mortality
+                                    $sql1 = "SELECT * FROM `main_mortality` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND (`ccode` IN ('$sec_list') OR `warehouse` IN ('$sec_list')) AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`itemcode`,`code` ASC";
+                                    $query1 = mysqli_query($conn, $sql1); $iwm_bbds = $iwm_bqty = $iwm_bamt = array();
+                                    while($row1 = mysqli_fetch_assoc($query1)){
+                                        $key1 = $row1['itemcode'];
+                                        if(strtotime($row1['date']) < strtotime($fdate)){ }
+                                        else{
+                                            $key1 = $row1['itemcode'];
+                                            if($row1['mtype'] == "customer" || $row1['mtype'] == "supplier"){
+                                                $iwcm_bbds[$key1] += (float)$row1['birds'];
+                                                $iwcm_bqty[$key1] += (float)$row1['quantity'];
+                                                $iwcm_bamt[$key1] += (float)$row1['amount'];
+                                            }
+                                            $iwm_bbds[$key1] += (float)$row1['birds'];
+                                            $iwm_bqty[$key1] += (float)$row1['quantity'];
+                                            $iwm_bamt[$key1] += (float)$row1['amount'];
+                                        }
+                                    }
+
+                                     //Shortage Screen
+                                    $sql1 = "SELECT * FROM `item_shortage_screen` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `warehouse` IN ('$sec_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`itemcode`,`trnum` ASC";
+                                    $query1 = mysqli_query($conn, $sql1); $iwsa_abbds = $iwsa_dbbds = $iwsa_abqty = $iwsa_dbqty = $iwsa_abamt = $iwsa_dbamt = array();
+                                    while($row1 = mysqli_fetch_assoc($query1)){
+                                        $key1 = $row1['itemcode'];
+                                        if(strtotime($row1['date']) < strtotime($fdate)){ }
+                                        else{
+                                            if($row1['a_type'] == "deduct"){
+                                                $iwss_dbbds[$key1] += (float)$row1['birds'];
+                                                $iwss_dbqty[$key1] += (float)$row1['nweight'];
+                                                $iwss_dbamt[$key1] += (float)$row1['amount'];
+                                            }
+                                        }
+                                    }
                                     
                                     //Sales
                                     $key_index = ""; $open_stock_saleout_sector_qty = $open_stock_saleout_item_qty = array();
@@ -623,10 +692,11 @@
 
                                                 //Opening
                                                 $total_itemin_opening = $open_stock_purin_sector_qty[$key_index] + $open_stock_closed_sector_qty[$key_index] + $open_stock_transin_sector_qty[$key_index] + $open_stock_srtn_sector_qty[$key_index] + $open_stock_adja_sector_qty[$key_index];
-                                                $total_itemout_opening = $open_stock_saleout_sector_qty[$key_index] + $open_stock_transout_sector_qty[$key_index] + $open_stock_prtn_sector_qty[$key_index] + $open_stock_adjd_sector_qty[$key_index];// + $open_stock_smort_sector_qty[$key_index] + $open_stock_cmort_sector_qty[$key_index];
+                                                $total_itemout_opening = $open_stock_saleout_sector_qty[$key_index] + $open_stock_transout_sector_qty[$key_index] + $open_stock_prtn_sector_qty[$key_index] + $open_stock_adjd_sector_qty[$key_index]+ $open_stock_mmrtn_sector_qty[$key_index];// + $open_stock_smort_sector_qty[$key_index] + $open_stock_cmort_sector_qty[$key_index];
 
                                                 $final_item_opening_qty = $total_itemin_opening - $total_itemout_opening;
-                                                $final_purtrin_between_item_qty = $between_stock_purin_sector_qty[$key_index] + $between_stock_transin_sector_qty[$key_index] + $btw_stock_adja_sector_qty[$key_index];
+                                                //$final_purtrin_between_item_qty = $between_stock_purin_sector_qty[$key_index] + $between_stock_transin_sector_qty[$key_index] + $btw_stock_adja_sector_qty[$key_index];
+                                                $final_purtrin_between_item_qty = $between_stock_purin_sector_qty[$key_index] + $btw_stock_adja_sector_qty[$key_index];
                                                 $final_transferout_between_item_qty = $between_stock_transout_sector_qty[$key_index] + $between_stock_prtn_item_qty[$key_index] + $btw_stock_adjd_sector_qty[$key_index];
                                                 $final_sold_between_item_qty = $between_stock_saleout_sector_qty[$key_index];
                                                 $final_salereturn_between_item_qty = $between_stock_srtn_sector_qty[$key_index];
@@ -668,10 +738,29 @@
 
                                             //Opening
                                             $total_itemin_opening = $open_stock_purin_item_qty[$key_index] + $open_stock_closed_item_qty[$key_index] + $open_stock_transin_item_qty[$key_index] + $open_stock_srtn_item_qty[$key_index] + $open_stock_adja_item_qty[$key_index];
-                                            $total_itemout_opening = $open_stock_saleout_item_qty[$key_index] + $open_stock_transout_item_qty[$key_index] + $open_stock_prtn_item_qty[$key_index] + $open_stock_adjd_item_qty[$key_index];// + $open_stock_smort_item_qty[$key_index] + $open_stock_cmort_item_qty[$key_index];
+                                            $total_itemout_opening = $open_stock_saleout_item_qty[$key_index] + $open_stock_transout_item_qty[$key_index] + $open_stock_prtn_item_qty[$key_index] + $open_stock_adjd_item_qty[$key_index] + $open_stock_mmrtn_item_qty[$key_index];// + $open_stock_smort_item_qty[$key_index] + $open_stock_cmort_item_qty[$key_index];
+
+                                            // echo $open_stock_purin_item_qty[$key_index] + $open_stock_transin_item_qty[$key_index]."<br> Purchase";
+                                            // echo $open_stock_adja_item_qty[$key_index]."<br> add";
+                                            // echo $open_stock_saleout_item_qty[$key_index] + $open_stock_transout_item_qty[$key_index]."<br> sale";
+                                            // echo $open_stock_adjd_item_qty[$key_index]."<br> deduct";
+                                            // echo $open_stock_mmrtn_item_qty[$key_index]."<br> mortality";
+                                            // echo $open_stock_closed_item_qty[$key_index]."<br> Closed";
+                                            // echo $open_stock_srtn_item_qty[$key_index]."<br> Sale Return";
+                                            // echo $open_stock_prtn_item_qty[$key_index]."<br> Purchase Return";
+                                            //Opening
+                                            // $total_itemin_opening = $open_stock_purin_item_qty[$key_index] + $open_stock_closed_item_qty[$key_index] + $open_stock_transin_item_qty[$key_index]  + $open_stock_adja_item_qty[$key_index];
+                                            // $total_itemout_opening = $open_stock_saleout_item_qty[$key_index] + $open_stock_transout_item_qty[$key_index] + $open_stock_mmrtn_item_qty[$key_index] + $open_stock_adjd_item_qty[$key_index] ;// + $open_stock_smort_item_qty[$key_index] + $open_stock_cmort_item_qty[$key_index];
+
+                                            //Mortality
+                                            $mort = $iwm_bqty[$key_index];
+
+                                            //Shortge
+                                            $shortag = $iwss_dbqty[$key_index];
 
                                             $final_item_opening_qty = $total_itemin_opening - $total_itemout_opening;
-                                            $final_purtrin_between_item_qty = $between_stock_purin_item_qty[$key_index] + $between_stock_transin_item_qty[$key_index] + $btw_stock_adja_item_qty[$key_index];
+                                            //$final_purtrin_between_item_qty = $between_stock_purin_item_qty[$key_index] + $between_stock_transin_item_qty[$key_index] + $btw_stock_adja_item_qty[$key_index];
+                                            $final_purtrin_between_item_qty = $between_stock_purin_item_qty[$key_index] + $btw_stock_adja_item_qty[$key_index];
                                             $final_transferout_between_item_qty = $between_stock_transout_item_qty[$key_index] + $between_stock_prtn_item_qty[$key_index] + $btw_stock_adjd_item_qty[$key_index];
                                             $final_sold_between_item_qty = $between_stock_saleout_item_qty[$key_index];
                                             $final_salereturn_between_item_qty = $between_stock_srtn_item_qty[$key_index];
@@ -684,10 +773,11 @@
                                                 $gt_trout_stock = $gt_trout_stock + $final_transferout_between_item_qty;
                                                 $gt_sold_stock = $gt_sold_stock + $final_sold_between_item_qty;
                                                 $gt_sreturn_stock = $gt_sreturn_stock + $final_salereturn_between_item_qty;
+                                                $gt_mort_stock = $gt_mort_stock + $mort;
                                                 if($_SERVER['REMOTE_ADDR'] == "49.205.134.69"){
                                                     echo "<br/>$item_name[$icode]<br/>";
                                                     echo "<br/>$total_itemin_opening = $open_stock_purin_item_qty[$key_index] + $open_stock_closed_item_qty[$key_index] + $open_stock_transin_item_qty[$key_index] + $open_stock_srtn_item_qty[$key_index] + $open_stock_adja_item_qty[$key_index];<br/>";
-                                                    echo "<br/>$total_itemout_opening = $open_stock_saleout_item_qty[$key_index] + $open_stock_transout_item_qty[$key_index] + $open_stock_prtn_item_qty[$key_index] + $open_stock_adjd_item_qty[$key_index];<br/>";
+                                                    echo "<br/>$total_itemout_opening = $open_stock_saleout_item_qty[$key_index] + $open_stock_transout_item_qty[$key_index] + $open_stock_prtn_item_qty[$key_index] + $open_stock_adjd_item_qty[$key_index] + $open_stock_mmrtn_item_qty[$key_index];<br/>";
                                                     echo "<br/>$final_item_opening_qty = $total_itemin_opening - $total_itemout_opening;<br/>";
                                                     echo "<br/><br/>";
                                                 }
@@ -698,6 +788,8 @@
                                             echo '<td style="text-align:left;">'.$item_unit[$icode].'</td>';
                                             echo '<td>'.number_format_ind(round($final_item_opening_qty,2)).'</td>';
                                             echo '<td>'.number_format_ind(round($final_purtrin_between_item_qty,2)).'</td>';
+                                            echo '<td>'.number_format_ind(round($mort,2)).'</td>';
+                                            echo '<td>'.number_format_ind(round($shortag,2)).'</td>';
                                             echo '<td>'.number_format_ind(round($final_transferout_between_item_qty,2)).'</td>';
                                             echo '<td>'.number_format_ind(round($final_sold_between_item_qty,2)).'</td>';
                                             echo '<td>'.number_format_ind(round($final_salereturn_between_item_qty,2)).'</td>';
@@ -724,10 +816,17 @@
 
                                             //Opening
                                             $total_itemin_opening = $open_stock_purin_item_qty[$key_index] + $open_stock_closed_item_qty[$key_index] + $open_stock_transin_item_qty[$key_index] + $open_stock_srtn_item_qty[$key_index] + $open_stock_adja_item_qty[$key_index];
-                                            $total_itemout_opening = $open_stock_saleout_item_qty[$key_index] + $open_stock_transout_item_qty[$key_index] + $open_stock_prtn_item_qty[$key_index] + $open_stock_adjd_item_qty[$key_index];// + $open_stock_smort_item_qty[$key_index] + $open_stock_cmort_item_qty[$key_index];
+                                            $total_itemout_opening = $open_stock_saleout_item_qty[$key_index] + $open_stock_transout_item_qty[$key_index] + $open_stock_prtn_item_qty[$key_index] + $open_stock_adjd_item_qty[$key_index] + $open_stock_mmrtn_item_qty[$key_index];// + $open_stock_smort_item_qty[$key_index] + $open_stock_cmort_item_qty[$key_index];
+
+                                            //Mortality
+                                            $mort = $iwm_bqty[$key_index];
+
+                                            //Shortge
+                                            $shortag = $iwss_dbqty[$key_index];
 
                                             $final_item_opening_qty = $total_itemin_opening - $total_itemout_opening;
-                                            $final_purtrin_between_item_qty = $between_stock_purin_item_qty[$key_index] + $between_stock_transin_item_qty[$key_index] + $btw_stock_adja_item_qty[$key_index];
+                                            // $final_purtrin_between_item_qty = $between_stock_purin_item_qty[$key_index] + $between_stock_transin_item_qty[$key_index] + $btw_stock_adja_item_qty[$key_index];
+                                            $final_purtrin_between_item_qty = $between_stock_purin_item_qty[$key_index] + $btw_stock_adja_item_qty[$key_index];
                                             $final_transferout_between_item_qty = $between_stock_transout_item_qty[$key_index] + $between_stock_prtn_item_qty[$key_index] + $btw_stock_adjd_item_qty[$key_index];
                                             $final_sold_between_item_qty = $between_stock_saleout_item_qty[$key_index];
                                             $final_salereturn_between_item_qty = $between_stock_srtn_item_qty[$key_index];
@@ -740,6 +839,8 @@
                                                 $gt_trout_stock = $gt_trout_stock + $final_transferout_between_item_qty;
                                                 $gt_sold_stock = $gt_sold_stock + $final_sold_between_item_qty;
                                                 $gt_sreturn_stock = $gt_sreturn_stock + $final_salereturn_between_item_qty;
+                                                $gt_mort_stock = $gt_mort_stock + $mort;
+                                                $gt_short_stock = $gt_short_stock + $shortag;
 
                                             echo '<tr>';
                                             echo '<td style="text-align:left;">'.$sl++.'</td>';
@@ -748,6 +849,8 @@
                                             echo '<td style="text-align:left;">'.$item_unit[$icode].'</td>';
                                             echo '<td>'.number_format_ind(round($final_item_opening_qty,2)).'</td>';
                                             echo '<td>'.number_format_ind(round($final_purtrin_between_item_qty,2)).'</td>';
+                                            echo '<td>'.number_format_ind(round($mort,2)).'</td>';
+                                            echo '<td>'.number_format_ind(round($shortag,2)).'</td>';
                                             echo '<td>'.number_format_ind(round($final_transferout_between_item_qty,2)).'</td>';
                                             echo '<td>'.number_format_ind(round($final_sold_between_item_qty,2)).'</td>';
                                             echo '<td>'.number_format_ind(round($final_salereturn_between_item_qty,2)).'</td>';
@@ -767,6 +870,8 @@
                                     echo '<td colspan="4" style="text-align:right;color:green;background-color: #98fb98;border:solid">Total</td>';
                                     echo '<td style="text-align:right;color:green;background-color: #98fb98;border:solid">'.number_format_ind(round($gt_opening_stock,2)).'</td>';
                                     echo '<td style="text-align:right;color:green;background-color: #98fb98;border:solid">'.number_format_ind(round($gt_purtrin_stock,2)).'</td>';
+                                    echo '<td style="text-align:right;color:green;background-color: #98fb98;border:solid">'.number_format_ind(round($gt_mort_stock,2)).'</td>';
+                                    echo '<td style="text-align:right;color:green;background-color: #98fb98;border:solid">'.number_format_ind(round($gt_short_stock,2)).'</td>';
                                     echo '<td style="text-align:right;color:green;background-color: #98fb98;border:solid">'.number_format_ind(round($gt_trout_stock,2)).'</td>';
                                     echo '<td style="text-align:right;color:green;background-color: #98fb98;border:solid">'.number_format_ind(round($gt_sold_stock,2)).'</td>';
                                     echo '<td style="text-align:right;color:green;background-color: #98fb98;border:solid">'.number_format_ind(round($gt_sreturn_stock,2)).'</td>';

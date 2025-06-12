@@ -27,14 +27,6 @@ if($link_active_flag > 0){
     else if($aid == 1){ $acount = 1; }
     else{ $acount = 0; }
 
-    /*Check for Table Availability*/
-$database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
-$sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.breeder_cus_lines LIKE poulso6_admin_broiler_broilermaster.breeder_cus_lines;"; mysqli_query($conn,$sql1); }
-// if(in_array("broiler_item_brands", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_item_brands LIKE poulso6_admin_broiler_broilermaster.broiler_item_brands;"; mysqli_query($conn,$sql1); }
-// if(in_array("broiler_hatchentry", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_hatchentry LIKE poulso6_admin_broiler_broilermaster.broiler_hatchentry;"; mysqli_query($conn,$sql1); }
-// if(in_array("broiler_bird_transferout", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.broiler_bird_transferout LIKE poulso6_admin_broiler_broilermaster.broiler_bird_transferout;"; mysqli_query($conn,$sql1); }
-
 ?>
 <html lang="en">
     <head>
@@ -43,11 +35,36 @@ if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE
     <body class="m-0 hold-transition sidebar-mini">
         <?php
         if($acount == 1){
-            $sql='SHOW COLUMNS FROM `main_contactdetails`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+            /*Check for Table Availability*/
+            $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
+            $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+            if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE IF NOT EXISTS $database_name.breeder_cus_lines LIKE poulso6_admin_broiler_broilermaster.breeder_cus_lines;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_cancel_type", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_cancel_type LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_cancel_type;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_client_trade_details", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_client_trade_details LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_client_trade_details;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_countries", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_countries LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_countries;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_credentials", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_credentials LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_credentials;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_currency_code", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_currency_code LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_currency_code;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_document_type", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_document_type LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_document_type;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_error_code", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_error_code LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_error_code;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_item_units", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_item_units LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_item_units;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_payment_type", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_payment_type LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_payment_type;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_reverse_charge", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_reverse_charge LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_reverse_charge;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_states", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_states LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_states;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_supply_type", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_supply_type LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_supply_type;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_transaction_type", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_transaction_type LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_transaction_type;"; mysqli_query($conn,$sql1); }
+            if(in_array("broiler_ebill_shipping_details", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_ebill_shipping_details LIKE poulso6_admin_broiler_broilermaster.broiler_ebill_shipping_details;"; mysqli_query($conn,$sql1); }
+            if(in_array("country_currency", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.country_currency LIKE poulso6_admin_broiler_broilermaster.country_currency;"; mysqli_query($conn,$sql1); }
+
+            $sql='SHOW COLUMNS FROM `main_contactdetails`'; $query= mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
             if(in_array("processing_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `processing_flag` INT(100) NOT NULL DEFAULT '0' COMMENT 'Plant Access Flag' AFTER `dflag`"; mysqli_query($conn,$sql); }
             if(in_array("cus_ccode", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `cus_ccode` VARCHAR(100) NULL DEFAULT NULL COMMENT 'Customer Code' AFTER `code`"; mysqli_query($conn,$sql); }
+            if(in_array("country", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `country` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `cus_ccode`"; mysqli_query($conn,$sql); }
+            if(in_array("currency", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `currency` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `country`"; mysqli_query($conn,$sql); }
             
+            $sql='SHOW COLUMNS FROM `broiler_ebill_shipping_details`'; $query= mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+            while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+            if(in_array("addr_type", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `broiler_ebill_shipping_details` ADD `addr_type` VARCHAR(100) NULL DEFAULT NULL COMMENT 'Address Type' AFTER `id`"; mysqli_query($conn,$sql); }
             
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
@@ -145,8 +162,6 @@ if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE
                                                 if($delete_flag == 1){
                                                     //cho "<a href='".$delete_url."'><i class='fa fa-trash' style='color:red;' title='delete'></i></a>&ensp;&ensp;";
                                                     ?> <a href='javascript:void(0)' id='<?php echo $id1; ?>' value='<?php echo $id1; ?>' onclick='checkdelete(this.id)'><i class='fa fa-trash' style='color:red;' title='delete'></i></a> <?php
-
-
                                                 }
                                                 if($print_flag == 1){
                                                     echo "<a href='".$print_url."'><i class='fa fa-print' style='color:black;' title='Print'></i></a>&ensp;&ensp;";
@@ -160,8 +175,8 @@ if(in_array("breeder_cus_lines", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE
                                                     }
                                                     echo "<a href='".$authorize_url."'><i class='fa fa-lock-open' style='color:orange;' title='Authorize'></i></a>&ensp;&ensp;";
                                                 }
-                                                if((int)$updoc_flag == 1){ echo "&ensp;".$upd_links; }
                                             }
+                                            if((int)$updoc_flag == 1){ echo "&ensp;".$upd_links; }
                                         ?>
                                         </td>
                                     </tr>

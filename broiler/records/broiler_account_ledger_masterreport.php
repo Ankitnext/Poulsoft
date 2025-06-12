@@ -139,13 +139,7 @@ if ($sector_access_code == "all") {
 include $num_format_file;
 
 include "header_head.php";
-$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' " . $sector_access_list . " ORDER BY `description` ASC";
-$query = mysqli_query($conn, $sql);
-while ($row = mysqli_fetch_assoc($query)) {
-    $sector_code[$row['code']] = $row['code'];
-    $sector_name[$row['code']] = $row['description'];
-}
-$sql = "SELECT * FROM `broiler_farm` WHERE `active` = '1' " . $farm_access_filter1 . "" . $branch_access_filter2 . "" . $line_access_filter2 . " ORDER BY `description` ASC";
+$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' " . $sector_access_filter1 . " ORDER BY `description` ASC";
 $query = mysqli_query($conn, $sql);
 while ($row = mysqli_fetch_assoc($query)) {
     $sector_code[$row['code']] = $row['code'];
@@ -177,7 +171,14 @@ while ($row = mysqli_fetch_assoc($query)) {
     $ven_code[$row['code']] = $row['code'];
     $ven_name[$row['code']] = $row['name'];
 }
-
+$sql = "SELECT * FROM `broiler_farm` WHERE `active` = '1' " . $farm_access_filter1 . "" . $branch_access_filter2 . "" . $line_access_filter2 . " ORDER BY `description` ASC";
+$query = mysqli_query($conn, $sql);
+while ($row = mysqli_fetch_assoc($query)) {
+    $sector_code[$row['code']] = $row['code'];
+    $sector_name[$row['code']] = $row['description'];
+    $ven_name[$row['code']] = $row['description'];
+}
+$filename = "broiler_account_ledger";
 $fdate = $tdate = date("Y-m-d");
 $coas = "select";
 $sectors = "all";
@@ -253,7 +254,7 @@ if (isset($_POST['submit_report']) == true) {
             <thead class="thead1" align="center">
                 <tr align="center">
                     <td colspan="2" align="center"><img src="<?php echo "../".$row['logopath']; ?>" height="110px" /></td>
-                    <th colspan="15" align="center"><?php echo $row['cdetails']; ?><h5>Account Ledger Report</h5>
+                    <th colspan="15" align="center"><?php echo $row['cdetails']; ?><h6><b>Ledger Name : </b><?php echo $coa_name[$coas]; ?></h6><h5>Account Ledger Report</h5>
                     </th>
                 </tr>
             </thead>
@@ -334,7 +335,7 @@ if (isset($_POST['submit_report']) == true) {
                             </div>
                             <div class="m-2 form-group">
                                 <label>Export</label>
-                                <select name="export" id="export" class="form-control select2">
+                                <select name="export" id="export" class="form-control select2" onchange="tableToExcel('mine', 'Branch Wise Realization_','<?php echo $filename;?>', this.options[this.selectedIndex].value)">
                                     <option value="display" <?php if ($excel_type == "display") {
                                                                 echo "selected";
                                                             } ?>>-Display-</option>
@@ -416,7 +417,15 @@ if (isset($_POST['submit_report']) == true) {
                                 $checked = "";
                             }
                             echo '<input type="checkbox" class="hide_show" id="acc_fromwarehouse" onclick="update_masterreport_status(this.id);" ' . $checked . '><span>From Warehouse</span>';
-                        } else if ($act_col_numbs[$key_id] == "vehicle_no" || $nac_col_numbs[$key_id1] == "vehicle_no") {
+                        } else if ($act_col_numbs[$key_id] == "acc_fcoa" || $nac_col_numbs[$key_id1] == "acc_fcoa") {
+                            if (!empty($act_col_numbs[$key_id])) {
+                                $checked = "checked";
+                            } else {
+                                $checked = "";
+                            }
+                            echo '<input type="checkbox" class="hide_show" id="acc_fcoa" onclick="update_masterreport_status(this.id);" ' . $checked . '><span>From Coa</span>';
+                        }
+                        else if ($act_col_numbs[$key_id] == "vehicle_no" || $nac_col_numbs[$key_id1] == "vehicle_no") {
                             if (!empty($act_col_numbs[$key_id])) {
                                 $checked = "checked";
                             } else {
@@ -524,6 +533,9 @@ if (isset($_POST['submit_report']) == true) {
                 } else if ($act_col_numbs[$key_id] == "acc_fromwarehouse") {
                     echo "<th id='order'>From Warehouse</th>";
                     $column_visible_count =  $column_visible_count + 1;
+                } else if ($act_col_numbs[$key_id] == "acc_fcoa") {
+                    echo "<th id='order'>From Coa</th>";
+                    $column_visible_count =  $column_visible_count + 1;
                 } else if ($act_col_numbs[$key_id] == "vehicle_no") {
                     echo "<th id='order'>Vehicle number</th>";
                     $column_visible_count =  $column_visible_count + 1;
@@ -629,20 +641,35 @@ if (isset($_POST['submit_report']) == true) {
         ?>
         <tbody class="tbody1" id="tbody1">
             <?php
-            $sql_record = "SELECT * FROM `account_summary` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$sector_filter." AND `etype` IN ('PayVoucher','ContraNote','JorVoucher') AND `crdr` LIKE 'DR' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
-            $query = mysqli_query($conn, $sql_record); $dr_acc = array();
-            while($row = mysqli_fetch_assoc($query)){ $dr_acc[$row['trnum']] = $row['coa_code']; }
+            $sql_record = "SELECT * FROM `account_summary` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$sector_filter." AND `etype` IN ('Payment Voucher','Receipt Voucher','PayVoucher','ContraNote','JorVoucher') AND `crdr` LIKE 'DR' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+            $query = mysqli_query($conn, $sql_record); $dr_acc = $dr_mname = array();
+            while($row = mysqli_fetch_assoc($query)){
+                $key1 = $row['trnum']."@".round($row['amount'],2);
+                $dr_acc[$key1] = $row['coa_code'];
+                if($row['vendor'] != ""){ $dr_mname[$key1] = $ven_name[$row['vendor']]; }
+                else { $dr_mname[$key1] = $coa_name[$row['coa_code']]; }
+            }
+            $sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+            while($row = mysqli_fetch_assoc($query)){ $coa_code[$row['code']] = $row['code']; $coa_name[$row['code']] = $row['description']; }
 
-            $sql_record = "SELECT * FROM `account_summary` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$sector_filter." AND `etype` IN ('PayVoucher','ContraNote','JorVoucher') AND `crdr` LIKE 'CR' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+            $sql_record = "SELECT * FROM `account_summary` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$sector_filter." AND `etype` IN ('Payment Voucher','Receipt Voucher','PayVoucher','ContraNote','JorVoucher') AND `crdr` LIKE 'CR' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
             $query = mysqli_query($conn, $sql_record); $cr_acc = array();
-            while($row = mysqli_fetch_assoc($query)){ $cr_acc[$row['trnum']] = $row['coa_code']; }
+            while($row = mysqli_fetch_assoc($query)){ $cr_acc[$row['trnum']."@".round($row['amount'],2)] = $row['coa_code']; }
 
+            $sql_record = "SELECT * FROM `account_vouchers` WHERE `active` = '1' AND `dflag` = '0'  ORDER BY `date`,`addedtime`,`trnum` ASC";
+            $query = mysqli_query($conn, $sql_record);  while($row = mysqli_fetch_assoc($query)){ $acc_fcname[$row['trnum']] = $coa_name[$row['fcoa']]; }
+            
             $sql_record = "SELECT * FROM `account_summary` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$coa_filter."".$sector_filter." AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`addedtime`,`trnum` ASC";
-            $query = mysqli_query($conn, $sql_record); $tot_bds = $tot_qty = $tot_amt = $c = 0;
+            $query = mysqli_query($conn, $sql_record); $tot_bds = $tot_qty = $tot_amt = $c = $btw_cr_amt = $btw_dr_amt = 0;
             while($row = mysqli_fetch_assoc($query)){
                 $c++;
                 $vendors = $row['vendor'];
+                $trnumes = $row['trnum'];
                 $locations = $row['location'];
+                $acc_fcoa = $acc_fcname[$row['trnum']];
+
+            // $sql_record = "SELECT * FROM `account_vouchers` WHERE `trnum`= '$trnumes' AND `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `dflag` = '0'  ORDER BY `date`,`addedtime`,`trnum` ASC";
+            // $query = mysqli_query($conn, $sql_record);  while($row = mysqli_fetch_assoc($query)){ $acc_fcoa = $coa_name[$row['fcoa']]; }
             ?>
                 <tr>
                 <?php
@@ -657,6 +684,7 @@ if (isset($_POST['submit_report']) == true) {
                             if (!empty($sector_name[$locations])) { $from_waehouse = $sector_name[$locations]; } else if (!empty($ven_name[$vendors])) { $from_waehouse = $ven_name[$vendors]; } else { }
                             echo "<td title='From Warehouse'>" . $from_waehouse . "</td>";
                         }
+                        else if($act_col_numbs[$key_id] == "acc_fcoa"){ echo "<td title='From Coa'>" . $acc_fcoa . "</td>"; }
                         else if($act_col_numbs[$key_id] == "vehicle_no"){
                             if(!empty($vehicle_code[$row['vehicle_code']])){ $vehicle_name = $vehicle_code[$row['vehicle_code']]; } else { $vehicle_name = $row['vehicle_code']; }
                             echo "<td title='Vehicle Name'>" . $vehicle_name  . "</td>";
@@ -665,12 +693,16 @@ if (isset($_POST['submit_report']) == true) {
                         else if($act_col_numbs[$key_id] == "acc_quantity"){ echo "<td title='Quantity'>" . number_format_ind($row['quantity']) . "</td>"; }
                         else if($act_col_numbs[$key_id] == "acc_paid_received"){
                             $paid_Received =  "";
-                            if($row['etype'] == "PayVoucher" || $row['etype'] == "JorVoucher" || $row['etype'] == "ContraNote"){
-                                if($row['crdr'] == "CR" && $coas == $row['coa_code']){
-                                    if(!empty($dr_acc[$row['trnum']])){ $paid_Received =  $coa_name[$dr_acc[$row['trnum']]]; } else{ }
+                            if($row['etype'] == "Payment Voucher" || $row['etype'] == "Receipt Voucher" || $row['etype'] == "PayVoucher" || $row['etype'] == "JorVoucher" || $row['etype'] == "ContraNote"){
+                                $okey = $row['trnum']."@".round($row['amount'],2);
+                                if($row['crdr'] == "CR" && !empty($dr_mname[$okey]) && $dr_mname[$okey] != ""){
+                                    $paid_Received =  $dr_mname[$okey];
+                                }
+                                else if($row['crdr'] == "CR" && $coas == $row['coa_code']){
+                                    if(!empty($dr_acc[$okey])){ $paid_Received =  $coa_name[$dr_acc[$okey]]; } else{ }
                                 }
                                 else if($row['crdr'] == "DR" && $coas == $row['coa_code']){
-                                    if(!empty($dr_acc[$row['trnum']])){ $paid_Received =  $coa_name[$cr_acc[$row['trnum']]]; } else{ }
+                                    if(!empty($cr_acc[$okey])){ $paid_Received =  $coa_name[$cr_acc[$okey]]; } else{ }
                                 }
                                 else{ }
                             }
@@ -689,22 +721,24 @@ if (isset($_POST['submit_report']) == true) {
                         else if($act_col_numbs[$key_id] == "acc_cr"){
                             if($row['crdr'] == "CR"){
                                 $cr_amount =  number_format_ind($row['amount']);
+                                $btw_cr_amt = $btw_cr_amt + $row['amount'];
                                 $coa_crbal_amount = $coa_crbal_amount + $row['amount'];
                                 $coa_runbal_amount = $coa_runbal_amount - $row['amount'];
                             }
                             else{ $cr_amount =  number_format_ind("0"); }
-                            echo "<td title='Cr Amount'>".$cr_amount."</td>";
+                            echo "<td title='Cr Amount' style='text-align:right;'>".$cr_amount."</td>";
                         }
                         else if($act_col_numbs[$key_id] == "acc_dr"){
                             if($row['crdr'] == "DR"){
                                 $dr_amount =  number_format_ind($row['amount']);
+                                $btw_dr_amt = $btw_dr_amt + $row['amount'];
                                 $coa_drbal_amount = $coa_drbal_amount + $row['amount'];
                                 $coa_runbal_amount = $coa_runbal_amount + $row['amount'];
                             }
                             else{
                                 $dr_amount =  number_format_ind("0");
                             }
-                            echo "<td title='Dr Amount'>".$dr_amount."</td>";
+                            echo "<td title='Dr Amount' style='text-align:right;'>".$dr_amount."</td>";
                         }
                         else if($act_col_numbs[$key_id] == "acc_running_balance"){
                             echo "<td title='Running Balance' style='text-align:right;'>".number_format_ind($coa_runbal_amount)."</td>";
@@ -729,9 +763,9 @@ if (isset($_POST['submit_report']) == true) {
                         
                         $key_id = "A:1:" . $a;
                         if ($act_col_numbs[$key_id] == "acc_cr") {
-                            echo "<th style='text-align:right;'>" .  number_format_ind(round($coa_crbal_amount, 2)) . "</th>";
+                            echo "<th style='text-align:right;'>" .  number_format_ind(round($btw_cr_amt, 2)) . "</th>";
                         } else if ($act_col_numbs[$key_id] == "acc_dr") {
-                            echo "<th style='text-align:right;'>". number_format_ind(round($coa_drbal_amount, 2)) . "</th>";
+                            echo "<th style='text-align:right;'>". number_format_ind(round($btw_dr_amt, 2)) . "</th>";
                         } else if ($act_col_numbs[$key_id] == "acc_running_balance") {
                             echo "<th style='text-align:right;'>" . number_format_ind(round($coa_runbal_amount, 2)) . "</th>";
                         } else {
@@ -924,6 +958,47 @@ if (isset($_POST['submit_report']) == true) {
                     asc = !asc;
                 })
             });
+        }
+
+         function tableToExcel(table, name, filename, chosen){ 
+              
+              var uri = 'data:application/vnd.ms-excel;base64,'
+                  , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                  , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                  , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+            //  return function(table, name, filename, chosen) {
+                  if (chosen === 'excel') { 
+                    //$('#header_sorting').empty();
+                  if (!table.nodeType) table = document.getElementById(table)
+                  var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
+                  //window.location.href = uri + base64(format(template, ctx))
+                  var link = document.createElement("a");
+                                  link.download = filename+".xls";
+                                  link.href = uri + base64(format(template, ctx));
+                                  link.click();
+                  
+         /*       var html = '';
+                html += '<th id="order_num">Sl.No.</th>';
+                html += '<th id="order">Branch</th>';
+                html += '<th id="order">Line</th>';
+                html += '<th id="order">Supervisor</th>';
+                html += '<th id="order">Farm Name</th>';
+                html += '<th id="order">Batch</th>';
+                html += '<th id="order">Book No</th>';
+                html += '<th id="order_num">Age</th>';
+                html += '<th id="order_num">Opening Birds</th>';
+                html += '<th id="order_num">Before Yesterday Mort</th>';
+                html += '<th id="order_num">Yesterday Mortality</th>';
+                html += '<th id="order_num">Today Mortality</th>';
+                html += '<th id="order_num">Mort%</th>';
+                html += '<th id="order_num">Balance Birds</th>';
+                html += '<th id="order">Diseases Details</th>';
+                $('#header_sorting').append(html);
+                table_sort();
+                table_sort2();
+                table_sort3();*/
+  
+          }
         }
 
         function convertNumber(d) {

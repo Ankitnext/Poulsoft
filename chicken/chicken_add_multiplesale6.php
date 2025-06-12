@@ -39,6 +39,10 @@ if($access_error_flag == 0){
 
     $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'chicken_display_multiplesale6.php' AND `field_function` LIKE 'Display Customer Balance' AND `user_access` LIKE 'all' AND `flag` = '1'";
 	$query = mysqli_query($conn,$sql); $bal_flag = mysqli_num_rows($query);
+
+    //check and fetch date range
+    global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    include "poulsoft_fetch_daterange_master.php";
 ?>
     <html>
         <head>
@@ -57,7 +61,7 @@ if($access_error_flag == 0){
                         <div class="row">
                             <div class="form-group" style="width:110px;">
                                 <label for="date">Date<b style="color:red;">&nbsp;*</b></label>
-                                <input type="text" name="date" id="date" class="form-control sale_datepickers" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" readonly />
+                                <input type="text" name="date" id="date" class="form-control range_picker" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" readonly />
                             </div>
                             <div class="form-group" style="width:190px;">
                                 <label for="warehouse">Warehouse/Vehicle<b style="color:red;">&nbsp;*</b></label>
@@ -157,6 +161,8 @@ if($access_error_flag == 0){
                 </form>
             </div>
             <script>
+                //Date Range selection
+                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 function return_back(){
                     window.location.href = "chicken_display_multiplesale6.php";
                 }
@@ -521,6 +527,10 @@ if($access_error_flag == 0){
 		    <script src="chick_validate_basicfields.js"></script>
             <?php include "header_foot1.php"; ?>
 		    <script src="handle_ebtn_as_tbtn.js"></script>
+            <script>
+                //Date Range selection
+                $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+            </script>
         </body>
     </html>
 <?php

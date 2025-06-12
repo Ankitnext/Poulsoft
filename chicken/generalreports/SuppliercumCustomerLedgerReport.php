@@ -70,6 +70,9 @@
 
     $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Supplier Payment' AND `field_function` = 'Display TCDS Calculations' AND `user_access` = 'all' AND `flag` = '1'";
     $query = mysqli_query($conn,$sql); $dtcds_flag = mysqli_num_rows($query);
+
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'SuppliercumCustomerLedgerReport.php' AND `field_function` LIKE 'Purchase Sale Sorting' AND `user_access` LIKE 'all' AND `flag` = '1'";
+    $query = mysqli_query($conn,$sql); $sltr_flag = mysqli_num_rows($query); //$avou_flag = 1;
 			
 ?>
 <html>
@@ -219,7 +222,11 @@
 								
 								$ob_sales = $ob_receipt = $ob_returns = $ob_mortality = $ob_sreturns = $ob_smortality = $ob_ccn = $ob_cdn = $rb_amt = $ob_cramt = $ob_dramt = $ob_purchases = $ob_payments = $ob_sup_cramt = $ob_sup_ccn = $ob_sup_dramt = $rb_amt = $ob_rcv = $ob_pid = 0; $old_inv = "";
 								if($count14 > 0){
+									if($sltr_flag > 0){ 
+									$obsql = "SELECT * FROM `customer_sales` WHERE `date` < '$fdate' AND `trtype` NOT IN ('PST') AND `customercode` = '$cus_names' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+									} else {
 									$obsql = "SELECT * FROM `customer_sales` WHERE `date` < '$fdate' AND `customercode` = '$cus_names' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+									}
 									$obquery = mysqli_query($conn,$obsql);
 									while($obrow = mysqli_fetch_assoc($obquery)){
 										if($old_inv != $obrow['invoice']){
@@ -318,14 +325,22 @@
 								//Sales
 								$sales = array();
 								if($count14 > 0){
+									if($sltr_flag > 0){ 
+									$sequence = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'"; $flags = " AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+									} else {
 									$sequence = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'"; $flags = " AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+									}
 									$sql = $sequence."".$cnames."".$inames."".$wnames."".$flags; $query = mysqli_query($conn,$sql); $i = 0;
 									while($row = mysqli_fetch_assoc($query)){
 										$i = $i + 1; $sales[$row['date']."@".$i] = $row['date']."@".$row['invoice']."@".$row['bookinvoice']."@".$row['customercode']."@".$row['jals']."@".$row['totalweight']."@".$row['emptyweight']."@".$row['itemcode']."@".$row['birds']."@".$row['netweight']."@".$row['itemprice']."@".$row['totalamt']."@".$row['tcdsper']."@".$row['tcdsamt']."@".$row['roundoff']."@".$row['finaltotal']."@".$row['warehouse']."@".$row['narration']."@".$row['discountamt']."@".$row['taxamount']."@".$row['remarks']."@".$row['vehiclecode'];
 									}
 								}
 								if($count14 > 0){
+									if($sltr_flag > 0){ 
+									$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+									} else {
 									$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+									}
 									$query = mysqli_query($conn,$sql);
 									while($row = mysqli_fetch_assoc($query)){
 										$slc_icount[$row['invoice']] = $slc_icount[$row['invoice']] + 1;

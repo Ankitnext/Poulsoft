@@ -27,6 +27,10 @@ if($link_active_flag > 0){
     if($user_type == "S"){ $acount = 1; }
     else if($aid == 1){ $acount = 1; }
     else{ $acount = 0; }
+
+    $rem_flag = 0;
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'poulsoft_display_mstrct1.php' AND `field_function` = 'Receipt Remark' AND `user_access` LIKE 'all' AND `flag` = '1'";
+    $query = mysqli_query($conn,$sql); $rem_flag = mysqli_num_rows($query);
 ?>
 <html lang="en">
     <head>
@@ -133,6 +137,7 @@ if($link_active_flag > 0){
 										<th>Account</th>
 										<th>description</th>
 										<th>Amount</th>
+                                        <?php if($rem_flag > 0) { ?><th>Remarks</th> <?php } ?>
 										<th>Cost Center</th>
 										<th>Action</th>
                                     </tr>
@@ -153,6 +158,9 @@ if($link_active_flag > 0){
 
                                         $sql = "SELECT * FROM `inv_sectors` WHERE `dflag` = '0' ORDER BY `description` ASC";
                                         $query = mysqli_query($conn,$sql); $sector_name = array();
+                                        while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
+
+                                        $sql = "SELECT * FROM `location_branch` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
                                         while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
 
                                         $delete_url = $delete_link."?utype=delete&trnum=";
@@ -178,6 +186,7 @@ if($link_active_flag > 0){
 										<td><?php echo $vfcc_name[$row['from_account']]; ?></td>
 										<td><?php echo $vfcc_name[$row['to_account']]; ?></td>
 										<td style="text-align:right;"><?php echo round($row['amount'],5); ?></td>
+										<?php if($rem_flag > 0) { ?><td><?php echo $row['remarks']; } ?></td>
 										<td><?php echo $sector_name[$row['sector']]; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php

@@ -164,6 +164,8 @@ if($link_active_flag > 0){
         <script src="datepicker/jquery/jquery.js"></script>
         <script src="datepicker/jquery-ui.js"></script>
         <script>
+            //Date Range selection
+            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
                 window.location.href = 'broiler_display_customercrdrnote.php?ccid='+ccid;
@@ -233,8 +235,6 @@ if($link_active_flag > 0){
                 html += '</div>';
                 html += '<hr class="labelrow" style="display:none;" />';
                 $('#row_body').append(html); $('.select2').select2();
-                //Date Range selection
-                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
                 
             }
@@ -262,12 +262,11 @@ if($link_active_flag > 0){
 			function validateamount(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(2); document.getElementById(x).value = b; }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
         </script>
+        <?php include "header_foot.php"; ?>
         <script>
             //Date Range selection
-            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
             $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
         </script>
-        <?php include "header_foot.php"; ?>
     </body>
 </html>
 

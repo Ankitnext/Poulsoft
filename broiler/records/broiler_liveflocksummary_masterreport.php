@@ -37,8 +37,8 @@ $query = mysqli_query($conn,$sql); $ibrand_code = array();
 while($row = mysqli_fetch_assoc($query)){ $ibrand_code[$row['item_code']] = $row['brand_code']; }
 
 $sql = "SELECT * FROM `broiler_item_brands` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `id` ASC";
-$query = mysqli_query($conn,$sql); $ibrand_name = array();
-while($row = mysqli_fetch_assoc($query)){ $ibrand_name[$row['code']] = $row['description']; }
+$query = mysqli_query($conn,$sql); $ibrand_codes = $ibrand_name = array();
+while($row = mysqli_fetch_assoc($query)){ $ibrand_codes[$row['code']] = $row['code']; $ibrand_name[$row['code']] = $row['description']; }
 
 $i++; $font_family_code[$i] = $i; $font_family_name[$i] = "Arial";
 //$i++; $font_family_code[$i] = $i; $font_family_name[$i] = "Arial, sans-serif";
@@ -131,15 +131,16 @@ $sql = "SELECT * FROM `broiler_batch` WHERE `active` = '1' AND `farm_code` IN ('
 while($row = mysqli_fetch_assoc($query)){ $batch_code[$row['code']] = $row['code']; $batch_name[$row['code']] = $row['description']; $batch_book[$row['code']] = $row['book_num']; $batch_gcflag[$row['code']] = $row['gc_flag']; $batch_farm[$row['code']] = $row['farm_code']; }
 
 $emp_list = implode("','", $farm_supervisor);
-$sql = "SELECT * FROM `broiler_employee` WHERE `dflag` = '0' AND `code` IN ('$emp_list')"; $query = mysqli_query($conn,$sql);
+$sql = "SELECT * FROM `broiler_employee` WHERE `dflag` = '0' AND `active` = '1' AND `code` IN ('$emp_list')"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $supervisor_code[$row['code']] = $row['code']; $supervisor_name[$row['code']] = $row['name']; }
+
 
 $sql = "SELECT * FROM `inv_sectors` WHERE `dflag` = '0' ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
-while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
+while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_code2[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
 $sql = "SELECT * FROM `main_contactdetails` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['name']; }
+while($row = mysqli_fetch_assoc($query)){ $sector_code2[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['name']; }
 
 $sql = "SELECT * FROM `broiler_breedstandard` WHERE `active` = '1' ORDER BY `age` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){
@@ -192,7 +193,8 @@ if(isset($_REQUEST['submit_report']) == true){
     $branches = $_REQUEST['branches'];
     $lines = $_REQUEST['lines'];
     $farms = $_REQUEST['farms'];
-    $regions = $_POST['regions'];
+    $regions = $_REQUEST['regions'];
+    $hatch = $_REQUEST['hatch'];
     $supervisors = $_REQUEST['supervisors'];
     $abirds = $_REQUEST['abirds'];
     if($_SERVER['REMOTE_ADDR'] == "49.205.135.183"){
@@ -206,90 +208,32 @@ if(isset($_REQUEST['submit_report']) == true){
     $mort_above = $_REQUEST['mort_above'];
     if($day_entryfeed_flag == 1){ $manual_nxtfeed = $_REQUEST['manual_nxtfeed']; }
 
-
-
-
     $farm_query = "";
-    if($regions != "all"){
-        $rbrh_alist = array(); foreach($branch_code as $bcode){ $rcode = $branch_region[$bcode]; if($rcode == $regions){ $rbrh_alist[$bcode] = $bcode; } }
-        $rbrh_list = implode("','",$rbrh_alist);
-        $farm_query .= " AND `branch_code` IN ('$rbrh_list')";
-    }
-
     if($regions != "all"){ $farm_query .= " AND `region_code` LIKE '$regions'"; }
+    // if($hatch != "all"){ $hatch_query = " AND `` LIKE '$hatch'"; }
     if($branches != "all"){ $farm_query .= " AND `branch_code` LIKE '$branches'"; }
     if($lines != "all"){ $farm_query .= " AND `line_code` LIKE '$lines'"; }
     if($supervisors != "all"){ $farm_query .= " AND `supervisor_code` LIKE '$supervisors'"; }
     if($farms != "all"){ $farm_query .= " AND `code` LIKE '$farms'"; }
-
     $farm_list = ""; $farm_list = implode("','", $farm_code);
 
-    
-    $sql = "SELECT * FROM `broiler_farm` WHERE `active` = '1' ".$farm_query." AND `dflag` = '0' ORDER BY `description` ASC";
-
+    $sql = "SELECT * FROM `broiler_farm` WHERE `code` IN ('$farm_list') AND `active` = '1' ".$farm_query." AND `dflag` = '0' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $farm_alist = array();
     while($row = mysqli_fetch_assoc($query)){ $farm_alist[$row['code']] = $row['code']; }
-    
+
+    // $sql = "SELECT * FROM `main_contactdetails` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+    // $query = mysqli_query($conn,$sql); 
+    // while($row = mysqli_fetch_assoc($query)){ $hatch_alist[$row['code']] = $row['code']; }
+    // // $hatch_query2 = ""; if($hatch != "all"){ $hatch_query2 = " AND `vcode` LIKE '$hatch'"; } else if($hatch = "all") { $hatch_query2 = " AND vcode IN ('$farm_list')"; } 
+    // $hatch_list = implode("','",$hatch_alist);
+    // $hatch_query2 = ""; if($hatch != "all"){ $hatch_query2 = " AND `vcode` LIKE '$hatch'"; } 
+    // else if($hatch = "all") { $hatch_query2 = " AND vcode IN ('$hatch_list')"; } 
+
     
     $farm_list = implode("','",$farm_alist);
-    if($farms != "all"){
-        $farm_query = " AND a.farm_code = '$farms'";
-        $farm_query2 = " AND farm_code = '$farms'";
-    }
-    else if($supervisors != "all"){
-        foreach($farm_code as $fcode){
-            if($farm_supervisor[$fcode] == $supervisors){
-                if($farm_list == ""){
-                    $farm_list = $fcode;
-                }
-                else{
-                    $farm_list = $farm_list;
-                }
-            }
-        }
-        $farm_query = " AND a.farm_code IN ('$farm_list')";
-        $farm_query2 = " AND farm_code IN ('$farm_list')";
-    }
-    else if($lines != "all"){
-        foreach($farm_code as $fcode){
-            if($farm_line[$fcode] == $lines){
-                if($farm_list == ""){
-                    $farm_list = $fcode;
-                }
-                else{
-                    $farm_list = $farm_list;
-                }
-            }
-        }
-        $farm_query = " AND a.farm_code IN ('$farm_list')";
-        $farm_query2 = " AND farm_code IN ('$farm_list')";
-    }
-    else if($branches != "all"){
-        foreach($farm_code as $fcode){
-            if($farm_branch[$fcode] == $branches){
-                if($farm_list == ""){
-                    $farm_list = $fcode;
-                }
-                else{
-                    $farm_list = $farm_list;
-                }
-            }
-        }
-        $farm_query = " AND a.farm_code IN ('$farm_list')";
-        $farm_query2 = " AND farm_code IN ('$farm_list')";
-    }
-    else{
-        foreach($farm_code as $fcode){
-            if($farm_list == ""){
-                $farm_list = $fcode;
-            }
-            else{
-                $farm_list = $farm_list;
-            }
-        }
-        $farm_query = " AND a.farm_code IN ('$farm_list')";
-        $farm_query2 = " AND farm_code IN ('$farm_list')";
-    }
+    $farm_query = $farm_query2 = "";
+    $farm_query = " AND a.farm_code IN ('$farm_list')";
+    $farm_query2 = " AND farm_code IN ('$farm_list')";
 	$excel_type = $_REQUEST['export'];
 	//$url = "../PHPExcel/Examples/broiler_liveflocksummary_masterreport-Excel.php?fromdate=".$fdate."&todate=".$tdate."&branch=".$branches."&line=".$lines."&supervisor=".$supervisors."&farm=".$farms."&abirds=".$abirds."&age_above=".$age_above."&href=".$field_href[0];
 }
@@ -355,6 +299,24 @@ if(isset($_REQUEST['submit_report']) == true){
                                         <option value="all" <?php if($farms == "all"){ echo "selected"; } ?>>-All-</option>
                                         <?php foreach($farm_code as $fcode){ if($farm_name[$fcode] != ""){ ?>
                                         <option value="<?php echo $fcode; ?>" <?php if($farms == $fcode){ echo "selected"; } ?>><?php echo $farm_name[$fcode]; ?></option>
+                                        <?php } } ?>
+                                    </select>
+                                </div>
+                                 <div class="m-2 form-group">
+                                    <label>Hatchery Name</label>
+                                    <select name="hatch" id="hatch" class="form-control select2">
+                                        <option value="all" <?php if($hatch == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($sector_code2 as $fcode){ if($sector_name[$fcode] != ""){ ?>
+                                        <option value="<?php echo $fcode; ?>" <?php if($hatch == $fcode){ echo "selected"; } ?>><?php echo $sector_name[$fcode]; ?></option>
+                                        <?php } } ?>
+                                    </select>
+                                </div>
+                                 <div class="m-2 form-group">
+                                    <label>Feed Name</label>
+                                    <select name="br_feed" id="br_feed" class="form-control select2">
+                                        <option value="all" <?php if($br_feed == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($ibrand_codes as $fcode){ if($ibrand_name[$fcode] != ""){ ?>
+                                        <option value="<?php echo $fcode; ?>" <?php if($br_feed == $fcode){ echo "selected"; } ?>><?php echo $ibrand_name[$fcode]; ?></option>
                                         <?php } } ?>
                                     </select>
                                 </div>
@@ -458,6 +420,7 @@ if(isset($_REQUEST['submit_report']) == true){
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "line_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="line_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Line</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "supervisor_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="supervisor_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Supervisor</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "farm_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="farm_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Farmer</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "batch_code"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="batch_code" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Batch Code</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "batch_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="batch_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Batch</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "book_no"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="book_no" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Book No</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "brood_age" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "brood_age"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="brood_age" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Age</span>'; }
@@ -525,6 +488,7 @@ if(isset($_REQUEST['submit_report']) == true){
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name"){ echo "<th id='order'>Line</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<th id='order'>Supervisor</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<th id='order'>Farmer</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<th id='order'>Batch Code</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<th id='order'>Batch</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<th id='order'>Book No</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "brood_age"){ echo "<th id='order_num'>Age</th>"; }
@@ -981,496 +945,503 @@ if(isset($_REQUEST['submit_report']) == true){
                     $brood_age = $batch_age[$batches];
                     $fetch_fcode = $batch_farm[$batches];
                     if($batches != ""){
-                        //Chick or Bird Transactions
-                        $purchase_chicks = $farm_transferin_chicks = $sector_transferin_chicks = $mortality_chicks = $chicks_cull = 0;
-                        $sales_birds_nos = $sales_birds_qty = $farm_transferout_birds = $sector_transferout_birds = 0;
-                        $purtrin_chick_amt = 0;
-                        //Purchase or Transfer in
-                        if(!empty($pur_chick_qty[$batches."@".$chick_code])){
-                            $purchase_chicks = $purchase_chicks + $pur_chick_qty[$batches."@".$chick_code];
-                            $purtrin_chick_amt = $purtrin_chick_amt + $pur_chick_amt[$batches."@".$chick_code];
-                        }
-                        if(!empty($pur_chick_qty[$batches."@".$bird_code])){
-                            $purchase_chicks = $purchase_chicks + $pur_chick_qty[$batches."@".$bird_code];
-                            $purtrin_chick_amt = $purtrin_chick_amt + $pur_chick_amt[$batches."@".$bird_code];
-                        }
-                        if(!empty($farm_trin_bird_qty[$batches."@".$chick_code])){
-                            $farm_transferin_chicks = $farm_transferin_chicks + $farm_trin_bird_qty[$batches."@".$chick_code];
-                            $purtrin_chick_amt = $purtrin_chick_amt + $farm_trin_bird_amt[$batches."@".$chick_code];
-                        }
-                        if(!empty($farm_trin_bird_qty[$batches."@".$bird_code])){
-                            $farm_transferin_chicks = $farm_transferin_chicks + $farm_trin_bird_qty[$batches."@".$bird_code];
-                            $purtrin_chick_amt = $purtrin_chick_amt + $farm_trin_bird_amt[$batches."@".$bird_code];
-                        }
-                        if(!empty($sector_trin_bird_qty[$batches."@".$chick_code])){
-                            $sector_transferin_chicks = $sector_transferin_chicks + $sector_trin_bird_qty[$batches."@".$chick_code];
-                            $purtrin_chick_amt = $purtrin_chick_amt + $sector_trin_bird_amt[$batches."@".$chick_code];
-                        }
-                        if(!empty($sector_trin_bird_qty[$batches."@".$bird_code])){
-                            $sector_transferin_chicks = $sector_transferin_chicks + $sector_trin_bird_qty[$batches."@".$bird_code];
-                            $purtrin_chick_amt = $purtrin_chick_amt + $sector_trin_bird_amt[$batches."@".$bird_code];
-                        }
-                        //Mortality
-                        if(!empty($dentry_mort[$batches])){
-                            $mortality_chicks = $mortality_chicks + $dentry_mort[$batches];
-                        }
-                        //Culls
-                        if(!empty($dentry_cull[$batches])){
-                            $chicks_cull = $chicks_cull + $dentry_cull[$batches];
-                        }
-                        //Sale or Transfer Out
-                        if(!empty($sale_bird_nos[$batches."@".$chick_code])){
-                            $sales_birds_nos = $sales_birds_nos + $sale_bird_nos[$batches."@".$chick_code];
-                            //echo "<br/>$sales_birds_nos";
-                        }
-                        if(!empty($sale_bird_nos[$batches."@".$bird_code])){
-                            $sales_birds_nos = $sales_birds_nos + $sale_bird_nos[$batches."@".$bird_code];
-                            //echo "<br/>$sales_birds_nos";
-                        }
-                        if(!empty($sale_bird_qty[$batches."@".$chick_code])){
-                            $sales_birds_qty = $sales_birds_qty + $sale_bird_qty[$batches."@".$chick_code];
-                        }
-                        if(!empty($sale_bird_qty[$batches."@".$bird_code])){
-                            $sales_birds_qty = $sales_birds_qty + $sale_bird_qty[$batches."@".$bird_code];
-                        }
-                        if(!empty($farm_trout_bird_qty[$batches."@".$chick_code])){
-                            $farm_transferout_birds = $farm_transferout_birds + $farm_trout_bird_qty[$batches."@".$chick_code];
-                        }
-                        if(!empty($farm_trout_bird_qty[$batches."@".$bird_code])){
-                            $farm_transferout_birds = $farm_transferout_birds + $farm_trout_bird_qty[$batches."@".$bird_code];
-                        }
-                        if(!empty($sector_trout_bird_qty[$batches."@".$chick_code])){
-                            $sector_transferout_birds = $sector_transferout_birds + $sector_trout_bird_qty[$batches."@".$chick_code];
-                        }
-                        if(!empty($sector_trout_bird_qty[$batches."@".$bird_code])){
-                            $sector_transferout_birds = $sector_transferout_birds + $sector_trout_bird_qty[$batches."@".$bird_code];
-                        }
-                        //Feed Transactions
-                        $purchase_feeds = $farm_transferin_feeds = $sector_transferin_feeds = $consumed_feeds = $sales_feeds = $farm_transferout_feeds = $sector_transferout_feeds = 0;
-                        $purtrin_feed_amt = 0;
-                        foreach($feed_code as $fcode){
-                            //Purchase or Transfer in
-                            if(!empty($pur_feed_qty[$batches."@".$fcode])){
-                                $purchase_feeds = $purchase_feeds + $pur_feed_qty[$batches."@".$fcode];
-                                $purtrin_feed_amt = $purtrin_feed_amt + $pur_feed_amt[$batches."@".$fcode];
-                            }
-                            if(!empty($farm_trin_feed_qty[$batches."@".$fcode])){
-                                $farm_transferin_feeds = $farm_transferin_feeds + $farm_trin_feed_qty[$batches."@".$fcode];
-                                $purtrin_feed_amt = $purtrin_feed_amt + $farm_trin_feed_amt[$batches."@".$fcode];
-                            }
-                            if(!empty($sector_trin_feed_qty[$batches."@".$fcode])){
-                                $sector_transferin_feeds = $sector_transferin_feeds + $sector_trin_feed_qty[$batches."@".$fcode];
-                                $purtrin_feed_amt = $purtrin_feed_amt + $sector_trin_feed_amt[$batches."@".$fcode];
-                            }
-                            
-                            //Sale or Transfer Out
-                            if(!empty($sale_feed_qty[$batches."@".$fcode])){
-                                $sales_feeds = $sales_feeds + $sale_feed_qty[$batches."@".$fcode];
-                            }
-                            if(!empty($farm_trout_feed_qty[$batches."@".$fcode])){
-                                $farm_transferout_feeds = $farm_transferout_feeds + $farm_trout_feed_qty[$batches."@".$fcode];
-                            }
-                            if(!empty($sector_trout_feed_qty[$batches."@".$fcode])){
-                                $sector_transferout_feeds = $sector_transferout_feeds + $sector_trout_feed_qty[$batches."@".$fcode];
-                            }
-                        }
-                        //Feed Consumed
-                        if(!empty($dentry_feed[$batches])){
-                            $consumed_feeds = $consumed_feeds + $dentry_feed[$batches];
-                        }
-                        //Medicine & Vaccine Transactions
-                        $purchase_medvacs = $farm_transferin_medvacs = $sector_transferin_medvacs = $consumed_medvacs = $sales_medvacs = $farm_transferout_medvacs = $sector_transferout_medvacs = 0;
-                        $purtrin_medvac_amt = 0;
-                        foreach($medvac_code as $fcode){
-                            //Purchase or Transfer in
-                            if(!empty($pur_medvac_qty[$batches."@".$fcode])){
-                                $purchase_medvacs = $purchase_medvacs + $pur_medvac_qty[$batches."@".$fcode];
-                                $purtrin_medvac_amt = $purtrin_medvac_amt + $pur_medvac_amt[$batches."@".$fcode];
-                            }
-                            if(!empty($farm_trin_medvac_qty[$batches."@".$fcode])){
-                                $farm_transferin_medvacs = $farm_transferin_medvacs + $farm_trin_medvac_qty[$batches."@".$fcode];
-                                $purtrin_medvac_amt = $purtrin_medvac_amt + $farm_trin_medvac_amt[$batches."@".$fcode];
-                            }
-                            if(!empty($sector_trin_medvac_qty[$batches."@".$fcode])){
-                                $sector_transferin_medvacs = $sector_transferin_medvacs + $sector_trin_medvac_qty[$batches."@".$fcode];
-                                $purtrin_medvac_amt = $purtrin_medvac_amt + $sector_trin_medvac_amt[$batches."@".$fcode];
-                            }
-                            //Medicine Consumption
-                            if(!empty($medvac_qty[$batches])){
-                                $consumed_medvacs = $consumed_medvacs + $medvac_qty[$batches];
-                            }
-                            //Sale or Transfer Out
-                            if(!empty($sale_medvac_qty[$batches."@".$fcode])){
-                                $sales_medvacs = $sales_medvacs + $sale_medvac_qty[$batches."@".$fcode];
-                            }
-                            if(!empty($farm_trout_medvac_qty[$batches."@".$fcode])){
-                                $farm_transferout_medvacs = $farm_transferout_medvacs + $farm_trout_medvac_qty[$batches."@".$fcode];
-                            }
-                            if(!empty($sector_trout_medvac_qty[$batches."@".$fcode])){
-                                $sector_transferout_medvacs = $sector_transferout_medvacs + $sector_trout_medvac_qty[$batches."@".$fcode];
-                            }
-                        }
-
-                        $display_age = $display_act_age = $display_supervisor = $display_farmbranch = $display_farmname = $display_farbatch = $display_placement_date = 
-                        $display_lifting_start_date = $mean_age_total = $display_mean_age = $display_recent_entry_date = $display_gap_days = $display_housed_chicks = $display_mort = 
-                        $display_mortper = $display_sold_birds = $display_available_birds = $display_availableavg_body_wt = $display_fcr = $display_cfcr = $display_eef = 
-                        $display_shortage_birds = $display_feeds_transferred = $display_feeds_in_farm = $display_feeds_consumed = $display_feeds_out_farm = $display_feeds_balance = 0;
-                        //$display_age = $brood_age;
-                        $display_supervisor = $supervisor_name[$farm_supervisor[$fetch_fcode]];
-                        $display_farmbranch = $branch_name[$farm_branch[$fetch_fcode]];
-                        $display_farmline = $line_name[$farm_line[$fetch_fcode]];
-                        $display_farmname = $farm_name[$fetch_fcode];
-                        $display_farbatch = $batch_name[$batches];
-                        $display_batchbook = $batch_book[$batches];
-                        
-                        //if(!empty($display_farbatch) && !empty($chick_placed_date[$batches]) && date("d.m.Y",$chick_placed_date[$batches]) != "01.01.1970"){ 
-                        if(!empty($chick_placed_date[$batches]) && date("d.m.Y",$chick_placed_date[$batches]) != "01.01.1970" || !empty($sector_trin_date[$batches]) && date("d.m.Y",strtotime($sector_trin_date[$batches])) != "01.01.1970" || !empty($farm_trin_date[$batches]) && date("d.m.Y",strtotime($farm_trin_date[$batches])) != "01.01.1970" || !empty($pur_feedin_date[$batches]) && date("d.m.Y",strtotime($pur_feedin_date[$batches])) != "01.01.1970"){ 
-                            if(date("d.m.Y",$chick_placed_date[$batches]) != "01.01.1970"){
-                                $display_placement_date = $chick_placed_date[$batches];
-                            }
-                            else if(date("d.m.Y",strtotime($dentry_min_date[$batches])) != "01.01.1970"){
-                                $display_placement_date = strtotime($dentry_min_date[$batches]);
-                            }
-                            else{
-                                $display_placement_date = strtotime($dentry_min_date[$batches]);
-                            }
-                            if($day_entryage_flag == 1){
-                                $display_age = $dentry_max_age[$batches];
-                            }
-                            else{
-                                $display_age = ((strtotime($today) - $display_placement_date) / 60 / 60 / 24)+1;
-                            }
-                            if(!empty($dentry_max_age[$batches]) && $dentry_max_age[$batches] != ""){
-                                $display_act_age = $dentry_max_age[$batches];
-                            }
-                            else{
-                                $display_act_age = 0;
-                            }
-                            if(!empty($sale_start_date[$batches."@".$bird_code])){
-                                $display_lifting_start_date = $sale_start_date[$batches."@".$bird_code];
-                            }
-                            else{
-                                $display_lifting_start_date = "";
-                            }
-
-                            $fdate = $start_date[$batches]; $tdate = $end_date[$batches];
-                            for($currentDate = $fdate; $currentDate <= $tdate; $currentDate += (86400)){
-                                $present_date = date("Y-m-d",$currentDate);
-                                if(!empty($sal_birds[$present_date."@".$bird_code."@".$batches]) && !empty($day_ages[$present_date."@".$batches])){
-                                    $mean_age_total = $mean_age_total + ($day_ages[$present_date."@".$batches] * $sal_birds[$present_date."@".$bird_code."@".$batches]);
-                                    //echo "<br/>".$batches;
+                        //echo "<br/>".$_POST['hatch']."@".$cin_sup_code[$batches]."@".$sector_name[$cin_sup_code[$batches]];
+                        if($_POST['hatch'] == "all" || $sector_name[$_POST['hatch']] == $sector_name[$cin_sup_code[$batches]]){
+                            if($_POST['br_feed'] == "all" || $ibrand_name[$_POST['br_feed']] == $blentry_items[$batches]){
+                                //Chick or Bird Transactions
+                                $purchase_chicks = $farm_transferin_chicks = $sector_transferin_chicks = $mortality_chicks = $chicks_cull = 0;
+                                $sales_birds_nos = $sales_birds_qty = $farm_transferout_birds = $sector_transferout_birds = 0;
+                                $purtrin_chick_amt = 0;
+                                //Purchase or Transfer in
+                                if(!empty($pur_chick_qty[$batches."@".$chick_code])){
+                                    $purchase_chicks = $purchase_chicks + $pur_chick_qty[$batches."@".$chick_code];
+                                    $purtrin_chick_amt = $purtrin_chick_amt + $pur_chick_amt[$batches."@".$chick_code];
                                 }
-                            }
-                            $display_recent_entry_date = strtotime($dentry_max_date[$batches]);
-                            
-                            
-
-                            if(date("d.m.Y",strtotime($dentry_max_date[$batches])) != "01.01.1970"){
-                                $display_gap_days = ((strtotime(date("d.m.Y")) - strtotime($dentry_max_date[$batches])) / 60 / 60 / 24);
-                            }
-                            else if(date("d.m.Y",strtotime($chick_placed_date[$batches])) != "01.01.1970"){
-                                $display_gap_days = ((strtotime(date("d.m.Y")) - $chick_placed_date[$batches]) / 60 / 60 / 24);
-                            }
-                            else{
-                                $display_gap_days = 0;
-                            }
-                            $display_housed_chicks = $purchase_chicks + $farm_transferin_chicks + $sector_transferin_chicks;
-                            //echo "<br/>".$purchase_chicks."-".$farm_trin_bird_qty."-".$sector_trin_bird_qty;
-                            //echo "<br/>".$batches."-".$display_farbatch."-".date("d.m.Y",$chick_placed_date[$batches])."-".date("d.m.Y",strtotime($dentry_max_date[$batches]));
-
-                            $Actual_prod_cost = (float)$purtrin_chick_amt + (float)$purtrin_feed_amt + (float)$purtrin_medvac_amt + ((float)$admin_cost[$farm_branch[$fetch_fcode]] * (float)$display_housed_chicks);
-                            
-                            if($sales_birds_nos > 0){
-                                $remaining_chicks = (float)$display_housed_chicks - (float)$mortality_chicks - (float)$chicks_cull - (float)$sales_birds_nos;
-                                $sold_avg_wt = (float)$sales_birds_qty;
-                            }
-                            else{
-                                $remaining_chicks = (float)$display_housed_chicks - (float)$mortality_chicks - (float)$chicks_cull; $sold_avg_wt = 0;
-                            }
-
-                            $davg_bwt = round(((float)$davg_wt[$batches] / 1000),3);
-                            if(!empty($davg_wt[$batches]) && $davg_bwt > 0){
-                                $dentry_avg_wt = ((float)$remaining_chicks * (float)$davg_bwt);
-                                //echo "<br/>".$dentry_avg_wt."-".(float)$remaining_chicks."-".((float)$davg_wt[$batches] / 1000);
-                            }
-                            else{ $dentry_avg_wt = 0; }
-
-                            $total_bird_wt = $sold_avg_wt + $dentry_avg_wt;
-                            if($total_bird_wt > 0){
-                                $display_prod_cost = $Actual_prod_cost / $total_bird_wt;
-                            }
-                            else{
-                                $display_prod_cost = 0;
-                            }
-                            //$display_prod_cost_title = $Actual_prod_cost."/".$total_bird_wt."-".$display_prod_cost;
-
-                            //echo "<br/>".$Actual_prod_cost."-".$total_bird_wt."-".$sold_avg_wt."-".$dentry_avg_wt."-".$purtrin_chick_amt."-".$purtrin_feed_amt."-".$purtrin_medvac_amt."-".$admin_cost[$farm_branch[$fetch_fcode]]."-".$display_housed_chicks;
-
-                            $display_mort = $mortality_chicks;
-                            if($display_housed_chicks > 0 && $display_mort > 0){
-                                $display_mortper = (($display_mort / $display_housed_chicks) * 100);
-                            }
-                            else{
-                                $display_mortper = 0;
-                            }
-                            $display_cull = $chicks_cull;
-                            if($display_housed_chicks > 0 && $display_cull > 0){
-                                $display_cullper = (($display_cull / $display_housed_chicks) * 100);
-                            }
-                            else{
-                                $display_cullper = 0;
-                            }
-                            $display_sold_birds = $sales_birds_nos;
-                            $display_sold_weight = $sales_birds_qty;
-                            $display_available_birds = ($display_housed_chicks - ($display_mort + $display_cull + $display_sold_birds));
-                            if($sales_birds_nos > 0){
-                                $display_availableavg_body_wt = ($sales_birds_qty / $sales_birds_nos);
-                                $abwt_title = "$display_availableavg_body_wt = ($sales_birds_qty / $sales_birds_nos);";
-                            }
-                            else{
-                                if(!empty($davg_wt[$batches]) && $davg_wt[$batches] > 0){
-                                    $display_availableavg_body_wt = round(((float)$davg_wt[$batches] / 1000),3);
-                                    $abwt_title = "$display_availableavg_body_wt = round(((float)$davg_wt[$batches] / 1000),3);";
+                                if(!empty($pur_chick_qty[$batches."@".$bird_code])){
+                                    $purchase_chicks = $purchase_chicks + $pur_chick_qty[$batches."@".$bird_code];
+                                    $purtrin_chick_amt = $purtrin_chick_amt + $pur_chick_amt[$batches."@".$bird_code];
                                 }
-                                else{
-                                    $display_availableavg_body_wt = 0;
-                                    $abwt_title = "";
+                                if(!empty($farm_trin_bird_qty[$batches."@".$chick_code])){
+                                    $farm_transferin_chicks = $farm_transferin_chicks + $farm_trin_bird_qty[$batches."@".$chick_code];
+                                    $purtrin_chick_amt = $purtrin_chick_amt + $farm_trin_bird_amt[$batches."@".$chick_code];
                                 }
-                            }
-                            if($sales_birds_qty > 0 && $consumed_feeds > 0) {
-                                $display_fcr = ($consumed_feeds / $sales_birds_qty);
-                                $fcr_title = "$display_fcr = ($consumed_feeds / $sales_birds_qty);";
-                            }
-                            else if($display_available_birds != 0 && $display_availableavg_body_wt != 0 && $consumed_feeds > 0){
-                                $display_fcr = ($consumed_feeds / ($display_available_birds * $display_availableavg_body_wt));
-                                $fcr_title = "$display_fcr = ($consumed_feeds / ($display_available_birds * $display_availableavg_body_wt));";
-                            }
-                            else{
-                                $display_fcr = 0;
-                                $fcr_title = "";
-                            }
-                            if($display_availableavg_body_wt > 0){
-                                $display_cfcr = (((2 - ($display_availableavg_body_wt)) / 4) + $display_fcr);
-                            }
-                            else{
-                                $display_cfcr = 0;
-                            }
-                            
-                            if($mean_age_total > 0 && $sales_birds_nos > 0){
-                                $display_mean_age = $mean_age_total / $sales_birds_nos;
-                            }
-                            //else if($mean_age_total > 0 && $display_available_birds > 0){ $display_mean_age = $mean_age_total / $display_available_birds; }
-                            else{
-                                $display_mean_age = 0;
-                            }
-                            if($display_housed_chicks > 0 && ($display_fcr * $display_mean_age) > 0){
-                                $display_eef = (((((($display_housed_chicks - $display_mort - $display_cull) / $display_housed_chicks) * 100) * $display_availableavg_body_wt) * 100) / ($display_fcr * $display_mean_age));
-                            }
-                            else{
-                                $display_eef = 0;
-                            }
-                            
-
-                            if($display_available_birds > 0){ $display_shortage_birds = 0; $display_excess_birds = $display_available_birds; } else{ $display_shortage_birds = (($display_mort + $display_cull + $display_sold_birds) - $display_housed_chicks); $display_excess_birds = 0; }
-                            $display_feeds_transferred = $purchase_feeds + $sector_transferin_feeds;
-                            $display_feeds_in_farm = $farm_transferin_feeds;
-                            $display_feeds_consumed = $consumed_feeds;
-                            $display_feeds_out_farm = $farm_transferout_feeds;
-                           
-                            $display_feeds_balance = (($display_feeds_transferred + $display_feeds_in_farm) - ($display_feeds_consumed + $display_feeds_out_farm + $sales_feeds + $sector_transferout_feeds));
-                            //echo "<br/>$display_feeds_balance = (($display_feeds_transferred + $display_feeds_in_farm) - ($display_feeds_consumed + $display_feeds_out_farm + $sales_feeds + $sector_transferout_feeds));";
-                            
-                            $latest_consumed_qty = $dentry_con[$batches];
-
-                            if($latest_consumed_qty > 0){
-                                $display_feed_bal_days = $display_feeds_balance / $latest_consumed_qty;
-                                $display_next_3_days_feed = $latest_consumed_qty * (float)$manual_nxtfeed;
-                            }
-                            else{
-                                $display_feed_bal_days = $display_next_3_days_feed = 0;
-                            }
-                            if($abirds == "" && $max_age == "" && $min_age == "" || (float)$abirds <= (float)$display_available_birds && $max_age == "" && $min_age == "" || $display_age >= $min_age && $display_age <= $max_age){
-                                if($display_mortper >= $mort_above){
-                                   if($age_above > 0){
-                                    if(date('d.m.Y',((int)$display_placement_date)) == '01.01.1970'){
-                                        $display_age = 0; 
-                                    }
-                                   }
-                                    if($age_above == 0 || $display_age >= $age_above){
-                                $slno++;
-                                $total_housed_chicks = $total_housed_chicks + $display_housed_chicks;
-                                $total_mort_chicks = $total_mort_chicks + $display_mort;
-                                $total_cull_chicks = $total_cull_chicks + $display_cull;
-                                $total_sold_chicks = $total_sold_chicks + $display_sold_birds;
-                                $total_sold_weight = $total_sold_weight + $display_sold_weight;
-                                $total_aval_chicks = $total_aval_chicks + $display_available_birds;
-                                $total_short_chicks = $total_short_chicks + $display_shortage_birds;
-                                $total_exccess_chicks = $total_exccess_chicks + $display_excess_birds;
-                                $total_feedin_chicks = $total_feedin_chicks + $display_feeds_transferred;
-                                $total_feedin_farm_chicks = $total_feedin_farm_chicks + $display_feeds_in_farm;
-                                $total_feed_consumed_chicks = $total_feed_consumed_chicks + $display_feeds_consumed;
-                                $total_feedout_farm_chicks = $total_feedout_farm_chicks + $display_feeds_out_farm;
-                                $total_feed_bal_chicks = $total_feed_bal_chicks + $display_feeds_balance;
-                                $total_next_3_days_feed = $total_next_3_days_feed + $display_next_3_days_feed;
-
-                                //Present Day Mortality
-                                if(empty($cdate_mort[$batches]) || $cdate_mort[$batches] == ""){ $cdate_mort[$batches] = 0; }
-                                $tcur_mort += (float)$cdate_mort[$batches];
-
-                                echo "<tr>";
-                                for($i = 1;$i <= $col_count;$i++){
-                                    $key_id = "A:1:".$i;
-                                    if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sl_no"){ echo "<td title='Sl.No.' style='text-align:center;'>".$slno."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "branch_name"){ echo "<td title='Branch' style='text-align:left;'>".$display_farmbranch."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name"){ echo "<td title='Line' style='text-align:left;'>".$display_farmline."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<td title='Supervisor' style='text-align:left;'>".$display_supervisor."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<td title='Farmer' style='text-align:left;'>".$display_farmname."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<td title='Batch' style='text-align:left;'>".$display_farbatch."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<td title='Book No' style='text-align:left;'>".$display_batchbook."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "brood_age"){
-                                        if(date('d.m.Y',((int)$display_placement_date)) == '01.01.1970'){ echo "<td title='Present Day Age' style='text-align:center;'>0</td>"; }
-                                        else{ echo "<td title='Present Day Age' style='text-align:center;'>".round($display_age)."</td>"; }
-                                    }else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "brood_act_age"){
-                                        if(date('d.m.Y',((int)$display_placement_date)) == '01.01.1970'){ echo "<td title='Age' style='text-align:center;'>0</td>"; }
-                                        else{ echo "<td title='Age' style='text-align:center;'>".round($display_act_age)."</td>"; }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "placement_date"){
-                                        if(date('d.m.Y',((int)$display_placement_date)) == '01.01.1970'){ echo "<td title='Placement Date' style='text-align:left;'></td>"; } 
-                                        else{ echo "<td title='Placement Date' style='text-align:left;'>".date('d.m.Y',((int)$display_placement_date))."</td>"; }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "lifting_start_date"){
-                                        if(date("d.m.Y",((int)$display_lifting_start_date)) == "01.01.1970"){ echo "<td title='Lifting Start Date' style='text-align:left;'></td>"; }
-                                        else{ echo "<td title='Lifting Start Date' style='text-align:left;'>".date("d.m.Y",((int)$display_lifting_start_date))."</td>"; }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mean_age"){ echo "<td title='Mean Age' style='text-align:right;'>".number_format_ind(round($display_mean_age,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "liquidation_date"){
-                                        if(date("d.m.Y",((int)$display_recent_entry_date)) == "01.01.1970"){ echo "<td title='Latest Entry Date' style='text-align:left;'><b style='color:red'>Not Started</b></td>"; } 
-                                        else{ echo "<td title='Latest Entry Date' style='text-align:left;'>".date("d.m.Y",((int)$display_recent_entry_date))."</td>"; }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "gap_days"){
-                                        if(number_format_ind($display_gap_days) == "19,579.77" || number_format_ind($display_gap_days) == "19698.770833333"){
-                                            echo "<td title='Gap Days' style='text-align:right;'>0</td>";
-                                        }
-                                        else{
-                                            echo "<td title='Gap Days' style='text-align:right;'>".$display_gap_days."</td>";
-                                        }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chick_placed"){ echo "<td title='Housed Chicks' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_housed_chicks)))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mortality_count"){ echo "<td title='Mort' style='text-align:right;'><a href=/records/broiler_single_dayrecord_masterreport.php?submit_report=true&farms=". $fetch_fcode ."&batch=". $batches ." target='_blank'>".str_replace(".00","",number_format_ind(round($display_mort)))."</a></td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mortality_per"){
-                                        if((float)$display_mortper > 3){
-                                            echo "<td title='Mort%' style='text-align:right;color:red;'>".number_format_ind(round($display_mortper,2))."</td>";
-                                        }
-                                        else{
-                                            echo "<td title='Mort%' style='text-align:right;'>".number_format_ind(round($display_mortper,2))."</td>";
-                                        }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "culls_count"){ echo "<td title='Cull' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_cull)))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "culls_per"){ echo "<td title='Cull%' style='text-align:right;'>".number_format_ind(round($display_cullper,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birdsno"){ echo "<td title='Sold Birds' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_sold_birds)))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birdswt"){ echo "<td title='Sold Weight' style='text-align:right;'>".number_format_ind(round($display_sold_weight,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "available_birds"){ echo "<td title='Available Birds' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_available_birds)))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_bodywt"){ echo "<td title='Std B.Wt' style='text-align:right;'>".number_format($std_body_weight[round($display_age)] / 1000,3)."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "avg_bodywt"){
-                                        if(!empty($tdate_awht[$batches]) && (FLOAT)$tdate_awht[$batches] > 0){
-                                            echo "<td title='Avg B.Wt: ".$abwt_title."' style='text-align:right;color:blue;'>".number_format($display_availableavg_body_wt,3)."</td>";
-                                        }
-                                        else if($std_body_weight[round($display_age)] > $display_availableavg_body_wt){
-                                            echo "<td title='Avg B.Wt: ".$abwt_title."' style='text-align:right;color:red;'>".number_format($display_availableavg_body_wt,3)."</td>";
-                                        }
-                                        else if(number_format_ind($display_availableavg_body_wt) == "0.00"){
-                                            echo "<td title='Avg B.Wt: ".$abwt_title."' style='text-align:right;color:red;'>".number_format($display_availableavg_body_wt,3)."</td>";
-                                        }
-                                        else{
-                                            echo "<td title='Avg B.Wt: ".$abwt_title."' style='text-align:right;color:green;'>".number_format($display_availableavg_body_wt,3)."</td>";
-                                        }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_fcr"){ echo "<td title='Std FCR' style='text-align:right;'>".number_format($std_fcr[round($display_age)],3)."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "fcr"){
-                                        if(number_format($display_fcr,3) == "INF" || number_format($display_fcr,3) == "NAN"){ echo "<td title='FCR' style='text-align:right;'>0.000</td>"; }
-                                        else{ echo "<td title='FCR: ".$fcr_title."' style='text-align:right;'>".number_format($display_fcr,3)."</td>"; }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "cfcr"){ echo "<td title='CFCR' style='text-align:right;'>".number_format($display_cfcr,3)."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "eef"){ echo "<td title='EEF' style='text-align:right;'>".number_format_ind(round($display_eef,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mgmt_perkg_price"){ echo "<td title='M PC/Kg' style='text-align:right;'>".number_format_ind(round($display_prod_cost,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_sector_count"){ echo "<td title='Feed Transferred' style='text-align:right;'>".number_format_ind(round($display_feeds_transferred,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_farm_count"){ echo "<td title='Transfer In From Other Farms' style='text-align:right;'>".number_format_ind(round($display_feeds_in_farm,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_feed_birdsno"){ echo "<td title='Std Feed perKg' style='text-align:right;'>".number_format_ind(round(($std_cum_feed[round($display_age)] * $display_housed_chicks) / 1000,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_feed_perbirdno"){
-                                        if((float)$display_housed_chicks != 0){ $t1 = 0; $t1 = round(((($std_cum_feed[round($display_age)] * $display_housed_chicks) / 1000) / $display_housed_chicks),2); }
-                                        else{ $t1 = 0; }
-                                        echo "<td title='Std Feed Con' style='text-align:right;'>".number_format_ind($t1)."</td>";
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){
-                                        if((($std_cum_feed[round($display_age)] * $display_housed_chicks) / 1000) > $display_feeds_consumed){
-                                            echo "<td title='Feed Con' style='text-align:right;color:green;'>".number_format_ind(round($display_feeds_consumed,2))."</td>";
-                                        }
-                                        else if(number_format_ind($display_feeds_consumed) == "0.00"){
-                                            echo "<td title='Feed Con' style='text-align:right;color:black;'>".number_format_ind(round($display_feeds_consumed,2))."</td>";
-                                        }
-                                        else{
-                                            echo "<td title='Feed Con' style='text-align:right;color:red;'>".number_format_ind(round($display_feeds_consumed,2))."</td>";
-                                        }
-                                    } else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_bags"){
-                                        if((($std_cum_feed[round($display_age)] * $display_housed_chicks) / 1000) > $display_feeds_consumed){
-                                            echo "<td title='Feed Con' style='text-align:right;color:green;'>".number_format_ind(round($display_feeds_consumed/50,2))."</td>";
-                                        }
-                                        else if(number_format_ind($display_feeds_consumed) == "0.00"){
-                                            echo "<td title='Feed Con' style='text-align:right;color:black;'>".number_format_ind(round($display_feeds_consumed/50,2))."</td>";
-                                        }
-                                        else{
-                                            echo "<td title='Feed Con' style='text-align:right;color:red;'>".number_format_ind(round($display_feeds_consumed/50,2))."</td>";
-                                        }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "actual_feed_perbirdno"){
-                                        if($display_housed_chicks > 0){
-                                            echo "<td title='Actual Feed perKg' style='text-align:right;'>".number_format_ind(round(($display_feeds_consumed / $display_housed_chicks),2))."</td>";
-                                        }
-                                        else{
-                                            echo "<td title='Actual Feed perKg' style='text-align:right;'>".number_format_ind(round((0),2))."</td>";
-                                        }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "actual_feed_perbirdno2"){
-                                        if(((float)$display_housed_chicks - (float)$display_mort - (float)$display_cull) > 0){
-                                            $atitle = "number_format_ind(round(((float)$display_feeds_consumed / ((float)$display_housed_chicks - (float)$display_mort - (float)$display_cull)),2))";
-                                            echo "<td title='".$atitle."' style='text-align:right;'>".number_format_ind(round(((float)$display_feeds_consumed / ((float)$display_housed_chicks - (float)$display_mort - (float)$display_cull)),2))."</td>";
-                                        }
-                                        else{
-                                            echo "<td title='Actual Feed perKg' style='text-align:right;'>".number_format_ind(round((0),2))."</td>";
-                                        }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_farms_count"){ echo "<td title='Transfer Out to Farms' style='text-align:right;'>".number_format_ind(round($display_feeds_out_farm,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ echo "<td title='Feed Balance' style='text-align:right;'>".number_format_ind(round($display_feeds_balance,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_days"){ echo "<td title='Feed Balance Days-".$display_feeds_balance."/".$latest_consumed_qty."' style='text-align:right;'>".substr(number_format_ind($display_feed_bal_days),0,-3)."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "next_3days_feed"){ echo "<td title='Next 3 Days Feed' style='text-align:right;'>".number_format_ind(round($display_next_3_days_feed,2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birds_per"){ 
-                                        if($display_housed_chicks > 0){
-                                            echo "<td title='Sold Weight' style='text-align:right;'>".number_format_ind(($display_sold_birds/$display_housed_chicks)*100)."</td>"; 
-                                        }else{
-                                            echo "<td title='Sold Weight' style='text-align:right;'>"."0"."</td>"; 
-                                        }
- 
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chick_received_from"){ 
-                                        if(!empty($sector_name[$cin_sup_code[$batches]])){
-                                            echo "<td title='Sold Weight' style='text-align:right;'>".$sector_name[$cin_sup_code[$batches]]."</td>"; 
-                                        }else{
-                                            echo "<td title='Sold Weight' style='text-align:right;'></td>"; 
-                                        }
-                                    }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_sector_bags"){ echo "<td title='Feed Transferred Bags' style='text-align:right;'>".number_format_ind(round(($display_feeds_transferred / 50),2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_farm_bags"){ echo "<td title='Transfer In From Other Farms Bags' style='text-align:right;'>".number_format_ind(round(($display_feeds_in_farm / 50),2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_farms_bags"){ echo "<td title='Transfer Out to Farms Bags' style='text-align:right;'>".number_format_ind(round(($display_feeds_out_farm / 50),2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_bags"){ echo "<td title='Feed Balance Bags' style='text-align:right;'>".number_format_ind(round(($display_feeds_balance / 50),2))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "latest_feedin_brand"){ echo "<td title='Latest Feed-In Brand' style='text-align:left;'>".$blentry_items[$batches]."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "today_mort_count"){ echo "<td title='Today Mortality' style='text-align:right;'>".str_replace('.00','',number_format_ind($cdate_mort[$batches]))."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chickin_hatchery_name"){ echo "<td title='Today Mortality' style='text-align:right;'>".$sector_name[$chkin_hcode[$batches]]."</td>"; }
-                                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chickin_supplier_name"){ echo "<td title='Today Mortality' style='text-align:right;'>".$sector_name[$chkin_vcode[$batches]]."</td>"; }
-                                    else { }
+                                if(!empty($farm_trin_bird_qty[$batches."@".$bird_code])){
+                                    $farm_transferin_chicks = $farm_transferin_chicks + $farm_trin_bird_qty[$batches."@".$bird_code];
+                                    $purtrin_chick_amt = $purtrin_chick_amt + $farm_trin_bird_amt[$batches."@".$bird_code];
                                 }
-                                echo "</tr>";
-                            }
-                            }
+                                if(!empty($sector_trin_bird_qty[$batches."@".$chick_code])){
+                                    $sector_transferin_chicks = $sector_transferin_chicks + $sector_trin_bird_qty[$batches."@".$chick_code];
+                                    $purtrin_chick_amt = $purtrin_chick_amt + $sector_trin_bird_amt[$batches."@".$chick_code];
+                                }
+                                if(!empty($sector_trin_bird_qty[$batches."@".$bird_code])){
+                                    $sector_transferin_chicks = $sector_transferin_chicks + $sector_trin_bird_qty[$batches."@".$bird_code];
+                                    $purtrin_chick_amt = $purtrin_chick_amt + $sector_trin_bird_amt[$batches."@".$bird_code];
+                                }
+                                //Mortality
+                                if(!empty($dentry_mort[$batches])){
+                                    $mortality_chicks = $mortality_chicks + $dentry_mort[$batches];
+                                }
+                                //Culls
+                                if(!empty($dentry_cull[$batches])){
+                                    $chicks_cull = $chicks_cull + $dentry_cull[$batches];
+                                }
+                                //Sale or Transfer Out
+                                if(!empty($sale_bird_nos[$batches."@".$chick_code])){
+                                    $sales_birds_nos = $sales_birds_nos + $sale_bird_nos[$batches."@".$chick_code];
+                                    //echo "<br/>$sales_birds_nos";
+                                }
+                                if(!empty($sale_bird_nos[$batches."@".$bird_code])){
+                                    $sales_birds_nos = $sales_birds_nos + $sale_bird_nos[$batches."@".$bird_code];
+                                    //echo "<br/>$sales_birds_nos";
+                                }
+                                if(!empty($sale_bird_qty[$batches."@".$chick_code])){
+                                    $sales_birds_qty = $sales_birds_qty + $sale_bird_qty[$batches."@".$chick_code];
+                                }
+                                if(!empty($sale_bird_qty[$batches."@".$bird_code])){
+                                    $sales_birds_qty = $sales_birds_qty + $sale_bird_qty[$batches."@".$bird_code];
+                                }
+                                if(!empty($farm_trout_bird_qty[$batches."@".$chick_code])){
+                                    $farm_transferout_birds = $farm_transferout_birds + $farm_trout_bird_qty[$batches."@".$chick_code];
+                                }
+                                if(!empty($farm_trout_bird_qty[$batches."@".$bird_code])){
+                                    $farm_transferout_birds = $farm_transferout_birds + $farm_trout_bird_qty[$batches."@".$bird_code];
+                                }
+                                if(!empty($sector_trout_bird_qty[$batches."@".$chick_code])){
+                                    $sector_transferout_birds = $sector_transferout_birds + $sector_trout_bird_qty[$batches."@".$chick_code];
+                                }
+                                if(!empty($sector_trout_bird_qty[$batches."@".$bird_code])){
+                                    $sector_transferout_birds = $sector_transferout_birds + $sector_trout_bird_qty[$batches."@".$bird_code];
+                                }
+                                //Feed Transactions
+                                $purchase_feeds = $farm_transferin_feeds = $sector_transferin_feeds = $consumed_feeds = $sales_feeds = $farm_transferout_feeds = $sector_transferout_feeds = 0;
+                                $purtrin_feed_amt = 0;
+                                foreach($feed_code as $fcode){
+                                    //Purchase or Transfer in
+                                    if(!empty($pur_feed_qty[$batches."@".$fcode])){
+                                        $purchase_feeds = $purchase_feeds + $pur_feed_qty[$batches."@".$fcode];
+                                        $purtrin_feed_amt = $purtrin_feed_amt + $pur_feed_amt[$batches."@".$fcode];
+                                    }
+                                    if(!empty($farm_trin_feed_qty[$batches."@".$fcode])){
+                                        $farm_transferin_feeds = $farm_transferin_feeds + $farm_trin_feed_qty[$batches."@".$fcode];
+                                        $purtrin_feed_amt = $purtrin_feed_amt + $farm_trin_feed_amt[$batches."@".$fcode];
+                                    }
+                                    if(!empty($sector_trin_feed_qty[$batches."@".$fcode])){
+                                        $sector_transferin_feeds = $sector_transferin_feeds + $sector_trin_feed_qty[$batches."@".$fcode];
+                                        $purtrin_feed_amt = $purtrin_feed_amt + $sector_trin_feed_amt[$batches."@".$fcode];
+                                    }
+                                    
+                                    //Sale or Transfer Out
+                                    if(!empty($sale_feed_qty[$batches."@".$fcode])){
+                                        $sales_feeds = $sales_feeds + $sale_feed_qty[$batches."@".$fcode];
+                                    }
+                                    if(!empty($farm_trout_feed_qty[$batches."@".$fcode])){
+                                        $farm_transferout_feeds = $farm_transferout_feeds + $farm_trout_feed_qty[$batches."@".$fcode];
+                                    }
+                                    if(!empty($sector_trout_feed_qty[$batches."@".$fcode])){
+                                        $sector_transferout_feeds = $sector_transferout_feeds + $sector_trout_feed_qty[$batches."@".$fcode];
+                                    }
+                                }
+                                //Feed Consumed
+                                if(!empty($dentry_feed[$batches])){
+                                    $consumed_feeds = $consumed_feeds + $dentry_feed[$batches];
+                                }
+                                //Medicine & Vaccine Transactions
+                                $purchase_medvacs = $farm_transferin_medvacs = $sector_transferin_medvacs = $consumed_medvacs = $sales_medvacs = $farm_transferout_medvacs = $sector_transferout_medvacs = 0;
+                                $purtrin_medvac_amt = 0;
+                                foreach($medvac_code as $fcode){
+                                    //Purchase or Transfer in
+                                    if(!empty($pur_medvac_qty[$batches."@".$fcode])){
+                                        $purchase_medvacs = $purchase_medvacs + $pur_medvac_qty[$batches."@".$fcode];
+                                        $purtrin_medvac_amt = $purtrin_medvac_amt + $pur_medvac_amt[$batches."@".$fcode];
+                                    }
+                                    if(!empty($farm_trin_medvac_qty[$batches."@".$fcode])){
+                                        $farm_transferin_medvacs = $farm_transferin_medvacs + $farm_trin_medvac_qty[$batches."@".$fcode];
+                                        $purtrin_medvac_amt = $purtrin_medvac_amt + $farm_trin_medvac_amt[$batches."@".$fcode];
+                                    }
+                                    if(!empty($sector_trin_medvac_qty[$batches."@".$fcode])){
+                                        $sector_transferin_medvacs = $sector_transferin_medvacs + $sector_trin_medvac_qty[$batches."@".$fcode];
+                                        $purtrin_medvac_amt = $purtrin_medvac_amt + $sector_trin_medvac_amt[$batches."@".$fcode];
+                                    }
+                                    //Medicine Consumption
+                                    if(!empty($medvac_qty[$batches])){
+                                        $consumed_medvacs = $consumed_medvacs + $medvac_qty[$batches];
+                                    }
+                                    //Sale or Transfer Out
+                                    if(!empty($sale_medvac_qty[$batches."@".$fcode])){
+                                        $sales_medvacs = $sales_medvacs + $sale_medvac_qty[$batches."@".$fcode];
+                                    }
+                                    if(!empty($farm_trout_medvac_qty[$batches."@".$fcode])){
+                                        $farm_transferout_medvacs = $farm_transferout_medvacs + $farm_trout_medvac_qty[$batches."@".$fcode];
+                                    }
+                                    if(!empty($sector_trout_medvac_qty[$batches."@".$fcode])){
+                                        $sector_transferout_medvacs = $sector_transferout_medvacs + $sector_trout_medvac_qty[$batches."@".$fcode];
+                                    }
+                                }
+
+                                $display_age = $display_act_age = $display_supervisor = $display_farmbranch = $display_farmname = $display_farbatch = $display_placement_date = 
+                                $display_lifting_start_date = $mean_age_total = $display_mean_age = $display_recent_entry_date = $display_gap_days = $display_housed_chicks = $display_mort = 
+                                $display_mortper = $display_sold_birds = $display_available_birds = $display_availableavg_body_wt = $display_fcr = $display_cfcr = $display_eef = 
+                                $display_shortage_birds = $display_feeds_transferred = $display_feeds_in_farm = $display_feeds_consumed = $display_feeds_out_farm = $display_feeds_balance = 0;
+                                //$display_age = $brood_age;
+                                $display_supervisor = $supervisor_name[$farm_supervisor[$fetch_fcode]];
+                                $display_farmbranch = $branch_name[$farm_branch[$fetch_fcode]];
+                                $display_farmline = $line_name[$farm_line[$fetch_fcode]];
+                                $display_farmname = $farm_name[$fetch_fcode];
+                                $display_farbatch_code = $batches;
+                                $display_farbatch = $batch_name[$batches];
+                                $display_batchbook = $batch_book[$batches];
+                                
+                                //if(!empty($display_farbatch) && !empty($chick_placed_date[$batches]) && date("d.m.Y",$chick_placed_date[$batches]) != "01.01.1970"){ 
+                                if(!empty($chick_placed_date[$batches]) && date("d.m.Y",$chick_placed_date[$batches]) != "01.01.1970" || !empty($sector_trin_date[$batches]) && date("d.m.Y",strtotime($sector_trin_date[$batches])) != "01.01.1970" || !empty($farm_trin_date[$batches]) && date("d.m.Y",strtotime($farm_trin_date[$batches])) != "01.01.1970" || !empty($pur_feedin_date[$batches]) && date("d.m.Y",strtotime($pur_feedin_date[$batches])) != "01.01.1970"){ 
+                                    if(date("d.m.Y",$chick_placed_date[$batches]) != "01.01.1970"){
+                                        $display_placement_date = $chick_placed_date[$batches];
+                                    }
+                                    else if(date("d.m.Y",strtotime($dentry_min_date[$batches])) != "01.01.1970"){
+                                        $display_placement_date = strtotime($dentry_min_date[$batches]);
+                                    }
+                                    else{
+                                        $display_placement_date = strtotime($dentry_min_date[$batches]);
+                                    }
+                                    if($day_entryage_flag == 1){
+                                        $display_age = $dentry_max_age[$batches];
+                                    }
+                                    else{
+                                        $display_age = ((strtotime($today) - $display_placement_date) / 60 / 60 / 24)+1;
+                                    }
+                                    if(!empty($dentry_max_age[$batches]) && $dentry_max_age[$batches] != ""){
+                                        $display_act_age = $dentry_max_age[$batches];
+                                    }
+                                    else{
+                                        $display_act_age = 0;
+                                    }
+                                    if(!empty($sale_start_date[$batches."@".$bird_code])){
+                                        $display_lifting_start_date = $sale_start_date[$batches."@".$bird_code];
+                                    }
+                                    else{
+                                        $display_lifting_start_date = "";
+                                    }
+
+                                    $fdate = $start_date[$batches]; $tdate = $end_date[$batches];
+                                    for($currentDate = $fdate; $currentDate <= $tdate; $currentDate += (86400)){
+                                        $present_date = date("Y-m-d",$currentDate);
+                                        if(!empty($sal_birds[$present_date."@".$bird_code."@".$batches]) && !empty($day_ages[$present_date."@".$batches])){
+                                            $mean_age_total = $mean_age_total + ($day_ages[$present_date."@".$batches] * $sal_birds[$present_date."@".$bird_code."@".$batches]);
+                                            //echo "<br/>".$batches;
+                                        }
+                                    }
+                                    $display_recent_entry_date = strtotime($dentry_max_date[$batches]);
+                                    
+                                    
+
+                                    if(date("d.m.Y",strtotime($dentry_max_date[$batches])) != "01.01.1970"){
+                                        $display_gap_days = ((strtotime(date("d.m.Y")) - strtotime($dentry_max_date[$batches])) / 60 / 60 / 24);
+                                    }
+                                    else if(date("d.m.Y",strtotime($chick_placed_date[$batches])) != "01.01.1970"){
+                                        $display_gap_days = ((strtotime(date("d.m.Y")) - $chick_placed_date[$batches]) / 60 / 60 / 24);
+                                    }
+                                    else{
+                                        $display_gap_days = 0;
+                                    }
+                                    $display_housed_chicks = $purchase_chicks + $farm_transferin_chicks + $sector_transferin_chicks;
+                                    //echo "<br/>".$purchase_chicks."-".$farm_trin_bird_qty."-".$sector_trin_bird_qty;
+                                    //echo "<br/>".$batches."-".$display_farbatch."-".date("d.m.Y",$chick_placed_date[$batches])."-".date("d.m.Y",strtotime($dentry_max_date[$batches]));
+
+                                    $Actual_prod_cost = (float)$purtrin_chick_amt + (float)$purtrin_feed_amt + (float)$purtrin_medvac_amt + ((float)$admin_cost[$farm_branch[$fetch_fcode]] * (float)$display_housed_chicks);
+                                    
+                                    if($sales_birds_nos > 0){
+                                        $remaining_chicks = (float)$display_housed_chicks - (float)$mortality_chicks - (float)$chicks_cull - (float)$sales_birds_nos;
+                                        $sold_avg_wt = (float)$sales_birds_qty;
+                                    }
+                                    else{
+                                        $remaining_chicks = (float)$display_housed_chicks - (float)$mortality_chicks - (float)$chicks_cull; $sold_avg_wt = 0;
+                                    }
+
+                                    $davg_bwt = round(((float)$davg_wt[$batches] / 1000),3);
+                                    if(!empty($davg_wt[$batches]) && $davg_bwt > 0){
+                                        $dentry_avg_wt = ((float)$remaining_chicks * (float)$davg_bwt);
+                                        //echo "<br/>".$dentry_avg_wt."-".(float)$remaining_chicks."-".((float)$davg_wt[$batches] / 1000);
+                                    }
+                                    else{ $dentry_avg_wt = 0; }
+
+                                    $total_bird_wt = $sold_avg_wt + $dentry_avg_wt;
+                                    if($total_bird_wt > 0){
+                                        $display_prod_cost = $Actual_prod_cost / $total_bird_wt;
+                                    }
+                                    else{
+                                        $display_prod_cost = 0;
+                                    }
+                                    //$display_prod_cost_title = $Actual_prod_cost."/".$total_bird_wt."-".$display_prod_cost;
+
+                                    //echo "<br/>".$Actual_prod_cost."-".$total_bird_wt."-".$sold_avg_wt."-".$dentry_avg_wt."-".$purtrin_chick_amt."-".$purtrin_feed_amt."-".$purtrin_medvac_amt."-".$admin_cost[$farm_branch[$fetch_fcode]]."-".$display_housed_chicks;
+
+                                    $display_mort = $mortality_chicks;
+                                    if($display_housed_chicks > 0 && $display_mort > 0){
+                                        $display_mortper = (($display_mort / $display_housed_chicks) * 100);
+                                    }
+                                    else{
+                                        $display_mortper = 0;
+                                    }
+                                    $display_cull = $chicks_cull;
+                                    if($display_housed_chicks > 0 && $display_cull > 0){
+                                        $display_cullper = (($display_cull / $display_housed_chicks) * 100);
+                                    }
+                                    else{
+                                        $display_cullper = 0;
+                                    }
+                                    $display_sold_birds = $sales_birds_nos;
+                                    $display_sold_weight = $sales_birds_qty;
+                                    $display_available_birds = ($display_housed_chicks - ($display_mort + $display_cull + $display_sold_birds));
+                                    if($sales_birds_nos > 0){
+                                        $display_availableavg_body_wt = ($sales_birds_qty / $sales_birds_nos);
+                                        $abwt_title = "$display_availableavg_body_wt = ($sales_birds_qty / $sales_birds_nos);";
+                                    }
+                                    else{
+                                        if(!empty($davg_wt[$batches]) && $davg_wt[$batches] > 0){
+                                            $display_availableavg_body_wt = round(((float)$davg_wt[$batches] / 1000),3);
+                                            $abwt_title = "$display_availableavg_body_wt = round(((float)$davg_wt[$batches] / 1000),3);";
+                                        }
+                                        else{
+                                            $display_availableavg_body_wt = 0;
+                                            $abwt_title = "";
+                                        }
+                                    }
+                                    if($sales_birds_qty > 0 && $consumed_feeds > 0) {
+                                        $display_fcr = ($consumed_feeds / $sales_birds_qty);
+                                        $fcr_title = "$display_fcr = ($consumed_feeds / $sales_birds_qty);";
+                                    }
+                                    else if($display_available_birds != 0 && $display_availableavg_body_wt != 0 && $consumed_feeds > 0){
+                                        $display_fcr = ($consumed_feeds / ($display_available_birds * $display_availableavg_body_wt));
+                                        $fcr_title = "$display_fcr = ($consumed_feeds / ($display_available_birds * $display_availableavg_body_wt));";
+                                    }
+                                    else{
+                                        $display_fcr = 0;
+                                        $fcr_title = "";
+                                    }
+                                    if($display_availableavg_body_wt > 0){
+                                        $display_cfcr = (((2 - ($display_availableavg_body_wt)) / 4) + $display_fcr);
+                                    }
+                                    else{
+                                        $display_cfcr = 0;
+                                    }
+                                    
+                                    if($mean_age_total > 0 && $sales_birds_nos > 0){
+                                        $display_mean_age = $mean_age_total / $sales_birds_nos;
+                                    }
+                                    //else if($mean_age_total > 0 && $display_available_birds > 0){ $display_mean_age = $mean_age_total / $display_available_birds; }
+                                    else{
+                                        $display_mean_age = 0;
+                                    }
+                                    if($display_housed_chicks > 0 && ($display_fcr * $display_mean_age) > 0){
+                                        $display_eef = (((((($display_housed_chicks - $display_mort - $display_cull) / $display_housed_chicks) * 100) * $display_availableavg_body_wt) * 100) / ($display_fcr * $display_mean_age));
+                                    }
+                                    else{
+                                        $display_eef = 0;
+                                    }
+                                    
+
+                                    if($display_available_birds > 0){ $display_shortage_birds = 0; $display_excess_birds = $display_available_birds; } else{ $display_shortage_birds = (($display_mort + $display_cull + $display_sold_birds) - $display_housed_chicks); $display_excess_birds = 0; }
+                                    $display_feeds_transferred = $purchase_feeds + $sector_transferin_feeds;
+                                    $display_feeds_in_farm = $farm_transferin_feeds;
+                                    $display_feeds_consumed = $consumed_feeds;
+                                    $display_feeds_out_farm = $farm_transferout_feeds;
+                                
+                                    $display_feeds_balance = (($display_feeds_transferred + $display_feeds_in_farm) - ($display_feeds_consumed + $display_feeds_out_farm + $sales_feeds + $sector_transferout_feeds));
+                                    //echo "<br/>$display_feeds_balance = (($display_feeds_transferred + $display_feeds_in_farm) - ($display_feeds_consumed + $display_feeds_out_farm + $sales_feeds + $sector_transferout_feeds));";
+                                    
+                                    $latest_consumed_qty = $dentry_con[$batches];
+
+                                    if($latest_consumed_qty > 0){
+                                        $display_feed_bal_days = $display_feeds_balance / $latest_consumed_qty;
+                                        $display_next_3_days_feed = $latest_consumed_qty * (float)$manual_nxtfeed;
+                                    }
+                                    else{
+                                        $display_feed_bal_days = $display_next_3_days_feed = 0;
+                                    }
+                                    if($abirds == "" && $max_age == "" && $min_age == "" || (float)$abirds <= (float)$display_available_birds && $max_age == "" && $min_age == "" || $display_age >= $min_age && $display_age <= $max_age){
+                                        if($display_mortper >= $mort_above){
+                                        if($age_above > 0){
+                                            if(date('d.m.Y',((int)$display_placement_date)) == '01.01.1970'){
+                                                $display_age = 0; 
+                                            }
+                                        }
+                                            if($age_above == 0 || $display_age >= $age_above){
+                                        $slno++;
+                                        $total_housed_chicks = $total_housed_chicks + $display_housed_chicks;
+                                        $total_mort_chicks = $total_mort_chicks + $display_mort;
+                                        $total_cull_chicks = $total_cull_chicks + $display_cull;
+                                        $total_sold_chicks = $total_sold_chicks + $display_sold_birds;
+                                        $total_sold_weight = $total_sold_weight + $display_sold_weight;
+                                        $total_aval_chicks = $total_aval_chicks + $display_available_birds;
+                                        $total_short_chicks = $total_short_chicks + $display_shortage_birds;
+                                        $total_exccess_chicks = $total_exccess_chicks + $display_excess_birds;
+                                        $total_feedin_chicks = $total_feedin_chicks + $display_feeds_transferred;
+                                        $total_feedin_farm_chicks = $total_feedin_farm_chicks + $display_feeds_in_farm;
+                                        $total_feed_consumed_chicks = $total_feed_consumed_chicks + $display_feeds_consumed;
+                                        $total_feedout_farm_chicks = $total_feedout_farm_chicks + $display_feeds_out_farm;
+                                        $total_feed_bal_chicks = $total_feed_bal_chicks + $display_feeds_balance;
+                                        $total_next_3_days_feed = $total_next_3_days_feed + $display_next_3_days_feed;
+
+                                        //Present Day Mortality
+                                        if(empty($cdate_mort[$batches]) || $cdate_mort[$batches] == ""){ $cdate_mort[$batches] = 0; }
+                                        $tcur_mort += (float)$cdate_mort[$batches];
+
+                                        echo "<tr>";
+                                        for($i = 1;$i <= $col_count;$i++){
+                                            $key_id = "A:1:".$i;
+                                            if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sl_no"){ echo "<td title='Sl.No.' style='text-align:center;'>".$slno."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "branch_name"){ echo "<td title='Branch' style='text-align:left;'>".$display_farmbranch."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name"){ echo "<td title='Line' style='text-align:left;'>".$display_farmline."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<td title='Supervisor' style='text-align:left;'>".$display_supervisor."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<td title='Farmer' style='text-align:left;'>".$display_farmname."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td title='Batch Code' style='text-align:left;'>".$display_farbatch_code."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<td title='Batch' style='text-align:left;'>".$display_farbatch."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<td title='Book No' style='text-align:left;'>".$display_batchbook."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "brood_age"){
+                                                if(date('d.m.Y',((int)$display_placement_date)) == '01.01.1970'){ echo "<td title='Present Day Age' style='text-align:center;'>0</td>"; }
+                                                else{ echo "<td title='Present Day Age' style='text-align:center;'>".round($display_age)."</td>"; }
+                                            }else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "brood_act_age"){
+                                                if(date('d.m.Y',((int)$display_placement_date)) == '01.01.1970'){ echo "<td title='Age' style='text-align:center;'>0</td>"; }
+                                                else{ echo "<td title='Age' style='text-align:center;'>".round($display_act_age)."</td>"; }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "placement_date"){
+                                                if(date('d.m.Y',((int)$display_placement_date)) == '01.01.1970'){ echo "<td title='Placement Date' style='text-align:left;'></td>"; } 
+                                                else{ echo "<td title='Placement Date' style='text-align:left;'>".date('d.m.Y',((int)$display_placement_date))."</td>"; }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "lifting_start_date"){
+                                                if(date("d.m.Y",((int)$display_lifting_start_date)) == "01.01.1970"){ echo "<td title='Lifting Start Date' style='text-align:left;'></td>"; }
+                                                else{ echo "<td title='Lifting Start Date' style='text-align:left;'>".date("d.m.Y",((int)$display_lifting_start_date))."</td>"; }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mean_age"){ echo "<td title='Mean Age' style='text-align:right;'>".number_format_ind(round($display_mean_age,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "liquidation_date"){
+                                                if(date("d.m.Y",((int)$display_recent_entry_date)) == "01.01.1970"){ echo "<td title='Latest Entry Date' style='text-align:left;'><b style='color:red'>Not Started</b></td>"; } 
+                                                else{ echo "<td title='Latest Entry Date' style='text-align:left;'>".date("d.m.Y",((int)$display_recent_entry_date))."</td>"; }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "gap_days"){
+                                                if(number_format_ind($display_gap_days) == "19,579.77" || number_format_ind($display_gap_days) == "19698.770833333"){
+                                                    echo "<td title='Gap Days' style='text-align:right;'>0</td>";
+                                                }
+                                                else{
+                                                    echo "<td title='Gap Days' style='text-align:right;'>".$display_gap_days."</td>";
+                                                }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chick_placed"){ echo "<td title='Housed Chicks' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_housed_chicks)))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mortality_count"){ echo "<td title='Mort' style='text-align:right;'><a href=/records/broiler_single_dayrecord_masterreport.php?submit_report=true&farms=". $fetch_fcode ."&batch=". $batches ." target='_blank'>".str_replace(".00","",number_format_ind(round($display_mort)))."</a></td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mortality_per"){
+                                                if((float)$display_mortper > 3){
+                                                    echo "<td title='Mort%' style='text-align:right;color:red;'>".number_format_ind(round($display_mortper,2))."</td>";
+                                                }
+                                                else{
+                                                    echo "<td title='Mort%' style='text-align:right;'>".number_format_ind(round($display_mortper,2))."</td>";
+                                                }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "culls_count"){ echo "<td title='Cull' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_cull)))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "culls_per"){ echo "<td title='Cull%' style='text-align:right;'>".number_format_ind(round($display_cullper,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birdsno"){ echo "<td title='Sold Birds' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_sold_birds)))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birdswt"){ echo "<td title='Sold Weight' style='text-align:right;'>".number_format_ind(round($display_sold_weight,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "available_birds"){ echo "<td title='Available Birds' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_available_birds)))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_bodywt"){ echo "<td title='Std B.Wt' style='text-align:right;'>".number_format($std_body_weight[round($display_age)] / 1000,3)."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "avg_bodywt"){
+                                                if(!empty($tdate_awht[$batches]) && (FLOAT)$tdate_awht[$batches] > 0){
+                                                    echo "<td title='Avg B.Wt: ".$abwt_title."' style='text-align:right;color:blue;'>".number_format($display_availableavg_body_wt,3)."</td>";
+                                                }
+                                                else if($std_body_weight[round($display_age)] > $display_availableavg_body_wt){
+                                                    echo "<td title='Avg B.Wt: ".$abwt_title."' style='text-align:right;color:red;'>".number_format($display_availableavg_body_wt,3)."</td>";
+                                                }
+                                                else if(number_format_ind($display_availableavg_body_wt) == "0.00"){
+                                                    echo "<td title='Avg B.Wt: ".$abwt_title."' style='text-align:right;color:red;'>".number_format($display_availableavg_body_wt,3)."</td>";
+                                                }
+                                                else{
+                                                    echo "<td title='Avg B.Wt: ".$abwt_title."' style='text-align:right;color:green;'>".number_format($display_availableavg_body_wt,3)."</td>";
+                                                }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_fcr"){ echo "<td title='Std FCR' style='text-align:right;'>".number_format($std_fcr[round($display_age)],3)."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "fcr"){
+                                                if(number_format($display_fcr,3) == "INF" || number_format($display_fcr,3) == "NAN"){ echo "<td title='FCR' style='text-align:right;'>0.000</td>"; }
+                                                else{ echo "<td title='FCR: ".$fcr_title."' style='text-align:right;'>".number_format($display_fcr,3)."</td>"; }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "cfcr"){ echo "<td title='CFCR' style='text-align:right;'>".number_format($display_cfcr,3)."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "eef"){ echo "<td title='EEF' style='text-align:right;'>".number_format_ind(round($display_eef,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mgmt_perkg_price"){ echo "<td title='M PC/Kg' style='text-align:right;'>".number_format_ind(round($display_prod_cost,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_sector_count"){ echo "<td title='Feed Transferred' style='text-align:right;'>".number_format_ind(round($display_feeds_transferred,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_farm_count"){ echo "<td title='Transfer In From Other Farms' style='text-align:right;'>".number_format_ind(round($display_feeds_in_farm,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_feed_birdsno"){ echo "<td title='Std Feed perKg' style='text-align:right;'>".number_format_ind(round(($std_cum_feed[round($display_age)] * $display_housed_chicks) / 1000,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_feed_perbirdno"){
+                                                if((float)$display_housed_chicks != 0){ $t1 = 0; $t1 = round(((($std_cum_feed[round($display_age)] * $display_housed_chicks) / 1000) / $display_housed_chicks),2); }
+                                                else{ $t1 = 0; }
+                                                echo "<td title='Std Feed Con' style='text-align:right;'>".number_format_ind($t1)."</td>";
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){
+                                                if((($std_cum_feed[round($display_age)] * $display_housed_chicks) / 1000) > $display_feeds_consumed){
+                                                    echo "<td title='Feed Con' style='text-align:right;color:green;'>".number_format_ind(round($display_feeds_consumed,2))."</td>";
+                                                }
+                                                else if(number_format_ind($display_feeds_consumed) == "0.00"){
+                                                    echo "<td title='Feed Con' style='text-align:right;color:black;'>".number_format_ind(round($display_feeds_consumed,2))."</td>";
+                                                }
+                                                else{
+                                                    echo "<td title='Feed Con' style='text-align:right;color:red;'>".number_format_ind(round($display_feeds_consumed,2))."</td>";
+                                                }
+                                            } else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_bags"){
+                                                if((($std_cum_feed[round($display_age)] * $display_housed_chicks) / 1000) > $display_feeds_consumed){
+                                                    echo "<td title='Feed Con' style='text-align:right;color:green;'>".number_format_ind(round($display_feeds_consumed/50,2))."</td>";
+                                                }
+                                                else if(number_format_ind($display_feeds_consumed) == "0.00"){
+                                                    echo "<td title='Feed Con' style='text-align:right;color:black;'>".number_format_ind(round($display_feeds_consumed/50,2))."</td>";
+                                                }
+                                                else{
+                                                    echo "<td title='Feed Con' style='text-align:right;color:red;'>".number_format_ind(round($display_feeds_consumed/50,2))."</td>";
+                                                }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "actual_feed_perbirdno"){
+                                                if($display_housed_chicks > 0){
+                                                    echo "<td title='Actual Feed perKg' style='text-align:right;'>".number_format_ind(round(($display_feeds_consumed / $display_housed_chicks),2))."</td>";
+                                                }
+                                                else{
+                                                    echo "<td title='Actual Feed perKg' style='text-align:right;'>".number_format_ind(round((0),2))."</td>";
+                                                }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "actual_feed_perbirdno2"){
+                                                if(((float)$display_housed_chicks - (float)$display_mort - (float)$display_cull) > 0){
+                                                    $atitle = "number_format_ind(round(((float)$display_feeds_consumed / ((float)$display_housed_chicks - (float)$display_mort - (float)$display_cull)),2))";
+                                                    echo "<td title='".$atitle."' style='text-align:right;'>".number_format_ind(round(((float)$display_feeds_consumed / ((float)$display_housed_chicks - (float)$display_mort - (float)$display_cull)),2))."</td>";
+                                                }
+                                                else{
+                                                    echo "<td title='Actual Feed perKg' style='text-align:right;'>".number_format_ind(round((0),2))."</td>";
+                                                }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_farms_count"){ echo "<td title='Transfer Out to Farms' style='text-align:right;'>".number_format_ind(round($display_feeds_out_farm,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ echo "<td title='Feed Balance' style='text-align:right;'>".number_format_ind(round($display_feeds_balance,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_days"){ echo "<td title='Feed Balance Days-".$display_feeds_balance."/".$latest_consumed_qty."' style='text-align:right;'>".substr(number_format_ind($display_feed_bal_days),0,-3)."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "next_3days_feed"){ echo "<td title='Next 3 Days Feed' style='text-align:right;'>".number_format_ind(round($display_next_3_days_feed,2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birds_per"){ 
+                                                if($display_housed_chicks > 0){
+                                                    echo "<td title='Sold Weight' style='text-align:right;'>".number_format_ind(($display_sold_birds/$display_housed_chicks)*100)."</td>"; 
+                                                }else{
+                                                    echo "<td title='Sold Weight' style='text-align:right;'>"."0"."</td>"; 
+                                                }
+        
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chick_received_from"){ 
+                                                if(!empty($sector_name[$cin_sup_code[$batches]])){
+                                                    echo "<td title='Sold Weight' style='text-align:right;'>".$sector_name[$cin_sup_code[$batches]]."</td>"; 
+                                                }else{
+                                                    echo "<td title='Sold Weight' style='text-align:right;'></td>"; 
+                                                }
+                                            }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_sector_bags"){ echo "<td title='Feed Transferred Bags' style='text-align:right;'>".number_format_ind(round(($display_feeds_transferred / 50),2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_farm_bags"){ echo "<td title='Transfer In From Other Farms Bags' style='text-align:right;'>".number_format_ind(round(($display_feeds_in_farm / 50),2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_farms_bags"){ echo "<td title='Transfer Out to Farms Bags' style='text-align:right;'>".number_format_ind(round(($display_feeds_out_farm / 50),2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_bags"){ echo "<td title='Feed Balance Bags' style='text-align:right;'>".number_format_ind(round(($display_feeds_balance / 50),2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "latest_feedin_brand"){ echo "<td title='Latest Feed-In Brand' style='text-align:left;'>".$blentry_items[$batches]."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "today_mort_count"){ echo "<td title='Today Mortality' style='text-align:right;'>".str_replace('.00','',number_format_ind($cdate_mort[$batches]))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chickin_hatchery_name"){ echo "<td title='Today Mortality' style='text-align:right;'>".$sector_name[$chkin_hcode[$batches]]."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chickin_supplier_name"){ echo "<td title='Today Mortality' style='text-align:right;'>".$sector_name[$chkin_vcode[$batches]]."</td>"; }
+                                            else { }
+                                        }
+                                        echo "</tr>";
+                                    }
+                                    }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1487,6 +1458,7 @@ if(isset($_REQUEST['submit_report']) == true){
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "brood_age"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }

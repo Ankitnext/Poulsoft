@@ -29,6 +29,13 @@ if($link_active_flag > 0){
 
         $sql = "SELECT * FROM `layer_extra_access` WHERE `field_name` = 'layer Office' AND `field_function` = 'Create layer Sectors/Offices' AND `user_access` = 'all' AND `flag` = '1'";
         $query = mysqli_query($conn,$sql); $lsec_sflag = mysqli_num_rows($query);
+
+        $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'E-Invoices' AND `field_function` = 'Generate Auto E-Invoices' AND `user_access` = 'all' AND `flag` = '1'";
+        $query = mysqli_query($conn,$sql); $einv_gflag = mysqli_num_rows($query);
+
+        $sql = "SELECT * FROM `broiler_ebill_states` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+        $query = mysqli_query($conn,$sql); $estate_code = $estate_name = array();
+        while($row = mysqli_fetch_assoc($query)){ $estate_code[$row['code']] = $row['code']; $estate_name[$row['code']] = $row['description']; }
 ?>
 <html lang="en">
     <head>
@@ -94,7 +101,8 @@ if($link_active_flag > 0){
                                         <div class="col-md-4"></div>
                                         <div class="col-md-4">
                                             <label>Address<b style="color:red;">&nbsp;*</b></label>
-                                            <Textarea name="sector_address" id="sector_address"  rows="4" cols="50" maxlength="300" class="form-control" onkeyup="validatename(this.id)"></Textarea>
+                                            <Textarea name="sector_address" id="sector_address"  rows="4" cols="50" maxlength="300" class="form-control" ></Textarea>
+                                            <!-- <textarea id="editor" name="editor" rows="10" cols="80"></textarea> -->
                                         </div>
                                         <div class="col-md-4"></div>
                                     </div>
@@ -106,6 +114,18 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="col-md-4"></div>
                                     </div>
+                                    <?php if((int)$einv_gflag == 1){ ?>
+                                        <div class="row justify-content-center align-items-center">
+                                            <div class="form-group" style="width:130px;">
+                                                <label>Pincode<b style="color:red;">&nbsp;*</b></label>
+                                                <input type="text" name="pincode" id="pincode" class="form-control" onkeyup="validate_pincode(this.id)" style="width:120px;" />
+                                            </div>
+                                            <div class="form-group" style="width:190px;">
+                                                <label>State<b style="color:red;">&nbsp;*</b></label>
+                                                <select name="state" id="state" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($estate_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $estate_name[$scode]; ?></option><?php } ?></select>
+                                            </div>
+                                        </div>
+                                    <?php } ?>
                                     <?php if((int)$bsec_sflag == 1){ ?>
                                         <div class="row justify-content-center align-items-center">
                                             <div class="form-group">
@@ -186,6 +206,12 @@ if($link_active_flag > 0){
                 var b = document.getElementById("stype").value;
                 var c = document.getElementById("sloc").value;
                 var dupflag = document.getElementById("dupflag").value;
+                var einv_gflag = '<?php echo $einv_gflag; ?>'; if(einv_gflag == ""){ einv_gflag = 0; }
+                var pincode = state = "";
+                if(parseInt(einv_gflag) > 0){
+                    pincode = document.getElementById("pincode").value;
+                    state = document.getElementById("state").value;
+                }
                 var l = true;
                 if(parseFloat(dupflag) > 0){
                     alert("Sector/Office name already Exist \n Kindly check and try again ..!");
@@ -207,7 +233,18 @@ if($link_active_flag > 0){
                     document.getElementById("sloc").focus();
                     l = false;
                 }
+                else if(parseInt(einv_gflag) > 0 && pincode == ""){
+                    alert("Enter Pincode ..!");
+                    document.getElementById("pincode").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && state == "select"){
+                    alert("Select State ..!");
+                    document.getElementById("state").focus();
+                    l = false;
+                }
                 else { }
+
                 if(l == true){
                     return true;
                 }
@@ -217,7 +254,7 @@ if($link_active_flag > 0){
                     return false;
                 }
             }
-			function check_duplicate(){ 
+			function check_duplicate(){
 				var b = document.getElementById("idesc").value;
 				var c = "add";
 				if(!b.length == 0){
@@ -250,6 +287,17 @@ if($link_active_flag > 0){
                 }
                 if(!a.match(expr)){
                     a = a.replace(/[^a-zA-Z0-9 (.&)_-]/g, '');
+                }
+                document.getElementById(x).value = a;
+            }
+            function validate_pincode(x) {
+                expr = /^[0-9]*$/;
+                var a = document.getElementById(x).value;
+                if(a.length > 10){
+                    a = a.substr(0,a.length - 1);
+                }
+                if(!a.match(expr)){
+                    a = a.replace(/[^0-9]/g, '');
                 }
                 document.getElementById(x).value = a;
             }

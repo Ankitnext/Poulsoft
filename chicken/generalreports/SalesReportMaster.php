@@ -86,6 +86,9 @@
 	$sql = "SELECT *  FROM `main_linkdetails` WHERE `href` LIKE '%SalesReportMaster.php%'"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $cid = $row['childid']; }
 
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Rename to vehicleno' AND `field_function` = 'Vehicle No' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $vhlno = mysqli_num_rows($query);
+
 	$sql='SHOW COLUMNS FROM `master_reportfields`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
 	while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
 	if(in_array("purcus_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `master_reportfields` ADD `purcus_flag` varchar(300) NULL DEFAULT NULL COMMENT 'Pur-Sale Customer Name' AFTER `vendor_flag`"; mysqli_query($conn,$sql); }
@@ -339,7 +342,14 @@
                                     else if($field_details[$i.":".$aflag] == "discount_flag"){ $html .= '<th id="order_num">Discount</th>'; }
                                     else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<th id="order_num">Total Amount</th>'; }
                                     else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<th id="order">Warehouse</th>'; }
-                                    else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<th id="order">Remarks</th>'; }
+                                    else if($field_details[$i.":".$aflag] == "remarks_flag"){
+                                        if($vhlno > 0){
+                                            $html .= '<th id="order">Vehicle No</th>'; 
+                                        }else{
+                                            $html .= '<th id="order">Remarks</th>'; 
+                                        }
+                                         
+                                        }
                                     else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<th id="order">Vehicle</th>'; }
                                     else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<th id="order">Driver</th>'; }
                                     else if($field_details[$i.":".$aflag] == "cr_flag"){ $html .= '<th id="order_num">Amount</th>'; }
@@ -401,8 +411,15 @@
                                 $ptrno_list = implode("','", $pur_alist);
                                 if(sizeof($pur_alist) > 0){ $pur_fltr = " AND `link_trnum` IN ('$ptrno_list')"; } else{ $pur_fltr = " AND `link_trnum` IN ('none')"; }
                             }
+
+                            $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'SalesReportMaster.php' AND `field_function` LIKE 'Purchase Sale Sorting' AND `user_access` LIKE 'all' AND `flag` = '1'";
+                            $query = mysqli_query($conn,$sql); $sltr_flag = mysqli_num_rows($query); //$avou_flag = 1;
                             
+                            if($sltr_flag > 0 ){
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            } else {
                             $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            }
                             $query = mysqli_query($conn,$sql); $link_trnum = array();
                             while($row = mysqli_fetch_assoc($query)){ if($row['link_trnum'] != ""){ $link_trnum[$row['link_trnum']] = $row['link_trnum']; } }
 
@@ -413,7 +430,13 @@
                                 while($row = mysqli_fetch_assoc($query)){ $ltno_vname[$row['invoice']] = $sup_name[$row['vendorcode']]; }
                             }
 
+                           
+	
+                            if($sltr_flag > 0 ){
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                           } else {
                             $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                           }  
                             $query = mysqli_query($conn,$sql); $i = 0; $sales = $inv_count = $slc_freightamt = $slc_tcdsamt = $slc_roundoff = $slc_finaltotal = array();
                             while($row = mysqli_fetch_assoc($query)){
                                

@@ -226,11 +226,11 @@ if(isset($_POST['submit_report']) == true){
                 }
                 
 
-                $sbm_flag = 1; $brh_filter = "";
-                if($branches != "all"){ $farm_filter .= " AND `branch_code` = '$branches'"; } if($lines != "all"){ $farm_filter .= " AND `line_code` = '$lines'"; $sbm_flag = 1;}
-                if($supervisors != "all"){ $farm_filter .= " AND `supervisor_code` = '$supervisors'"; $sbm_flag = 0; }
+                $sbm_flag = 1; $brh_filter = $branch_filter = $line_filter = $supr_filter = "";
+                if($branches != "all"){ $branch_filter = " AND `branch_code` = '$branches'"; } if($lines != "all"){ $line_filter = " AND `line_code` = '$lines'"; $sbm_flag = 1;}
+                if($supervisors != "all"){ $supr_filter = " AND `supervisor_code` = '$supervisors'"; $sbm_flag = 0; }
 
-                $sql = "SELECT * FROM `broiler_farm` WHERE `dflag` = '0'".$farm_filter." ORDER BY `farm_code` ASC";
+                $sql = "SELECT * FROM `broiler_farm` WHERE `dflag` = '0'".$branch_filter."".$line_filter."".$supr_filter." ORDER BY `farm_code` ASC";
                 $query = mysqli_query($conn,$sql); $sup_list = ""; $sup_alist = array();
                 while($row = mysqli_fetch_assoc($query)){
                     $sup_alist[$sp_emp_code[$row['supervisor_code']]] = $sp_emp_code[$row['supervisor_code']];
@@ -252,8 +252,9 @@ if(isset($_POST['submit_report']) == true){
                     }
                 }
                 $sup_list = implode("','",$sup_alist);
-                if($sup_list == ""){ $sup_list = $sp_emp_code[$supervisors]; }
+                if($sup_list == ""){ $sup_list = $sp_emp_code[$supervisors] . "','" . $supervisors; }
                 if($branches == "all" && $lines == "all" && $supervisors == "all"){ $emp_filter = ""; } else{ $emp_filter = " AND `added_empcode` IN ('$sup_list')"; }
+                $emps_fltr = ""; if($supervisors != "all"){ $emps_fltr = " AND `farm_code` = '$supervisors'"; }
 
                 /*Fetch Employee Allowances*/
                 $sql = "SELECT * FROM `broiler_emp_allowance_master` WHERE `active` = '1' AND `dflag` = '0' AND (`fdate` <= '$fdate' || `tdate` >= '$tdate') ORDER BY `fdate` ASC";
@@ -281,7 +282,13 @@ if(isset($_POST['submit_report']) == true){
                     $trip_vehicle[$tkey] = alter_vehicleno($row['vch_number']);
                     $trip_totalkm[$tkey] = $row['total_km'];
 
-                    $dbe_code = $db_emp_code[$row['added_empcode']];
+                    if(empty($db_emp_code[$row['added_empcode']]) || $db_emp_code[$row['added_empcode']] == ""){
+                        $dbe_code = $row['added_empcode'];
+                    }
+                    else{
+                        $dbe_code = $db_emp_code[$row['added_empcode']];
+                    }
+                    
                     $trip_empname[$tkey] = $emp_name[$dbe_code];
                     $trip_addedemp[$tkey] = $row['added_empcode'];
 

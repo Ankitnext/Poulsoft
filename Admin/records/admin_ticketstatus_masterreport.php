@@ -79,7 +79,7 @@ else{
     $createdby_filter = $assignee_filter = $status_filter = $dbname_filter = $devtype_filter = $project_filter = $priority_filter = ""; $statusnotin_flag = 1;
     $fdate = $tdate = date("Y-m-d"); $created_by = $assigned_to = $ticket_status = $databases = $dev_types = $projects = $priorities = "all"; $excel_type = "display";
 }
-
+$upd_status = "none"; $udate = $trno_fltr = ""; $trno_alist = array();
 if(isset($_POST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
     $tdate = date("Y-m-d",strtotime($_POST['tdate']));
@@ -90,6 +90,21 @@ if(isset($_POST['submit_report']) == true){
     $dev_types = $_POST['dev_types'];                   if($dev_types == "all"){ $devtype_filter = ""; } else{ $devtype_filter = " AND `development_type` = '$dev_types'"; }
     $projects = $_POST['projects'];                     if($projects == "all"){ $project_filter = ""; } else{ $project_filter = " AND `requirement_list2` = '$projects'"; }
     $priorities = $_POST['priorities'];                 if($priorities == "all"){ $priority_filter = ""; } else{ $priority_filter = " AND `ticket_priority` = '$priorities'"; }
+    
+    //Check and fetch Updated details
+    if($user_code == "PST-0757"){
+        $upd_status = $_POST['upd_status'];
+        if(!empty($_POST['udate']) && $_POST['udate'] != ""){ $udate = date("Y-m-d",strtotime($_POST['udate'])); }
+        if($upd_status != "none" && !empty($_POST['udate']) && $_POST['udate'] != ""){
+            if($upd_status == "all"){ $ustatus_filter = " AND `addedtime` LIKE '%$udate%'"; } else{ $ustatus_filter = " AND `message` LIKE '%$upd_status%' AND `addedtime` LIKE '%$udate%'"; }
+            $user_filter = " AND `user_code` = '$user_code'";
+
+            $sql_record = "SELECT * FROM `ticket_comments` WHERE `active` = '1'".$ustatus_filter."".$user_filter." ORDER BY `id` ASC";
+            $query = mysqli_query($conn,$sql_record);
+            while($row = mysqli_fetch_assoc($query)){ $trno_alist[$row['ticket_no']] = $row['ticket_no']; }
+            if(sizeof($trno_alist) > 0){ $trno_list = implode("','",$trno_alist); $trno_fltr = " AND `trnum` IN ('$trno_list')"; }
+        }
+    }
 
     $status_notin = array(); $statusnotin_list = "";
     $i = 0;
@@ -280,6 +295,22 @@ if(isset($_POST['submit_report']) == true){
                                         <?php } } ?>
                                     </select>
                                 </div>
+                                <?php if($user_code == "PST-0757"){ ?>
+                                <div class="m-2 form-group">
+                                    <label>Upd Status</label>
+                                    <select name="upd_status" id="upd_status" class="form-control select2">
+                                        <option value="none" <?php if($upd_status == "none"){ echo "selected"; } ?>>-None-</option>
+                                        <option value="all" <?php if($upd_status == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($status_name as $sname){ if($sname != ""){ ?>
+                                        <option value="<?php echo $sname; ?>" <?php if($upd_status == $sname){ echo "selected"; } ?>><?php echo $sname; ?></option>
+                                        <?php } } ?>
+                                    </select>
+                                </div>
+                                <div class="m-2 form-group">
+                                    <label>Upd Date</label>
+                                    <input type="text" name="udate" id="udate" class="form-control datepicker" style="width:110px;" value="<?php if($udate != ""){ echo date("d.m.Y",strtotime($udate)); } ?>" />
+                                </div>
+                                <?php } ?>
                                 <div class="m-2 form-group">
                                     <br/>
                                     <button type="submit" name="submit_report" id="submit_report" class="btn btn-sm btn-success">Submit</button>
@@ -354,7 +385,7 @@ if(isset($_POST['submit_report']) == true){
             <tbody class="tbody1">
                 <?php
                 
-                $sql_record = "SELECT * FROM `ticket_management_system` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0'".$createdby_filter."".$assignee_filter."".$status_filter."".$dbname_filter."".$devtype_filter."".$stsnotin_filter."".$project_filter."".$priority_filter." ORDER BY `id` ASC";
+                $sql_record = "SELECT * FROM `ticket_management_system` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0'".$createdby_filter."".$assignee_filter."".$status_filter."".$dbname_filter."".$devtype_filter."".$stsnotin_filter."".$project_filter."".$priority_filter."".$trno_fltr." ORDER BY `id` ASC";
                 $query = mysqli_query($conn,$sql_record); $c = 0;
                 while($row = mysqli_fetch_assoc($query)){ $c++; $file_references = "";
                     echo "<tr>";

@@ -136,6 +136,9 @@
 	$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; $sector_code[$row['code']] = $row['code']; }
 	
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'CustomerLedgerMaster.php' AND `field_function` LIKE 'Purchase Sale Sorting' AND `user_access` LIKE 'all' AND `flag` = '1'";
+    $query = mysqli_query($conn,$sql); $sltr_flag = mysqli_num_rows($query); //$avou_flag = 1;
+                           
 	
 	$exoption = "displaypage";
 	if(isset($_POST['submit'])) { $excel_type = $_POST['export']; if($excel_type == "exportexcel"){ $exoption = "displaypage"; } else{ $exoption = $_POST['export']; } } else{ $excel_type = "displaypage"; }
@@ -329,7 +332,11 @@
 									
 									$ob_sales = $ob_receipt = $ob_mortality = $ob_returns = $ob_ccn = $ob_cdn = $rb_amt = $ob_cramt = $ob_dramt = $ob_rcv = $ob_pid = 0;
 									if($count14 > 0){
+										if($sltr_flag > 0){ 
+										$obsql = "SELECT * FROM `customer_sales` WHERE `date` < '$fdate' AND `trtype` NOT IN ('PST') AND `customercode` = '$cus_names' AND `active` = '1' ORDER BY `invoice` ASC";
+										} else {
 										$obsql = "SELECT * FROM `customer_sales` WHERE `date` < '$fdate' AND `customercode` = '$cus_names' AND `active` = '1' ORDER BY `invoice` ASC";
+										}
 										$obquery = mysqli_query($conn,$obsql); $old_inv = "";
 										while($obrow = mysqli_fetch_assoc($obquery)){
 											if($old_inv != $obrow['invoice']){
@@ -400,7 +407,11 @@
 									//Sales
 									$sii_count = $slc_finaltotal = $sales = $receipts = $mortality = $returns = $ccns = $cdns = array();
 									if($count14 > 0){
+										if($sltr_flag > 0){ 
+										$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate' AND `customercode` = '$cname' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+										} else {
 										$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `customercode` = '$cname' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+										}
 										$query = mysqli_query($conn,$sql); $i = 0; $link_trnums = $inv_cus_code = array();
 										while($row = mysqli_fetch_assoc($query)){
 																						

@@ -237,6 +237,9 @@ $sector_code = $sector_name = array();
 $sql = "SELECT * FROM `inv_sectors` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'broiler_dayrecord_masterreport.php' AND `field_function` = 'Day Cons' AND `user_access` = 'all' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $pound_flag = mysqli_num_rows($query);
+
 $sql = "SELECT * FROM `main_contactdetails` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['name']; }
 
@@ -280,65 +283,67 @@ $farm_query = "";
     
     
     $farm_list = implode("','",$farm_alist);
-if($farms != "all"){
-    $farm_query = " AND a.farm_code = '$farms'";
-    $farm_query2 = " AND farm_code IN ('$farms')";
-}
-else if($supervisors != "all"){
-    foreach($farm_code as $fcode){
-        if($farm_supervisor[$fcode] == $supervisors){
-            if($farm_list == ""){
-                $farm_list = $fcode;
-            }
-            else{
-                $farm_list = $farm_list."','".$fcode;
-            }
-        }
-    }
     $farm_query = " AND a.farm_code IN ('$farm_list')";
     $farm_query2 = " AND farm_code IN ('$farm_list')";
-}
-else if($lines != "all"){
-    foreach($farm_code as $fcode){
-        if($farm_line[$fcode] == $lines){
-            if($farm_list == ""){
-                $farm_list = $fcode;
-            }
-            else{
-                $farm_list = $farm_list."','".$fcode;
-            }
-        }
-    }
-    $farm_query = " AND a.farm_code IN ('$farm_list')";
-    $farm_query2 = " AND farm_code IN ('$farm_list')";
-}
-else if($branches != "all"){
-    foreach($farm_code as $fcode){
-        //echo "<br/>".$fcode."@".$farm_branch[$fcode]."@".$branches;
-        if($farm_branch[$fcode] == $branches){
-            if($farm_list == ""){
-                $farm_list = $fcode;
-            }
-            else{
-                $farm_list = $farm_list."','".$fcode;
-            }
-        }
-    }
-    $farm_query = " AND a.farm_code IN ('$farm_list')";
-    $farm_query2 = " AND farm_code IN ('$farm_list')";
-}
-else{
-    foreach($farm_code as $fcode){
-        if($farm_list == ""){
-            $farm_list = $fcode;
-        }
-        else{
-            $farm_list = $farm_list."','".$fcode;
-        }
-    }
-    $farm_query = " AND a.farm_code IN ('$farm_list')";
-    $farm_query2 = " AND farm_code IN ('$farm_list')";
-}
+// if($farms != "all"){
+//     $farm_query = " AND a.farm_code = '$farms'";
+//     $farm_query2 = " AND farm_code IN ('$farms')";
+// }
+// else if($supervisors != "all"){
+//     foreach($farm_code as $fcode){
+//         if($farm_supervisor[$fcode] == $supervisors){
+//             if($farm_list == ""){
+//                 $farm_list = $fcode;
+//             }
+//             else{
+//                 $farm_list = $farm_list."','".$fcode;
+//             }
+//         }
+//     }
+//     $farm_query = " AND a.farm_code IN ('$farm_list')";
+//     $farm_query2 = " AND farm_code IN ('$farm_list')";
+// }
+// else if($lines != "all"){
+//     foreach($farm_code as $fcode){
+//         if($farm_line[$fcode] == $lines){
+//             if($farm_list == ""){
+//                 $farm_list = $fcode;
+//             }
+//             else{
+//                 $farm_list = $farm_list."','".$fcode;
+//             }
+//         }
+//     }
+//     $farm_query = " AND a.farm_code IN ('$farm_list')";
+//     $farm_query2 = " AND farm_code IN ('$farm_list')";
+// }
+// else if($branches != "all"){
+//     foreach($farm_code as $fcode){
+//         //echo "<br/>".$fcode."@".$farm_branch[$fcode]."@".$branches;
+//         if($farm_branch[$fcode] == $branches){
+//             if($farm_list == ""){
+//                 $farm_list = $fcode;
+//             }
+//             else{
+//                 $farm_list = $farm_list."','".$fcode;
+//             }
+//         }
+//     }
+//     $farm_query = " AND a.farm_code IN ('$farm_list')";
+//     $farm_query2 = " AND farm_code IN ('$farm_list')";
+// }
+// else{
+//     foreach($farm_code as $fcode){
+//         if($farm_list == ""){
+//             $farm_list = $fcode;
+//         }
+//         else{
+//             $farm_list = $farm_list."','".$fcode;
+//         }
+//     }
+//     $farm_query = " AND a.farm_code IN ('$farm_list')";
+//     $farm_query2 = " AND farm_code IN ('$farm_list')";
+// }
 
 $tblcol_size = sizeof($act_col_numbs);
 ?>
@@ -502,6 +507,7 @@ $tblcol_size = sizeof($act_col_numbs);
                             if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sl_no" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "sl_no"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="sl_no" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Sl.No.</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_ccode" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "farm_ccode"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="farm_ccode" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Farm Code</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "farm_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="farm_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Farmer</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "batch_code"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="batch_code" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Batch Code</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "batch_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="batch_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Batch</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "book_no"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="book_no" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Book No</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "supervisor_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="supervisor_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Supervisor</span>'; }
@@ -528,10 +534,12 @@ $tblcol_size = sizeof($act_col_numbs);
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedopening_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedopening_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedopening_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed OB</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedin_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedin_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed In</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedout_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedout_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Out</span>'; }
-                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedconsumed_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedconsumed_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Con</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedconsumed_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } if($pound_flag > 0) { echo '<input type="checkbox" class="hide_show" id="feedconsumed_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Day Con</span>';} else { echo '<input type="checkbox" class="hide_show" id="feedconsumed_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Con</span>'; }}
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "day_feedintake" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "day_feedintake"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="day_feedintake" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Day Feed In Take</span>';} 
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_bags" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedconsumed_bags"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedconsumed_bags" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Bag Con</span>'; }
-                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feed_balance_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feed_balance_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Stock</span>'; }
-                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedcumconsumed_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedcumconsumed_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Cum. Feed</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feed_balance_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } if($pound_flag > 0) { echo '<input type="checkbox" class="hide_show" id="feed_balance_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Closing</span>'; } else { echo '<input type="checkbox" class="hide_show" id="feed_balance_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Stock</span>'; }}
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedcumconsumed_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedcumconsumed_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Cum. Feed In Take</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "cum_feedintake" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "cum_feedintake"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="cum_feedintake" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Cum. Feed</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_img" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feed_img"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feed_img" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Images</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "previous_day_feed" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "previous_day_feed"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="previous_day_feed" onclick="update_masterreport_status(this.id);" '.$checked.'><span>DB Feed</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "yesturday_feed" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "yesturday_feed"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="yesturday_feed" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Yest Feed</span>'; }
@@ -575,6 +583,7 @@ $tblcol_size = sizeof($act_col_numbs);
             if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sl_no"){ $nhtml .= '<th>Sl.No.</th>'; $fhtml .= '<th id="order_num">Sl.No.</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_ccode"){ $nhtml .= '<th>Farm Code</th>'; $fhtml .= '<th id="order">Farm Code</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ $nhtml .= '<th>Farmer</th>'; $fhtml .= '<th id="order">Farmer</th>'; }
+            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ $nhtml .= '<th>Batch Code</th>'; $fhtml .= '<th id="order">Batch Code</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ $nhtml .= '<th>Batch</th>'; $fhtml .= '<th id="order">Batch</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ $nhtml .= '<th>Book No</th>'; $fhtml .= '<th id="order">Book No</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ $nhtml .= '<th>Supervisor</th>'; $fhtml .= '<th id="order">Supervisor</th>'; }
@@ -601,10 +610,12 @@ $tblcol_size = sizeof($act_col_numbs);
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedopening_count"){ $nhtml .= '<th>Feed OB</th>'; $fhtml .= '<th id="order_num">Feed OB</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_count"){ $nhtml .= '<th>Feed In</th>'; $fhtml .= '<th id="order_num">Feed In</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_count"){ $nhtml .= '<th>Feed Out</th>'; $fhtml .= '<th id="order_num">Feed Out</th>'; }
-            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){ $nhtml .= '<th>Feed Con</th>'; $fhtml .= '<th id="order_num">Feed Con</th>'; }
+            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){ if($pound_flag > 0){ $nhtml .= '<th>Day Con</th>'; $fhtml .= '<th id="order_num">Day Con</th>';} else{ $nhtml .= '<th>Feed Con</th>'; $fhtml .= '<th id="order_num">Feed Con</th>'; }}
+            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "day_feedintake"){ $nhtml .= '<th>Day Feed In Take</th>'; $fhtml .= '<th id="order_num">Day Feed In Take</th>';} 
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_bags"){ $nhtml .= '<th>Feed Bag Con</th>'; $fhtml .= '<th id="order_num">Feed Bag Con</th>'; }
-            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ $nhtml .= '<th>Feed Stock</th>'; $fhtml .= '<th id="order_num">Feed Stock</th>'; }
+            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ if($pound_flag > 0){ $nhtml .= '<th>Feed Closing</th>'; $fhtml .= '<th id="order_num">Feed Closing</th>'; }else { $nhtml .= '<th>Feed Stock</th>'; $fhtml .= '<th id="order_num">Feed Stock</th>'; }}
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count"){ $nhtml .= '<th>Cum. Feed</th>'; $fhtml .= '<th id="order_num">Cum. Feed</th>'; }
+            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "cum_feedintake"){ $nhtml .= '<th>Cum. Feed In Take</th>'; $fhtml .= '<th id="order_num">Cum. Feed In Take</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_img"){ $nhtml .= '<th>Feed Images</th>'; $fhtml .= '<th id="order">Feed Images</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "previous_day_feed"){ $nhtml .= '<th>DB Feed</th>'; $fhtml .= '<th id="order_num">DB Feed</th>'; }
             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "yesturday_feed"){ $nhtml .= '<th>Yest Feed</th>'; $fhtml .= '<th id="order_num">Yest Feed</th>'; }
@@ -1233,6 +1244,7 @@ $tblcol_size = sizeof($act_col_numbs);
                                 $display_farmlongitude = $farm_longitude[$fetch_fcode];
                                 $display_farmcode = $farm_ccode[$fetch_fcode];
                                 $display_farmname = $farm_name[$fetch_fcode];
+                                if(!empty($batch_name[$batches])){ $display_farmbatch_code = $batches; } else{ $display_farmbatch_code = ""; }
                                 if(!empty($batch_name[$batches])){ $display_farmbatch = $batch_name[$batches]; } else{ $display_farmbatch = ""; }
                                 if(!empty($batch_book[$batches])){ $display_batchbook = $batch_book[$batches]; } else{ $display_batchbook = ""; }
                                 if(!empty($supervisor_name[$farm_supervisor[$fetch_fcode]])){
@@ -1461,6 +1473,9 @@ $tblcol_size = sizeof($act_col_numbs);
                                 $display_bbirds = (float)$display_obirds - (float)$display_cummort - (float)$display_culls - (float)$display_lifted - (float)$open_sale_sent - (float)$open_pp_sent - (float)$prst_pp_sbirds;
                                 $display_medvacname = $medvac_names;
                                 $display_remarks = $remarks;
+
+                                if($display_bbirds != 0 || $display_bbirds != "0") { $display_dayfeed_intake = $display_feed_consume / $display_bbirds; }
+                                if($display_bbirds != 0 || $display_bbirds != "0") { $display_cumfeed_intake = $display_feed_cumulate / $display_bbirds; }
                                 
                                 $display_medvacqty = (float)$open_medvacs_consume + (float)$present_medvacs_consume;
 
@@ -1551,8 +1566,10 @@ $tblcol_size = sizeof($act_col_numbs);
                                         $total_feeds_open += (float)$display_feeds_open;
                                         $total_feeds_in += (float)$display_feeds_in;
                                         $total_feed_consumed += (float)$display_feed_consume;
+                                        $total_dayfeed_intake += (float)$display_dayfeed_intake;
                                         $total_feed_stock += (float)$display_feed_stock;
                                         $total_feed_cumulate += (float)$display_feed_cumulate;
+                                        $total_cumfeed_intake += (float)$display_cumfeed_intake;
                                         $total_obirds += (float)$display_obirds;
                                         $display_total_present_obirds += (float)$display_present_obirds;
                                         $total_mort += (float)$display_mort;
@@ -1590,6 +1607,7 @@ $tblcol_size = sizeof($act_col_numbs);
                                             if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sl_no"){ echo "<td title='Sl.No.'>".$slno."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_ccode"){ echo "<td title='Farm Code'>".$display_farmcode."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<td title='Farmer'>".$display_farmname."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<td title='Batch'>".$display_farmbatch_code."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<td title='Batch'>".$display_farmbatch."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<td title='Book No'>".$display_batchbook."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<td title='Supervisor'>".$display_supervisor."</td>"; }
@@ -1604,7 +1622,7 @@ $tblcol_size = sizeof($act_col_numbs);
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mortality_count"){ echo "<td title='Mort' style='text-align:right;'>".str_replace(".00","",number_format_ind(round($display_mort,2)))."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "mortality_per"){ 
                                                 if(number_format_ind(round($display_mortper,2)) > 0.20){
-                                                    echo "<td title='Mort%' style='text-align:right;color:#f44336;'>".number_format_ind(round($display_mortper,2))."</td>"; 
+                                                    echo "<td title='Mort%' style='text-align:right;color:#f44336;font-size:15px;'><b>".number_format_ind(round($display_mortper,2))."</b></td>"; 
                                                 }else{
                                                     echo "<td title='Mort%' style='text-align:right;'>".number_format_ind(round($display_mortper,2))."</td>"; 
                                                 }
@@ -1644,9 +1662,11 @@ $tblcol_size = sizeof($act_col_numbs);
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedopening_count"){ echo "<td title='Feed OB' style='text-align:right;'>".number_format_ind(round(($display_feeds_open),2))."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_count"){ echo "<td title='Feed In' style='text-align:right;'>".number_format_ind(round(($display_feeds_in),2))."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_count"){ echo "<td title='Feed Out' style='text-align:right;'>".number_format_ind(round(($display_feed_out),2))."</td>"; }
-                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){ echo "<td title='Feed Con' style='text-align:right;'>".number_format_ind(round(($display_feed_consume),2))."</td>"; }
-                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ echo "<td title='Feed Stock' style='text-align:right;'>".number_format_ind(round(($display_feed_stock),2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){ if($pound_flag > 0){ echo "<td title='Day Con' style='text-align:right;'>".number_format_ind(round(($display_feed_consume),2))."</td>";}else { echo "<td title='Feed Con' style='text-align:right;'>".number_format_ind(round(($display_feed_consume),2))."</td>"; }}
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "day_feedintake"){  echo "<td title='Day Con' style='text-align:right;'>".number_format_ind(round(($display_dayfeed_intake),2))."</td>";}
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ if($pound_flag > 0){ echo "<td title='Feed Closing' style='text-align:right;'>".number_format_ind(round(($display_feed_stock),2))."</td>";}else{ echo "<td title='Feed Stock' style='text-align:right;'>".number_format_ind(round(($display_feed_stock),2))."</td>"; }}
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count"){ echo "<td title='Cum. Feed' style='text-align:right;'>".number_format_ind(round(($display_feed_cumulate),2))."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "cum_feedintake"){ echo "<td title='Cum. Feed In Take' style='text-align:right;'>".number_format_ind(round(($display_cumfeed_intake),2))."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_bags"){ echo "<td title='Cum. Feed' style='text-align:right;'>".number_format_ind(round(($display_feed_consume/50),2))."</td>"; }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_img"){
                                                 if(!empty($display_feedimage)){ ?><td title="Feed Images"><a href="javascript:void(0)" onClick="<?php echo $feed_img_list; ?>" title="<?php echo $feed_img_list; ?>">feedImage-<?php echo $slno; ?></a></td><?php }
@@ -1675,7 +1695,14 @@ $tblcol_size = sizeof($act_col_numbs);
                                             }
                     
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "std_feed_perbirdno"){ echo "<td title='Std Feed/Bird' style='text-align:right;'>".$display_std_feed_perbird."</td>"; } 
-                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "actual_feed_perbirdno"){ echo "<td title='Feed Feed/Bird' style='text-align:right;'>".$display_act_feed_perbird."</td>"; }
+                                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "actual_feed_perbirdno"){
+                                                if($display_act_feed_perbird > $display_std_feed_perbird){
+                                                    echo "<td title='Feed Feed/Bird' style='text-align:right;color:red;font-size:15px;'><b>".$display_act_feed_perbird."</b></td>"; 
+                                                }else{
+                                                    echo "<td title='Feed Feed/Bird' style='text-align:right;'>".$display_act_feed_perbird."</td>"; 
+                                                }
+                                                 
+                                            }
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "actual_cumfeed_perbirdno"){ echo "<td title='Feed Feed/Bird' style='text-align:right;'>".$display_actcum_feed_perbird."</td>"; }
                                             
                                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "chick_received_from"){ 
@@ -1707,6 +1734,7 @@ $tblcol_size = sizeof($act_col_numbs);
                     if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sl_no"){ echo "<th style='text-align:left; border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_ccode"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_code"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
@@ -1750,9 +1778,11 @@ $tblcol_size = sizeof($act_col_numbs);
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_count"){ echo "<th style='text-align:right;'>".number_format_ind($total_feeds_in)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_count"){ echo "<th style='text-align:right;'>".number_format_ind($display_feed_out)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_consumed)."</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "day_feedintake"){ echo "<th style='text-align:right;'>".number_format_ind($total_dayfeed_intake)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_bags"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_consumed/50)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_stock)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_cumulate)."</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "cum_feedintake"){ echo "<th style='text-align:right;'>".number_format_ind($total_cumfeed_intake)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_img"){ echo "<th style='text-align:left;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "previous_day_feed"){ echo "<th style='text-align:right;'>".number_format_ind($tot_display_pd_feed)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "yesturday_feed"){ echo "<th style='text-align:right;'>".number_format_ind($tot_display_yd_feed)."</th>"; }

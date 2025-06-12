@@ -120,7 +120,7 @@ $sql = "SELECT * FROM `item_category` ORDER BY `description` ASC"; $query = mysq
 while($row = mysqli_fetch_assoc($query)){ $icat_code[$row['code']] = $row['code']; $icat_name[$row['code']] = $row['description']; }
 
 $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_category[$row['code']] = $row['category']; }
+while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_category[$row['code']] = $row['category']; $item_hsn[$row['code']] = $row['hsn_code']; }
 
 $sql = "SELECT * FROM `breeder_cus_lines` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code']; $cline_name[$row['code']] = $row['description']; }
@@ -581,6 +581,7 @@ if(isset($_POST['submit_report']) == true){
                             else if($act_col_numbs[$key_id] == "sale_amt_wtcds" || $nac_col_numbs[$key_id1] == "sale_amt_wtcds"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="sale_amt_wtcds" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Total with TCS</span>'; }
                             else if($act_col_numbs[$key_id] == "customer_ccode" || $nac_col_numbs[$key_id1] == "customer_ccode"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="customer_ccode" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Customer Code</span>'; }
                             else if($act_col_numbs[$key_id] == "customer_sale_image" || $nac_col_numbs[$key_id1] == "customer_sale_image"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="customer_sale_image" onclick="update_masterreport_status(this.id);" '.$checked.'><span>DC Images</span>'; }
+                            else if($act_col_numbs[$key_id] == "item_hsncode" || $nac_col_numbs[$key_id1] == "item_hsncode"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="item_hsncode" onclick="update_masterreport_status(this.id);" '.$checked.'><span>HSN Code</span>'; }
                             
                             else{ }
                         }
@@ -642,6 +643,7 @@ if(isset($_POST['submit_report']) == true){
                     else if($act_col_numbs[$key_id] == "sale_amt_wtcds"){ echo "<th id='order_num'>Total with TCS</th>"; }
                     else if($act_col_numbs[$key_id] == "customer_ccode"){ echo "<th id='order_num'>Customer Code</th>"; }
                     else if($act_col_numbs[$key_id] == "customer_sale_image"){ echo "<th id='order_num'>DC Images</th>"; }
+                    else if($act_col_numbs[$key_id] == "item_hsncode"){ echo "<th id='order_num'>HSN Code</th>"; }
                     else{ }
                 }
                 ?>
@@ -950,6 +952,7 @@ if(isset($_POST['submit_report']) == true){
                                 echo "<td></td>";
                             }
                         }
+                        else if($act_col_numbs[$key_id] == "item_hsncode"){ echo "<td title='HSN Code'>".$item_hsn[$row['icode']]."</td>"; }
                         else{ }
                     }
                     echo "</tr>";
@@ -1106,6 +1109,7 @@ if(isset($_POST['submit_report']) == true){
                     else if($act_col_numbs[$key_id] == "sale_amt_wtcds"){ echo "<th style='text-align:right;'>".number_format_ind(round($tamt_wtcs,2))."</th>"; }
                     else if($act_col_numbs[$key_id] == "customer_ccode"){ echo "<th style='text-align:right;'></th>"; }
                     else if($act_col_numbs[$key_id] == "customer_sale_image"){ echo "<th style='text-align:right;'></th>"; }
+                    else if($act_col_numbs[$key_id] == "item_hsncode"){ echo "<th style='text-align:right;'></th>"; }
                     else{ }
                 }
                 echo "</tr>";

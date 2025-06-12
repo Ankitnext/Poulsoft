@@ -30,6 +30,17 @@ if($link_active_flag > 0){
         $query = mysqli_query($conn,$sql); $brchs_flag = mysqli_num_rows($query); if($brchs_flag == ""){ $brchs_flag = 0; }
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Customer Master' AND `field_function` LIKE 'Upload documents' AND `user_access` LIKE 'all' AND `flag` = '1'";
         $query = mysqli_query($conn,$sql); $updoc_flag = mysqli_num_rows($query);
+
+        $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'E-Invoices' AND `field_function` = 'Generate Auto E-Invoices' AND `user_access` = 'all' AND `flag` = '1'";
+        $query = mysqli_query($conn,$sql); $einv_gflag = mysqli_num_rows($query);
+
+        $sql = "SELECT * FROM `broiler_ebill_states` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+        $query = mysqli_query($conn,$sql); $estate_code = $estate_name = array();
+        while($row = mysqli_fetch_assoc($query)){ $estate_code[$row['code']] = $row['code']; $estate_name[$row['code']] = $row['description']; }
+       
+        $sql = "SELECT * FROM `country_currency` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `cont_name` ASC";
+        $query = mysqli_query($conn,$sql); $cont_code = $cont_name = array();
+        while($row = mysqli_fetch_assoc($query)){ $cont_code[$row['code']] = $row['code']; $cont_name[$row['code']] = $row['cont_name']; $curr_name[$row['code']] = $row['curr_name']; }
 ?>
 <html lang="en">
     <head>
@@ -42,6 +53,11 @@ if($link_active_flag > 0){
         }
         .form-control{
             font-size: 13px;
+        }
+        ::-webkit-scrollbar { width: 8px; height:8px; } /*display: none;*/
+        .row_body2{
+            width:100%;
+            overflow-y: auto;
         }
     </style>
     </head>
@@ -125,26 +141,23 @@ if($link_active_flag > 0){
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-group">
                                                 <label>GSTIN</label>
                                                 <input type="text" name="cgstin" id="cgstin" class="form-control" placeholder="Enter GSTIN..." onkeyup="validatename(this.id)" onchange="validate_company()">
                                             </div>
                                         </div>
 
-
-
-
                                         <?php if((int)$brap_flag == 1){ ?>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <div class="form-group">
                                                 <label>Plant Access</label>
                                                 <input type="checkbox" name="processing_flag" id="processing_flag" class="form-control" style="transform: scale(.5);"></input>
                                             </div>
                                         </div>
                                         <?php } ?>
-
-                                         <div class="form-group">
+                                        <div class="col-md-2">
+                                            <div class="form-group">
                                                 <label>Customer Line</label>
                                                 <select name="cline_code" id="cline_code" class="form-control select2" style="width: 100%;">
                                                     <option value="select">select</option>
@@ -158,8 +171,7 @@ if($link_active_flag > 0){
                                                     ?>
                                                 </select>
                                             </div>
-                                        
-
+                                        </div>
                                         <div class="col-md-2" style="visibility:hidden;">
                                             <div class="form-group">
                                                 <label>Verified Company</label>
@@ -266,19 +278,36 @@ if($link_active_flag > 0){
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
+                                            <div class="form-group">
+                                                <label>Country</label>
+                                                <!-- <input type="text" name="country" id="country" class="form-control" onkeyup="validatenum(this.id)" /> -->
+                                                <select name="country" id="country" class="form-control select2" style="width:180px;" onchange="getcurrency();"><option value="select">-select-</option>
+                                                <?php foreach($cont_code as $scode){ ?>
+                                                    <option value="<?php echo $scode; ?>"><?php echo $cont_name[$scode]; ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-group">
+                                                <label>Currency</label>
+                                                <input type="text" name="currency" id="currency" class="form-control" onkeyup="validatenum(this.id)" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
                                             <div class="form-group">
                                                 <label>Account No</label>
                                                 <input type="text" name="accno" id="accno" class="form-control" placeholder="0">
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
                                             <div class="form-group">
                                                 <label>IFSC Code</label>
                                                 <input type="text" name="ifsc" id="ifsc" class="form-control" placeholder="0" onchange="fetchbankdetails()">
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
                                             <div class="form-group">
                                                 <label>Bank Details</label>
                                                 <textarea name="bank_details" id="bank_details" class="form-control"></textarea>
@@ -306,6 +335,90 @@ if($link_active_flag > 0){
                                         <div class="form-group" style="width:110px;">
                                             <label>DOC-5</label>
                                             <input type="file" name="vdoc_link5" id="vdoc_link5" class="form-control" style="width:100px;">
+                                        </div>
+                                    </div>
+                                    <?php } ?>
+                                    <?php if((int)$einv_gflag == 1){ ?>
+                                    <div class="row justify-content-center align-items-center row_body2">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <div class="card-title">
+                                                    <div class="row justify-content-center align-items-center">
+                                                        <table align="center">
+                                                            <thead>
+                                                                <tr><th colspan="10" style="color:#009f07;background-color:#dbf7f8;text-align:center;font-weight:bold;">E-Invoice Billing Details</th></tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <th>Legal Name<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Trade Name<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>GSTIN<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Address-1<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Address-2</th>
+                                                                    <th>Location<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Pincode<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>State<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Phone</th>
+                                                                    <th>E-Mail</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><input type="text" name="blegal_name" id="blegal_name" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><input type="text" name="btrade_name" id="btrade_name" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><input type="text" name="bgstin" id="bgstin" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><textarea name="baddr1" id="baddr1" class="form-control" style="width:210px;"></textarea></td>
+                                                                    <td><textarea name="baddr2" id="baddr2" class="form-control" style="width:210px;"></textarea></td>
+                                                                    <td><input type="text" name="blocation" id="blocation" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><input type="text" name="bpincode" id="bpincode" class="form-control" style="width:110px;" onkeyup="validate_count(this.id)" /></td>
+                                                                    <td><select name="bstate" id="bstate" class="form-control select2" style="width:210px;"><option value="select">-select-</option><?php foreach($estate_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $estate_name[$scode]; ?></option><?php } ?></select></td>
+                                                                    <td><input type="text" name="bphone" id="bphone" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><input type="text" name="bemail" id="bemail" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-center align-items-center row_body2">
+                                        <div class="card card-default">
+                                            <div class="card-header">
+                                                <div class="card-title">
+                                                    <div class="row justify-content-center align-items-center">
+                                                        <table align="center">
+                                                            <thead>
+                                                                <tr><th colspan="10" style="color:brown;background-color:#e5e5e5;text-align:center;font-weight:bold;">E-Invoice Shipping Details</th></tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <th>Legal Name<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Trade Name<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>GSTIN<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Address-1<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Address-2</th>
+                                                                    <th>Location<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Pincode<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>State<b style="color:red;">&nbsp;*</b></th>
+                                                                    <th>Phone</th>
+                                                                    <th>E-Mail</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><input type="text" name="slegal_name" id="slegal_name" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><input type="text" name="strade_name" id="strade_name" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><input type="text" name="sgstin" id="sgstin" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><textarea name="saddr1" id="saddr1" class="form-control" style="width:210px;"></textarea></td>
+                                                                    <td><textarea name="saddr2" id="saddr2" class="form-control" style="width:210px;"></textarea></td>
+                                                                    <td><input type="text" name="slocation" id="slocation" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><input type="text" name="spincode" id="spincode" class="form-control" style="width:110px;" onkeyup="validate_count(this.id)" /></td>
+                                                                    <td><select name="sstate" id="sstate" class="form-control select2" style="width:210px;"><option value="select">-select-</option><?php foreach($estate_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $estate_name[$scode]; ?></option><?php } ?></select></td>
+                                                                    <td><input type="text" name="sphone" id="sphone" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                    <td><input type="text" name="semail" id="semail" class="form-control" style="width:110px;" onkeyup="validatename(this.id)" /></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <?php } ?>
@@ -353,6 +466,28 @@ if($link_active_flag > 0){
                 var obtype = document.getElementById("obtype").value;
                 var dupflag = document.getElementById("dupflag").value; if(dupflag == ""){ dupflag = 0; }
                 var dupflag2 = document.getElementById("dupflag2").value; if(dupflag2 == ""){ dupflag2 = 0; }
+
+                var einv_gflag = '<?php echo $einv_gflag; ?>'; if(einv_gflag == ""){ einv_gflag = 0; }
+                var blegal_name = btrade_name = bgstin = baddr1 = blocation = bpincode = bstate = "";
+                var slegal_name = strade_name = sgstin = saddr1 = slocation = spincode = sstate = "";
+                if(parseInt(einv_gflag) > 0){
+                    blegal_name = document.getElementById("blegal_name").value;
+                    btrade_name = document.getElementById("btrade_name").value;
+                    bgstin = document.getElementById("bgstin").value;
+                    baddr1 = document.getElementById("baddr1").value;
+                    blocation = document.getElementById("blocation").value;
+                    bpincode = document.getElementById("bpincode").value;
+                    bstate = document.getElementById("bstate").value;
+
+                    slegal_name = document.getElementById("slegal_name").value;
+                    strade_name = document.getElementById("strade_name").value;
+                    sgstin = document.getElementById("sgstin").value;
+                    saddr1 = document.getElementById("saddr1").value;
+                    slocation = document.getElementById("slocation").value;
+                    spincode = document.getElementById("spincode").value;
+                    sstate = document.getElementById("sstate").value;
+                }
+                
                 var l = true;
                 if(cname == ""){
                     alert("Please enter name");
@@ -386,6 +521,76 @@ if($link_active_flag > 0){
                         l = false;
                     }
                     else{ }
+                }
+                else if(parseInt(einv_gflag) > 0 && blegal_name == ""){
+                    alert("Please enter Legal Name in E-Invoice Billing Details");
+                    document.getElementById("blegal_name").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && bgstin == ""){
+                    alert("Please enter GSTIN in E-Invoice Billing Details");
+                    document.getElementById("bgstin").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && btrade_name == ""){
+                    alert("Please enter Trade Name in E-Invoice Billing Details");
+                    document.getElementById("btrade_name").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && baddr1 == ""){
+                    alert("Please enter Address-1 in E-Invoice Billing Details");
+                    document.getElementById("baddr1").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && blocation == ""){
+                    alert("Please enter Location in E-Invoice Billing Details");
+                    document.getElementById("blocation").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && bpincode == ""){
+                    alert("Please enter Pincode in E-Invoice Billing Details");
+                    document.getElementById("bpincode").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && bstate == "select"){
+                    alert("Please select State in E-Invoice Billing Details");
+                    document.getElementById("bstate").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && slegal_name == ""){
+                    alert("Please enter Legal Name in E-Invoice Shipping Details");
+                    document.getElementById("slegal_name").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && strade_name == ""){
+                    alert("Please enter Trade Name in E-Invoice Shipping Details");
+                    document.getElementById("strade_name").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && sgstin == ""){
+                    alert("Please enter GSTIN in E-Invoice Shipping Details");
+                    document.getElementById("sgstin").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && saddr1 == ""){
+                    alert("Please enter Address-1 in E-Invoice Shipping Details");
+                    document.getElementById("saddr1").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && slocation == ""){
+                    alert("Please enter Location in E-Invoice Shipping Details");
+                    document.getElementById("slocation").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && spincode == ""){
+                    alert("Please enter Pincode in E-Invoice Shipping Details");
+                    document.getElementById("spincode").focus();
+                    l = false;
+                }
+                else if(parseInt(einv_gflag) > 0 && sstate == "select"){
+                    alert("Please select State in E-Invoice Shipping Details");
+                    document.getElementById("sstate").focus();
+                    l = false;
                 }
                 else{ }
                 if(l == true){
@@ -422,6 +627,15 @@ if($link_active_flag > 0){
 				}
 				else { }
 			}
+           function getcurrency() {
+                var country = document.getElementById("country").value;
+                
+                <?php foreach($cont_code as $scode) { ?>
+                    if (country === "<?php echo $scode; ?>") {
+                        document.getElementById("currency").value = "<?php echo $curr_name[$scode]; ?>";
+                    }
+                <?php } ?>
+            }
             function checkcontacts1(){
 				var e = document.getElementById("cus_ccode").value;
 				var g = "new";
@@ -602,6 +816,17 @@ if($link_active_flag > 0){
 				}
 				if(!a.match(expr)){
 					a = a.replace(/[^0-9.]/g, '');
+				}
+				document.getElementById(x).value = a;
+			}
+			function validate_count(x) {
+				expr = /^[0-9]*$/;
+				var a = document.getElementById(x).value;
+				if(a.length > 100){
+					a = a.substr(0,a.length - 1);
+				}
+				if(!a.match(expr)){
+					a = a.replace(/[^0-9]/g, '');
 				}
 				document.getElementById(x).value = a;
 			}

@@ -6,48 +6,64 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+$user_code = $_SESSION['userid'];
 include "header_head.php";
 
-$sql = "SELECT * FROM `main_groups` WHERE `gtype` LIKE 'C' AND `dflag` = '0' ORDER BY `description` ASC";
+$sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){  $group_access_code = $row['cgroup_access']; }
+if($group_access_code == "all" || $group_access_code == ""){ $group_access_filter1 = ""; } else{ $group_access_list = implode("','", explode(",",$group_access_code)); $group_access_filter1 = " AND `code` IN ('$group_access_list')"; $group_access_filter2 = " AND `groupcode` IN ('$group_access_list')"; }
+
+$sql = "SELECT * FROM `main_groups` WHERE `gtype` LIKE '%C%' AND `dflag` = '0'".$group_access_filter1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){
     $vengrp_code[$row['code']] = $row['code'];
     $vengrp_name[$row['code']] = $row['description'];
+    $vengrp_gtype[$row['code']] = $row['gtype'];
+    $grp_ccac[$row['code']] = $row['cus_controller_code'];
+    $grp_scac[$row['code']] = $row['sup_controller_code'];
 }
 
-$fdate = $tdate = date("Y-m-d"); $vendor_group = "all"; $excel_type = "display";
+$fdate = $tdate = date("Y-m-d"); $vendor_group = "all"; $excel_type = "display"; $cas_flag = 0;
 if(isset($_REQUEST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_REQUEST['fdate']));
     $tdate = date("Y-m-d",strtotime($_REQUEST['tdate']));
-
-	 $vendor_group = $_REQUEST['vendor_group'];
+	$vendor_group = $_REQUEST['vendor_group'];
+    $clines = $_POST['cline'];
+    $cas_flag = 0; if($_REQUEST['cas_flag'] == TRUE || $_REQUEST['cas_flag'] == "on" || (int)$_REQUEST['cas_flag'] == 1){ $cas_flag = 1; }
 
 	$excel_type = $_POST['export'];
 	$url = "../PHPExcel/Examples/CustomerBalanceReportAll-Excel.php?fromdate=".$fdate."&todate=".$tdate."&vendor_group=".$vendor_group;
 }
-if($vendor_group == "all"){
-    $vengrp_filter = "";
-}
-else{
+
+$cline_fltr = "";
+    if($clines != "all"){ $cline_fltr = " AND `cline_code` IN ('$clines')"; }
+
+
+if($vendor_group != "all"){
     $vengrp_filter = " AND `groupcode` LIKE '$vendor_group'";
 }
-$vendor_code = array();
-$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE 'C'".$vengrp_filter." AND `active` ='1' AND `dflag` = '0' ORDER BY `name` ASC";
-$query = mysqli_query($conn,$sql);
+else{
+    if($cas_flag == 1){
+        $vengrp_filter = "";
+    }
+    else{
+        $glist = "";
+        foreach($vengrp_code as $gcode){ if($vengrp_gtype[$gcode] == "C"){ if($glist == ""){ $glist = $gcode; } else{ $glist = $glist."','".$gcode; } } }
+        $vengrp_filter = " AND `groupcode` IN ('$glist')";
+    }
+}
+
+$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$vengrp_filter."".$cline_fltr." AND `active` ='1' AND `dflag` = '0' ORDER BY `name` ASC";
+$query = mysqli_query($conn,$sql); $vendor_code = array();
 while($row = mysqli_fetch_assoc($query)){
     $vendor_code[$row['code']] = $row['code'];
     $vendor_ccode[$row['code']] = $row['cus_ccode'];
     $vendor_name[$row['code']] = $row['name'];
-    $ven_grp[$row['code']] = $row['groupcode'];
+    $vendor_ctype[$row['code']] = $row['contacttype'];
+    $vendor_gcode[$row['code']] = $row['groupcode'];
     $obdate[$row['code']] = $row['obdate'];
     $obtype[$row['code']] = $row['obtype'];
-    /*if($vendor_name[$row['code']] == "SS Reddy Hatchery"){
-        $obamt[$row['code']] = 0;
-    }
-    else{
-        $obamt[$row['code']] = $row['obamt'];
-    }*/
+    $obtrnum[$row['code']] = $row['opn_trnum'];
     $obamt[$row['code']] = $row['obamt'];
 }
 $customer_filter = "";
@@ -64,6 +80,9 @@ if(in_array("account_contranotes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
 if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_voucher_notes LIKE poulso6_admin_broiler_broilermaster.broiler_voucher_notes;"; mysqli_query($conn,$sql1); }
 if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_transitloss LIKE poulso6_admin_broiler_broilermaster.broiler_transitloss;"; mysqli_query($conn,$sql1); }
 
+
+$sql = "SELECT * FROM `breeder_cus_lines` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code']; $cline_name[$row['code']] = $row['description']; }
 ?>
 <html>
     <head>
@@ -125,14 +144,14 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
             <thead class="thead1" align="center">
                 <tr align="center">
                     <td colspan="2" align="center"><img src="<?php echo "../".$row['logopath']; ?>" height="110px"/></td>
-                    <th colspan="16" align="center"><?php echo $row['cdetails']; ?><h5>Customer Balance Report</h5></th>
+                    <th colspan="17" align="center"><?php echo $row['cdetails']; ?><h5>Customer Balance Report</h5></th>
                 </tr>
             </thead>
             <?php } ?>
             <form action="broiler_customer_ledger_all.php" method="post">
                 <thead class="thead2 text-primary layout-navbar-fixed">
                     <tr>
-                        <th colspan="18">
+                        <th colspan="19">
                             <div class="row">
                                 <div class="m-2 form-group">
                                     <label>From Date</label>
@@ -141,6 +160,10 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                                 <div class="m-2 form-group">
                                     <label>To Date</label>
                                     <input type="text" name="tdate" id="tdate" class="form-control datepicker" style="width:110px;" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" />
+                                </div>
+                                <div class="m-2 form-group">
+                                    <label>C&S</label>
+                                    <input type="checkbox" name="cas_flag" id="cas_flag" class="form-control" <?php if($cas_flag == 1){ echo "checked"; } ?> />
                                 </div>
                                 <div class="m-2 form-group">
                                     <label>Customer Group</label>
@@ -153,6 +176,16 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                                         <?php
                                         }
                                         ?>
+                                    </select>
+                                </div>
+
+                                <div class="m-2 form-group">
+                                    <label>Customer Line</label>
+                                    <select name="cline" id="cline" class="form-control select2">
+                                        <option value="all" <?php if($clines == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($cline_code as $bcode){ if($cline_name[$bcode] != ""){ ?>
+                                        <option value="<?php echo $bcode; ?>" <?php if($clines == $bcode){ echo "selected"; } ?>><?php echo $cline_name[$bcode]; ?></option>
+                                        <?php } } ?>
                                     </select>
                                 </div>
                                 <div class="m-2 form-group">
@@ -180,6 +213,7 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                     <th rowspan="2">Opening Balance</th>
                     <th colspan="5">Selected Period</th>
                     <th colspan="2" >Balance</th>
+                    <th></th>
                 </tr>
                 <tr align="center">
                     <th>Birds</th>
@@ -189,6 +223,7 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                     <th>B/w days balance</th>
                     <th>Credit</th>
                     <th>Debit</th>
+                    <th>Last Receipt Gap Days</th>
                 </tr>
             </thead>
             <?php
@@ -198,7 +233,8 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
             <tbody class="tbody1">
                 <?php
                     $old_inv = "";
-                    $opening_sales = $opening_receipts = $opening_ccn = $opening_cdn = $opening_returns = $opening_cntcr = $opening_cntdr = $opening_vcr = $opening_tloss = $opening_vdr = array();
+                    $opening_sales = $opening_receipts = $opening_ccn = $opening_cdn = $opening_returns = $opening_cntcr = $opening_cntdr = $opening_vcr = $opening_tloss = 
+                    $opening_vdr = $last_rdate = array();
 
                     $sql_record = "SELECT * FROM `broiler_sales` WHERE `date` < '$fdate' AND `vcode` IN ('$customer_filter') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
@@ -206,7 +242,7 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
 
                     $sql_record = "SELECT * FROM `broiler_receipts` WHERE `date` < '$fdate' AND `ccode` IN ('$customer_filter') AND `vtype` IN ('Customer') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
-                    if($transaction_count > 0){ while($row = mysqli_fetch_assoc($query)){ $opening_receipts[$row['ccode']] += (float)$row['amount']; } }
+                    if($transaction_count > 0){ while($row = mysqli_fetch_assoc($query)){ $opening_receipts[$row['ccode']] += (float)$row['amount']; if(empty($last_rdate[$row['ccode']]) || $last_rdate[$row['ccode']] == "" || strtotime($last_rdate[$row['ccode']]) <= strtotime($row['date'])){ $last_rdate[$row['ccode']] = $row['date']; } } }
 
                     $sql_record = "SELECT * FROM `broiler_itemreturns` WHERE `date` < '$fdate' AND `vcode` IN ('$customer_filter') AND `type` IN ('Customer') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
@@ -232,6 +268,24 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                     $query = mysqli_query($conn, $sql_record); $i = 0; $transaction_count = 0; if (!empty($query)) { $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){ while ($row = mysqli_fetch_assoc($query)) { $opening_tloss[$row['vcode']] += (float)$row['amount']; } }
 
+                    $sql_record = "SELECT * FROM `master_payments` WHERE `date` < '$fdate' AND `to_account` IN ('$customer_filter') AND `t_type` IN ('Customer Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn, $sql_record); $transaction_count = 0; 
+                    while($row = mysqli_fetch_assoc($query)){
+                        $opening_payments[$row['to_account']] += (float)$row['amount'];
+                    }
+
+                    $sql_record = "SELECT * FROM `master_receipts` WHERE `date` < '$fdate' AND `to_account` IN ('$customer_filter') AND `t_type` IN ('Customer Receipt') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn, $sql_record);
+                    $transaction_count = 0;
+                    if (!empty($query)) {
+                        $transaction_count = mysqli_num_rows($query);
+                    }
+                    if ($transaction_count > 0) {
+                        while ($row = mysqli_fetch_assoc($query)) {
+                            $opening_receipts[$row['to_account']] += (float)$row['amount'];
+                        }
+                    }
+
                     $old_inv = "";
                     $between_sales_birds = $between_sales_weight = $between_sales_amt = array();
                     $sql_record = "SELECT * FROM `broiler_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `vcode` IN ('$customer_filter') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
@@ -254,6 +308,7 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                     if($transaction_count > 0){
                         while($row = mysqli_fetch_assoc($query)){
                             $between_rct_amt[$row['ccode']] += (float)$row['amount'];
+                            if(empty($last_rdate[$row['ccode']]) || $last_rdate[$row['ccode']] == "" || strtotime($last_rdate[$row['ccode']]) <= strtotime($row['date'])){ $last_rdate[$row['ccode']] = $row['date']; }
                         }
                     }
                     
@@ -295,18 +350,55 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                     $query = mysqli_query($conn, $sql_record); $i = 0; $transaction_count = 0; if (!empty($query)) { $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){ while ($row = mysqli_fetch_assoc($query)) { $between_tloss[$row['vcode']] += (float)$row['amount']; } }
 
+                    $sql_record = "SELECT * FROM `master_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `to_account` IN ('$customer_filter') AND `t_type` IN ('Customer Receipt') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn, $sql_record);
+                    $transaction_count = 0;
+                    if (!empty($query)) {
+                        $transaction_count = mysqli_num_rows($query);
+                    }
+                    if ($transaction_count > 0) {
+                        while ($row = mysqli_fetch_assoc($query)) {
+                            $between_rct_amt[$row['to_account']] += (float)$row['amount'];
+                        }
+                    }
+                    $sql_record = "SELECT * FROM `master_payments` WHERE `date` < '$fdate' AND `to_account` = '$vendors' AND `t_type` IN ('Customer Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn, $sql_record);
+                    $transaction_count = 0;
+                    if (!empty($query)) {
+                        $transaction_count = mysqli_num_rows($query);
+                    }
+                    if ($transaction_count > 0) {
+                        while ($row = mysqli_fetch_assoc($query)) {
+                            $between_payments[$row['to_account']] += (float)$row['amount'];
+                        }
+                    }
+
+
                     $final_opening_amt = $final_between_sale_birds = $final_between_sale_weight = $final_between_sale_amt = $final_between_rct_amt = $final_between_balance_amt = 
-                    $final_all_customer_balance_amt = $tot_cr_amt = $tot_dr_amt = 0;
+                    $final_all_customer_balance_amt = $tot_cr_amt = $tot_dr_amt = 0; $today = date("Y-m-d");
                     foreach($vendor_code as $vcode){
                         /*Customer Inital Opening Balance */
-                        if($obtype[$vcode] == "Cr"){ $ob_cramt = (float)round($obamt[$vcode],5); $ob_dramt = 0; } else{ $ob_dramt = (float)round($obamt[$vcode],5); $ob_cramt = 0; }
+                        $ob_cramt = $ob_dramt = 0;
+                        //check for C&S
+                        if(strtolower($vendor_ctype[$vcode]) == "s&c"){
+                            $otrnum = $obtrnum[$vcode]; $gcode = $vendor_gcode[$vcode]; $c_coa = $grp_ccac[$gcode]; $s_coa = $grp_scac[$gcode];
+                            $sql1 = "SELECT * FROM `account_summary` WHERE `trnum` = '$otrnum' AND `coa_code` IN ('$c_coa') AND `active` = '1' AND `dflag` = '0'";
+                            $query1 = mysqli_query($conn,$sql1); $s_cnt = mysqli_num_rows($query1);
+                            if($s_cnt > 0){
+                                if($obtype[$vcode] == "Cr"){ $ob_cramt = (float)$obamt[$vcode]; $ob_dramt = 0; } else{ $ob_dramt = (float)$obamt[$vcode]; $ob_cramt = 0; }
+                            }
+                        }
+                        else{
+                            if($obtype[$vcode] == "Cr"){ $ob_cramt = (float)$obamt[$vcode]; $ob_dramt = 0; } else{ $ob_dramt = (float)$obamt[$vcode]; $ob_cramt = 0; }
+                        }
+                        //if($obtype[$vcode] == "Cr"){ $ob_cramt = (float)round($obamt[$vcode],5); $ob_dramt = 0; } else{ $ob_dramt = (float)round($obamt[$vcode],5); $ob_cramt = 0; }
 
                         /*Opening Balance Calculations */
                         $current_opening_amt = 0;
-                        $current_opening_amt = (((float)round($opening_sales[$vcode],5) + (float)round($opening_cdn[$vcode],5) + (float)round($ob_dramt,5) + (float)round($opening_cntdr[$vcode],5) + (float)round($opening_vdr[$vcode],5)) - ((float)round($opening_receipts[$vcode],5) + (float)round($opening_vcr[$vcode],5) + (float)round($opening_ccn[$vcode],5) + (float)round($opening_returns[$vcode],5) + (float)round($ob_cramt,5) + (float)round($opening_cntcr[$vcode],5) + (float)round($opening_tloss[$vcode],5)));
-                        if($vendor_name[$vcode] == "SS Reddy Hatchery"){
-                        echo "<br/>$current_opening_amt = (((float)round($opening_sales[$vcode],5) + (float)round($opening_cdn[$vcode],5) + (float)round($ob_dramt,5) + (float)round($opening_cntdr[$vcode],5) + (float)round($opening_vdr[$vcode],5)) - ((float)round($opening_receipts[$vcode],5) + (float)round($opening_vcr[$vcode],5) + (float)round($opening_ccn[$vcode],5) + (float)round($opening_returns[$vcode],5) + (float)round($ob_cramt,5) + (float)round($opening_cntcr[$vcode],5) + (float)round($opening_tloss[$vcode],5)));";
-                        }
+                        $current_opening_amt = (((float)round($opening_sales[$vcode],5) + (float)round($opening_cdn[$vcode],5) + (float)round($ob_dramt,5) + (float)round($opening_cntdr[$vcode],5) + (float)round($opening_vdr[$vcode],5) + (float)round($opening_payments[$vcode],2)) - ((float)round($opening_receipts[$vcode],5) + (float)round($opening_vcr[$vcode],5) + (float)round($opening_ccn[$vcode],5) + (float)round($opening_returns[$vcode],5) + (float)round($ob_cramt,5) + (float)round($opening_cntcr[$vcode],5) + (float)round($opening_tloss[$vcode],5)));
+                        //if($vendor_name[$vcode] == "SS Reddy Hatchery"){
+                        //echo "<br/>$current_opening_amt = (((float)round($opening_sales[$vcode],5) + (float)round($opening_cdn[$vcode],5) + (float)round($ob_dramt,5) + (float)round($opening_cntdr[$vcode],5) + (float)round($opening_vdr[$vcode],5)) - ((float)round($opening_receipts[$vcode],5) + (float)round($opening_vcr[$vcode],5) + (float)round($opening_ccn[$vcode],5) + (float)round($opening_returns[$vcode],5) + (float)round($ob_cramt,5) + (float)round($opening_cntcr[$vcode],5) + (float)round($opening_tloss[$vcode],5)));";
+                        //}
                         /*if($vendor_name[$vcode] == "KARTICK MONDAL"){
                             if($_SERVER['REMOTE_ADDR'] == "49.207.226.103"){
                                 echo "<br/>Sale: ".$opening_sales[$vcode];
@@ -333,7 +425,7 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
 
                         /*Between days Total Amount */
                         $current_sale_amt = 0;
-                        $current_sale_amt = (float)round($between_sales_amt[$vcode],5) + (float)round($between_cdn[$vcode],5) + (float)round($between_cntdr[$vcode],5);
+                        $current_sale_amt = (float)round($between_sales_amt[$vcode],5) + (float)round($between_cdn[$vcode],5) + (float)round($between_cntdr[$vcode],5) + (float)round($between_payments[$vcode],5);
 
                         /*Between days Total Receipt */
                         $current_rct_amt = 0;
@@ -348,9 +440,9 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                         $final_customer_balance_amt = (float)round($current_opening_amt,5) + (float)round($current_Balance_amt,5);
 
                         if(number_format_ind($final_customer_balance_amt) != "0.00"){
-                            $url_link = "broiler_customeraging_report2.php?fdate=".$fdate."&tdate=".$tdate."&vendors=".$vcode;
+                            $url_link = "broiler_customer_ledger.php?fdate=".$fdate."&tdate=".$tdate."&vendors=".$vcode;
                             echo "<tr>";
-                            echo "<td>".$vengrp_name[$ven_grp[$vcode]]."</td>";
+                            echo "<td>".$vengrp_name[$vendor_gcode[$vcode]]."</td>";
                             //echo "<td>".$vcode."</td>";
                             echo "<td>".$vendor_ccode[$vcode]."</td>";
                             echo "<td><a href='$url_link' target='_BLANK'>".$vendor_name[$vcode]."</a></td>";
@@ -371,7 +463,8 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                                 $tot_dr_amt += (float)$final_customer_balance_amt;
                             }
                             //echo "<td style='text-align:right;'>".number_format_ind($final_customer_balance_amt)."</td>";
-                            
+                            $rct_gapdays = 0; if(!empty($last_rdate[$vcode]) && $last_rdate[$vcode] != ""){ $rct_gapdays = (INT)((strtotime($today) - strtotime($last_rdate[$vcode])) / 60 / 60 / 24); }
+                            echo "<td style='text-align:right;'>".round($rct_gapdays)."</td>";
                             echo "</tr>";
 
                             /*Final Total */
@@ -395,6 +488,7 @@ if(in_array("broiler_transitloss", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
                     echo "<td style='text-align:right;font-weight:bold;'>".str_replace("-","",number_format_ind($tot_cr_amt))."</td>";
                     echo "<td style='text-align:right;font-weight:bold;'>".number_format_ind($tot_dr_amt)."</td>";
                     //echo "<td style='text-align:right;font-weight:bold;'>".number_format_ind($final_all_customer_balance_amt)."</td>";
+                    echo "<td style='font-weight:bold;'></td>";
                     echo "</tr>";
                 ?>
             </tbody>

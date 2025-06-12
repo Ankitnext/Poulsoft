@@ -110,7 +110,11 @@ if($link_active_flag > 0){
                                     <div class="row">
                                         <div class="form-group" style="width:170px;">
                                             <label>Customer</label>
-							                <select name="pname[]" id="pname[0]" class="form-control select2" style="width:160px;"> <option value="select">select</option> <?php foreach($fpcode as $fcode){ ?> <option value="<?php echo $fpcode[$fcode]; ?>"><?php echo $fpname[$fcode]; ?></option> <?php } ?> </select>
+							                <select name="pname[]" id="pname[0]" class="form-control select2" style="width:160px;" onchange="fetch_customer_bal_amt2(this.id);"> <option value="select">select</option> <?php foreach($fpcode as $fcode){ ?> <option value="<?php echo $fpcode[$fcode]; ?>"><?php echo $fpname[$fcode]; ?></option> <?php } ?> </select>
+                                        </div>
+                                        <div class="form-group" style="width:110px;">
+                                            <label>Balance</label>
+							                <input type="text" name="cbal_amt[]" id="cbal_amt[0]" class="form-control" style="width:100px;" onkeyup="validatenum(this.id);" readonly />
                                         </div>
                                         <div class="form-group" style="width:170px;">
                                             <label>Mode<b style="color:red;">&nbsp;*</b></label>
@@ -182,7 +186,8 @@ if($link_active_flag > 0){
                 
                 html += '<div class="row" id="row_no['+d+']">';
                 //html += '<div class="form-group" style="width:110px;"><label class="labelrow" style="display:none;">Date<b style="color:red;">&nbsp;*</b></label><input type="text" name="date[]" id="date['+c+']" class="form-control datepicker" style="width:100px;" value="<?php //echo date("d.m.Y"); ?>" onmouseover="displaycalendor()" ></div>';
-                html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Customer</label><select name="pname[]" id="pname['+c+']" class="form-control select2" style="width:160px;"><option value="select">select</option> <?php foreach($fpcode as $fcode){ ?> <option value="<?php echo $fpcode[$fcode]; ?>"><?php echo $fpname[$fcode]; ?></option> <?php } ?> </select></div>';
+                html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Customer</label><select name="pname[]" id="pname['+c+']" class="form-control select2" style="width:160px;" onchange="fetch_customer_bal_amt2(this.id);"><option value="select">select</option> <?php foreach($fpcode as $fcode){ ?> <option value="<?php echo $fpcode[$fcode]; ?>"><?php echo $fpname[$fcode]; ?></option> <?php } ?> </select></div>';
+                html += '<div class="form-group" style="width:110px;"><label class="labelrow" style="display:none;">Balance<b style="color:red;">&nbsp;*</b></label><input type="text" name="cbal_amt[]" id="cbal_amt['+c+']" class="form-control" style="width:100px;" onkeyup="validatenum(this.id);" readonly /></div>';
                 html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Mode<b style="color:red;">&nbsp;*</b></label><select name="mode[]" id="mode['+c+']" class="form-control select2" style="width:160px;" onchange="updatecode(this.id)"> <option value="select">select</option> <?php foreach($acode as $fcode){ ?> <option value="<?php echo $acode[$fcode]; ?>"><?php echo $adesc[$fcode]; ?></option> <?php } ?> </select></div>';
                 html += '<div class="form-group" style="width:170px;"><label class="labelrow" style="display:none;">Code<b style="color:red;">&nbsp;*</b></label><select name="code[]" id="code['+c+']" class="form-control select2" style="width:160px;"> <option value="select">select</option></select></div>';
                 html += '<div class="form-group" style="width:110px;"><label class="labelrow" style="display:none;">Amount</label><input type="text" name="amount[]" id="amount['+c+']" class="form-control" style="width:100px;" onkeyup="getamountinwords();validatenum(this.id);" onchange="validateamount(this.id);"></div>';
@@ -283,6 +288,51 @@ if($link_active_flag > 0){
 					<?php } ?>
 				}
 			}
+            function fetch_customer_bal_amt(a){
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                var vendors = document.getElementById("pname["+d+"]").value;
+                document.getElementById("cbal_amt["+d+"]").value = "";
+                if(vendors != "select"){
+                    var batch_list = new XMLHttpRequest();
+                    var method = "GET";
+                    var url = "poulsoft_fetch_customer_balamt1.php?vendors="+vendors+"&r_cnt="+d;
+                    var asynchronous = true;
+                    //window.open(url);
+                    batch_list.open(method, url, asynchronous);
+                    batch_list.send();
+                    batch_list.onreadystatechange = function(){
+                        if(this.readyState == 4 && this.status == 200){
+                            var batch_dt1 = this.responseText;
+                            var batch_dt2 = batch_dt1.split("[@$&]");
+                            var rows = batch_dt2[0];
+                            var c_amt = batch_dt2[1]; if(c_amt == ""){ c_amt = 0; }
+                            document.getElementById("cbal_amt["+rows+"]").value = parseFloat(c_amt).toFixed(2);
+                        }
+                    }
+                }
+            }
+            function fetch_customer_bal_amt2(a){
+                var b = a.split("["); var c = b[1].split("]"); var d = c[0];
+                var vendors = document.getElementById("pname["+d+"]").value;
+                document.getElementById("cbal_amt["+d+"]").value = "";
+                if(vendors != "select"){
+                    var batch_list = new XMLHttpRequest();
+                    var method = "GET";
+                    var url = "poulsoft_fetch_customer_balamt1ty.php?vendors="+vendors+"&r_cnt="+d;
+                    var asynchronous = true;
+                    //window.open(url);
+                    batch_list.open(method, url, asynchronous);
+                    batch_list.send();
+                    batch_list.onreadystatechange = function(){
+                        if(this.readyState == 4 && this.status == 200){
+                            var batch_dt1 = this.responseText;
+                            console.log(batch_dt1);
+                            var res = parseFloat(batch_dt1);
+                            document.getElementById("cbal_amt["+d+"]").value = parseFloat(batch_dt1).toFixed(2);
+                        }
+                    }
+                }
+            }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
             setInterval(function(){
                 if(window.screen.availWidth <= 400){

@@ -171,7 +171,6 @@ for($i = 0;$i < $dsize;$i++){
 
     }
 
-    
     if($receipt[$i] == "" || $receipt[$i] == NULL || $receipt[$i] == 0 || $receipt[$i] == "0.00" || $receipt[$i] == "0" || $receipt[$i] == 0.00){ $receipt[$i] = "0.00"; }
     else{
         //Generate Invoice transaction number format

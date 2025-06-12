@@ -37,7 +37,7 @@ $tcds_type2 = "add";
 $transporter_code = $driver = $vehicle = "";
 $freight_amt = 0;
 
-$tot_jals = $_POST['tot_jals']; 
+$tot_jals = $_POST['tot_jals'];
 $tot_birds = $_POST['tot_birds'];
 $tot_tweight = $_POST['tot_tweight'];
 $tot_eweight = $_POST['tot_eweight'];
@@ -98,6 +98,8 @@ $from_kms = $_POST['from_kms'];
 $to_kms = $_POST['to_kms'];
 $total_kms = $_POST['total_kms'];
 $from_location = $to_location = "";
+$prc_per_km = $_POST['price_perkm'];
+$tot_prc_kms = $_POST['price_perkm_total'];
 
 $tcoa = $tcoa_amt = $remarks2 = array();
 $i = 0; foreach($_POST['tcoa'] as $tcoas){ $tcoa[$i] = $tcoas; $i++; }
@@ -117,9 +119,9 @@ if((float)$fcoa_amt > 0 || (float)$balance_amt > 0){
     $dsize = sizeof($tcoa);
     for($i = 0;$i < $dsize;$i++){
         if($tcoa_amt[$i] == ""){ $tcoa_amt[$i] = 0; }
-        if($tcoa_amt[$i] > 0){
-            $sql = "INSERT INTO `acc_vouchers` (`incr`,`prefix`,`trnum`,`link_trnum`,`vtype`,`date`,`dcno`,`group_code`,`advance_amt`,`fcoa`,`tcoa`,`amount`,`balance_amt`,`warehouse`,`remarks`,`from_location`,`to_location`,`from_kms`,`to_kms`,`total_kms`,`flag`,`active`,`tdflag`,`pdflag`,`trtype`,`trlink`,`addedemp`,`addedtime`,`updatedtime`) 
-            VALUES('$incr','$prefix','$trnum','$trip_trnum','$vtype','$date','$billno','$group_code','$fcoa_amt','$fcoa','$tcoa[$i]','$tcoa_amt[$i]','$balance_amt','$warehouse','$remarks2[$i]','$from_location','$to_location','$from_kms','$to_kms','$total_kms','$flag','$active','$tdflag','$pdflag','$trtype','$trlink','$addedemp','$addedtime','$addedtime')";
+        if($tcoa_amt[$i] > 0 && $tcoa[$i] != "select" && $tcoa[$i] != ""){
+            $sql = "INSERT INTO `acc_vouchers` (`incr`,`prefix`,`trnum`,`link_trnum`,`vtype`,`date`,`dcno`,`group_code`,`advance_amt`,`fcoa`,`tcoa`,`amount`,`balance_amt`,`warehouse`,`remarks`,`from_location`,`to_location`,`from_kms`,`to_kms`,`total_kms`,`veh_amt`,`veh_rate`,`flag`,`active`,`tdflag`,`pdflag`,`trtype`,`trlink`,`addedemp`,`addedtime`,`updatedtime`) 
+            VALUES('$incr','$prefix','$trnum','$trip_trnum','$vtype','$date','$billno','$group_code','$fcoa_amt','$fcoa','$tcoa[$i]','$tcoa_amt[$i]','$balance_amt','$warehouse','$remarks2[$i]','$from_location','$to_location','$from_kms','$to_kms','$total_kms','$tot_prc_kms','$prc_per_km','$flag','$active','$tdflag','$pdflag','$trtype','$trlink','$addedemp','$addedtime','$addedtime')";
             if(!mysqli_query($conn,$sql)){ die("Error 1:-".mysqli_error($conn)); } else{ }
         }
     }
@@ -138,7 +140,7 @@ $i = 0; foreach($_POST['emps_eamt'] as $sup_eamts){ $sup_eamt[$i] = $sup_eamts; 
 $i = 0; foreach($_POST['remarks3'] as $remarks3s){ $remarks3[$i] = $remarks3s; $i++; }
 $tot_empsal_amt = $_POST['tot_empsal_amt'];
 
-if((float)$tot_empsal_amt > 0){
+//if((float)$tot_empsal_amt > 0){
     //Generate Transaction No.
     $incr = 0; $prefix = $trnum = $trno_dt1 = ""; $trno_dt2 = array();
     $trno_dt1 = generate_transaction_details($date,"pur_dvou2","DTI","generate",$_SESSION['dbase']);
@@ -150,15 +152,18 @@ if((float)$tot_empsal_amt > 0){
     for($i = 0;$i < $dsize;$i++){
         if($advance_amt[$i] == ""){ $advance_amt[$i] = 0; }
         if($sup_eamt[$i] == ""){ $sup_eamt[$i] = 0; }
-        if($advance_amt[$i] > 0){
-            $sflag = $_POST['supr_flag'][$i];
-            $supr_flag = 0; if($sflag == 1 || $sflag == "on" || $sflag == true){ $supr_flag = 1; }
+        if($supr_flag == 0 && $advance_amt[$i] == 0){
+        }else if($supr_flag == 1 && $advance_amt[$i] == 0){
+            $sql = "INSERT INTO `acc_vouchers` (`incr`,`prefix`,`trnum`,`link_trnum`,`vtype`,`date`,`dcno`,`group_code`,`fcoa`,`tcoa`,`advance_amt`,`supr_flag`,`sup_eamt`,`amount`,`balance_amt`,`warehouse`,`remarks`,`from_location`,`to_location`,`from_kms`,`to_kms`,`total_kms`,`flag`,`active`,`tdflag`,`pdflag`,`trtype`,`trlink`,`addedemp`,`addedtime`,`updatedtime`) 
+            VALUES('$incr','$prefix','$trnum','$trip_trnum','$vtype','$date','$billno',NULL,'$labour_fcoa','$emp_scode[$i]','$advance_amt[$i]','$supr_flag','$sup_eamt[$i]','$advance_amt[$i]','0','$warehouse','$remarks3[$i]','$from_location','$to_location','$from_kms','$to_kms','$total_kms','$flag','$active','$tdflag','$pdflag','$trtype','$trlink','$addedemp','$addedtime','$addedtime')";
+            if(!mysqli_query($conn,$sql)){ die("Error 1:-".mysqli_error($conn)); } else{ }
+        }else if($supr_flag == 1 && $advance_amt[$i] > 0){
             $sql = "INSERT INTO `acc_vouchers` (`incr`,`prefix`,`trnum`,`link_trnum`,`vtype`,`date`,`dcno`,`group_code`,`fcoa`,`tcoa`,`advance_amt`,`supr_flag`,`sup_eamt`,`amount`,`balance_amt`,`warehouse`,`remarks`,`from_location`,`to_location`,`from_kms`,`to_kms`,`total_kms`,`flag`,`active`,`tdflag`,`pdflag`,`trtype`,`trlink`,`addedemp`,`addedtime`,`updatedtime`) 
             VALUES('$incr','$prefix','$trnum','$trip_trnum','$vtype','$date','$billno',NULL,'$labour_fcoa','$emp_scode[$i]','$advance_amt[$i]','$supr_flag','$sup_eamt[$i]','$advance_amt[$i]','0','$warehouse','$remarks3[$i]','$from_location','$to_location','$from_kms','$to_kms','$total_kms','$flag','$active','$tdflag','$pdflag','$trtype','$trlink','$addedemp','$addedtime','$addedtime')";
             if(!mysqli_query($conn,$sql)){ die("Error 1:-".mysqli_error($conn)); } else{ }
         }
     }
-}
+//}
 
 header('location:chicken_display_generalpurchase2.php?ccid='.$ccid);
 

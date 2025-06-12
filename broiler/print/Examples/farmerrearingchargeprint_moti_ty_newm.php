@@ -177,7 +177,7 @@ while($row = mysqli_fetch_assoc($query)){
     $fmr_ifsc_code = $row['ifsc_code'];
     $fmr_bank_name = $row['bank_name'];
     $fmr_branch_code = $row['branch_code'];
-    $panno = $pdata['panno'];
+    $panno = $row['panno'];
 }
 $bank_flag = 1;
 $sql = "SELECT * FROM `item_details` ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql);
@@ -289,21 +289,21 @@ $html .= '<table width="100%" >
         </td>
         <!-- Right Column: Bank Details -->
         <td width="60%" valign="top">
-            <table width="80%" >
+            <table width="60%" >
                 <tr>
                     <td><strong>Bank Name </strong></td>
-                    <td>:</td>
-                    <td>'.$fmr_branch_code.'</td>
+                    
+                    <td>: '.$fmr_bank_name.'</td>
                 </tr>
                 <tr>
                     <td><strong>A/c No.</strong></td>
-                    <td>:</td>
-                    <td>'.$fmr_accountno.'</td>
+                    
+                    <td>: '.$fmr_accountno.'</td>
                 </tr>
                 <tr>
                     <td><strong>IFSC No.</strong></td>
-                    <td>:</td>
-                    <td>'.$fmr_ifsc_code.'</td>
+                   
+                    <td>: '.$fmr_ifsc_code.'</td>
                 </tr>
             </table>
         </td>
@@ -438,13 +438,14 @@ $html .= '
             <td style="; "></td>
         </tr>';
 if((float)$feed_consume_kgs != 0){ $t1 = $feed_cost_amt / $feed_consume_kgs; } else{ $t1 = 0; }
+$feed_costs = $actual_feed_cost / $feed_consume_kgs;
     $html .= '    <tr>
             <td style=";width:140px;text-align:left; ">1st Week Mortality</td>
             <td style=";width:10px; ">:</td>
             <td style=";text-align:right; ">'.$days7_mort_count.'</td>
             <td style="; ">'.$days7_mort.'%</td>
 
-            <td style=";width:140px;text-align:left; ">Feed Cost @ '.number_format_ind(round(($actual_feed_price),2)).'</td>
+            <td style=";width:140px;text-align:left; ">Feed Cost @ '.number_format_ind(round(($feed_costs),2)).'</td>
             <td style=";width:10px; ">:</td>
             <td style=";text-align:right ">'.number_format_ind(round($actual_feed_cost,2)).'</td>
 
@@ -523,6 +524,7 @@ if((float)$feed_consume_kgs != 0){ $t1 = $feed_cost_amt / $feed_consume_kgs; } e
             <td style="; "></td>
         </tr>';
         $totalfinal =  round(($standard_gc_amt + $sales_incentive_amt + $actual_charge_exp_amt),2);
+        if($totalfinal < 0) { $totalfinals = 0;} else { $totalfinals = $totalfinal;}
      $html .= '    <tr>
             <td style=";width:140px;text-align:left; ">Avg. Birds Wt(kg)</td>
             <td style=";width:10px; ">:</td>
@@ -531,7 +533,7 @@ if((float)$feed_consume_kgs != 0){ $t1 = $feed_cost_amt / $feed_consume_kgs; } e
 
             <td style=";width:140px;text-align:left; ">Growing Charges @ Rs '.number_format_ind(round($standard_gc_prc,2)).'</td>
             <td style=";width:10px; "></td>
-            <td style="; ">'.number_format_ind(round($standard_gc_amt,2)).'</td>
+            <td style="; ">'.number_format_ind(round($totalfinals,2)).'</td>
 
             <td style=";width:140px;text-align:left; ">Total</td>
             <td style=";text-align:right; "></td>
@@ -539,7 +541,8 @@ if((float)$feed_consume_kgs != 0){ $t1 = $feed_cost_amt / $feed_consume_kgs; } e
              <td style="; "></td>
             <td style=";text-align:right;border-top:2px solid black; ">'.$totalfinal.'</td>
         </tr>';
-      $finamt1 = $standard_gc_amt + $sales_incentive_amt + $actual_charge_exp_amt - $tds_amt;
+        $percentage = $totalfinal * 0.01;
+      $finamt1 = $standard_gc_amt + $sales_incentive_amt + $actual_charge_exp_amt - $percentage;
       $html .='   <tr>
             <td style=";width:140px;text-align:left; ">Total Feed Consumed(kg)</td>
             <td style=";width:10px; ">:</td>
@@ -554,7 +557,7 @@ if((float)$feed_consume_kgs != 0){ $t1 = $feed_cost_amt / $feed_consume_kgs; } e
             <td style=";text-align:right; ">'.round(1,2).'</td>
             <td style=";width:10px; ">:</td>
              <td style="; "></td>
-            <td style=";text-align:right;border-bottom:2px solid black; ">'.round($tds_amt,2).'</td>
+            <td style=";text-align:right;border-bottom:2px solid black; ">'.round($percentage,2).'</td>
         </tr>
 
          <tr>
@@ -565,7 +568,7 @@ if((float)$feed_consume_kgs != 0){ $t1 = $feed_cost_amt / $feed_consume_kgs; } e
 
             <td style=";width:140px;text-align:left; "><b>Total Cost Amount</b></td>
             <td style=";width:10px; "></td>
-            <td style="; "><b>'.number_format_ind(round(($actual_chick_cost + $actual_feed_cost + $actual_medicine_cost + $admin_cost_amt + $standard_gc_amt ),2)).'</b></td>
+            <td style="; "><b>'.number_format_ind(round(($actual_chick_cost + $actual_feed_cost + $actual_medicine_cost + $admin_cost_amt + $totalfinals ),2)).'</b></td>
 
             <td style=";width:140px;text-align:left; ">Total Amount</td>
             <td style="; "></td>
@@ -604,7 +607,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
 
             <td style=";width:140px;text-align:left; ">Cost of Production / kg</td>
             <td style=";width:10px; ">:</td>
-            <td style=";text-align:right;border:1px solid black; ">'.number_format_ind(round(($actual_chick_cost + $actual_feed_cost + $actual_medicine_cost + $admin_cost_amt + $standard_gc_amt) / $sold_weight,2)).'</td>
+            <td style=";text-align:right;border:1px solid black; ">'.number_format_ind(round(($actual_chick_cost + $actual_feed_cost + $actual_medicine_cost + $admin_cost_amt + $totalfinal) / $sold_weight,2)).'</td>
 
             <td style=";width:140px;text-align:left; ">Deduction</td>
             <td style="; "></td>
@@ -712,6 +715,8 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
             <td style="width:60px;border-right:1px solid black;border-right; ">Amount</td>
         </tr>';
        $qtyplaced = $placed_birds - ($mortality + $culls) ;
+       if($lmbwt != 0 || $lmbwt != '0'){  $amt = (float)$lb_amt/$lmbwt; } else { $amt = 0; }
+
        $html .= '<tr>
             <td style=";width:140px;text-align:left; "></td>
             <td style=";width:10px; "></td>
@@ -741,13 +746,15 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
     <td style="width: 60px;border-right:1px solid black;border-right; ">'.$nb_amt.'</td>
 </tr>
 
+
+
 <tr>
    
     <td colspan="6" style="; width: 455px; text-align: center;"></td>
     <td style="width:80px;text-align:left;border-left:1px solid black;"></td>
     <td style="width:80px; ">'.$lmbird.'</td>
     <td  style="width:50px; ">'.$lmbwt.'</td>
-    <td style="width: 50px;"></td>
+    <td style="width: 50px;">'.$amt.'</td>
     <td style="width: 60px;border-right:1px solid black;border-right; ">'.$lb_amt.'</td>
 </tr>
 
@@ -782,7 +789,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
             <td style=";width:80px;text-align:left;border-left:1px solid black;  "></td>
             <td style="width:80px;border-top:1px solid black;border-bottom:1px solid black; ">'.$totalqtyplaced.'</td>
             <td style="width:50px;border-top:1px solid black;border-bottom:1px solid black; ">'.$qtykgsold.'</td>
-             <td style="width:50px;border-top:1px solid black;border-bottom:1px solid black; ">'.$totavgqty.'</td>
+             <td style="width:50px;border-top:1px solid black;border-bottom:1px solid black; ">'.($totavgqty + $amt).'</td>
             <td style="width:60px;border-right:1px solid black;border-right;border-top:1px solid black;border-bottom:1px solid black; ">'.number_format_ind($tot_item_amt).'</td>
         </tr>
 
@@ -800,7 +807,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
             <td style=" width: 80px;">Total Cost</td>
             <td style=" width: 50px;"></td>
             <td style=" width: 50px;"></td>
-            <td style=" width: 60px;border-right:1px solid black;border-right;">'.number_format_ind(round(($actual_chick_cost + $actual_feed_cost + $actual_medicine_cost + $admin_cost_amt + $standard_gc_amt),2)).'</td>
+            <td style=" width: 60px;border-right:1px solid black;border-right;">'.number_format_ind(round(($actual_chick_cost + $actual_feed_cost + $actual_medicine_cost + $admin_cost_amt + $totalfinals),2)).'</td>
         </tr>
       
 
@@ -814,10 +821,10 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
            
 
             <td style="width:80px;text-align:left;border-left:1px solid black; "></td>
-            <td style="width:80px;"><b>Profit/Less</b></td>
+            <td style="width:80px;"><b>Profit/Loss</b></td>
             <td style="width:50px; "></td>
              <td style="width:50px; "></td>
-            <td style="width:60px;border-right:1px solid black;border-right;border-top:1px solid black;border-bottom:1px solid black ">'.number_format_ind($tot_item_amt - ($actual_chick_cost + $actual_feed_cost + $actual_medicine_cost + $admin_cost_amt + $standard_gc_amt)).'</td>
+            <td style="width:60px;border-right:1px solid black;border-right;border-top:1px solid black;border-bottom:1px solid black ">'.number_format_ind($tot_item_amt - ($actual_chick_cost + $actual_feed_cost + $actual_medicine_cost + $admin_cost_amt + $totalfinals)).'</td>
         </tr>';
         $denominator = $avg_wt * $lmbird;
         $percentage = 0;

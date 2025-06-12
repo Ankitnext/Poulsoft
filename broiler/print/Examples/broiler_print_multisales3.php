@@ -454,9 +454,9 @@ foreach($day_ccode as $cuscode){
 			$html .= '<td colspan="2" style="padding:5px;text-align:right;"><br/>'.number_format_ind($famt).'&nbsp;&nbsp;</td>';
 		$html .= '</tr>';
 		$html .= '<tr>';
-			$html .= '<td colspan="6"><br/><br/><b>Amount in words:</b>&nbsp;&nbsp;'.convert_number_to_words($famt).'.&nbsp;&nbsp;<br/></td>';
-            $html .= '<td colspan="4">';
-            $html .= '<table>';
+			$html .= '<td colspan="10"><br/><br/><b>Amount in words:</b>&nbsp;&nbsp;'.convert_number_to_words($famt).'.&nbsp;&nbsp;<br/></td>';
+            // $html .= '<td colspan="4">';
+            // $html .= '<table>';
            // $html .= '<tr>';
            // $html .= '<td style="padding:5px;text-align:left;">&nbsp;Previous Balance:&nbsp;</td>';
            // $html .= '<td style="padding:5px;text-align:right;">'.number_format_ind($post).'&nbsp;&nbsp;</td>';
@@ -469,12 +469,12 @@ foreach($day_ccode as $cuscode){
           //  $html .= '<td style="padding:5px;text-align:left;">&nbsp;Received Amount:&nbsp;</td>';
           //  $html .= '<td style="padding:5px;text-align:right;">'.number_format_ind($current_orct).'&nbsp;&nbsp;</td>';
          //   $html .= '</tr>';
-            $html .= '<tr>';
-            $html .= '<td style="padding:5px;text-align:left;border-top:1px dotted black;">&nbsp;<br/>&nbsp;Closing Balance:&nbsp;</td>';
-            $html .= '<td style="padding:5px;text-align:right;border-top:1px dotted black;"><b><br/>'.number_format_ind($camt).'</b>&nbsp;&nbsp;</td>';
-            $html .= '</tr>';
-            $html .= '</table>';
-            $html .= '</td>';
+            // $html .= '<tr>';
+            // $html .= '<td style="padding:5px;text-align:left;border-top:1px dotted black;">&nbsp;<br/>&nbsp;Closing Balance:&nbsp;</td>';
+            // $html .= '<td style="padding:5px;text-align:right;border-top:1px dotted black;"><b><br/>'.number_format_ind($camt).'</b>&nbsp;&nbsp;</td>';
+            // $html .= '</tr>';
+            // $html .= '</table>';
+            // $html .= '</td>';
 		$html .= '</tr>';
 		
 		if($bank_flag == 1){

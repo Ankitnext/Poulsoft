@@ -252,7 +252,7 @@ $html .= '<table width="100%">';
 $html .=  '<tr width="40%" align="left"><th>'.$cdetail.'</th>';
 $html .=  '<th>';
 
-$html .= '<p style=" font-weight: bold;">Former Payment Sheet</p><br/>';
+$html .= '<p style=" font-weight: bold;">Farmer Payment Sheet</p><br/>';
 $html .= '<table width="100%" >
     <tr>
       
@@ -835,7 +835,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
             <td style="width:82pxt; ">Lame</td>
             <td style="width:82px; ">'.($avg_wt * $lmbird).'</td>
             <td style="width:82px; ">'.number_format_ind(round($percentage, 2)).'</td>
-            <td style="width:82px; ">'.(($avg_wt * $lmbird)-$lmbwt).'</td>
+            <td style="width:82px; ">'.number_format_ind(round((($avg_wt * $lmbird)-$lmbwt),2)).'</td>
             <td style="width:82px; ">'.$lmbwt.'</td>
 
             <td style="width:92px;text-align:left; "></td>
@@ -852,7 +852,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
             <td style="width:82pxt;border-top:1px solid black; "></td>
             <td style="width:82px;border-top:1px solid black; ">'.($abwt + ($avg_wt * $lmbird)).'</td>
             <td style="width:82px;border-top:1px solid black; ">'.number_format_ind(round($percentage, 2)).'</td>
-            <td style="width:82px;border-top:1px solid black; ">'.(($avg_wt * $lmbird)-$lmbwt).'</td>
+            <td style="width:82px;border-top:1px solid black; ">'.number_format_ind(round((($avg_wt * $lmbird)-$lmbwt),2)).'</td>
             <td style="width:82px;border-top:1px solid black; ">'.($abwt + $lmbwt).'</td>
             <td style="width:82px;text-align:left; "></td>
            

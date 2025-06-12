@@ -14,6 +14,8 @@ if($link_active_flag > 0){
     $sql1 = "SHOW TABLES WHERE ".$table_head." LIKE 'image_deletion_details';"; $query1 = mysqli_query($conn,$sql1); $tcount = mysqli_num_rows($query1);
     if($tcount > 0){ } else{ $sql1 = "CREATE TABLE $database_name.image_deletion_details LIKE poulso6_admin_broiler_broilermaster.image_deletion_details;"; mysqli_query($conn,$sql1); }
 
+ 
+
     while($row = mysqli_fetch_assoc($query)){ $cname = $row['name']; }
     $sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$user_code' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
     $dlink = $alink = $elink = $rlink = $plink = $ulink = $flink = array(); $sector_access = $cgroup_access = $user_type = "";
@@ -141,6 +143,15 @@ if($link_active_flag > 0){
             if($paflag == "" || $paflag == NULL || $paflag == 0){ $paflag = 0; }
             if($autflag == "" || $autflag == NULL || $autflag == 0){ $autflag = 0; }
 
+               $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Chick Purchase' AND `field_function` = 'Hide Chick Purchase' AND `flag` = '1'";
+                $query = mysqli_query($conn,$sql); $dchkpur = mysqli_num_rows($query); $chick_code = ""; $ckfltr = "";
+                if($dchkpur > 0){
+                    $sql = "SELECT * FROM `item_details` WHERE `active` = '1' AND `description` like '%chicks%'  ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+                    while($row = mysqli_fetch_assoc($query)){ $chk_code[$row['code']] = $row['code']; }
+                    $chick_code = implode("','",$chk_code);
+                    $ckfltr = " AND `code` NOT IN ('$chick_code')";
+                 }
+
             $fsdate = $cid."-fdate"; $tsdate = $cid."-tdate"; $tsicats = $cid."-icats"; $tslocs = $cid."-locs";
             if(isset($_POST['submit']) == true){
                 $fdate = date("Y-m-d",strtotime($_POST['fdate']));
@@ -173,7 +184,8 @@ if($link_active_flag > 0){
             $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
             
-            $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `id` DESC";
+
+            $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0'".$ckfltr." ORDER BY `id` DESC";
             $query = mysqli_query($conn,$sql); $item_code = $item_name = $item_category = array();
             while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_category[$row['code']] = $row['category']; }
             

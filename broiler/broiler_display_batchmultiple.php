@@ -4,9 +4,10 @@ include "newConfig.php";
 $user_name = $_SESSION['users']; $user_code = $_SESSION['userid']; $cid = $_GET['ccid'];
 $href = explode("/", $_SERVER['REQUEST_URI']); $url = $href[1];
 if($cid != ""){ $_SESSION['batchmultiple'] = $cid; } else{ $cid = $_SESSION['batchmultiple']; }
+
 $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC";
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
-if($link_active_flag > 0){
+if($link_active_flag > 0){    
     while($row = mysqli_fetch_assoc($query)){ $cname = $row['name']; }
     $sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$user_code' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
     $dlink = $alink = $elink = $rlink = $plink = $ulink = $flink = array(); $sector_access = $cgroup_access = $user_type = "";
@@ -34,6 +35,11 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition sidebar-mini">
         <?php
         if($acount == 1){
+            /*Check for Column Availability*/
+            $sql='SHOW COLUMNS FROM `broiler_batch`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+            while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+            if(in_array("clot_no", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `broiler_batch` ADD `clot_no` VARCHAR(300) NULL DEFAULT NULL COMMENT 'Chick received lot no' AFTER `book_num`"; mysqli_query($conn,$sql); }
+        
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
@@ -54,9 +60,19 @@ if($link_active_flag > 0){
             if(!empty($pnt_acc[$gp_id."P"])){ $print_flag = 1; $print_link = $gp_link[$gp_id."P"]; } else { $print_link = ""; $print_flag = 0; }
             if(!empty($upd_acc[$gp_id."U"])){ $update_flag = 1; $update_link = $gp_link[$gp_id."U"]; } else { $update_link = ""; $update_flag = 0; }
             
-            $sql = "SELECT * FROM `location_branch` ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $c = 0;
+            /*Check User access Locations*/
+            $sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'"; $query = mysqli_query($conn,$sql);
+            while($row = mysqli_fetch_assoc($query)){ $branch_access_code = $row['branch_code']; $line_access_code = $row['line_code']; $farm_access_code = $row['farm_code']; $sector_access_code = $row['loc_access']; }
+            if($branch_access_code == "all"){ $branch_access_filter1 = ""; } else{ $branch_access_list = implode("','", explode(",",$branch_access_code)); $branch_access_filter1 = " AND `code` IN ('$branch_access_list')"; $branch_access_filter2 = " AND `branch_code` IN ('$branch_access_list')"; }
+            if($line_access_code == "all"){ $line_access_filter1 = ""; } else{ $line_access_list = implode("','", explode(",",$line_access_code)); $line_access_filter1 = " AND `code` IN ('$line_access_list')"; $line_access_filter2 = " AND `line_code` IN ('$line_access_list')"; }
+            if($farm_access_code == "all"){ $farm_access_filter1 = ""; } else{ $farm_access_list = implode("','", explode(",",$farm_access_code)); $farm_access_filter1 = " AND `code` IN ('$farm_access_list')"; }
+
+            $sql = "SELECT * FROM `location_branch` WHERE `active` = '1' AND `dflag` = '0' ".$branch_access_filter1." ORDER BY `description` ASC";
+            //$sql = "SELECT * FROM `location_branch` ORDER BY `description` ASC"; 
+            $query = mysqli_query($conn,$sql); $c = 0;
             while($row = mysqli_fetch_assoc($query)){ $branch_code[$row['code']] = $row['code']; $branch_name[$row['code']] = $row['description']; $c++; if($c == 1){ $branches = $row['code']; } }
-            
+            $branch_list = implode("','",$branch_code); 
+
             if(isset($_POST['submit']) == true){
                 $branches = $_POST['branches'];
             }
@@ -121,12 +137,13 @@ if($link_active_flag > 0){
 										<th>Farm Description</th>
 										<th>Book Number</th>
 										<th>Batch Code</th>
+                                        <th>Lot No</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                        if($branches == "all"){ $branch_filter = ""; } else{ $branch_filter = " AND `branch_code` = '$branches'"; }
+                                        if($branches == "all"){ $branch_filter = "AND `branch_code` IN ('$branch_list')"; } else{ $branch_filter = " AND `branch_code` = '$branches'"; }
                                         $farm_code = array();
                                         $sql = "SELECT * FROM `broiler_farm` WHERE `dflag` = '0'".$branch_filter." ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql);
                                         while($row = mysqli_fetch_assoc($query)){
@@ -153,6 +170,7 @@ if($link_active_flag > 0){
                                         <td><?php echo $farm_name[$row['farm_code']]; ?></td>
 										<td><?php echo $row['book_num']; ?></td>
 										<td><?php echo $row['description']; ?></td>
+                                        <td><?php echo $row['clot_no']; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){

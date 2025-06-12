@@ -29,6 +29,10 @@ if($access_error_flag == 0){
     $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `active` = '1' ORDER BY `name` ASC";
     $query = mysqli_query($conn,$sql); $cus_code = $cus_name = array();
     while($row = mysqli_fetch_assoc($query)){ $cus_code[$row['code']] = $row['code']; $cus_name[$row['code']] = $row['name']; }
+
+    //check and fetch date range
+    global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    include "poulsoft_fetch_daterange_master.php";
     
 ?>
     <html>
@@ -57,14 +61,14 @@ if($access_error_flag == 0){
                                         <th>Weight<b style="color:red;">&nbsp;*</b></th>
                                         <th>Price<b style="color:red;">&nbsp;*</b></th>
                                         <th>Amount</th>
-                                        <th>Warehouse<b style="color:red;">&nbsp;*</b></th>
+                                        <th>Warehouse<b style="color:red;"></b></th>
                                         <th>Remarks</th>
                                         <th style="width:70px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="row_body">
                                     <tr style="margin:5px 0px 5px 0px;">
-                                        <td><input type="text" name="date[]" id="date[0]" class="form-control sale_datepickers" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" readonly /></td>
+                                        <td><input type="text" name="date[]" id="date[0]" class="form-control range_picker" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" readonly /></td>
                                         <td><select name="vcode[]" id="vcode[0]" class="form-control select2" style="width:350px;"><option value="select">-select-</option><?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $cus_name[$scode]; ?></option><?php } ?></select></td>
                                         <td><select name="itemcode[]" id="itemcode[0]" class="form-control select2" style="width:180px;" onchange="update_row_fields();"><option value="select">select</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>
                                         <?php
@@ -101,6 +105,8 @@ if($access_error_flag == 0){
                 </form>
             </div>
             <script>
+                //Date Range selection
+                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 function return_back(){
                     window.location.href = "chicken_display_item_return1.php";
                 }
@@ -183,7 +189,7 @@ if($access_error_flag == 0){
                     var birds_flag = '<?php echo $birds_flag; ?>';
 
                     html += '<tr id="row_no['+d+']">';
-                    html += '<td><input type="text" name="date[]" id="date['+d+']" class="form-control sale_datepickers" value="'+date+'" style="width:100px;" readonly /></td>';
+                    html += '<td><input type="text" name="date[]" id="date['+d+']" class="form-control range_picker" value="'+date+'" style="width:100px;" readonly /></td>';
                     html += '<td><select name="vcode[]" id="vcode['+d+']" class="form-control select2" style="width:350px;"><option value="select">-select-</option><?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $cus_name[$scode]; ?></option><?php } ?></select></td>';
                     html += '<td><select name="itemcode[]" id="itemcode['+d+']" class="form-control select2" style="width:180px;" onchange="update_row_fields();"><option value="select">select</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>';
                     if(parseInt(jals_flag) == 1){ html += '<td><input type="text" name="jals[]" id="jals['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_count(this.id);calculate_total_amt();" /></td>'; }
@@ -202,9 +208,10 @@ if($access_error_flag == 0){
                     //document.getElementById("date["+d+"]").focus();
                     $('#itemcode\\[' + d + '\\]').select2(); document.getElementById('itemcode['+d+']').value = picode; $('#itemcode\\[' + d + '\\]').select2();
 
-                    var rng_mdate = '<?php echo $rng_mdate; ?>';
-                    var today = '<?php echo $today; ?>';
-                    $('.sale_datepickers').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true,minDate: rng_mdate,maxDate: today,autoclose: true });
+                    // var rng_mdate = '<?php echo $rng_mdate; ?>';
+                    // var today = '<?php echo $today; ?>';
+                    // $('.sale_datepickers').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true,minDate: rng_mdate,maxDate: today,autoclose: true });
+                    $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
 
                     update_row_fields();
                 }
@@ -257,6 +264,10 @@ if($access_error_flag == 0){
 		    <script src="chick_validate_basicfields.js"></script>
             <?php include "header_foot1.php"; ?>
 		    <script src="handle_ebtn_as_tbtn.js"></script>
+              <script>
+                //Date Range selection
+                $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+            </script>
         </body>
     </html>
 <?php

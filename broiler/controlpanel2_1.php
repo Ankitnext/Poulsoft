@@ -12,7 +12,7 @@ if($line_access_code == "all"){ $line_access_filter1 = ""; } else{ $line_access_
 if($farm_access_code == "all"){ $farm_access_filter1 = ""; } else{ $farm_access_list = implode("','", explode(",",$farm_access_code)); $farm_access_filter1 = " AND `code` IN ('$farm_access_list')"; }
 
 $chick_placement_details = $feed_stock_details = $opening_bird_details = $mortality_bird_details = $lifting_bird_details = $yesterday_lifting_bird_details = $closing_bird_details = $total_mortality_bird_details = 
-$agewise_available_birds = $agewise_abirds_details = $bird_bal_details = $feed_bal_details = $branch_wise_weekly_mort_details = $branch_wise_total_mort_details = $branch_wise_cur_mort_details = 0;
+$agewise_available_birds = $agewise_abirds_details = $bird_bal_details = $week_wise_mort_details = $feed_bal_details = $branch_wise_weekly_mort_details = $branch_wise_weekly_mortper_details = $branch_wise_total_mort_details = $branch_wise_single_date_mort_details = $branch_wise_cur_mort_details = 0;
 $sql1 = "SELECT * FROM `master_dashboard_links` WHERE `field_name` LIKE 'Broiler' AND `user_code` = '$user_code' ORDER BY `sort_order` ASC";
 $query1 = mysqli_query($conn,$sql1); $dcount1 = mysqli_num_rows($query1); $dboard_flag = 0;
 if($dcount1 > 0){
@@ -23,6 +23,7 @@ if($dcount1 > 0){
         if($row1['panel_name'] == "Opening Birds-List"){ $opening_bird_details = $row1['active']; }
         if($row1['panel_name'] == "Mortality Birds-Doughnut"){ $mortality_bird_details = $row1['active']; }
         if($row1['panel_name'] == "Lifting Birds-Bar Chart"){ $lifting_bird_details = $row1['active']; }
+        if($row1['panel_name'] == "Lifting Birds-Bar Chart-2"){ $lifting_bird_details2 = $row1['active']; }
         if($row1['panel_name'] == "Previous Day Lifting Birds-Bar Chart"){ $yesterday_lifting_bird_details = $row1['active']; }
         if($row1['panel_name'] == "Closing Birds-List"){ $closing_bird_details = $row1['active']; }
         if($row1['panel_name'] == "Total Mortality Per-List"){ $total_mortality_bird_details = $row1['active']; }
@@ -34,7 +35,9 @@ if($dcount1 > 0){
         if($row1['panel_name'] == "Live Farms-List"){ $live_farm_details = $row1['active']; }
         if($row1['panel_name'] == "Week Wise Mortality-List"){ $week_wise_mort_details = $row1['active']; }
         if($row1['panel_name'] == "Branch Wise Weekly Mortality-List"){ $branch_wise_weekly_mort_details = $row1['active']; }
+        if($row1['panel_name'] == "Branch Wise Weekly Mortality Per-List"){ $branch_wise_weekly_mortper_details = $row1['active']; }
         if($row1['panel_name'] == "Branch Wise Total Mortality Percentage-List"){ $branch_wise_total_mort_details = $row1['active']; }
+        if($row1['panel_name'] == "Branch Wise Single Date Mortality Percentage-List"){ $branch_wise_single_date_mort_details = $row1['active']; }
         if($row1['panel_name'] == "Branch Wise Current Mortality Percentage-List"){ $branch_wise_cur_mort_details = $row1['active']; }
         if($row1['panel_name'] == "Cash/Bank Balance"){ $cash_or_bank_balance_details = $row1['active']; }
         if($row1['panel_name'] == "Date wise Sale Details"){ $date_wise_sale_details = $row1['active']; }
@@ -86,7 +89,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
     while($row = mysqli_fetch_assoc($query)){ $region_code[$row['code']] = $row['code']; $region_name[$row['code']] = $row['description']; }
 
     $branch_code = $branch_name = $branch_region = array();
-    $sql = "SELECT * FROM `location_branch` WHERE `code` IN ('$closed_branch_list_filter') ".$branch_access_filter1." AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+    $sql = "SELECT * FROM `location_branch` WHERE `code` IN ('$closed_branch_list_filter') ".$branch_access_filter1." AND `dflag` = '0' AND `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
     while($row = mysqli_fetch_assoc($query)){ $branch_code[$row['code']] = $row['code']; $branch_name[$row['code']] = $row['description']; $branch_region[$row['code']] = $row['region_code']; }
     
     $line_code = $line_name = $line_branch = array();
@@ -181,7 +184,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
     while($row = mysqli_fetch_assoc($query)){
         $icode = $row['icode'];
         if(!empty($birds_alist[$icode]) && $birds_alist[$icode] == $icode){
-            if(strtotime($row['date']) < strtotime($fdate)){
+            if(strtotime($row['date']) <= strtotime($fdate)){
                 $opur_cbirds[$row['farm_batch']] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
             }
             else{
@@ -206,7 +209,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
     while($row = mysqli_fetch_assoc($query)){
         $icode = $row['code'];
         if(!empty($birds_alist[$icode]) && $birds_alist[$icode] == $icode){
-            if(strtotime($row['date']) < strtotime($fdate)){
+            if(strtotime($row['date']) <= strtotime($fdate)){
                 $otrin_cbirds[$row['to_batch']] += (float)$row['quantity'];
             }
             else{
@@ -259,7 +262,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
     $query = mysqli_query($conn,$sql); $live_farms = mysqli_num_rows($query);
     
     $sql = "SELECT * FROM `broiler_sales` WHERE `date` <= '$tdate' AND `icode` IN ('$item_list') AND `farm_batch` IN ('$batch_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `farm_batch` ASC";
-    $query = mysqli_query($conn,$sql); $osale_cbirds = $osale_cweight = $bsale_cbirds = $bsale_cweight = $stk_out_fqty = array();
+    $query = mysqli_query($conn,$sql); $osale_cbirds = $osale_cweight = $bsale_cbirds = $bsale_cweight = $stk_out_fqty = $bsale_camt = array();
     while($row = mysqli_fetch_assoc($query)){
         $icode = $row['icode'];
         if(!empty($birds_alist[$icode]) && $birds_alist[$icode] == $icode){
@@ -270,6 +273,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
             else{
                 $bsale_cbirds[$row['farm_batch']] += (float)$row['birds'];
                 $bsale_cweight[$row['farm_batch']] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
+                $bsale_camt[$row['farm_batch']] += (float)$row['item_tamt'];
             }
         }
         else if(!empty($feed_alist[$icode]) && $feed_alist[$icode] == $icode){
@@ -288,6 +292,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                 $obout_cweight[$row['from_batch']] += (float)$row['weight'];
             }
             else{
+                $bsale_cbirds[$row['farm_batch']] += (float)$row['birds'];
                 $bbout_cbirds[$row['from_batch']] += (float)$row['birds'];
                 $bbout_cweight[$row['from_batch']] += (float)$row['weight'];
             }
@@ -354,7 +359,8 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
     
     $fetch_type = "branch_wise";
     $branch_mort_birds = $branch_cull_birds = $bwopn_fqty = $bwpur_fqty = $bwtrin_fqty = $bwcon_fqty = $bwtout_fqty = $baw_abds_7 = $baw_abds_14 = $baw_abds_21 = $baw_abds_28 = $baw_abds_35 = $baw_abds_42 = $baw_abds_49 = array();
-    $bwmort_w1 = $bwmort_w2 = $bwmort_w3 = $bwmort_w4 = $bwmort_w5 = $bwmort_w6 = $bwmort_w7 = $bwmort_w8 = array();
+    $bwmort_w1 = $bwmort_w2 = $bwmort_w3 = $bwmort_w4 = $bwmort_w5 = $bwmort_w6 = $bwmort_w7 = $bwmort_w8 = $chkpcd_bdate = $bwtc_oqty = array();
+    $cmort_qty = 0;
     foreach($batch_alist as $bcode){
         $fcode = $batch_farm[$bcode]; $bhcode = $farm_branch[$fcode]; $lcode = $farm_line[$fcode]; $scode = $farm_supervisor[$fcode];
         $branch_list[$bhcode] = $bhcode;
@@ -403,11 +409,13 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
 
         /*Placed Chicks*/
         $chick_placement[$key1] += ((float)$opur_cbirds[$bcode] + (float)$otrin_cbirds[$bcode]);
+        /*B/w Placed Chicks*/
+        $chkpcd_bdate[$key1] += ((float)$bpur_cbirds[$bcode] + (float)$btrin_cbirds[$bcode]);
 
         /*Opening Birds Calculations*/
         $opening_birds = 0; $opening_birds = (($opur_cbirds[$bcode] + $otrin_cbirds[$bcode]) - ($omort_cbirds[$bcode] + $osale_cbirds[$bcode] + $otout_cbirds[$bcode] + $obout_cbirds[$bcode]));
-        $branch_opening_birds[$key1] += (float)$opening_birds;
-        $total_opn_birds += (float)$opening_birds;
+        $branch_opening_birds[$key1] += (int)$opening_birds;
+        $total_opn_birds += (int)$opening_birds;
 
         /*Total Placement Farms*/
         $total_in_chicks = 0; $total_in_chicks = ((float)$opur_cbirds[$bcode] + (float)$otrin_cbirds[$bcode]);
@@ -419,6 +427,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
         $branch_mort_birds[$key1] += (float)$bchk_mqty[$bcode];
         $branch_cull_birds[$key1] += (float)$bchk_cqty[$bcode];
         $total_cur_mort += (float)$cur_mortality;
+        $cmort_qty += (float)$bchk_mqty[$bcode];
 
         /*Live Farm Counts*/
         /*Current Lifting Details*/
@@ -427,7 +436,9 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
         $total_cur_birdno += (float)$cur_sale_birdno;
 
         $cur_sale_birdwt = 0; $cur_sale_birdwt = $bsale_cweight[$bcode];
+        $cur_sale_amt = 0; $cur_sale_amt = (float)$bsale_camt[$bcode];
         $branch_cur_birdwt[$key1] += (float)$cur_sale_birdwt;
+        $branch_cur_saleamt[$key1] += (float)$cur_sale_amt;
         $total_cur_birdwt += (float)$cur_sale_birdwt;
 
         /*Day -1 Lifting Details*/
@@ -441,8 +452,8 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
 
         /*Closing Birds Calculations*/
         $closing_birds = 0; $closing_birds = ($opening_birds - ($cur_mortality + $cur_sale_birdno));
-        $branch_closing_birds[$key1] += (float)$closing_birds;
-        $total_cls_birds += (float)$closing_birds;
+        $branch_closing_birds[$key1] += (int)$closing_birds;
+        $total_cls_birds += (int)$closing_birds;
 
         /*Current Total Avg Mortality*/
        if(empty($dentry_batches[$bcode])){ }
@@ -533,6 +544,10 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
         $bwmort_w7[$key1] += (float)$mort_w7[$bcode];
         $bwmort_w8[$key1] += (float)$mort_w8[$bcode];
         $bwtmort_qty[$key1] += ((float)$mort_w1[$bcode] + (float)$mort_w2[$bcode] + (float)$mort_w3[$bcode] + (float)$mort_w4[$bcode] + (float)$mort_w5[$bcode] + (float)$mort_w6[$bcode] + (float)$mort_w7[$bcode] + (float)$mort_w8[$bcode]);
+        /*Branch Wise Single Date Mortality*/
+        if((float)$bchk_mqty[$bcode] != 0){ $bwtc_oqty[$key1] += (float)$opening_birds; }
+        $bwsd_tmc_qty[$key1] += (float)$bchk_mqty[$bcode];
+
         /*Week Wise Mortality Details*/
         if($brood_curage[$bcode] >= 1 &&  $brood_curage[$bcode] <= 7){ $farm1_mort++; $week1_mort += (float)$cur_mortality; $week1_opnb += (float)$opening_birds; }
         else if($brood_curage[$bcode] >= 8 &&  $brood_curage[$bcode] <= 14){ $farm2_mort++; $week2_mort += (float)$cur_mortality; $week2_opnb += (float)$opening_birds; }
@@ -656,7 +671,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                         </div>-->
                                         <div class="form-group" style="width:220px;">
                                             <label for="regions" class="font-weight-bold">Region</label>
-                                            <select name="regions[]" id="regions" class="form-control select2" style="width:210px;" multiple onchange="fetch_farms_details(this.id)">
+                                            <select name="regions[]" id="regions" class="form-control select2" style="width:210px;" multiple onchange="check_options(this.id);fetch_farms_details(this.id)">
                                                 <option value="all" <?php foreach($regions as $rlist){ if($rlist == "all"){ echo "selected"; } } ?>>-All-</option>
                                                 <?php foreach($region_code as $bcode){ if($region_name[$bcode] != ""){ ?>
                                                 <option value="<?php echo $bcode; ?>" <?php foreach($regions as $rlist){ if($rlist == $bcode){ echo "selected"; } } ?>><?php echo $region_name[$bcode]; ?></option>
@@ -665,7 +680,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                         </div>
                                         <div class="form-group" style="width:220px;">
                                             <label for="branches" class="font-weight-bold">Branch</label>
-                                            <select name="branches[]" id="branches" class="form-control select2" style="width:210px;" multiple onchange="fetch_farms_details(this.id)">
+                                            <select name="branches[]" id="branches" class="form-control select2" style="width:210px;" multiple onchange="check_options(this.id);fetch_farms_details(this.id)">
                                                 <option value="all" <?php foreach($branches as $blist){ if($blist == "all"){ echo "selected"; } } ?>>-All-</option>
                                                 <?php foreach($branch_code as $bcode){ if($branch_name[$bcode] != ""){ ?>
                                                 <option value="<?php echo $bcode; ?>" <?php foreach($branches as $blist){ if($blist == $bcode){ echo "selected"; } } ?>><?php echo $branch_name[$bcode]; ?></option>
@@ -674,7 +689,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                         </div>
                                         <div class="form-group" style="width:220px;">
                                             <label for="lines" class="font-weight-bold">Line</label>
-                                            <select name="lines[]" id="lines" class="form-control select2" style="width:210px;" multiple onchange="fetch_farms_details(this.id)">
+                                            <select name="lines[]" id="lines" class="form-control select2" style="width:210px;" multiple onchange="check_options(this.id);fetch_farms_details(this.id)">
                                                 <option value="all" <?php foreach($lines as $blist){ if($blist == "all"){ echo "selected"; } } ?>>-All-</option>
                                                 <?php foreach($line_code as $lcode){ if($line_name[$lcode] != ""){ ?>
                                                 <option value="<?php echo $lcode; ?>" <?php foreach($lines as $blist){ if($blist == $lcode){ echo "selected"; } } ?>><?php echo $line_name[$lcode]; ?></option>
@@ -844,7 +859,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                             <th style="text-align:left;"><h6>:</th>
                                                             <td style="text-align:center;">
                                                                 <h6>
-                                                                    <a href="javascript:void(0)" id="/records/broiler_liveflocksummary_masterreport.php?submit_report=true&branches=<?php echo $bch_code; ?>&lines=all&supervisors=all&farms=all&manual_nxtfeed=3&export=display" onclick="broiler_openurl(this.id);">
+                                                                    <a href="javascript:void(0)" id="/records/broiler_liveflocksummary_masterreport.php?submit_report=true&branches=<?php echo $bch_code; ?>&regions=all&lines=all&supervisors=all&farms=all&manual_nxtfeed=3&export=display" onclick="broiler_openurl(this.id);">
                                                                        <?php echo str_replace(".00","",number_format_ind($branch_opening_birds[$bch_code])); ?>
                                                                     </a>
                                                                 </h6>
@@ -897,19 +912,19 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                         $i = $pcd_bno = $opn_bno = $mort_bno = $cull_bno = $sale_bno = $clsd_bno = 0;
                                                         foreach($branch_code as $bch_code){
                                                             if(!empty($branch_list[$bch_code])){
-                                                                $pcd_bno += (float)$chick_placement[$bch_code];
+                                                                $pcd_bno += (float)$chkpcd_bdate[$bch_code];
                                                                 $opn_bno += (float)$branch_opening_birds[$bch_code];
                                                                 $mort_bno += (float)$branch_mort_birds[$bch_code];
                                                                 $cull_bno += (float)$branch_cull_birds[$bch_code];
                                                                 $sale_bno += (float)$branch_cur_birdno[$bch_code];
-                                                                $bcls_birds = 0; $bcls_birds = (float)$branch_opening_birds[$bch_code] - (float)$branch_mort_birds[$bch_code] - (float)$branch_cull_birds[$bch_code] - (float)$branch_cur_birdno[$bch_code];
+                                                                $bcls_birds = 0; $bcls_birds = ((float)$branch_opening_birds[$bch_code] + (float)$chkpcd_bdate[$bch_code]) - ((float)$branch_mort_birds[$bch_code] + (float)$branch_cull_birds[$bch_code] + (float)$branch_cur_birdno[$bch_code]);
                                                                 $clsd_bno += (float)$bcls_birds;
                                                         ?>
                                                         <tr style="width:100%;border-bottom:none;">
                                                             <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[$i].";'></button> ".$branch_name[$bch_code]; ?></h6></th>
                                                             <th style="text-align:left;"><h6>:</th>
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($branch_opening_birds[$bch_code])); ?></h6></td>
-                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($chick_placement[$bch_code])); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($chkpcd_bdate[$bch_code])); ?></h6></td>
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($branch_mort_birds[$bch_code])); ?></h6></td>
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($branch_cull_birds[$bch_code])); ?></h6></td>
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($branch_cur_birdno[$bch_code])); ?></h6></td>
@@ -974,6 +989,8 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                                 $u_fqty += (float)$bwtout_fqty[$bch_code];
                                                                 $a_fqty = 0; $a_fqty = (((float)$bwopn_fqty[$bch_code] + (float)$bwpur_fqty[$bch_code] + (float)$bwtrin_fqty[$bch_code]) - ((float)$bwcon_fqty[$bch_code] + (float)$bwtout_fqty[$bch_code]));
                                                                 $b_fqty += (float)$a_fqty;
+
+                                                                $i_url = ''; $i_url = '/records/broiler_batchwise_stocktransfer1.php?submit_report=true&fdate='.$fdate.'&tdate='.$fdate;
                                                         ?>
                                                         <tr style="width:100%;border-bottom:none;">
                                                             <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[$i].";'></button> ".$branch_name[$bch_code]; ?></h6></th>
@@ -981,8 +998,8 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($bwopn_fqty[$bch_code])); ?></h6></td>
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($bwpur_fqty[$bch_code])); ?></h6></td>
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($bwtrin_fqty[$bch_code])); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><a href="javascript:void(0)" id="<?php echo $i_url; ?>" onclick="broiler_openurl(this.id);"><?php echo str_replace(".00","",number_format_ind($bwtout_fqty[$bch_code])); ?></a></h6></td>
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($bwcon_fqty[$bch_code])); ?></h6></td>
-                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($bwtout_fqty[$bch_code])); ?></h6></td>
                                                             <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind($a_fqty)); ?></h6></td>
                                                         </tr>
                                                         <?php
@@ -995,8 +1012,8 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                             <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($o_fqty)); ?></b></h6></th>
                                                             <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($p_fqty)); ?></b></h6></th>
                                                             <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($i_fqty)); ?></b></h6></th>
-                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($c_fqty)); ?></b></h6></th>
                                                             <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($u_fqty)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($c_fqty)); ?></b></h6></th>
                                                             <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($b_fqty)); ?></b></h6></th>
                                                         </tr>
                                                         </table>
@@ -1169,6 +1186,112 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                             </div>
                             <?php
                             }
+                            if($sorting == "Branch Wise Weekly Mortality Per-List" && (int)$branch_wise_weekly_mortper_details == 1){
+                            ?>
+                            <div class="m-0 p-0 col-lg-12 col-6">
+                                <section class="m-0 p-0 content">
+                                    <div class="m-0 p-0 container-fluid">
+                                        <div class="m-0 p-0 row">
+                                            <div class="col-md-12">
+                                                <div class="m-0 p-0 card card-danger">
+                                                    <div class="card-body bg-light" id="openings1">
+                                                        <table class="w-100 tbl-list">
+                                                            <tr style="text-align:center;">
+                                                                <th colspan="10" style="text-align:center; color:red;"><label for="">Week Wise Mortality %</label></th>
+                                                            </tr>
+                                                            <tr style="text-align:center;">
+                                                                <th style="text-align:center;color:brown;"><label for="">Branch</label></th>
+                                                                <th style="text-align:center;"></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">1st Wk</label></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">2nd Wk</label></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">3rd Wk</label></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">4th Wk</label></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">5th Wk</label></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">6th Wk</label></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">7th Wk</label></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">>7th Wk</label></th>
+                                                                <th style="text-align:center;color:brown;"><label for="">Total</label></th>
+                                                            </tr>
+                                                        
+                                                        <?php
+                                                        $i = $mwk_1 = $mwk_2 = $mwk_3 = $mwk_4 = $mwk_5 = $mwk_6 = $mwk_7 = $mwk_8 = $b_fqty = $pcd_cqty = $ipc_qty = 0;
+                                                        foreach($branch_code as $bch_code){
+                                                            if(!empty($branch_list[$bch_code])){
+                                                                $mwk_1 += (float)$bwmort_w1[$bch_code];
+                                                                $mwk_2 += (float)$bwmort_w2[$bch_code];
+                                                                $mwk_3 += (float)$bwmort_w3[$bch_code];
+                                                                $mwk_4 += (float)$bwmort_w4[$bch_code];
+                                                                $mwk_5 += (float)$bwmort_w5[$bch_code];
+                                                                $mwk_6 += (float)$bwmort_w6[$bch_code];
+                                                                $mwk_7 += (float)$bwmort_w7[$bch_code];
+                                                                $mwk_8 += (float)$bwmort_w8[$bch_code];
+                                                                $a_fqty = 0; $a_fqty = ((float)$bwmort_w1[$bch_code] + (float)$bwmort_w2[$bch_code] + (float)$bwmort_w3[$bch_code] + (float)$bwmort_w4[$bch_code] + (float)$bwmort_w5[$bch_code] + (float)$bwmort_w6[$bch_code] + (float)$bwmort_w7[$bch_code] + (float)$bwmort_w8[$bch_code]);
+                                                                $b_fqty += (float)$a_fqty;
+                                                                $pcd_cqty = $chick_placement[$bch_code];
+                                                                if((float)$pcd_cqty != 0){
+                                                                    $ipc_qty += (float)$chick_placement[$bch_code];
+                                                        ?>
+                                                        <tr style="width:100%;border-bottom:none;">
+                                                            <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[$i].";'></button> ".$branch_name[$bch_code]; ?></h6></th>
+                                                            <th style="text-align:left;"><h6>:</th>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$bwmort_w1[$bch_code] / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$bwmort_w2[$bch_code] / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$bwmort_w3[$bch_code] / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$bwmort_w4[$bch_code] / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$bwmort_w5[$bch_code] / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$bwmort_w6[$bch_code] / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$bwmort_w7[$bch_code] / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$bwmort_w8[$bch_code] / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                            <td style="text-align:center;"><h6><?php echo str_replace(".00","",number_format_ind(round((((float)$a_fqty / (float)$pcd_cqty) * 100),2))); ?></h6></td>
+                                                        </tr>
+                                                        <?php
+                                                                $i++;
+                                                                }
+                                                            }
+                                                        }
+                                                        if((float)$ipc_qty != 0){
+                                                        ?>
+                                                        <tr style="width:100%;border-top: 0.1vh dashed black;">
+                                                            <th colspan="2" style="text-align:left;color:brown;"><h6><b>Total:</b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$mwk_1 / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$mwk_2 / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$mwk_3 / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$mwk_4 / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$mwk_5 / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$mwk_6 / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$mwk_7 / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$mwk_8 / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(round((((float)$b_fqty / (float)$ipc_qty) * 100),2))); ?></b></h6></th>
+                                                        </tr>
+                                                        <?php
+                                                        }
+                                                        else{
+                                                        ?>
+                                                        <tr style="width:100%;border-top: 0.1vh dashed black;">
+                                                            <th colspan="2" style="text-align:left;color:brown;"><h6><b>Total:</b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                            <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind(0)); ?></b></h6></th>
+                                                        </tr>
+                                                        <?php
+                                                        }
+                                                        ?>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                            <?php
+                            }
                             if($sorting == "Branch Wise Total Mortality Percentage-List" && (int)$branch_wise_total_mort_details == 1){
                             ?>
                             <div class="m-0 p-0 col-lg-6 col-6">
@@ -1182,8 +1305,49 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                             <div class="chart-header">MORTALITY & CULLS</div>
 
                                                             <canvas id="barChart1"></canvas>
+                                                            <?php
+                                                            $tcp_cnt = $tmc_cnt = $amc_per = 0;
+                                                            foreach($branch_code as $bcode){
+                                                                if(!empty($branch_list[$bcode])){
+                                                                    $tcp_cnt += ((float)$chick_placement[$bcode] + (float)$chkpcd_bdate[$bcode]);
+                                                                    $tmc_cnt += (float)$bwtmort_qty[$bcode];
+                                                                }
+                                                            }
+                                                            if((float)$tcp_cnt != 0 && (float)$tmc_cnt != 0){
+                                                                $amc_per = (((float)$tmc_cnt / (float)$tcp_cnt) * 100);
+                                                            }
+                                                            ?>
+                                                            <div class="chart-average">AVERAGE : <strong><?php echo number_format_ind(round($amc_per,2)); ?> %</strong></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                            <?php
+                            }
+                            if($sorting == "Branch Wise Single Date Mortality Percentage-List" && (int)$branch_wise_single_date_mort_details == 1){
+                            ?>
+                            <div class="m-0 p-0 col-lg-6 col-6">
+                                <section class="m-0 p-0 content">
+                                    <div class="container-fluid">
+                                        <div class="card card-danger">
+                                             <div class="p-0 card-body bg-light" id="openings1">
+                                                <div class="card card-success">
+                                                    <div class="card-body">
+                                                        <div class="chart-container">
+                                                            <div class="chart-header">MORTALITY & CULLS</div>
 
-                                                            <div class="chart-average">AVERAGE : <strong>0.70 %</strong></div>
+                                                            <canvas id="barChart5"></canvas>
+                                                            <?php
+                                                                $mac_cnt = 0;
+                                                                if($cmort_qty > 0 && $total_popn_birds > 0){
+                                                                    $mac_cnt = (($cmort_qty / $total_popn_birds) * 100);
+                                                                }
+                                                            ?>
+                                                            <div class="chart-average">AVERAGE : <strong><?php echo number_format_ind(round($mac_cnt,2)); ?> %</strong></div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1298,6 +1462,38 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                             </div>
                             <?php
                             }
+                            if($sorting == "Lifting Birds-Bar Chart-2" && (int)$lifting_bird_details2 == 1){
+                            ?>
+                            <div class="m-0 p-0 col-lg-6 col-6">
+                                <!-- Main content -->
+                                <section class="m-0 p-0 content">
+                                    <div class="container-fluid">
+                                    <div class="card card-danger">
+                                                <div class="p-0 card-body bg-light" id="openings1">
+                                                    <div class="card card-success">
+                                                        <div class="card-body">
+                                                            <h6><b>Lifting Details</b></h6>
+                                                            <?php
+                                                                if($total_cur_birdwt > 0 && $total_cur_birdno > 0){
+                                                                    $ft_ldcount = $total_cur_birdwt / $total_cur_birdno;
+                                                                }
+                                                                else{
+                                                                    $ft_ldcount = 0;
+                                                                }
+                                                            ?>
+                                                            <h6 style='color:green;'><?php echo "Total: Birds: <b>".str_replace(".00","",number_format_ind($total_cur_birdno))."</b> Weight: <b>".number_format_ind($total_cur_birdwt)."</b> Avg Wt: <b>".number_format_ind(round(($ft_ldcount),2))."</b>"; ?></h6>
+                                                            <div class="chart">
+                                                            <canvas id="barChart6" style="min-height: 360px; height: 360px; max-height: 360px; max-width: 100%;"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    </div>
+                                </section>
+                            </div>
+                            <?php
+                            }
                             if($sorting == "Previous Day Lifting Birds-Bar Chart" && (int)$yesterday_lifting_bird_details == 1){
                             ?>
                             <div class="col-lg-5 col-6">
@@ -1358,7 +1554,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                     <th style="text-align:left;"><h6>:</th>
                                                     <td style="text-align:center;">
                                                         <h6>
-                                                            <a href="javascript:void(0)" id="/records/broiler_liveflocksummary_masterreport.php?submit_report=true&branches=<?php echo $bch_code; ?>&lines=all&supervisors=all&farms=all&manual_nxtfeed=3&export=display" onclick="broiler_openurl(this.id);">
+                                                            <a href="javascript:void(0)" id="/records/broiler_liveflocksummary_masterreport.php?submit_report=true&branches=<?php echo $bch_code; ?>&regions=all&lines=all&supervisors=all&farms=all&manual_nxtfeed=3&export=display" onclick="broiler_openurl(this.id);">
                                                                 <?php echo str_replace(".00","",number_format_ind($branch_closing_birds[$bch_code])); ?>
                                                             </a>                                                       
                                                         </h6>
@@ -1869,7 +2065,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
         <script>
             var name1 = name2 = name3 = name4 = label_names = ""; var opn_value = names = names2 = value = []; var i = 0;
             <?php
-            $key_names = $key_val = $opn_names = $opnings = "";
+            $key_names = $key_names2 = $key_val = $opn_names = $opnings = "";
             foreach($branch_code as $bch_code){
                 if(!empty($branch_list[$bch_code])){
                     $opnings = str_replace(".00","",number_format_ind($branch_opening_birds[$bch_code]));
@@ -1890,7 +2086,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
             }
             ?>
             <?php
-            $key_val = $opn_birds = $opnings = $sale_bridno = $bno = $bwt = $sale_birdwt = $sale_bridno2 = $bno2 = $bwt2 = $sale_birdwt2 = "";
+            $key_val = $opn_birds = $opnings = $sale_bridno = $bno = $bwt = $sale_birdwt = $sale_amt = $sale_bridno2 = $bno2 = $bwt2 = $sale_birdwt2 = "";
             foreach($branch_code as $bch_code){
                 if(!empty($branch_list[$bch_code])){
                     $mcount = str_replace(".00","",$branch_curmort_birds[$bch_code]);
@@ -1921,6 +2117,15 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                     else{
                         $sale_birdwt = $sale_birdwt."@".$bwt;
                     }
+                    $sale_prc = 0; if((float)$branch_cur_birdwt[$bch_code] != 0){ $sale_prc = round(((float)$branch_cur_saleamt[$bch_code] / (float)$branch_cur_birdwt[$bch_code]),2); }
+                    //Avg. Prc Names
+                    if($key_names2 == ""){
+                        $key_names2 = $branch_name[$bch_code]." (".$sale_prc.")";
+                    }
+                    else{
+                        $key_names2 = $key_names2."@".$branch_name[$bch_code]." (".$sale_prc.")";
+                    }
+
                     /*Day -1 Lifting Details*/
                     $bno2 = str_replace(".00","",$branch_yest_birdno[$bch_code]);
                     if($sale_bridno2 == ""){
@@ -1940,6 +2145,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
             }
             ?>
             name1 = '<?php echo $key_names; ?>'; names = name1.split("@");
+            name2 = '<?php echo $key_names2; ?>'; names2 = name2.split("@");
             var value1 = '<?php echo $key_val; ?>'; values = value1.split("@");
 
             var mortality_bird_details = '<?php echo (int)$mortality_bird_details; ?>';
@@ -2012,13 +2218,13 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                 ctx.fillStyle = '#000';
 
                                 // Calculate center position
-                                const centerX = width / 3;
+                                const centerX = width / 2;
                                 const centerY = height / 3;
 
                                 // Draw each line of text
                                 var verticalOffset = 0
                                 lines.forEach((line, index) => {
-                                    verticalOffset = verticalOffset + 20;
+                                    verticalOffset = verticalOffset + 30;
                                     ctx.fillText(line, centerX, centerY + verticalOffset);
                                 });
 
@@ -2140,6 +2346,116 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                 );
             }
             
+            var lifting_bird_details2 = '<?php echo (int)$lifting_bird_details2; ?>';
+            if(parseInt(lifting_bird_details2) == 1){
+                var birdno = birdwt = [];
+                name3 = '<?php echo $sale_bridno; ?>'; birdno = name3.split("@");
+                name3 = '<?php echo $sale_birdwt; ?>'; birdwt = name3.split("@");
+
+                var names_d1 = birds_d1 = weight_d1 = "";
+                var names_d2 = birds_d2 = weight_d2 = [];
+                for(var n1 = 0;n1 < names2.length;n1++){
+                    if(parseFloat(birdno[n1]) != 0 && parseFloat(birdwt[n1]) != 0){
+                        if(names_d1 == ""){ names_d1 = names2[n1]; } else{ names_d1 = names_d1+"@"+names2[n1]; }
+                        if(birds_d1 == ""){ birds_d1 = birdno[n1]; } else{ birds_d1 = birds_d1+"@"+birdno[n1]; }
+                        if(weight_d1 == ""){ weight_d1 = birdwt[n1]; } else{ weight_d1 = weight_d1+"@"+birdwt[n1]; }
+                    }
+                }
+                names_d2 = names_d1.split("@");
+                birds_d2 = birds_d1.split("@");
+                weight_d2 = weight_d1.split("@");
+                //alert(name1+"\n"+value1+"\n"+names.length+"\n"+values.length+"\n\n\n"+names_d1+"\n"+values_d1+"\n"+names_d2.length+"\n"+values_d2.length);
+
+                
+                // setup 
+                const data = {
+                labels: names_d2,
+                datasets: [
+                    {
+                    label: 'Birds',
+                    data: birds_d2,
+                    maxBarThickness: 45,
+                    backgroundColor: [
+                    //'rgba(75, 192, 192, 0.2)',
+                    'rgba(75, 192, 192, 1)',
+                    ],
+                    borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    ],
+                    borderWidth: 1,
+                    datalabels: {
+                        color: 'rgba(75, 192, 192, 1)',
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 5
+                    }
+                },
+                {
+                    label: 'Weight',
+                    data: weight_d2,
+                    maxBarThickness: 35,
+                    backgroundColor: [
+                    //'rgba(54, 162, 235, 0.2)',
+                    'rgba(54, 162, 235, 1)',
+                    ],
+                    borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    ],
+                    borderWidth: 1,
+                    datalabels: {
+                        display: (context) => context.dataset.data[context.dataIndex] !== 0,
+                        formatter: (value) => value,
+                        color: 'rgba(54, 162, 235, 1)',
+                        anchor: 'end',
+                        align: 'top',
+                        //rotation: 90,
+                        offset: 15
+                    }
+                }]
+                };
+
+                //topLabels plugin block
+                const topLabels = {
+                    id: 'topLabels',
+                    beforeRender(chart) {
+                        const dataset = chart.data.datasets[0];
+                        const meta = chart.getDatasetMeta(0);
+                        meta.data.forEach((bar, index) => {
+                            if (dataset.data[index] !== 0) {
+                                const value = dataset.data[index];
+                                const ctx = chart.ctx;
+                                ctx.save();
+                                ctx.font = '12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.fillStyle = '#000';
+                                ctx.fillText(value, bar.x, bar.y - 10);
+                                ctx.restore();
+                            }
+                        });
+                    }
+                }
+                // config 
+                const config = {
+                type: 'bar',
+                data,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grace: 4000
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels,topLabels]
+                };
+
+                // render init block
+                const myChart = new Chart(
+                document.getElementById('barChart6'),
+                config
+                );
+            }
+            
             var agewise_available_birds = '<?php echo (int)$agewise_available_birds; ?>';
             if(parseInt(agewise_available_birds) == 1){
                 var age_name = age_birds = [];
@@ -2209,10 +2525,22 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                 data,
                 options: {
                     scales: {
-                    y: {
-                        beginAtZero: true,
-                        grace: 5000
-                    }
+                        x: {
+                            ticks: {
+                                font: {
+                                    weight: 'bold', // Bold labels
+                                    size: 14
+                                }
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    weight: 'bold', // Bold labels
+                                    size: 14
+                                }
+                            }
+                        }
                     }
                 },
                 plugins: [ChartDataLabels]
@@ -2417,11 +2745,112 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
             }
         </script>
         <script>
+            var branch_wise_single_date_mort_details = '<?php echo (int)$branch_wise_single_date_mort_details; ?>';
+            if(parseInt(branch_wise_single_date_mort_details) == 1){
+                <?php
+                $bwt_mname = $bwt_mper = "";
+                foreach($branch_code as $bcode){
+                    if(!empty($branch_list[$bcode])){
+                        $p_cnt = str_replace(".00","",$bwtc_oqty[$bcode]);
+                        $m_cnt = str_replace(".00","",$bwsd_tmc_qty[$bcode]);
+                        $m_per = 0; if((float)$p_cnt != 0){ $m_per = round((((float)$m_cnt / (float)$p_cnt) * 100),3); }
+                        
+                        if((float)$m_per > 0){
+                            if($bwt_mname == ""){ $bwt_mname = $branch_name[$bcode]; } else{ $bwt_mname = $bwt_mname."@".$branch_name[$bcode]; }
+                            if($bwt_mper == ""){ $bwt_mper = $m_per; } else{ $bwt_mper = $bwt_mper."@".$m_per; }
+                        }
+                    }
+                }
+                ?>
+                var names = values = [];
+                var name1 = '<?php echo $bwt_mname; ?>'; names = name1.split("@");
+                var value1 = '<?php echo $bwt_mper; ?>'; values = value1.split("@");
+                
+                var names_d1 = values_d1 = "";
+                for(var n1 = 0;n1 < names.length;n1++){
+                    if(parseFloat(values[n1]) != 0){
+                        if(names_d1 == ""){ names_d1 = names[n1]; } else{ names_d1 = names_d1+"@"+names[n1]; }
+                        if(values_d1 == ""){ values_d1 = values[n1]; } else{ values_d1 = values_d1+"@"+values[n1]; }
+                    }
+                }
+                
+                var names_d2 = values_d2 = [];
+                names_d2 = names_d1.split("@");
+                values_d2 = values_d1.split("@");
+                
+                Chart.register(ChartDataLabels);
+                var ctx = document.getElementById('barChart5').getContext('2d');
+                var myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: names_d2,
+                        datasets: [{
+                            label: 'Mortality',
+                            data: values_d2,
+                            backgroundColor: 'rgba(65, 105, 225, 0.8)',
+                            borderColor: 'rgba(65, 105, 225, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                            barThickness: 12
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'center',
+                                color: '#000',
+                                font: {
+                                    weight: 'bold'
+                                },
+                                formatter: (value) => parseFloat(value).toFixed(2) + " %"
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                //max: 5,
+                                ticks: {
+                                    callback: (value) => parseFloat(value) + " %"
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        </script>
+        <script>
             function broiler_openurl(a){
                 window.open(a, "_blank");
             }
         </script>
         <script>
+             function check_options(selectId) {
+                    var selectElement = document.getElementById(selectId);
+                    var allflag = 0; var otherflag = 0;
+                    for (var option of selectElement.options) {
+                        if (option.selected) {
+                            if (option.value === "all") { allflag = 1; 
+                            } else { otherflag = 1; }
+                        }
+                    }
+                    console.log(allflag,otherflag);
+                    if (allflag === 1 && otherflag === 1) {
+                        selectElement.querySelector('option[value="all"]').selected = false;
+                        $(selectElement).trigger('change'); 
+                    }
+             }
             function fetch_farms_details(a){
                 var rgn_aflag = brh_aflag = lne_aflag = sup_aflag = 0;
                 var regions = branches = lines = supervisors = "";

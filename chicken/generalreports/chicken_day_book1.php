@@ -203,7 +203,7 @@ if(isset($_POST['submit']) == true){
                                         <div class="form-group" style="width:190px;">
                                             <label for="sectors">Warehouse</label>
                                             <select name="sectors" id="sectors" class="form-control select2" style="width:180px;">
-                                                <option value="select" <?php if($sectors == "select"){ echo "selected"; } ?>>-select-</option>
+                                                <option value="all" <?php if($sectors == "all"){ echo "selected"; } ?>>-All-</option>
 											    <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($sectors == $scode){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
                                             </select>
                                         </div>
@@ -539,20 +539,20 @@ if(isset($_POST['submit']) == true){
                             $html .= '<tbody class="tbody1">';
 
                            
-                            $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; }
+                            $sec_fltrr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; } else { $sec_fltr = " AND `warehouse` IN ('$sec_list')"; }
                             $itm_fltr = ""; if($items != "all"){ $itm_fltr = " AND `itemcode` = '$items'"; }
                             $usr_fltr = ""; if($users != "all"){ $usr_fltr = " AND `addedemp` = '$users'"; }
                             // $tr_dfltr = ""; if($types == "tr_date"){ $tr_dfltr = " AND `date` = '$fdate'"; }
                             // $et_dfltr = ""; if ($types == "ad_date") { $et_dfltr = " AND `addedtime` >= '$fdate 00:00:00' AND `addedtime` <= '$fdate 23:59:59'"; }
                             // $up_dfltr = ""; if ($types == "up_date") { $up_dfltr = " AND `updated` >= '$fdate 00:00:00' AND `updated` <= '$fdate 23:59:59'"; }
                             // $ups_dfltr = ""; if ($types == "up_date") { $ups_dfltr = " AND `updatedtime` >= '$fdate 00:00:00' AND `updatedtime` <= '$fdate 23:59:59'"; }
-                          
+                        //   echo $sec_fltr;
                             $sql = "SELECT * FROM `pur_purchase` WHERE `tdflag` = '0' AND `date` >= '$fdate' AND `date` <= '$tdate'".$itm_fltr."".$sec_fltr." AND `active` = '1' AND `pdflag` = '0' ORDER BY `date` ASC";
                             $query = mysqli_query($conn,$sql); $tot_qty = $tot_amt = 0;
                             while($row = mysqli_fetch_assoc($query)){
                                 $date = date("d.m.Y",strtotime($row['date']));
                                 $addedtime = $row['addedtime'];
-                                $addedemp = $row['addedemp'];
+                                $addedemp = $usr_name[$row['addedemp']];
                                 $jals = $row['jals'];
                                 $birds = $row['birds'];
                                 $totalweight = $row['totalweight'];
@@ -647,7 +647,7 @@ if(isset($_POST['submit']) == true){
                                 $html .= '</thead>';
                                 $html .= '<tbody class="tbody1">';
 
-                                $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; }
+                                $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; } else { $sec_fltr = " AND `warehouse` IN ('$sec_list')"; }       
                                 $itm_fltr = ""; if($items != "all"){ $itm_fltr = " AND `itemcode` = '$items'"; }
                                 $usr_fltr = ""; if($users != "all"){ $usr_fltr = " AND `addedemp` = '$users'"; }
                                 // $tr_dfltr = ""; if($types == "tr_date"){ $tr_dfltr = " AND `date` = '$fdate'"; }
@@ -668,9 +668,9 @@ if(isset($_POST['submit']) == true){
                                     $iname = $item_name[$row['itemcode']];
                                     $quantity = $row['closedquantity'];
                                     $price = $row['itemprice'];
-                                     $amount = $row['totalamt'];
+                                    $amount = $row['totalamt'];
                                     $remarks = $row['remarks'];
-                                    $addedemp = $row['addedemp'];
+                                    $addedemp = $usr_name[$row['addedemp']];
                                     $sname = $sector_name[$row['warehouse']];
 
                                     
@@ -771,7 +771,7 @@ if(isset($_POST['submit']) == true){
                                     $remarks = $row['remarks'];
                                     
                                   
-                                    $addedemp = $row['addedemp'];
+                                    $addedemp = $usr_name[$row['addedemp']];
                                     $sname = $sector_name[$row['warehouse']];
                                     $docno = $row['docno'];
                                     $vname = $ven_name[$row['ccode']];
@@ -840,21 +840,23 @@ if(isset($_POST['submit']) == true){
                                     $html .= '<tbody class="tbody1">';
 
                                     //$sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; }
+                                    $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; } else { $sec_fltr = " AND `warehouse` IN ('$sec_list')"; }       
                                     // $tr_dfltr = ""; if($types == "tr_date"){ $tr_dfltr = " AND `date` = '$fdate'"; }
                                     // $et_dfltr = ""; if ($types == "ad_date") { $et_dfltr = " AND `addedtime` >= '$fdate 00:00:00' AND `addedtime` <= '$fdate 23:59:59'"; }
                                     // $up_dfltr = ""; if ($types == "up_date") { $up_dfltr = " AND `updated` >= '$fdate 00:00:00' AND `updated` <= '$fdate 23:59:59'"; }
                                     // $ups_dfltr = ""; if ($types == "up_date") { $ups_dfltr = " AND `updatedtime` >= '$fdate 00:00:00' AND `updatedtime` <= '$fdate 23:59:59'"; }
                                 
-                                    $sql = "SELECT * FROM `customer_receipts` WHERE `tdflag` = '0' AND `date` >= '$fdate' AND `date` <= '$tdate' AND `pdflag` = '0' AND `active` = '1' ORDER BY `date` ASC";
+                                    $sql = "SELECT * FROM `customer_receipts` WHERE `tdflag` = '0' AND `date` >= '$fdate' AND `date` <= '$tdate'".$sec_fltr." AND `pdflag` = '0' AND `active` = '1' ORDER BY `date` ASC";
                                     $query = mysqli_query($conn,$sql); $tot_qty = $tot_amt = 0;
                                     while($row = mysqli_fetch_assoc($query)){
-                                        $date = date("d.m.Y",strtotime($row['date']));
+                                        // $date = date("d.m.Y",strtotime($row['date']));
                                         $addedtime = $row['addedtime'];
+                                        $addedtime = $row['updatedtime'];
                                         $mode = $row['mode'];
                                         $method = $row['method'];
                                         $amount = $row['amount'];
                                         $remarks = $row['remarks'];
-                                        $addedemp = $ven_name[$row['addedemp']];
+                                        $addedemp = $usr_name[$row['addedemp']];
                                         $sname = $sector_name[$row['warehouse']];
                                         $docno = $row['trnum'];
                                         $vname = $ven_name[$row['ccode']];
@@ -923,12 +925,13 @@ if(isset($_POST['submit']) == true){
                                         $html .= '<tbody class="tbody1">';
 
                                         //$sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; }
+                                        $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; } else { $sec_fltr = " AND `warehouse` IN ('$sec_list')"; }       
                                         // $tr_dfltr = ""; if($types == "tr_date"){ $tr_dfltr = " AND `date` = '$fdate'"; }
                                         // $et_dfltr = ""; if ($types == "ad_date") { $et_dfltr = " AND `addedtime` >= '$fdate 00:00:00' AND `addedtime` <= '$fdate 23:59:59'"; }
                                         // $up_dfltr = ""; if ($types == "up_date") { $up_dfltr = " AND `updated` >= '$fdate 00:00:00' AND `updated` <= '$fdate 23:59:59'"; }
                                         // $ups_dfltr = ""; if ($types == "up_date") { $ups_dfltr = " AND `updatedtime` >= '$fdate 00:00:00' AND `updatedtime` <= '$fdate 23:59:59'"; }
                                 
-                                    $sql = "SELECT * FROM `main_crdrnote` WHERE `tdflag` = '0' AND `date` >= '$fdate' AND `date` <= '$tdate' AND `pdflag` = '0' AND `active` = '1' ORDER BY `date`,`trnum` ASC";
+                                    $sql = "SELECT * FROM `main_crdrnote` WHERE `tdflag` = '0' AND `date` >= '$fdate' AND `date` <= '$tdate'".$sec_fltr." AND `pdflag` = '0' AND `active` = '1' ORDER BY `date`,`trnum` ASC";
                                     $query = mysqli_query($conn,$sql); $tot_qty = $tot_amt = 0;
                                     while($row = mysqli_fetch_assoc($query)){
                                         $date = date("d.m.Y",strtotime($row['date']));
@@ -1008,6 +1011,7 @@ if(isset($_POST['submit']) == true){
                                         $html .= '<tbody class="tbody1">';
 
                                         //$sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; }
+                                        // $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; } else { $sec_fltr = " AND `warehouse` IN ('$sec_list')"; }        
                                         // $tr_dfltr = ""; if($types == "tr_date"){ $tr_dfltr = " AND `date` = '$fdate'"; }
                                         // $et_dfltr = ""; if ($types == "ad_date") { $et_dfltr = " AND `addedtime` >= '$fdate 00:00:00' AND `addedtime` <= '$fdate 23:59:59'"; }
                                         // $up_dfltr = ""; if ($types == "up_date") { $up_dfltr = " AND `updated` >= '$fdate 00:00:00' AND `updated` <= '$fdate 23:59:59'"; }
@@ -1110,7 +1114,7 @@ if(isset($_POST['submit']) == true){
                                         $amount = $row['amount'];
                                         $price = $row['price'];
                                         $coa = $row['coa'];
-                                        $addedemp = $ven_name[$row['addedemp']];
+                                        $addedemp = $usr_name[$row['addedemp']];
                                         $ware = $sector_name[$row['warehouse']];
                                         //$tware = $sector_name[$row['towarehouse']];
                                         $iname = $item_name[$row['itemcode']];
@@ -1196,7 +1200,7 @@ if(isset($_POST['submit']) == true){
                                         $amount = $row['amount'];
                                        
                                        // $coa = $row['coa'];
-                                        $addedemp = $ven_name[$row['addedemp']];
+                                        $addedemp = $usr_name[$row['addedemp']];
                                         $ware = $sector_name[$row['warehouse']];
                                        
                                         $docno = $row['trnum'];
@@ -1271,17 +1275,17 @@ if(isset($_POST['submit']) == true){
                                         // $ups_dfltr = ""; if ($types == "up_date") { $ups_dfltr = " AND `updatedtime` >= '$fdate 00:00:00' AND `updatedtime` <= '$fdate 23:59:59'"; }
                                 
                                         $item_list = implode("','",$item_alist);
-                                        $sql = "SELECT * FROM `item_details` WHERE `code` IN ('$item_list') AND `active` = '1' ORDER BY `description` ASC";
-                                        $query = mysqli_query($conn,$sql); $item_alist = array();
-                                        while($row = mysqli_fetch_assoc($query)){ $item_alist[$row['code']] = $row['code']; }
+                                        // $sql = "SELECT * FROM `item_details` WHERE `code` IN ('$item_list') AND `active` = '1' ORDER BY `description` ASC";
+                                        // $query = mysqli_query($conn,$sql); $item_alist = array();
+                                        // while($row = mysqli_fetch_assoc($query)){ $item_alist[$row['code']] = $row['code']; }
                                         
                                         $i = 0; $fti_jals = $fti_bds = $fti_twt = $fti_ewt = $fti_nwt = $fti_amt = array();
                                         foreach($item_alist as $icode){
                                             $iname = $item_name[$icode];
                                             $jals = 0;
-                                            $birds = $opn_bds[$icode]; if($birds == ""){ $birds = 0; }
                                             $tweight = 0;
                                             $eweight = 0;
+                                            $birds = $opn_bds[$icode]; if($birds == ""){ $birds = 0; }
                                             $nweight = $opn_qty[$icode]; if($nweight == ""){ $nweight = 0; }
                                             $price = $iwp_oprc[$icode]; if($price == ""){ $price = 0; }
                                             $amount = ((float)$price * (float)$nweight); if($amount == ""){ $amount = 0; }
@@ -1330,6 +1334,10 @@ if(isset($_POST['submit']) == true){
                                             $iwsi_bbds[$row1['itemcode']] += (float)$birds;
                                             $iwsi_bqty[$row1['itemcode']] += (float)$nweight;
                                             $iwsi_bamt[$row1['itemcode']] += (float)$amount;
+                                            $iwsi_prc[$row1['itemcode']] = (float)$price;
+                                            $addedempss[$row1['itemcode']] = $usr_name[$row1['addedemp']];
+                                            $addedtimess[$row1['itemcode']] = $row1['addedtime'];
+                                            $ssname[$row1['itemcode']] = $sector_name[$row1['warehouse']];
                                         }
                                         //Transfer-In
                                         $sql1 = "SELECT * FROM `item_stocktransfers` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `code` IN ('$item_list') AND `towarehouse` IN ('$sec_list') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`code`,`trnum` ASC";
@@ -1358,6 +1366,9 @@ if(isset($_POST['submit']) == true){
                                             $iwsi_bbds[$row1['itemcode']] += (float)$birds;
                                             $iwsi_bqty[$row1['itemcode']] += (float)$nweight;
                                             $iwsi_bamt[$row1['itemcode']] += (float)$amount;
+                                            $addedempss[$row1['itemcode']] = $usr_name[$row1['addedemp']];
+                                            $addedtimess[$row1['itemcode']] = $row1['addedtime'];
+                                            $ssname[$row1['itemcode']] = $sector_name[$row1['towarehouse']];
                                         }
                                         //Stock Adjustment
                                         $sql1 = "SELECT * FROM `item_stock_adjustment` WHERE `date` <= '$tdate' AND `itemcode` IN ('$item_list') AND `warehouse` IN ('$sec_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`itemcode`,`trnum` ASC";
@@ -1370,11 +1381,13 @@ if(isset($_POST['submit']) == true){
                                                     $iwsa_abbds[$key1] += (float)$row1['birds'];
                                                     $iwsa_abqty[$key1] += (float)$row1['nweight'];
                                                     $iwsa_abamt[$key1] += (float)$row1['amount'];
+                                                    $ssname[$key1] = $sector_name[$row1['warehouse']];
                                                 }
                                                 else if($row1['a_type'] == "deduct"){
                                                     $iwsa_dbbds[$key1] += (float)$row1['birds'];
                                                     $iwsa_dbqty[$key1] += (float)$row1['nweight'];
                                                     $iwsa_dbamt[$key1] += (float)$row1['amount'];
+                                                    $ssname[$key1] = $sector_name[$row1['warehouse']];
                                                 }
                                             }
                                         }
@@ -1389,6 +1402,7 @@ if(isset($_POST['submit']) == true){
                                                 $iwm_bbds[$key1] += (float)$row1['birds'];
                                                 $iwm_bqty[$key1] += (float)$row1['quantity'];
                                                 $iwm_bamt[$key1] += (float)$row1['amount'];
+                                                $ssname[$key1] = $sector_name[$row1['ccode']];
                                             }
                                         }
                                         //Total Stock Available-Purchase Side
@@ -1439,12 +1453,16 @@ if(isset($_POST['submit']) == true){
                                             $iwso_bbds[$row1['itemcode']] += (float)$birds;
                                             $iwso_bqty[$row1['itemcode']] += (float)$nweight;
                                             $iwso_bamt[$row1['itemcode']] += (float)$amount;
+                                            $addedempss[$row1['itemcode']] = $usr_name[$row1['addedemp']];
+                                            $addedtimess[$row1['itemcode']] = $row1['addedtime'];
+                                            $ssname[$row1['itemcode']] = $sector_name[$row1['warehouse']];
                                         }
                                         //Transfer-Out
                                         $sql1 = "SELECT * FROM `item_stocktransfers` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `code` IN ('$item_list') AND `fromwarehouse` IN ('$sec_list') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`code`,`trnum` ASC";
                                         $query1 = mysqli_query($conn,$sql1);
                                         while($row1 = mysqli_fetch_assoc($query1)){
                                             $j++;
+                                            $cname = $ven_name[$row1['customercode']];
                                             $cname = $sector_name[$row1['fromwarehouse']];
                                             $iname = $item_name[$row1['code']];
                                             $jals = $row1['jals']; if($jals == ""){ $jals = 0; }
@@ -1467,17 +1485,22 @@ if(isset($_POST['submit']) == true){
                                             $iwso_bbds[$row1['itemcode']] += (float)$birds;
                                             $iwso_bqty[$row1['itemcode']] += (float)$nweight;
                                             $iwso_bamt[$row1['itemcode']] += (float)$amount;
+                                            $addedempss[$row1['itemcode']] = $usr_name[$row1['addedemp']];
+                                            $addedtimess[$row1['itemcode']] = $row1['addedtime'];
+                                            $ssname[$row1['itemcode']] = $sector_name[$row1['fromwarehouse']];
                                         }
             
                                                  
                                                  foreach($item_alist as $icode){
                                                     // Closing
-                                                    $cls_bds = $birds = round((((float)$opn_bdss[$icode] + (float)$iwsi_bbds[$icode] + (float)$iwsa_abbds[$icode]) - ((float)$iwm_bbds[$icode] + (float)$iwso_bbds[$icode] + (float)$iwsa_dbbds[$icode])),2); if($birds == ""){ $birds = 0; }
+                                                    $cls_bds = round((((float)$opn_bdss[$icode] + (float)$iwsi_bbds[$icode] + (float)$iwsa_abbds[$icode]) - ((float)$iwm_bbds[$icode] + (float)$iwso_bbds[$icode] + (float)$iwsa_dbbds[$icode])),2); if($cls_bds == ""){ $cls_bds = 0; }
                                                      $cls_qty = $nweight = round((((float)$opn_qtyy[$icode] + (float)$iwsi_bqty[$icode] + (float)$iwsa_abqty[$icode]) - ((float)$iwm_bqty[$icode] + (float)$iwso_bqty[$icode] + (float)$iwsa_dbqty[$icode])),2); if($nweight == ""){ $nweight = 0; }
                                                         $price = $iwp_oprc[$icode]; if($price == ""){ $price = 0; }
                                                         $amount = ((float)$price * (float)$nweight);
                                                         //$amount = round(((float)$iwso_bamt[$icode] - ((float)$opn_amt[$icode] + (float)$iwsi_bamt[$icode] - (float)$iwm_bamt[$icode])),2); if($amount == ""){ $amount = 0; }
                                                      $cls_amts = $cls_amt[$icode] += (float)$amount;
+                                                       $pur_prcs = $iwsi_prc[$icode];
+                                                       $clss = $nweight * $pur_prcs;
             
                                                     // Stock Adjustment 
                                                     $stk_bds = ((float)$iwsa_abbds[$icode] - (float)$iwsa_dbbds[$icode]); if($stk_bds == ""){ $stk_bds = 0; }
@@ -1489,14 +1512,14 @@ if(isset($_POST['submit']) == true){
                                         
                                         $slno++; 
                                         $html .= '<tr>';
-                                        $html .= '<td style="text-align:left;">'.$sname.'</td>';
-                                        $html .= '<td style="text-align:left;">'.$iname.'</td>';
+                                        $html .= '<td style="text-align:left;">'.$ssname[$icode].'</td>';
+                                        $html .= '<td style="text-align:left;">'.$item_name[$icode].'</td>';
                                         $html .= '<td style="text-align:right;">'.number_format_ind($cls_bds).'</td>';
                                         $html .= '<td style="text-align:right;">'.number_format_ind($cls_qty).'</td>';
                                         $html .= '<td style="text-align:right;"></td>';
-                                        $html .= '<td style="text-align:right;">'.number_format_ind($cls_amts).'</td>';
-                                        $html .= '<td style="text-align:left;">'.$uname.'</td>';
-                                        $html .= '<td colspan="4" style="text-align:left;">'.date("d.m.Y H:i:s", strtotime($addedtime)).'</td>';
+                                        $html .= '<td style="text-align:right;">'.number_format_ind($clss).'</td>';
+                                        $html .= '<td style="text-align:left;">'.$addedempss[$icode].'</td>';
+                                        $html .= '<td colspan="4" style="text-align:left;">'.date("d.m.Y H:i:s", strtotime($addedtimess[$icode])).'</td>';
                                         
                                     // $html .= '<td style="text-align:right;">'.number_format_ind(round($rsale_amt,2)).'</td>';
                                         $html .= '</tr>';

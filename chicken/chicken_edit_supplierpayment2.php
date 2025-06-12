@@ -27,6 +27,10 @@ if($access_error_flag == 0){
      $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Supplier Payment' AND `field_function` = 'Hide Dcno and Sector' AND `user_access` = 'all' AND `flag` = '1'";
     $query = mysqli_query($conn,$sql); $hdcsec_flag = mysqli_num_rows($query);
 
+    //check and fetch date range
+    global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
+    include "poulsoft_fetch_daterange_master.php";
+
 ?>
     <html>
         <head>
@@ -87,7 +91,7 @@ if($access_error_flag == 0){
                                 </thead>
                                 <tbody id="row_body">
                                     <tr style="margin:5px 0px 5px 0px;">
-                                        <td><input type="text" name="date" id="date" class="form-control pay_datepickers" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per();" readonly /></td>
+                                        <td><input type="text" name="date" id="date" class="form-control range_picker" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per();" readonly /></td>
                                         <td><select name="ccode" id="ccode" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($sup_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($ccode == $scode){ echo "selected"; } ?>><?php echo $sup_name[$scode]; ?></option><?php } ?></select></td>
                                         <td><select name="mode" id="mode" class="form-control select2" style="width:180px;" onchange="update_coa_method();"><option value="select">-select-</option><?php foreach($mode_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($mode == $scode){ echo "selected"; } ?>><?php echo $mode_name[$scode]; ?></option><?php } ?></select></td>
                                         <td>
@@ -248,6 +252,10 @@ if($access_error_flag == 0){
 		    <script src="chick_validate_basicfields.js"></script>
             <?php include "header_foot1.php"; ?>
             <script src="handle_ebtn_as_tbtn.js"></script>
+            <script>
+                //Date Range selection
+                $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+            </script>
         </body>
     </html>
 <?php
