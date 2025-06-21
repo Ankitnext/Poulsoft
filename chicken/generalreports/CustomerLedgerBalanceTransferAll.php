@@ -148,7 +148,7 @@
 									<th>Balance</th>
 								</tr>
 							</thead>
-							<tbody class="tbody1" id="myTable" style="background-color: #f4f0ec;">
+							<tbody class="tbody1" id="myTable1" style="background-color: #f4f0ec;">
 							<?php
 								if(isset($_POST['submit']) == true){
 									if($_POST['export'] != "exportexcel"){

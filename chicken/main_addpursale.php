@@ -49,11 +49,16 @@
 			<?php
 				$today = date("Y-m-d");
 				$fdate = date("d.m.Y",strtotime($today));
-				$sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-				while($row = mysqli_fetch_assoc($query)){
-					$item_code[$row['code']] = $row['code'];
-					$item_name[$row['code']] = $row['description'];
-				}
+				
+				$sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%MACHINE%' OR `description` LIKE '%SHOP INVESTMENT%' OR `description` LIKE '%SCALE%' OR `description` LIKE '%BOARD%' OR `description` LIKE '%CASH%' OR `description` LIKE '%OTHERS%') AND `active` = '1' ORDER BY `id`";
+				$query = mysqli_query($conn,$sql); $cat_alist = array();
+				while($row = mysqli_fetch_assoc($query)) { $cat_alist[$row['code']] = $row['code']; }
+				$cat_list = implode("','",$cat_alist);
+
+				$sql = "SELECT * FROM `item_details` WHERE `category` NOT IN ('$cat_list') AND `active` = '1' ORDER BY `description` ASC";
+				$query = mysqli_query($conn,$sql); $item_code = $item_name = array();
+				while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; }
+
 				$sql = "SELECT * FROM `main_officetypes` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 				while($row = mysqli_fetch_assoc($query)){ if($row['description'] == "Warehouse"){ if($branches == ""){ $branches = $row['code']; } else{ $branches = $branches."','".$row['code']; } } }
 				$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' AND `type` IN ('$branches') ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);

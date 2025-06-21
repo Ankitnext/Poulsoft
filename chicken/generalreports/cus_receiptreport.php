@@ -106,6 +106,7 @@
 ?>
 <html>
 	<head>
+          <title>Receipt Report</title>
 		<script>
 			var exptype = '<?php echo $exports; ?>';
 			var url = '<?php echo $url; ?>';

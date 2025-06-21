@@ -18,7 +18,12 @@ if($access_error_flag == 0){
     $query = mysqli_query($conn,$sql);$jals_flag = $birds_flag = $tweight_flag = $eweight_flag = 0;
     while($row = mysqli_fetch_assoc($query)){ $jals_flag = (int)$row['jals_flag']; $birds_flag = (int)$row['birds_flag']; $tweight_flag = (int)$row['tweight_flag']; $eweight_flag = (int)$row['eweight_flag']; }
 
-    $sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC";
+    $sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%MACHINE%' OR `description` LIKE '%SHOP INVESTMENT%' OR `description` LIKE '%SCALE%' OR `description` LIKE '%BOARD%' OR `description` LIKE '%CASH%' OR `description` LIKE '%OTHERS%') AND `active` = '1' ORDER BY `id`";
+    $query = mysqli_query($conn,$sql); $cat_alist = array();
+    while($row = mysqli_fetch_assoc($query)) { $cat_alist[$row['code']] = $row['code']; }
+    $cat_list = implode("','",$cat_alist);
+
+    $sql = "SELECT * FROM `item_details` WHERE `category` NOT IN ('$cat_list') AND `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $item_code = $item_name = array();
     while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; }
 

@@ -1,7 +1,7 @@
 <?php 
 	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 	include "../config.php";
-	include "header_head.php";
+	// include "header_head.php";
 	include "number_format_ind.php";
 	
 	$today = date("Y-m-d");
@@ -28,7 +28,10 @@
 	if($ccount > 0){ while($row = mysqli_fetch_assoc($query)){ $sales_sms_flag = $row['outstand_sms']; $sales_wapp_flag = $row['outstand_wapp']; } } else { $sales_sms_flag = $sales_wapp_flag = '0'; }
 ?>
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+	<head>
+		<title>Customer Outstanding Balance Report</title>
+		<?php include "header_head.php"; ?>
+		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<?php
 			if($exoption == "exportexcel") {
 				echo header("Content-type: application/xls");

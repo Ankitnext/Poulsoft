@@ -3,7 +3,7 @@
 	include "../config.php";
 	include "header_head.php";
 	include "number_format_ind.php";
-	
+	$dbname = $_SESSION['dbase'];
 	$today = date("Y-m-d");
 	$sql = "SELECT * FROM `master_itemfields` WHERE `type` = 'Birds' AND `id` = '1'"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $ifwt = $row['wt']; $ifbw = $row['bw']; $ifjbw = $row['jbw']; $ifjbwen = $row['jbwen']; $ifctype = $row['ctype']; }
@@ -187,13 +187,16 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 						<table id="main_table" class="table1" style="min-width:100%;line-height:23px;">
 							<thead class="thead2" style="background-color: #98fb98;">
 								<tr>
+									<th>Sl No.</th>
 									<th colspan="9">Purchases</th>
 									<th colspan="5">Sales</th>
 									<th colspan="2">Wt. Loss</th>
 									<th colspan="1">Expenses</th>
 									<th colspan="2">Profit/Loss</th>
+									<th colspan="1"></th>
 								</tr>
 								<tr>
+									<th></th>
 									<th>Date</th>
 									<th>Load No</th>
 									<th>Warehouse</th>
@@ -236,7 +239,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 										$pur_details[$row['date']."&".$row['bookinvoice']] = $row['date']."@".$row['bookinvoice']."@".$pname[$row['vendorcode']]."@".$row['birds']."@".$row['nwt']."@".$avgWt."@".$row['itemprice']."@".$row['totalamt'];
 									}*/
 									 $sql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `itemcode` IN ('$item_codes') AND `active` = '1'".$cnames."".$snames;
-									$query = mysqli_query($conn,$sql);
+									$query = mysqli_query($conn,$sql); $user_alist = array();
 									while($row = mysqli_fetch_assoc($query)){
 										//$avgWt = 0;
 										//$avgWt = $row['nwt'] / $row['birds'];
@@ -252,7 +255,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 										$pur_toamt[$index] = $pur_toamt[$index] + $row['totalamt'];
 										$pur_price[$index] = $row['itemprice'];
 										$pur_sector[$index] = $row['warehouse'];
-										echo $usern = $user_name[$row['addedemp']];
+										$user_alist[$index] = $user_name[$row['addedemp']];
 										//$sal_details[$row['date']."&".$row['bookinvoice']] = $row['birds']."@".$row['nwt']."@".$avgWt."@".$row['itemprice']."@".$row['totalamt'];
 									}
 									foreach($index_sale as $isal){
@@ -263,11 +266,11 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 										else{
 											$avgWt = 0;
 										}
-										$pur_details[$isal] = $pur_dates[$isal]."@".$pur_bkinv[$isal]."@".$pur_cuscd[$isal]."@".$pur_birds[$isal]."@".$pur_totwt[$isal]."@".$avgWt."@".$pur_price[$isal]."@".$pur_toamt[$isal];
+										$pur_details[$isal] = $pur_dates[$isal]."@".$pur_bkinv[$isal]."@".$pur_cuscd[$isal]."@".$pur_birds[$isal]."@".$pur_totwt[$isal]."@".$avgWt."@".$pur_price[$isal]."@".$pur_toamt[$isal]."@".$user_alist[$isal];
 									}
 									//$sql = "SELECT SUM(birds) as birds, SUM(netweight) as nwt,bookinvoice,customercode,date,AVG(itemprice) as itemprice,SUM(totalamt) as totalamt FROM `customer_sales` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `itemcode` IN ('$item_codes') AND `active` = '1' GROUP BY `date`,`bookinvoice` ORDER BY `date`,`bookinvoice`,`customercode` ASC";
 									$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `itemcode` IN ('$item_codes') AND `active` = '1'".$snames;
-									$query = mysqli_query($conn,$sql);
+									$query = mysqli_query($conn,$sql); $user_alist = array();
 									while($row = mysqli_fetch_assoc($query)){
 										//$avgWt = 0;
 										//$avgWt = $row['nwt'] / $row['birds'];
@@ -278,7 +281,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 										$sale_toamt[$index] = $sale_toamt[$index] + $row['totalamt'];
 										$sale_price[$index] = $row['itemprice'];
 										$sale_sector[$index] = $row['warehouse'];
-										echo $usern = $user_name[$row['addedemp']];
+										$user_alist[$index] = $user_name[$row['addedemp']];
 										//$sal_details[$row['date']."&".$row['bookinvoice']] = $row['birds']."@".$row['nwt']."@".$avgWt."@".$row['itemprice']."@".$row['totalamt'];
 									}
 									foreach($index_sale as $isal){
@@ -290,7 +293,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 											$avgWt = 0;
 										}
 										
-										$sal_details[$isal] = $sale_birds[$isal]."@".$sale_totwt[$isal]."@".$avgWt."@".$sale_price[$isal]."@".$sale_toamt[$isal];
+										$sal_details[$isal] = $sale_birds[$isal]."@".$sale_totwt[$isal]."@".$avgWt."@".$sale_price[$isal]."@".$sale_toamt[$isal]."@".$user_alist[$isal];
 									}
 									$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `prefix` = 'PV' AND `active` = '1'".$snames." ORDER BY `date`,`dcno` ASC";
 									$query = mysqli_query($conn,$sql);
@@ -299,7 +302,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 										$vou_details[$row['date']."&".$row['dcno']] = $vou_details[$row['date']."&".$row['dcno']] + $row['amount'];
 										$vou_sector[$row['date']."&".$row['dcno']] = $row['warehouse'];
 									}
-									$c = $tot_pur_bds = $tot_pur_qty = $tot_pur_amt = $tot_sal_bds = $tot_sal_qty = $tot_sal_amt = $tot_vou_amt = $tot_wht_qty = 0;
+									$sl = 1; $c = $tot_pur_bds = $tot_pur_qty = $tot_pur_amt = $tot_sal_bds = $tot_sal_qty = $tot_sal_amt = $tot_vou_amt = $tot_wht_qty = 0;
 									foreach($pur_docno as $pdno){
 										$c = $c + 1;
 										$pur_val = explode("@",$pur_details[$pdno]);
@@ -309,6 +312,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 										$str_values[$c] = $pur_val[0]."@".$pur_val[1];
 										$vou_val = $vou_details[$pdno];
 										echo "<tr>";
+										echo "<td style='text-align:left;'>".$sl++."</td>";
 										echo "<td style='text-align:left;'>".date("d.m.Y",strtotime($pur_val[0]))."</td>";
 										if($exoption == "printerfriendly"){
 											echo "<td style='text-align:left;'>".$pur_val[1]."</td>";
@@ -365,7 +369,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 										$ppk = number_format_ind($ppk);
 										echo "<td><input type='text' name='ppk$values' id='ppk$values' value='$ppk'  style='width:70px;text-align:right;border:none;background:inherit;' readonly /></td>";
 										
-										echo "<td>".$usern."</td>";
+										echo "<td style='text-align:left;'>".$sal_val[5]."</td>";
 										echo "</tr>";
 									}
 								}
@@ -373,7 +377,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 							</tbody>
 							<thead>
 								<tr class="foottr" style="background-color: #98fb98;">
-									<td align="center" colspan="4"><b>Total</b></td>
+									<td align="center" colspan="5"><b>Total</b></td>
 									<td style='padding-right: 5px;text-align:right;'><?php if(number_format_ind($tot_pur_bds) == "NAN.00" || number_format_ind($tot_pur_bds) == ".00" || number_format_ind($tot_pur_bds) == "0.00"){ echo "0.00"; } else{ echo number_format_ind($tot_pur_bds); } ?></td>
 									<td style='padding-right: 5px;text-align:right;'><input type="text" name="tpurqty" id="tpurqty" value="<?php if(number_format_ind($tot_pur_qty) == "NAN.00" || number_format_ind($tot_pur_qty) == ".00" || number_format_ind($tot_pur_qty) == "0.00"){ echo "0.00"; } else{ echo number_format_ind($tot_pur_qty); } ?>" style='width: 100px;text-align:right;border:none;background:inherit;' readonly /></td>
 									<td style='padding-right: 5px;text-align:right;'><?php if($tot_pur_qty > 0 && $tot_pur_bds > 0){ echo number_format_ind($tot_pur_qty / $tot_pur_bds); } else{ echo number_format_ind(0); } ?></td>
@@ -389,6 +393,7 @@ $url = "../PHPExcel/Examples/main_datewiseloadreportWME-Excel.php?fromdate=".$fr
 									<td style='padding-right: 5px;text-align:right;'><input type="text" name="tvouamt" id="tvouamt" value="<?php if(number_format_ind($tot_vou_amt) == "NAN.00" || number_format_ind($tot_vou_amt) == ".00" || number_format_ind($tot_vou_amt) == "0.00"){ echo "0.00"; } else{ echo number_format_ind($tot_vou_amt); } ?>" style='width: 100px;text-align:right;border:none;background:inherit;' readonly /></td>
 									<td style='padding-right: 5px;text-align:right;'><input type="text" name="tproamt" id="tproamt" value="<?php if(number_format_ind($tot_sal_amt - ($tot_pur_amt + $tot_vou_amt)) == "NAN.00" || number_format_ind($tot_sal_amt - ($tot_pur_amt + $tot_vou_amt)) == ".00" || number_format_ind($tot_sal_amt - ($tot_pur_amt + $tot_vou_amt)) == "0.00"){ echo "0.00"; } else{ echo number_format_ind($tot_sal_amt - ($tot_pur_amt + $tot_vou_amt)); } ?>" style='width:100px;text-align:right;border:none;background:inherit;' readonly /></td>
 									<td style='padding-right: 5px;text-align:right;'><input type="text" name="tpropkgamt" id="tpropkgamt" value="<?php if((float)$tot_pur_qty != 0){ echo number_format_ind(($tot_sal_amt - ($tot_pur_amt + $tot_vou_amt)) / $tot_pur_qty); } else{ echo number_format_ind(0); } ?>" style='width: 100px;text-align:right;border:none;background:inherit;' readonly /></td>
+									<td></td>
 								</tr>
 							</thead>
 						</table>

@@ -137,25 +137,39 @@ $sql = "SELECT * FROM `chicken_employee` WHERE `code` IN ('$supv_list') AND `act
 $query = mysqli_query($conn,$sql); $supv_code = $supv_name = array();
 while($row = mysqli_fetch_assoc($query)){ $supv_code[$row['code']] = $row['code']; $supv_name[$row['code']] = $row['name']; }
 
-$fdate = $tdate = $today = date("Y-m-d"); $supervisors = "all"; $area_acode = array(); $area_acode["all"] = "all"; $area_fltr = ""; $aa_flag = 0;
+//Select WhatsApp Flag
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Customer Master' AND `field_function` = 'Display WhatsApp Auto Selection' AND `user_access` = 'all' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $wapp_adflag = mysqli_num_rows($query);
+
+$bfdate = $btdate = $today = date("Y-m-d"); $supervisors = "all"; $area_acode = array(); $area_acode["all"] = "all"; $area_fltr = ""; $aa_flag = $bwe_flag = $wapp_aflag = 0;
 if(isset($_POST['submit_report']) == true){
+    $bfdate = date("Y-m-d",strtotime($_POST['bfdate']));
+    $btdate = date("Y-m-d",strtotime($_POST['btdate']));
     $supervisors = $_POST['supervisors'];
     $area_acode = array(); foreach($_POST['areas'] as $t1){ $area_acode[$t1] = $t1; if($t1 == "all" || $t1 == ""){ $area_acode["all"] = "all"; $aa_flag = 1; } }
     if($aa_flag == 0){ $area_list = implode("','",$area_acode); $area_fltr = " AND `area_code` IN ('$area_list')"; }
+
+    if((int)$wapp_adflag == 1){
+        if($_POST['wapp_aflag'] == true || $_POST['wapp_aflag'] == "on" || (int)$_POST['wapp_aflag'] == 1){ $wapp_aflag = 1; }
+    }
+    if($_POST['bwe_flag'] == true || $_POST['bwe_flag'] == "on" || (int)$_POST['bwe_flag'] == 1){ $bwe_flag = 1; }
 }
 $sup_fltr = ""; if($supervisors != "all"){ $sup_fltr = " AND `supr_code` IN ('$supervisors')"; }
+$wapp_fltr = ""; if((int)$wapp_aflag == 1){ $wapp_fltr = " AND `wapp_aflag` = '1'"; }
 
-$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$sup_fltr."".$area_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
-$query = mysqli_query($conn,$sql); $carea_alist = array();
-while($row = mysqli_fetch_assoc($query)){ $carea_alist[$row['area_code']] = $row['area_code']; }
+$sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$sup_fltr."".$area_fltr."".$wapp_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
+$query = mysqli_query($conn,$sql); $cus_alist = $carea_alist = array();
+while($row = mysqli_fetch_assoc($query)){ $cus_alist[$row['code']] = $row['code']; $carea_alist[$row['area_code']] = $row['area_code']; }
 //Area Details
 $area_list = implode("','",$carea_alist);
 $sql = "SELECT * FROM `main_areas` WHERE `code` IN ('$area_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $area_code = $area_name = array();
 while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code']; $area_name[$row['code']] = $row['description']; }
+
 ?>
 <html>
 	<head>
+        <title><?php echo $file_name; ?></title>
         <?php include "header_head2.php"; ?>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -176,16 +190,24 @@ while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code'
                             <td colspan="2"><?php echo $cdetails; ?></td>
                             <td colspan="15" align="center">
                                 <h3><?php echo $file_name; ?></h3>
-                                <label><b style="color: green;">From Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($fdate)); ?></label>&ensp;&ensp;
-                                <label><b style="color: green;">To Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($tdate)); ?></label>
+                                <label><b style="color: green;">From Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($bfdate)); ?></label>&ensp;&ensp;
+                                <label><b style="color: green;">To Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($btdate)); ?></label>
                             </td>
                         </tr>
                         <form action="<?php echo $form_reload_page; ?>" method="post" onsubmit="return check_val2();">
                             <tr>
                                 <th colspan="16">
                                     <div class="m-1 p-1 row">
+                                        <div class="m-2 form-group" style="width:110px;">
+                                            <label for="bfdate">From Date</label>
+                                            <input type="text" name="bfdate" id="bfdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($bfdate)); ?>" style="padding:0;padding-left:2px;width:100px;" onchange="fetch_todate();" readonly />
+                                        </div>
+                                        <div class="m-2 form-group" style="width:110px;">
+                                            <label for="btdate">To Date</label>
+                                            <input type="text" name="btdate" id="btdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($btdate)); ?>" style="padding:0;padding-left:2px;width:100px;" onchange="fetch_todate2();" readonly />
+                                        </div>
                                         <div class="m-2 form-group" style="width:200px;">
-                                            <label>Supervisor</label>
+                                            <label for="supervisors">Supervisor</label>
                                             <select name="supervisors" id="supervisors" class="form-control select2" style="width:190px;" onchange="fetch_careas();">
                                                 <option value="all" <?php if($supervisors == "all"){ echo "selected"; } ?>>-All-</option>
                                                 <?php foreach($supv_code as $gcode){ if($supv_name[$gcode] != ""){ ?>
@@ -194,13 +216,23 @@ while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code'
                                             </select>
                                         </div>
                                         <div class="m-2 form-group" style="width:200px;">
-                                            <label>Area</label>
+                                            <label for="areas">Area</label>
                                             <select name="areas[]" id="areas" class="form-control select2" style="width:190px;" multiple >
                                                 <option value="all" <?php foreach($area_acode as $areas){ if($areas == "all"){ echo "selected"; } } ?>>-All-</option>
                                                 <?php foreach($area_code as $gcode){ if($area_name[$gcode] != ""){ ?>
                                                 <option value="<?php echo $gcode; ?>" <?php foreach($area_acode as $areas){ if($areas == $gcode){ echo "selected"; } } ?>><?php echo $area_name[$gcode]; ?></option>
                                                 <?php } } ?>
                                             </select>
+                                        </div>
+                                        <?php if((int)$wapp_adflag == 1){ ?>
+                                        <div class="m-2 form-group" style="text-align: center;">
+                                            <label for="wapp_aflag">WhatsApp</label><br/>
+                                            <input type="checkbox" name="wapp_aflag" id="wapp_aflag" <?php if((int)$wapp_aflag == 1){ echo "checked"; } ?>>
+                                        </div>
+                                        <?php } ?>
+                                        <div class="m-2 form-group" style="text-align: center;">
+                                            <label for="bwe_flag">B/w Days Entry</label><br/>
+                                            <input type="checkbox" name="bwe_flag" id="bwe_flag" <?php if((int)$bwe_flag == 1){ echo "checked"; } ?>>
                                         </div>
                                         <div class="m-2 form-group">
                                             <button type="submit" name="submit_report" id="submit_report" class="btn btn-sm btn-success">Submit</button>
@@ -236,14 +268,6 @@ while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code'
 						<tr>
 							<td colspan="19" class="p-1">
                                 <div class="m-1 p-1 row">
-                                    <div class="form-group" style="width:110px;">
-                                        <label for="fdate">From Date</label>
-                                        <input type="text" name="fdate" id="fdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="padding:0;padding-left:2px;width:100px;" onchange="fetch_todate();" readonly />
-                                    </div>
-                                    <div class="form-group" style="width:110px;">
-                                        <label for="tdate">To Date</label>
-                                        <input type="text" name="tdate" id="tdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
-                                    </div>
                                     <div class="ml-2 mr-2 form-group">
                                         <label>Select All</label>
                                         <input type="checkbox" name="checkall" id="checkall" class="form-control" style="text-align:center;" onchange="checkedall()" />
@@ -265,6 +289,14 @@ while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code'
                                     </div>&ensp;
                                     <div class="form-group">
                                         <br/><button type="button" name="view_pdf_print" id="view_pdf_print" class="btn btn-warning btn-sm" onclick="upd_opn_details(this.id);">View PDF</button>
+                                    </div>&ensp;
+                                    <div class="form-group" style="width:110px;visibility:hidden;">
+                                        <label for="fdate">From Date</label>
+                                        <input type="text" name="fdate" id="fdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($bfdate)); ?>" style="padding:0;padding-left:2px;width:100px;" onchange="fetch_todate();" readonly />
+                                    </div>
+                                    <div class="form-group" style="width:110px;visibility:hidden;">
+                                        <label for="tdate">To Date</label>
+                                        <input type="text" name="tdate" id="tdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($btdate)); ?>" style="padding:0;padding-left:2px;width:100px;" onchange="fetch_todate2();" readonly />
                                     </div>&ensp;
                                     <div class="form-group">
                                         <br/><button type="button" name="send_pdf" id="send_pdf" class="btn btn-warning btn-sm" onclick="upd_opn_details(this.id);">WhatsApp PDF</button>
@@ -290,7 +322,35 @@ while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code'
                             <th>Mobile No.</th>
                         </tr>
                         <?php
-                        $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$sup_fltr."".$area_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
+                        $cus_alist2 = array(); $cus_fltr = "";
+                        if((int)$bwe_flag == 1){
+                            $cus_list = implode("','",$cus_alist);
+                            //Sales
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$bfdate' AND `date` <= '$btdate' AND `customercode` IN ('$cus_list') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){  $cus_alist2[$row['customercode']] = $row['customercode']; }
+                            //Receipt
+                            $sql = "SELECT * FROM `customer_receipts` WHERE `date` >= '$bfdate' AND `date` <= '$btdate' AND `ccode` IN ('$cus_list') AND `vtype` = 'C' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $cus_alist2[$row['ccode']] = $row['ccode']; }
+                            //Customer Crdr
+                            $sql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$bfdate' AND `date` <= '$btdate' AND `ccode` IN ('$cus_list') AND `mode` IN ('CCN','CDN') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $cus_alist2[$row['ccode']] = $row['ccode']; }
+                            //Sales Return
+                            $sql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$bfdate' AND `date` <= '$btdate' AND `vcode` IN ('$cus_list') AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $cus_alist2[$row['vcode']] = $row['vcode']; }
+                            //Customer Mortality
+                            $sql = "SELECT * FROM `main_mortality` WHERE `date` >= '$bfdate' AND `date` <= '$btdate' AND `ccode` IN ('$cus_list') AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`code`,`id` ASC";
+                            $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $cus_alist2[$row['ccode']] = $row['ccode']; }
+                        
+                            if(sizeof($cus_alist2) > 0){
+                                $cus_list = implode("','",$cus_alist2);
+                                $cus_fltr = " AND `code` IN ('$cus_list')";
+                            }
+                            else{
+                                $cus_fltr = " AND `code` IN ('MKPS-0001')";
+                            }
+                        }
+                        
+                        $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%'".$cus_fltr."".$sup_fltr."".$area_fltr."".$wapp_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `name` ASC";
                         $query = mysqli_query($conn,$sql); $c = 0;
                         while($row = mysqli_fetch_assoc($query)){
                             $c++;
@@ -328,8 +388,14 @@ while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code'
                 else{ return false; }
             }
             function upd_opn_details(a){
-                document.getElementById("send_type").value = a;
-                document.getElementById("send_cuspdf").click();
+                var x = true;
+                if(a == "send_pdf"){
+                    x = confirm("Are you sure, you want to send the WhatsApp PDF?");
+                }
+                if(x == true){
+                    document.getElementById("send_type").value = a;
+                    document.getElementById("send_cuspdf").click();
+                }
             }
             function checkval(){
                 var incr = '<?php echo $c; ?>';
@@ -467,7 +533,8 @@ while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code'
                 }
             }
             function fetch_todate(){
-                var fdate = document.getElementById("fdate").value;
+                var fdate = document.getElementById("bfdate").value;
+                document.getElementById("fdate").value = fdate;
                 var fetch_tdate = new XMLHttpRequest();
                 var method = "GET";
                 var url = "chicken_fetch_dates.php?fdate="+fdate+"&type=days_7";
@@ -478,9 +545,16 @@ while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code'
                 fetch_tdate.onreadystatechange = function(){
                     if(this.readyState == 4 && this.status == 200){
                         var tdate = this.responseText;
+                        document.getElementById("btdate").value = tdate;
                         document.getElementById("tdate").value = tdate;
                     }
                 }
+            }
+            function fetch_todate2(){
+                var fdate = document.getElementById("bfdate").value;
+                var tdate = document.getElementById("btdate").value;
+                document.getElementById("fdate").value = fdate;
+                document.getElementById("tdate").value = tdate;
             }
             function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
         </script>

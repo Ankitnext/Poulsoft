@@ -96,6 +96,8 @@ if($link_active_flag > 0){
         $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){ $reject_code[$row['code']] = $row['code']; $reject_name[$row['code']] = $row['description']; }
         
+        $sql ="SELECT *  FROM `extra_access` WHERE `field_name` = 'broiler_display_hatchentry2.php' AND `field_function` = 'ECI-ECM' AND `flag` = '1'";
+        $query = mysqli_query($conn,$sql); $ecm_flag = mysqli_num_rows($query);
 ?>
 <html lang="en">
     <head>
@@ -242,6 +244,44 @@ if($link_active_flag > 0){
                                         <div class="form-group">
                                             <label>Culls%<b style="color:red;">&nbsp;*</b></label>
                                             <input type="text" name="culls_per" id="culls_per" class="form-control text-right" style="width:110px; text-right" readonly />
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-center align-items-center">
+                                        <div class="form-group">
+                                            <label>Infertile Egg</label>
+                                            <input type="text" name="infertile_nos" id="infertile_nos" class="form-control text-right" style="width:110px; text-right" onkeyup="calculate_row_total()" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Infertile Egg%</label>
+                                            <input type="text" name="infertile_per" id="infertile_per" class="form-control text-right" style="width:110px; text-right" readonly />
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-center align-items-center">
+                                        <div class="form-group">
+                                            <?php if($ecm_flag > 0){ ?>
+                                            <label>E.C.M</label>
+                                            <?php } else { ?>
+                                            <label>E.C.I</label>
+                                            <?php } ?>
+                                            <input type="text" name="eci_nos" id="eci_nos" class="form-control text-right" style="width:110px; text-right" onkeyup="calculate_row_total()" />
+                                        </div>
+                                        <div class="form-group">
+                                             <?php if($ecm_flag > 0){ ?>
+                                            <label>E.C.M%</label>
+                                            <?php } else { ?>
+                                            <label>E.C.I%</label>
+                                            <?php } ?>
+                                            <input type="text" name="eci_per" id="eci_per" class="form-control text-right" style="width:110px; text-right" readonly />
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-center align-items-center">
+                                        <div class="form-group">
+                                            <label>Blasting Egg</label>
+                                            <input type="text" name="blasting_nos" id="blasting_nos" class="form-control text-right" style="width:110px; text-right" onkeyup="calculate_row_total()" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Blasting Egg%</label>
+                                            <input type="text" name="blasting_per" id="blasting_per" class="form-control text-right" style="width:110px; text-right" readonly />
                                         </div>
                                     </div>
                                     <div class="row justify-content-center align-items-center">
@@ -644,7 +684,7 @@ if($link_active_flag > 0){
                     document.getElementById("reject_egg_per["+i+"]").value = parseFloat(reject_egg_per).toFixed(2);
                     tot_reject_egg_count += parseFloat(reject_egg_nos);
                 }
-                var hatch_nos = hatch_per = deathin_hatch_nos = deathin_hatch_per = culls_nos = culls_per = salable_chick_nos = salable_chick_per = 0;
+                var hatch_nos = hatch_per = deathin_hatch_nos = deathin_hatch_per = culls_nos = culls_per = salable_chick_nos = salable_chick_per = infertile_nos = infertile_per = eci_nos = eci_per = blasting_nos = blasting_per = 0;
                 
                 hatch_nos = parseFloat(nof_egg_set) - parseFloat(tot_reject_egg_count);
                 hatch_per = ((parseFloat(hatch_nos) / parseFloat(nof_egg_set)) * 100);
@@ -658,8 +698,23 @@ if($link_active_flag > 0){
                 culls_nos = document.getElementById("culls_nos").value; if(culls_nos == ""){ culls_nos = 0; }
                 culls_per = ((parseFloat(culls_nos) / parseFloat(nof_egg_set)) * 100);
                 document.getElementById("culls_per").value = culls_per.toFixed(2);
+
+                 // infirtile nos & per
+                 infertile_nos = document.getElementById("infertile_nos").value; if(infertile_nos == ""){ infertile_nos = 0; }
+                infertile_per = ((parseFloat(infertile_nos) / parseFloat(nof_egg_set)) * 100);
+                document.getElementById("infertile_per").value = infertile_per.toFixed(2);
+
+                // eci no & per
+                eci_nos = document.getElementById("eci_nos").value; if(eci_nos == ""){ eci_nos = 0; }
+                eci_per = ((parseFloat(eci_nos) / parseFloat(nof_egg_set)) * 100);
+                document.getElementById("eci_per").value = eci_per.toFixed(2);
+
+                // blasting egg no & per
+                blasting_nos = document.getElementById("blasting_nos").value; if(blasting_nos == ""){ blasting_nos = 0; }
+                blasting_per = ((parseFloat(blasting_nos) / parseFloat(nof_egg_set)) * 100);
+                document.getElementById("blasting_per").value = blasting_per.toFixed(2);
                 
-                salable_chick_nos = parseFloat(nof_egg_set) - parseFloat(tot_reject_egg_count) - parseFloat(deathin_hatch_nos) - parseFloat(culls_nos);
+                salable_chick_nos = parseFloat(nof_egg_set) - parseFloat(tot_reject_egg_count) - parseFloat(deathin_hatch_nos) - parseFloat(culls_nos) - parseFloat(infertile_nos) - parseFloat(eci_nos) - parseFloat(blasting_nos);
                 salable_chick_per = ((parseFloat(salable_chick_nos) / parseFloat(nof_egg_set)) * 100);
                 document.getElementById("salable_chick_nos").value = salable_chick_nos;
                 document.getElementById("salable_chick_per").value = parseFloat(salable_chick_per).toFixed(2);

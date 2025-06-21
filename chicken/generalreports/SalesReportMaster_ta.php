@@ -83,19 +83,22 @@
 	while($row = mysqli_fetch_assoc($query)){ $cus_jalsfreight_flag = $row['cus_jalsfreight_flag']; }
 	if($cus_jalsfreight_flag == ""){ $cus_jalsfreight_flag = 0; }
 
-	$sql = "SELECT *  FROM `main_linkdetails` WHERE `href` LIKE '%SalesReportMaster_ta.php%'"; $query = mysqli_query($conn,$sql);
+	$sql = "SELECT *  FROM `main_linkdetails` WHERE `href` LIKE '%SalesReportMaster.php%'"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $cid = $row['childid']; }
+
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Rename to vehicleno' AND `field_function` = 'Vehicle No' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $vhlno = mysqli_num_rows($query);
 
 	$sql='SHOW COLUMNS FROM `master_reportfields`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
 	while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
 	if(in_array("purcus_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `master_reportfields` ADD `purcus_flag` varchar(300) NULL DEFAULT NULL COMMENT 'Pur-Sale Customer Name' AFTER `vendor_flag`"; mysqli_query($conn,$sql); }
 	if(in_array("salesup_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `master_reportfields` ADD `salesup_flag` varchar(300) NULL DEFAULT NULL COMMENT 'Pur-Sale Supplier Name' AFTER `purcus_flag`"; mysqli_query($conn,$sql); }
 	if(in_array("atime_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `master_reportfields` ADD `atime_flag` varchar(300) NULL DEFAULT NULL COMMENT 'addedemp time' AFTER `salesup_flag`"; mysqli_query($conn,$sql); }
-	
+
     // Logo Flag
     $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Reports' AND `field_function` LIKE 'Fetch Logo Dynamically' AND `user_access` LIKE 'all' AND `flag` = '1'";
     $query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
-	if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
+    if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
 
     //Report Master Access Filter
     $sql = "SELECT * FROM `master_reportfields` WHERE `code` = '$cid' AND `active` = '1'"; $query = mysqli_query($conn,$sql); $frt_amt_flag = 0;
@@ -103,6 +106,7 @@
         $type = "type";
         $code = "code";
         $pattern = "pattern";
+        $field_details[$row['sl_flag']] = "sl_flag";
         $field_details[$row['date_flag']] = "date_flag";
         $field_details[$row['inv_flag']] = "inv_flag";
         $field_details[$row['binv_flag']] = "binv_flag";
@@ -160,7 +164,7 @@
         foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
         $grp_list = implode("@",$groups);
 	}
-	$url = "../PHPExcel/Examples/SalesReportMaster_ta-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&billnos=".$billnos."&item_cat=".$item_cat."&items=".$items."&sectors=".$sectors."&users=".$users."&groups=".$grp_list."&prices=".$prices;
+	$url = "../PHPExcel/Examples/SalesReportMaster-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&billnos=".$billnos."&item_cat=".$item_cat."&items=".$items."&sectors=".$sectors."&users=".$users."&groups=".$grp_list."&prices=".$prices;
 	
 ?>
 <html>
@@ -178,7 +182,7 @@
 	    <?php if($exports == "displaypage" || $exports == "printerfriendly") { ?>
 			<table align="center">
 				<tr>
-                    <?php
+                <?php
                     if($dlogo_flag > 0) { ?>
                         <td><img src="../<?php echo $logo1; ?>" height="150px"/></td>
                     <?php }
@@ -318,7 +322,8 @@
                             $html .= '<tr>';
                             for($i = 1;$i <= $col_count;$i++){
                                 if(!empty($field_details[$i.":".$aflag])){
-                                    if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
+                                    if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<th id="order">Sl&nbsp;No.</th>'; $bwtd_det_col++; }
+                                    else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<th id="order">Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<th id="order">Book Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<th id="order">Customer</th>'; $bwtd_det_col++; }
@@ -339,10 +344,17 @@
                                     else if($field_details[$i.":".$aflag] == "discount_flag"){ $html .= '<th id="order_num">Discount</th>'; }
                                     else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<th id="order_num">Total Amount</th>'; }
                                     else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<th id="order">Warehouse</th>'; }
-                                    else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<th id="order">Remarks</th>'; }
+                                    else if($field_details[$i.":".$aflag] == "remarks_flag"){
+                                        if($vhlno > 0){
+                                            $html .= '<th id="order">Vehicle No</th>'; 
+                                        }else{
+                                            $html .= '<th id="order">Remarks</th>'; 
+                                        }
+                                         
+                                        }
                                     else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<th id="order">Vehicle</th>'; }
                                     else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<th id="order">Driver</th>'; }
-                                    else if($field_details[$i.":".$aflag] == "cr_flag"){ $html .= '<th id="order_num">Sales</th>'; }
+                                    else if($field_details[$i.":".$aflag] == "cr_flag"){ $html .= '<th id="order_num">Amount</th>'; }
                                     else if($field_details[$i.":".$aflag] == "dr_flag"){ $html .= '<th id="order_num">Receipts</th>'; }
                                     else if($field_details[$i.":".$aflag] == "rb_flag"){ $html .= '<th id="order_num">Running Balance</th>'; }
                                     else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<th id="order">User</th>'; }
@@ -401,8 +413,15 @@
                                 $ptrno_list = implode("','", $pur_alist);
                                 if(sizeof($pur_alist) > 0){ $pur_fltr = " AND `link_trnum` IN ('$ptrno_list')"; } else{ $pur_fltr = " AND `link_trnum` IN ('none')"; }
                             }
+
+                            $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'SalesReportMaster.php' AND `field_function` LIKE 'Purchase Sale Sorting' AND `user_access` LIKE 'all' AND `flag` = '1'";
+                            $query = mysqli_query($conn,$sql); $sltr_flag = mysqli_num_rows($query); //$avou_flag = 1;
                             
+                            if($sltr_flag > 0 ){
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            } else {
                             $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            }
                             $query = mysqli_query($conn,$sql); $link_trnum = array();
                             while($row = mysqli_fetch_assoc($query)){ if($row['link_trnum'] != ""){ $link_trnum[$row['link_trnum']] = $row['link_trnum']; } }
 
@@ -413,7 +432,13 @@
                                 while($row = mysqli_fetch_assoc($query)){ $ltno_vname[$row['invoice']] = $sup_name[$row['vendorcode']]; }
                             }
 
+                           
+	
+                            if($sltr_flag > 0 ){
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                           } else {
                             $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                           }  
                             $query = mysqli_query($conn,$sql); $i = 0; $sales = $inv_count = $slc_freightamt = $slc_tcdsamt = $slc_roundoff = $slc_finaltotal = array();
                             while($row = mysqli_fetch_assoc($query)){
                                
@@ -431,14 +456,21 @@
                                 }
                                 $i++;
                             }
-                            $ccount = sizeof($sales); $exi_inv = "";
+                            $ccount = sizeof($sales); $exi_inv = ""; $sl = 1;
+                            $rowred = 'style="background-color:red;"';
                             for($cdate = strtotime($fdate);$cdate <= strtotime($tdate);$cdate += (86400)){
                                 $adate = date('Y-m-d', $cdate);
                                 for($j = 0;$j <= $ccount;$j++){
                                     if($sales[$adate."@".$j] != ""){
                                         $sales_details = explode("@",$sales[$adate."@".$j]);
-                                        $html .= '<tr>';
+                                       // $html .= '<tr>';
+                                        if ($sales_details[10] == 1) {
+                                            $html .= '<tr ' . $rowred . '>';
+                                        } else {
+                                            $html .= '<tr>';
+                                        }
                                         $tacount = $tacount + (float)$sales_details[11];
+                                        
                                         if($exi_inv != $sales_details[1]){
                                             $exi_inv = $sales_details[1];
                                             if(number_format_ind($slc_finaltotal[$sales_details[1]]) == number_format_ind($rb_amt)){
@@ -451,14 +483,15 @@
                                             $ft_tcds = $ft_tcds + $slc_tcdsamt[$sales_details[1]];
                                             $ft_roundoff = $ft_roundoff + $slc_roundoff[$sales_details[1]];
                                             $fst_famt = $fst_famt + $slc_finaltotal[$sales_details[1]];
-                                            
+                                            // $sl = 0;
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td>'.$cus_name[$sales_details[3]].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td>'.$ltno_vname[$sales_details[26]].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td>'.$item_name[$sales_details[7]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$ltno_vname[$sales_details[26]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$item_name[$sales_details[7]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "jals_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($sales_details[4])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "birds_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($sales_details[8])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[5]).'</td>'; }
@@ -474,15 +507,15 @@
                                                     }
                                                 }
                                                 else if($field_details[$i.":".$aflag] == "prate_flag"){ $prate_index = $sales_details[0]."@".$cus_group[$sales_details[3]]."@".$sales_details[7]; $ppr_count++; $ppr_amt = $ppr_amt + $prates[$prate_index]; $html .= '<td class="text-right">'.number_format_ind($prates[$prate_index]).'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "price_flag"){ $html .= '<td class="text-right">'.$sales_details[10].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "price_flag"){  $html .= '<td class="text-right">'.$sales_details[10].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "freightamt_flag"){ $html .= '<td class="text-right">'.$sales_details[24].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[11]).'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td>'.$sector_name[$sales_details[16]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$sales_details[16]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<td>'.$sales_details[20].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<td>'.$sales_details[21].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<td>'.$sales_details[22].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "discount_flag"){ $html .= '<td>'.$sales_details[18].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td>'.$user_name[$sales_details[23]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$user_name[$sales_details[23]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "atime_flag"){ $html .= '<td>'.date("d.m.Y H:i:s",strtotime($sales_details[27])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "jfreight_flag"){ $html .= '<td class="text-right">'.number_format_ind($slc_freightamt[$sales_details[1]]).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tcds_flag"){ $html .= '<td class="text-right">'.number_format_ind($slc_tcdsamt[$sales_details[1]]).'</td>'; }
@@ -494,12 +527,13 @@
                                         }
                                         else{
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td>'.$cus_name[$sales_details[3]].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td>'.$ltno_vname[$sales_details[26]].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td>'.$item_name[$sales_details[7]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$ltno_vname[$sales_details[26]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$item_name[$sales_details[7]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "jals_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($sales_details[4])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "birds_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($sales_details[8])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[5]).'</td>'; }
@@ -516,14 +550,16 @@
                                                 }
                                                 else if($field_details[$i.":".$aflag] == "prate_flag"){ $prate_index = $sales_details[0]."@".$cus_group[$sales_details[3]]; $ppr_count++; $ppr_amt = $ppr_amt + $prates[$prate_index]; $html .= '<td class="text-right">'.number_format_ind($prates[$prate_index]).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "price_flag"){ $html .= '<td class="text-right">'.$sales_details[10].'</td>'; }
+                                                
+                                                    
                                                 else if($field_details[$i.":".$aflag] == "freightamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[24]).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[11]).'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td>'.$sector_name[$sales_details[16]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$sales_details[16]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<td>'.$sales_details[20].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<td>'.$sales_details[21].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<td>'.$sales_details[22].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "discount_flag"){ $html .= '<td>'.$sales_details[18].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td>'.$user_name[$sales_details[23]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$user_name[$sales_details[23]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "atime_flag"){ $html .= '<td>'.date("d.m.Y H:i:s",strtotime($sales_details[27])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "jfreight_flag"){ $html .= '<td></td>'; }
                                                 else if($field_details[$i.":".$aflag] == "tcds_flag"){ $html .= '<td></td>'; }

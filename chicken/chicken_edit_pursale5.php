@@ -76,7 +76,7 @@
                 $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
 				while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
-				 $sql = "SELECT * FROM `chicken_supplier_branch` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
+				$sql = "SELECT * FROM `chicken_supplier_branch` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
 				$query = mysqli_query($conn,$sql); $count = mysqli_num_rows($query); $sp_code = $sp_name = array();
 				while($row = mysqli_fetch_assoc($query)){$sp_code[$row['code']] = $row['code']; $sp_name[$row['code']] = $row['description'];}
 				

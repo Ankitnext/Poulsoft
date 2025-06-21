@@ -113,10 +113,25 @@ if(isset($_POST['submit']) == true){
     $fsizes = $_POST['fsizes'];
     $exports = $_POST['exports'];
     if($aa_flag == 0){ $area_list = implode("','",$area_acode); $area_fltr = " AND `area_code` IN ('$area_list')"; }
+     
+    if (count($area_acode) === 1 && isset($area_acode['all']) && $area_acode['all'] === 'all') {
+        $selected_area = 'all';
+    } else {
+        $arr = array();
+        foreach($area_acode as $are){  //$area_name
+           $arr[] = $area_name[$are];
+        }
+        $selected_area = implode(',', $arr);
+    }
+
+
+
+
 }
 ?>
 <html>
 	<head>
+        <title><?php echo $file_name; ?></title>
         <?php include "header_head2.php"; ?>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -131,19 +146,27 @@ if(isset($_POST['submit']) == true){
 		<section class="content" align="center">
 			<div class="col-md-12" align="center">
 				<form action="<?php echo $form_reload_page; ?>" method="post" onsubmit="return checkval()">
-				    <table <?php if($exports == "print") { echo ' class="main-table"'; } else{ echo ' class="table-sm table-hover main-table2"'; } ?>>
+				    <table <?php if($exports == "print") { 
+                        echo ' class="main-table"';
+                       
+                        } else{ echo ' class="table-sm table-hover main-table2"'; } ?>>
                         <thead class="thead1">
                             <tr>
+                            
                             <?php
+                            if($exports != "print"){
                                 if($dlogo_flag > 0) { ?>
                                     <td><img src="../<?php echo $logo1; ?>" height="150px"/></td>
+                                    
                                 <?php }
                                 else{ 
                                 ?>
                                 <td colspan="2"><img src="<?php echo "../".$logopath; ?>" height="150px"/></td>
-                                <td colspan="2"><?php echo $cdetails; ?></td>
-                                <td colspan="18" align="center">
-                                    <h3><?php echo $file_name; }?></h3>
+                                <td colspan="2"><?php echo $cdetails; ?></td>      
+                                <td colspan="16" align="center">
+                                    <h3><?php echo $file_name; }}else{
+                                        echo "<td colspan='16' style='text-align:center'><h4>".$csupr_name[$supervisors]." ".date("d-m-Y",strtotime($fdate))." to ".date("d-m-Y",strtotime($tdate))." Area(".$selected_area.")</h4></td>";
+                                    }?></h3>
                                 </td>
                             </tr>
                         </thead>
@@ -212,23 +235,32 @@ if(isset($_POST['submit']) == true){
                     <?php if($exports == "display" || $exports == "exportpdf"){ ?>
                     </table>
                     <table class="main-table table-sm table-hover" id="main_table">
-                    <?php } ?>
+                    <?php }else{ ?>
+                      </table>
+                    <table class="main-table table-sm table-hover">
+                    <?php }?>
 						<?php
                         }
                         if(isset($_POST['submit']) == true){
                             $sdate = $edate = $min_sdate = $max_sdate = ""; $week_no = array(); $fdate1 = $fdate;
                            
                             $html = $nhtml = $fhtml = '';
+                            if($exports == "print"){
+                               
+                            }
                             $html .= '<thead class="thead2" id="head_names">';
 
-                            $nhtml .= '<tr>'; $fhtml .= '<tr>';
+                            $nhtml .= '<tr>';
+                            $nhtml .= '<td colspan="6" style="text-align:center"><h4>'.$csupr_name[$supervisors].' '.date("d-m-Y",strtotime($fdate)).' to '.date("d-m-Y",strtotime($tdate)).' Area('.$selected_area.')</h4></td>';
+                            $nhtml .= '</tr>';
+
+                            $nhtml .= '<tr'.($exports == "print" ? ' style="width:10px;"' : '').'>'; $fhtml .= '<tr'.($exports == "print" ? ' style="width:10px;"' : '').'>';
                             $nhtml .= '<th>S No.</th>'; $fhtml .= '<th id="order">S No.</th>';
                             $nhtml .= '<th>Customer Name</th>'; $fhtml .= '<th id="order">Customer Name</th>';
                             $nhtml .= '<th>Opening</th>'; $fhtml .= '<th id="order">Opening</th>';
-                            $nhtml .= '<th>KGS</th>'; $fhtml .= '<th id="order_num">KGS</th>';
                             $nhtml .= '<th>Sales</th>'; $fhtml .= '<th id="order">Sales</th>';
                             $nhtml .= '<th>Receipt</th>'; $fhtml .= '<th id="order">Receipt</th>';
-                            $nhtml .= '<th>Day</th>'; $fhtml .= '<th id="order_num">Day</th>';
+                            $nhtml .= '<th>Remarks</th>'; $fhtml .= '<th id="order_num">Remarks</th>';
                             $nhtml .= '</tr>'; $fhtml .= '</tr>';
 
                             $html .= $fhtml;
@@ -252,16 +284,19 @@ if(isset($_POST['submit']) == true){
                             $sql = "SELECT invoice,finaltotal,customercode FROM `customer_sales` WHERE `date` < '$fdate' AND `customercode` IN ('$cus_list') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `invoice` ASC"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
                             if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ if($old_inv != $row['invoice']){ $oinv[$row['customercode']] += (float)$row['finaltotal']; $old_inv = $row['invoice']; } } }
 
-                            $sql = "SELECT amount,ccode FROM `customer_receipts` WHERE  `date` < '$fdate' AND `ccode` IN ('$cus_list') AND `active` = '1'"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
+                            $sql = "SELECT amount,mode,ccode FROM `main_crdrnote` WHERE  `date` < '$fdate' AND `ccode` IN ('$cus_list') AND `mode` IN ('CDN') AND `active` = '1' ORDER BY `mode` ASC"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
+                            if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ $ocdn[$row['ccode']] += (float)$row['amount']; } }
+
+                            $sql = "SELECT amount,ccode FROM `customer_receipts` WHERE  `date` <= '$tdate' AND `ccode` IN ('$cus_list') AND `active` = '1'"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
                             if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ $orct[$row['ccode']] += (float)$row['amount']; } }
 
-                            $sql = "SELECT amount,mode,ccode FROM `main_crdrnote` WHERE  `date` < '$fdate' AND `ccode` IN ('$cus_list') AND `mode` IN ('CCN','CDN') AND `active` = '1' ORDER BY `mode` ASC"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
-                            if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ if($row['mode'] == "CDN") { $ocdn[$row['ccode']] += (float)$row['amount']; } else {  $occn[$row['ccode']] += (float)$row['amount']; } } }
+                            $sql = "SELECT amount,mode,ccode FROM `main_crdrnote` WHERE  `date` <= '$tdate' AND `ccode` IN ('$cus_list') AND `mode` IN ('CCN') AND `active` = '1' ORDER BY `mode` ASC"; $query = mysqli_query($conn,$sql); $otcount = mysqli_num_rows($query);
+                            if($otcount > 0){ while($row = mysqli_fetch_assoc($query)){ $occn[$row['ccode']] += (float)$row['amount']; } }
 
-                            $obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$fdate' AND `ccode` IN ('$cus_list') AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $obquery = mysqli_query($conn,$obsql); $otcount = mysqli_num_rows($query);
+                            $obsql = "SELECT * FROM `main_mortality` WHERE `date` <= '$tdate' AND `ccode` IN ('$cus_list') AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $obquery = mysqli_query($conn,$obsql); $otcount = mysqli_num_rows($query);
                             if($otcount > 0){ while($obrow = mysqli_fetch_assoc($obquery)){ $omortality[$obrow['ccode']] += (float)$obrow['amount']; } }
 
-                            $obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fdate' AND `vcode` IN ('$cus_list') AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $obquery = mysqli_query($conn,$obsql); $otcount = mysqli_num_rows($query);
+                            $obsql = "SELECT * FROM `main_itemreturns` WHERE `date` <= '$tdate' AND `vcode` IN ('$cus_list') AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'"; $obquery = mysqli_query($conn,$obsql); $otcount = mysqli_num_rows($query);
                             if($otcount > 0){ while($obrow = mysqli_fetch_assoc($obquery)){ $oreturns[$obrow['vcode']] += (float)$obrow['amount']; } }
                             
                             $balance = $sales = $receipts = array();
@@ -272,24 +307,7 @@ if(isset($_POST['submit']) == true){
 
                            
                             }
-                            // Testing
-                            echo $oinv['DBT-0002'];
-                            echo ".1<hr>";
-                            echo $ocdn['DBT-0002'];
-                            echo ".2<hr>";
-                            echo $obdramt['DBT-0002'];
-                            echo ".3<hr>";
-                            echo $orct['DBT-0002'];
-                            echo ".4<hr>";
-                            echo $omortality['DBT-0002'];
-                            echo ".5<hr>";
-                            echo $oreturns['DBT-0002'];
-                            echo ".6<hr>";
-                            echo $occn['DBT-0002'];
-                            echo ".7<hr>";
-                            echo $obcramt['DBT-0002'];
-                            echo ".8<hr>";
-                            //Week Wise Sales
+                 
                             $sql = "SELECT * FROm `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `customercode` IN ('$cus_list') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
                             $query = mysqli_query($conn,$sql); $sql_qty = $sql_amt = array(); $old_inv = "";
                             while($row = mysqli_fetch_assoc($query)){
@@ -306,7 +324,7 @@ if(isset($_POST['submit']) == true){
                                 $rct_amt[$row['ccode']] += (float)$row['amount'];
                                 $dateValue = $row['date']; // Assuming 'date' is in YYYY-MM-DD format
                                 $dayAbbreviation = date('D', strtotime($dateValue)); // Extracts day name (Mon, Tue, etc.)
-
+                              
                                 // Append multiple day abbreviations separated by commas
                                 if (!isset($rct_day[$row['ccode']])) {
                                     $rct_day[$row['ccode']] = $dayAbbreviation; // First entry
@@ -328,29 +346,25 @@ if(isset($_POST['submit']) == true){
                                 $slno++;
                                // $price = 0; if((float)$isale_qty[$key] != 0){ $price = (float)$isale_amt[$key] / (float)$isale_qty[$key]; }
                                 $html .= '<tr>';
-                                $html .= '<td style="text-align:right;">'.$slno.'</td>';
-                                $html .= '<td style="text-align:right;">'.$cs_names[$key].'</td>';
-                                //$html .= '<td style="text-align:right;">'.$key.'</td>';
-                                $html .= '<td style="text-align:right;">'.number_format_ind(round($ob_amt,2)).'</td>';
-                                $html .= '<td style="text-align:right;">'.number_format_ind(round($sql_qty[$key],2)).'</td>';
-                                $html .= '<td style="text-align:right;">'.number_format_ind(round($sql_amt[$key],2)).'</td>';
-                                $html .= '<td style="text-align:right;">'.number_format_ind(round($rct_amt[$key],2)).'</td>';
-                                $html .= '<td style="text-align:right;">'.$rct_day[$key].'</td>';
-                                // $html .= '<td style="text-align:right;">'.number_format_ind(round($cls_bal,2)).'</td>';
+                                $html .= '<td style="text-align:center;height: 50px;">'.$slno.'</td>';
+                                $html .= '<td style="text-align:left;width:240px;">'.$cs_names[$key].'</td>';
+                                $html .= '<td style="text-align:center;width:140px">'.number_format_ind(round($ob_amt,2)).'</td>';
+                                $html .= '<td style="text-align:center;width:140px;">'.number_format_ind(round($sql_amt[$key],2)).'</td>';
+                                $html .= '<td style="text-align:right;width:140px;"></td>';
+                                $html .= '<td style="text-align:right;width:300px;"></td>';
                                 $html .= '</tr>';
                                 
                                 $tsale_qty += (float)$sql_qty[$key];
                                 $tsale_amt += (float)$sql_amt[$key];
                                 $trct_amt += (float)$rct_amt[$key];
-                                // $tsale_wamt += (float)$week_amt;
-                                // $tsale_clb = (float)$cls_bal;
                             }
                             $html .= '<tr class="thead2">';
                             $html .= '<th colspan="3">Total</th>';
-                            $html .= '<th style="text-align:right;">'.number_format_ind(round($tsale_qty,2)).'</th>';
-                            $html .= '<th style="text-align:right;">'.number_format_ind(round($tsale_amt,2)).'</th>';
-                            $html .= '<th style="text-align:right;">'.number_format_ind(round($trct_amt,2)).'</th>';
-                            $html .= '<th style="text-align:right;" colspan="1"></th>';
+                         //   $html .= '<th style="text-align:center;">'.number_format_ind(round($tsale_qty,2)).'</th>';
+                          
+                            $html .= '<th style="text-align:center;">'.number_format_ind(round($tsale_amt,2)).'</th>';
+                            $html .= '<th style="text-align:right;"></th>';
+                            $html .= '<th style="text-align:right;" colspan="2"></th>';
                             $html .= '</tr>';
 
                             echo $html;
@@ -386,11 +400,22 @@ if(isset($_POST['submit']) == true){
         <script type="text/javascript">
             function tableToExcel(table, name, filename, chosen){
                 if(chosen === 'excel'){
+                    
+                    document.getElementById("head_names").innerHTML = "";
+                    var html = '';
+                    html += '<?php echo $nhtml; ?>';
+                    $('#head_names').append(html);
+
                     var table = document.getElementById("main_table");
                     var workbook = XLSX.utils.book_new();
                     var worksheet = XLSX.utils.table_to_sheet(table);
                     XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
                     XLSX.writeFile(workbook, filename+".xlsx");
+                    
+                    document.getElementById("head_names").innerHTML = "";
+                    var html = '';
+                    html += '<?php echo $fhtml; ?>';
+                    document.getElementById("head_names").innerHTML = html;
                     
                     $('#exports').select2();
                     document.getElementById("exports").value = "display";

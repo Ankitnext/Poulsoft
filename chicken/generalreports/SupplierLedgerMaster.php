@@ -7,14 +7,14 @@
 	
 	if($db == ''){
 		include "../newConfig.php";
-		include "header_head.php"; 
+		// include "header_head.php"; 
 		include "../broiler_check_tableavailability.php";
 		include "number_format_ind.php"; 
 		$dbname = $_SESSION['dbase'];
 	}
 	else{
 		include "APIconfig.php";
-		include "header_head.php";
+		// include "header_head.php";
 		include "../broiler_check_tableavailability.php";
 		include "number_format_ind.php";
 		$dbname = $db;
@@ -133,7 +133,10 @@
 	
 ?>
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+	<head>
+		<title>Supplier Ledger</title>
+        <?php include "header_head2.php"; ?>
+		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<script>
 			var exptype = '<?php echo $excel_type; ?>';
 			var url = '<?php echo $url; ?>';

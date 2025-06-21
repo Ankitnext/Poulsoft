@@ -1,0 +1,52 @@
+.reportheadermenu td { padding: 5px; }
+.reportheaderlabel { font-size: 17px; }
+.header {
+    position: fixed;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    height: 220px;
+	text-align: center;
+    z-index: 10;
+    -webkit-box-shadow: 0 7px 8px rgba(0, 0, 0, 0.12);
+    -moz-box-shadow: 0 7px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 7px 8px rgba(0, 0, 0, 0.12);
+  }
+    
+  .page__content-container {
+	top: 250px;
+    margin: 250px auto;
+    
+  }
+.box-body { min-height: 350px; }
+.form-control { width: 145px; height: 23px; }
+.select2-container .select2-selection--single{ box-sizing:border-box; cursor:pointer; display:block; height:23px; user-select:none; -webkit-user-select:none; }
+.select2-container--default .select2-selection--single{background-color:#fff;border:1px solid #aaa;border-radius:4px}
+.select2-container--default .select2-selection--single .select2-selection__rendered{color:#444;line-height:18px}
+.select2-container--default .select2-selection--single .select2-selection__clear{cursor:pointer;float:right;font-weight:bold}
+.select2-container--default .select2-selection--single .select2-selection__placeholder{color:#999}
+.select2-container--default .select2-selection--single .select2-selection__arrow{height:23px;position:absolute;top:1px;right:1px;width:20px}
+.select2-container--default .select2-selection--single .select2-selection__arrow b{border-color:#888 transparent transparent transparent;border-style:solid;border-width:5px 4px 0 4px;height:0;left:50%;margin-left:-4px;margin-top:-2px;position:absolute;top:50%;width:0}
+#datepicker,#datepicker1 { height: 23px; }
+.table1,.table1 thead,.table1 tr,.table1 td {
+border-collapse:collapse;
+border: 1px solid black;
+}
+.thead1 td{
+padding: 5px;
+}
+.thead2 th {
+text-align:center;
+border-collapse:collapse;
+border: 1px solid black;
+}
+.tbody1 td {
+padding-left:5px;
+}
+.tbody1 tr:hover {
+background-color: #fae7b5;
+}
+.foottr {
+font-weight:bold;
+text-align:center;
+}

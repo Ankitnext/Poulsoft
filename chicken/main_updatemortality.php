@@ -68,12 +68,31 @@ if($_POST['submittrans'] == "updatepage"){
 	if($amount == "" || $amount == NULL){ $amount = $price * $quantity; }
 	if($mtype == "" || $mtype == NULL || $mtype == "select"){ $mtype = ""; }
 	if($ccode == "" || $ccode == NULL || $ccode == "select"){ $ccode = ""; }
+
+	include_once("poulsoft_store_chngmaster.php");
+	$chng_type = "Edit";
+	$edit_file = "main_updatemortality.php";
+	$mtbl_name = "main_mortality";
+	$tno_cname = "code";
+	$msg1 = array("file"=>$edit_file, "trnum"=>$code, "tno_cname"=>$tno_cname, "edit_emp"=>$addedemp, "edit_time"=>$addedtime, "chng_type"=>$chng_type, "mtbl_name"=>$mtbl_name);
+	$message = json_encode($msg1);
+	store_modified_details($message);
 	
 	$sql = "UPDATE `main_mortality` SET `mtype` = '$mtype',`date` = '$date',`itemcode` = '$itemcode',`birds` = '$birds',`quantity` = '$quantity',`price` = '$price',`amount` = '$amount',`ccode` = '$ccode',`warehouse` = '$warehouse',`remarks` = '$remarks' WHERE `code` = '$code'";
 	if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { header('location:main_displaymortality.php?cid='.$cid); }
 }
 else if($_GET['type'] == "delete"){
 	$code = $_GET['code'];
+	
+	include_once("poulsoft_store_chngmaster.php");
+	$chng_type = "Delete";
+	$edit_file = "main_updatemortality.php";
+	$mtbl_name = "main_mortality";
+	$tno_cname = "code";
+	$msg1 = array("file"=>$edit_file, "trnum"=>$code, "tno_cname"=>$tno_cname, "edit_emp"=>$addedemp, "edit_time"=>$addedtime, "chng_type"=>$chng_type, "mtbl_name"=>$mtbl_name);
+	$message = json_encode($msg1);
+	store_modified_details($message);
+
 	$sql = "UPDATE `main_mortality` SET `dflag` = '1',`active` = '0',`updatedemp` = '$addedemp',`updatedtime` = '$addedtime' WHERE `code` = '$code'";
 	if(!mysqli_query($conn,$sql)){ $status = "failed"; } else { $status = "success"; }
 	echo $status;

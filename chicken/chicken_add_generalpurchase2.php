@@ -22,10 +22,15 @@ if($access_error_flag == 0){
     while($row = mysqli_fetch_assoc($query)){ $ppzflag = $row['ppzflag']; $ifwt = $row['wt']; $ifbw = $row['bw']; $ifjbw = $row['jbw']; $ifjbwen = $row['jbwen']; }
     if($ifjbwen == 1 || $ifjbw == 1){ $jals_flag = 1; } if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ $birds_flag = 1; } if($ifjbwen == 1){ $tweight_flag = $eweight_flag = 1; } if($ppzflag == ""){ $ppzflag = 0; }
 
-    $sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC";
+    $sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%MACHINE%' OR `description` LIKE '%SHOP INVESTMENT%' OR `description` LIKE '%SCALE%' OR `description` LIKE '%BOARD%' OR `description` LIKE '%CASH%' OR `description` LIKE '%OTHERS%') AND `active` = '1' ORDER BY `id`";
+    $query = mysqli_query($conn,$sql); $cat_alist = array();
+    while($row = mysqli_fetch_assoc($query)) { $cat_alist[$row['code']] = $row['code']; }
+    $cat_list = implode("','",$cat_alist);
+
+    $sql = "SELECT * FROM `item_details` WHERE `category` NOT IN ('$cat_list') AND `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $item_code = $item_name = array();
     while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; }
-
+ 
     $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
     while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
@@ -304,7 +309,7 @@ if($access_error_flag == 0){
                                     <thead>
                                         <tr style="text-align:left;">
                                             <th>Labour</th>
-                                            <th>Supervisor</th>
+                                            <!--<th>Supervisor</th>-->
                                             <th>Adv Amt</th>
                                             <th>Remarks</th>
                                             <th style="width:70px;"></th>
@@ -314,7 +319,7 @@ if($access_error_flag == 0){
                                     <tbody id="row_body3">
                                         <tr id="row_no3[0]">
                                             <td><select name="emp_scode[]" id="emp_scode[0]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($driver_code as $acode){ ?><option value="<?php echo $acode; ?>"><?php echo $driver_name[$acode]; ?></option><?php } ?></select></td>
-                                            <td style="text-align:center;"><input type="checkbox" name="supr_flag[0]" id="supr_flag[0]" onchange="calculate_empsal_amt2();" /></td>
+                                            <!--<td style="text-align:center;"><input type="checkbox" name="supr_flag[0]" id="supr_flag[0]" onchange="calculate_empsal_amt2();" /></td>-->
                                             <td><input type="text" name="emps_amt[]" id="emps_amt[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_empsal_amt2();" onchange="validate_amount(this.id);" /></td>
                                             <th><textarea name="remarks3[]" id="remarks3[0]" class="form-control" style="width:150px;height:28px;"></textarea></th>
                                             <td id="action3[0]"><a href="javascript:void(0);" id="addrow3[0]" onclick="create_row3(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
@@ -701,7 +706,7 @@ if($access_error_flag == 0){
                     document.getElementById("incr3").value = d;
                     html += '<tr id="row_no3['+d+']">';
                     html += '<td><select name="emp_scode[]" id="emp_scode['+d+']" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($driver_code as $acode){ ?><option value="<?php echo $acode; ?>"><?php echo $driver_name[$acode]; ?></option><?php } ?></select></td>';
-                    html += '<td style="text-align:center;"><input type="checkbox" name="supr_flag['+d+']" id="supr_flag['+d+']" onchange="calculate_empsal_amt2();" /></td>';
+                    //html += '<td style="text-align:center;"><input type="checkbox" name="supr_flag['+d+']" id="supr_flag['+d+']" onchange="calculate_empsal_amt2();" /></td>';
                     html += '<td><input type="text" name="emps_amt[]" id="emps_amt['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_empsal_amt2();" onchange="validate_amount(this.id);" /></td>';
                     html += '<th><textarea name="remarks3[]" id="remarks3['+d+']" class="form-control" style="width:150px;height:28px;"></textarea></th>';
                     html += '<td id="action3['+d+']"><a href="javascript:void(0);" id="addrow3['+d+']" onclick="create_row3(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow3['+d+']" onclick="destroy_row3(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
@@ -755,14 +760,14 @@ if($access_error_flag == 0){
                 }
                 function calculate_empsal_amt2(){
                     var incr3 = document.getElementById("incr3").value;
-                    var cost_amt = tot_empsal_amt = tot_emps_eamt = emps_eamt = 0; var supr_flag = "";
+                    var cost_amt = tot_empsal_amt = tot_emps_eamt = emps_eamt = 0; //var supr_flag = "";
                     for(var d = 0;d <= incr3;d++){
                         cost_amt = document.getElementById("emps_amt["+d+"]").value; if(cost_amt == ""){ cost_amt = 0; }
-                        supr_flag = document.getElementById("supr_flag["+d+"]");
+                        /*supr_flag = document.getElementById("supr_flag["+d+"]");
                         emps_eamt = 0;
                         if(supr_flag.checked == true){
                             emps_eamt = 100;
-                        }
+                        }*/
                         document.getElementById("emps_eamt["+d+"]").value = emps_eamt;
                         tot_empsal_amt = parseFloat(tot_empsal_amt) + parseFloat(cost_amt);
                         tot_emps_eamt = parseFloat(tot_emps_eamt) + parseFloat(emps_eamt);

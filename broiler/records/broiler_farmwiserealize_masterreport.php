@@ -25,19 +25,13 @@ $file_name = "Farm Wise Realization";
 
 /* admin cost include flag check*/
 $sql3 = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Farmwise Realization' AND `field_function` LIKE 'Include Admin Cost'  AND (`user_access` LIKE '%$addedemp%' OR `user_access` = 'all')";
-$query3 = mysqli_query($conn, $sql3);
-$ccount3 = mysqli_num_rows($query3);
-if ($ccount3 > 0) {
-	while ($row3 = mysqli_fetch_assoc($query3)) {
-		$admincost_include_flag = $row3['flag'];
-	}
-} else {
-	mysqli_query($conn, "INSERT INTO `extra_access` ( `field_name`, `field_function`, `user_access`, `flag`) VALUES ( 'Farmwise Realization', 'Include Admin Cost', 'all', '1')");
-	$admincost_include_flag =  1;
-}
-if ($admincost_include_flag == '') {
-	$admincost_include_flag =  0;
-}
+$query3 = mysqli_query($conn, $sql3); $ccount3 = mysqli_num_rows($query3);
+if($ccount3 > 0){ while($row3 = mysqli_fetch_assoc($query3)){ $admincost_include_flag = $row3['flag']; } }
+else{ mysqli_query($conn, "INSERT INTO `extra_access` ( `field_name`, `field_function`, `user_access`, `flag`) VALUES ( 'Farmwise Realization', 'Include Admin Cost', 'all', '1')"); $admincost_include_flag =  1; }
+if($admincost_include_flag == ''){ $admincost_include_flag =  0; }
+
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'broiler_farmwiserealize_masterreport.php' AND `field_function` LIKE 'FarmerPay is zero add totalpayable'"; $query = mysqli_query($conn,$sql);
+$parasflag = mysqli_num_rows($query);
 
 /*admin cost include flag check*/
 $sql='SHOW COLUMNS FROM `broiler_rearingcharge`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = $bsup_flag = 0;
@@ -144,13 +138,17 @@ $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Chick%' 
 while($row = mysqli_fetch_assoc($query)){ $chick_code = $row['code']; $chick_category = $row['category']; }
 
 $sql = "SELECT * FROM `broiler_farmer`"; $query = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($query)){ $farmer_name[$row['code']] = $row['name']; $farmer_mobile1[$row['code']] = $row['mobile1']; $farmer_mobile2[$row['code']] = $row['mobile2']; }
+while($row = mysqli_fetch_assoc($query)){ $farmer_name[$row['code']] = $row['name']; $farmer_aname[$row['code']] = $row['acc_holder_name']; $farmer_mobile1[$row['code']] = $row['mobile1']; $farmer_mobile2[$row['code']] = $row['mobile2']; $farmer_pan[$row['code']] = $row['panno']; }
 
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Bird%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $bird_code = $row['code']; $bird_name = $row['description']; }
 
 $sql = "SELECT * FROM `item_category` WHERE `dflag` = '0'"; $query = mysqli_query($conn,$sql); $item_cat_coa = array();
 while($row = mysqli_fetch_assoc($query)){ $item_cat_coa[$row['code']] = $row['iac']; }
+
+$sql = "SELECT * FROM `extra_access` WHERE `flag` = '1'"; $query = mysqli_query($conn,$sql); 
+$pan_flag = mysqli_num_rows($query);
+// while($row = mysqli_fetch_assoc($query)){ $item_cat_coa[$row['code']] = $row['iac']; }
 
 $sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%feed%'"; $query = mysqli_query($conn,$sql); $item_cat = "";
 while($row = mysqli_fetch_assoc($query)){ if( $item_cat = ""){  $item_cat = $row['code'];} else{ $item_cat = $item_cat."','".$row['code']; } }
@@ -482,6 +480,8 @@ $tblcol_size = sizeof($act_col_numbs);
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "branch_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "branch_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="branch_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Branch</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "line_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="line_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Line</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "supervisor_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="supervisor_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Supervisor</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farmer_bank_aname" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "farmer_bank_aname"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="farmer_bank_aname" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Farmer Account Name</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farmer_panno" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "farmer_panno"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="farmer_panno" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Farmer Pan No.</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "farm_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="farm_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Farm</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "batch_name"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="batch_name" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Batch</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "book_no"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="book_no" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Book No</span>'; }
@@ -597,6 +597,8 @@ $tblcol_size = sizeof($act_col_numbs);
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "branch_name"){ echo "<th id='order'>Branch</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name"){ echo "<th id='order'>Line</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<th id='order'>Supervisor</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farmer_bank_aname"){ echo "<th id='order'>Farmer Account Name</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farmer_panno"){ echo "<th id='order'>Farmer Pan No.</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<th id='order'>Farm</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<th id='order'>Batch</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<th id='order'>Book No</th>"; }
@@ -896,12 +898,38 @@ $tblcol_size = sizeof($act_col_numbs);
                         $total_amount_payable = 0;
                     }
 
-                    if($admincost_include_flag == 1){
-                        $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    // if($admincost_include_flag == 1){
+                    //     $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    // }
+                    // else{
+                    //     $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    // }
 
+                    if($parasflag > 0){
+
+                        if($admincost_include_flag == 1){
+                            if((float)$farmer_actpay_paid[$row['batch_code']] > 0){
+                                $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$farmer_actpay_paid[$row['batch_code']];
+                            }else{
+                                $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable;
+                            }
+                           
+                        }
+                        else{
+                            if((float)$farmer_actpay_paid[$row['batch_code']] > 0){
+                                $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$farmer_actpay_paid[$row['batch_code']];
+                            }else{
+                                $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$total_amount_payable;
+                            }
+                          //  $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$farmer_actpay_paid[$row['batch_code']]; //(float)$row['farmer_payable'];
+                        }
                     }else{
-                        $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$total_amount_payable; //(float)$row['farmer_payable'];
-
+                        if($admincost_include_flag == 1){
+                            $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                        }
+                        else{
+                            $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                        }
                     }
                     $profit_loss = (float)$row['sale_amount']- (float)$total_prod;
                     /* Total Mean Age Calculations */
@@ -993,6 +1021,8 @@ $tblcol_size = sizeof($act_col_numbs);
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "branch_name"){ echo "<td title='Branch'>".$branch_name[$row['branch_code']]."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name"){ echo "<td title='Line'>".$line_name[$row['line_code']]."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<td title='Supervisor'>".$supervisor_name[$farm_supervisor[$row['farm_code']]]."</td>"; }
+                        else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farmer_bank_aname"){ echo "<td title='Farm'>".$farmer_aname[$farm_farmer[$row['farm_code']]]."</td>"; }
+                        else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farmer_panno"){ echo "<td title='Farm'>".$farmer_pan[$farm_farmer[$row['farm_code']]]."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<td title='Farm'>".$farm_name[$row['farm_code']]."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<td title='Batch'>".$batch_name[$row['batch_code']]."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<td title='Book No'>".$batch_book[$row['batch_code']]."</td>"; }
@@ -1301,6 +1331,8 @@ $tblcol_size = sizeof($act_col_numbs);
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "branch_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "line_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "supervisor_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farmer_bank_aname"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farmer_panno"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "farm_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "batch_name"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "book_no"){ echo "<th style='text-align:left; border-left: 0px;border-right: 0px;'></th>"; }

@@ -2,7 +2,7 @@
 	//main_stocktransferreport.php
 	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 	include "../config.php";
-	include "header_head.php";
+	// include "header_head.php";
 	include "number_format_ind.php";
 	$today = date("Y-m-d");
 	$dbname = $_SESSION['dbase'];
@@ -61,7 +61,10 @@
 <?php $expoption = "displaypage"; if(isset($_POST['submit'])) { $expoption = $_POST['export']; } if($expoption == "displaypage") { $exoption = "displaypage"; } else { $exoption = $expoption; }; ?>
 
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+	<head>
+		<title>Stock Transaction Report</title>
+		<?php include "header_head.php"; ?>
+		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<?php
 			if($exoption == "exportexcel") {
 				echo header("Content-type: application/xls");

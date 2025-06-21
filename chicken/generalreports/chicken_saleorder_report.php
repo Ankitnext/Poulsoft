@@ -1,5 +1,5 @@
 <?php
-    //chicken_vehexp_report.php
+    //chicken_saleorder_report.php
 	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 	$requested_data = json_decode(file_get_contents('php://input'),true);
 	session_start();
@@ -11,16 +11,16 @@
 		$dbname = $_SESSION['dbase'];
 		$users_code = $_SESSION['userid'];
 
-        $form_reload_page = "chicken_vehexp_report.php";
+        $form_reload_page = "chicken_saleorder_report.php";
 	}
 	else{
 		include "APIconfig.php";
 		include "number_format_ind.php";
 		$dbname = $db;
 		$users_code = $_GET['emp_code'];
-        $form_reload_page = "chicken_vehexp_report.php?db=".$db;
+        $form_reload_page = "chicken_saleorder_report.php?db=".$db;
 	}
-    $file_name = "Vehicle Expense Report";
+    $file_name = "Sales Order Report";
 
 	$sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users_code'";
 	$query = mysqli_query($conn,$sql);
@@ -68,16 +68,22 @@
 	$query = mysqli_query($conn,$sql); $item_code = $item_name = array();
 	while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_category[$row['code']] = $row['category']; }
 
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `active` = '1' ORDER BY `name` ASC";
+    $query = mysqli_query($conn,$sql); $cus_code = $cus_name = $sup_code = $sup_name = array();
+    while($row = mysqli_fetch_assoc($query)){
+        if($row['contacttype'] == "C" || $row['contacttype'] == "S&C"){ $cus_code[$row['code']] = $row['code']; $cus_name[$row['code']] = $row['name']; } else{ }
+        if($row['contacttype'] == "S" || $row['contacttype'] == "S&C"){ $sup_code[$row['code']] = $row['code']; $sup_name[$row['code']] = $row['name']; } else{ }
+    }
     $sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $desc_code = $desc_name = array();
     while($row = mysqli_fetch_assoc($query)){ $desc_code[$row['code']] = $row['code']; $desc_name[$row['code']] = $row['description']; }
 
-	$fdate = $tdate = date("Y-m-d"); $sectors = $tcoa = $items = "all";
+	$fdate = $tdate = date("Y-m-d"); $cnames = $tcoa = $items = "all";
     $exports = "display";
 	if(isset($_POST['submit']) == true){
 		$fdate = date("Y-m-d",strtotime($_POST['fdate']));
 		$tdate = date("Y-m-d",strtotime($_POST['tdate']));
-		$sectors = $_POST['sectors'];
+		$cnames = $_POST['cnames'];
 		$tcoa = $_POST['tcoa'];
 		$items = $_POST['items'];
 		$exports = $_POST['exports'];
@@ -117,8 +123,8 @@
 						<?php if($exports == "display" || $exports == "exportpdf") { ?>
 						<thead class="thead1">
 							<tr>
-								<td colspan="19" class="p-1">
-                                    <div class="m-1 p-1 row">
+								<td colspan="11" class="p-1" style="width:75%;">
+                                    <div class="m-1 p-1 row" style="width:75%;">
                                         <div class="form-group" style="width:110px;">
                                             <label for="fdate">From Date</label>
                                             <input type="text" name="fdate" id="fdate" class="form-control datepickers" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="padding:0;padding-left:2px;width:100px;" readonly />
@@ -129,21 +135,14 @@
                                         </div>
                                        
                                         <div class="form-group" style="width:190px;">
-                                            <label for="sectors">Vehicle No.</label>
-                                            <select name="sectors" id="sectors" class="form-control select2" style="width:180px;">
-                                                <option value="all" <?php if($sectors == "all"){ echo "selected"; } ?>>-All-</option>
-											    <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($sectors == $scode){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
+                                            <label for="cnames">Vehicle No.</label>
+                                            <select name="cnames" id="cnames" class="form-control select2" style="width:180px;">
+                                                <option value="all" <?php if($cnames == "all"){ echo "selected"; } ?>>-All-</option>
+											    <?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($cnames == $scode){ echo "selected"; } ?>><?php echo $cus_name[$scode]; ?></option><?php } ?>
                                             </select>
                                         </div>
-                                        <div class="form-group" style="width:190px;">
-                                            <label for="tcoa">Expense Type</label>
-                                            <select name="tcoa" id="tcoa" class="form-control select2" style="width:180px;">
-                                                <option value="all" <?php if($tcoa == "all"){ echo "selected"; } ?>>-All-</option>
-											    <?php foreach($desc_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($tcoa == $scode){ echo "selected"; } ?>><?php echo $desc_name[$scode]; ?></option><?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="m-1 p-1 row">
+                                    <!-- </div>
+                                    <div class="m-1 p-1 row"> -->
                                         <div class="form-group" style="width:150px;">
                                             <label>Export</label>
                                             <select name="exports" id="exports" class="form-control select2" style="width:140px;" onchange="tableToExcel('main_table', '<?php echo $file_name; ?>','<?php echo $file_name; ?>', this.options[this.selectedIndex].value)">
@@ -168,46 +167,39 @@
 						<?php
                         }
                         if(isset($_POST['submit']) == true){
-                            // if($items != "all"){ $item_filter = " AND `code` IN ('$items')"; }
-                            // else if($item_cat == "all"){ $item_filter = ""; }
-                            // else{
-                            //     $icat_list = $item_filter = "";
-                            //     foreach($item_code as $icode){
-                            //         $item_category[$icode];
-                            //         if(!empty($item_category[$icode]) && $item_category[$icode] == $item_cat){
-                            //             if($icat_list == ""){ $icat_list = $icode; } else{ $icat_list = $icat_list."','".$icode; }
-                            //         }
-                            //     }
-                            //     $item_filter = " AND `code` IN ('$icat_list')";
-                            // }
-                            
-                            // if($sectors == "all"){ $sec_list = implode("','",$sector_code); $sector_filter = " AND `warehouse` IN ('$sec_list')"; }
-                            // else{ $sector_filter = " AND `warehouse` IN ('$sectors')"; }
-
+                           
                             $tcoa_fltr = ""; if($tcoa != "all"){ $tcoa_fltr = " AND `tcoa` = '$tcoa'"; }
-                            $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `warehouse` = '$sectors'"; }
+                            $cus_fltr = ""; if($cnames != "all"){ $cus_fltr = " AND `ccode` = '$cnames'"; }
 
                             
                             $html = '';
                             $html .= '<thead class="thead2" id="head_names">';
 
                             $nhead_html .= '<tr>';
-                            $nhead_html .= '<th>S No.</th>';
+                            $nhead_html .= '<th>Sl No.</th>';
                             $nhead_html .= '<th>Date</th>';
-                            $nhead_html .= '<th>Transaction No.</th>';
-                            $nhead_html .= '<th>Vehicle No.</th>';
-                            $nhead_html .= '<th>Expense Type</th>';
-                            $nhead_html .= '<th>Amount</th>';
+                            $nhead_html .= '<th>Supplier</th>';
+                            $nhead_html .= '<th>Warehouse</th>';
+                            $nhead_html .= '<th>Customer</th>';
+                            $nhead_html .= '<th>Item</th>';
+                            $nhead_html .= '<th>Quantity</th>';
+                            $nhead_html .= '<th>Vehicle</th>';
+                            $nhead_html .= '<th>Place</th>';
+                            $nhead_html .= '<th>Supervisor</th>';
                             $nhead_html .= '<th>Remarks</th>';
                             $nhead_html .= '</tr>';
 
                             $fhead_html .= '<tr>';
-                            $fhead_html .= '<th id="order_date">S No.</th>';
+                            $fhead_html .= '<th id="order">Sl No.</th>';
                             $fhead_html .= '<th id="order_date">Date</th>';
-                            $fhead_html .= '<th id="order">Transaction No.</th>';
-                            $fhead_html .= '<th id="order">Vehicle No.</th>';
-                            $fhead_html .= '<th id="order">Expense Type</th>';
-                            $fhead_html .= '<th id="order_num">Amount</th>';
+                            $fhead_html .= '<th id="order">Supplier</th>';
+                            $fhead_html .= '<th id="order">Warehouse</th>';
+                            $fhead_html .= '<th id="order">Customer</th>';
+                            $fhead_html .= '<th id="order">Item</th>';
+                            $fhead_html .= '<th id="order_num">Quantity</th>';
+                            $fhead_html .= '<th id="order">Vehicle</th>';
+                            $fhead_html .= '<th id="order">Place</th>';
+                            $fhead_html .= '<th id="order">Supervisor</th>';
                             $fhead_html .= '<th id="order">Remarks</th>';
                             $fhead_html .= '</tr>';
 
@@ -216,15 +208,18 @@
                             $html .= '</thead>';
                             $html .= '<tbody class="tbody1">';
                             
-                            $sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$tcoa_fltr."".$sec_fltr." AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum` ASC";
+                            $sql = "SELECT * FROM `salesorder` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$cus_fltr." AND `isDelete` = '0' ORDER BY `date`,`trnum` ASC";
                             $query = mysqli_query($conn,$sql); $tot_qty = $tot_amt = 0; $Sl = 1;
                             while($row = mysqli_fetch_assoc($query)){
                                 $date = date("d.m.Y",strtotime($row['date']));
-                                $trnum = $row['trnum'];
-                                $mode = $adesc[$row['mode']];
-                                $descs_name = $desc_name[$row['tcoa']];
+                                $supl_name = $sup_name[$row['supplier']];
                                 $sec_name = $sector_name[$row['warehouse']];
-                                $amount = $row['amount'];
+                                $cust_name = $cus_name[$row['ccode']];
+                                $it_name = $item_name[$row['itemcode']];
+                                $Quantity = $row['twt'];
+                                $vehicleno = $row['vehicleno'];
+                                $place = $row['place'];
+                                $supervisor = $row['supervisor'];
                                 $remarks = $row['remarks'];
                           
 
@@ -232,23 +227,27 @@
                                 $html .= '<tr>';
                                 $html .= '<td style="text-align:left;">'.$Sl++.'</td>';
                                 $html .= '<td style="text-align:left;">'.$date.'</td>';
-                                $html .= '<td style="text-align:left;">'.$trnum.'</td>';
+                                $html .= '<td style="text-align:left;">'.$supl_name.'</td>';
                                 $html .= '<td style="text-align:left;">'.$sec_name.'</td>';
-                                $html .= '<td style="text-align:left;">'.$descs_name.'</td>';
-                                $html .= '<td style="text-align:right;">'.number_format_ind($amount).'</td>';
+                                $html .= '<td style="text-align:left;">'.$cust_name.'</td>';
+                                $html .= '<td style="text-align:left;">'.$it_name.'</td>';
+                                $html .= '<td style="text-align:right;">'.number_format_ind($Quantity).'</td>';
+                                $html .= '<td style="text-align:left;">'.$vehicleno.'</td>';
+                                $html .= '<td style="text-align:left;">'.$place.'</td>';
+                                $html .= '<td style="text-align:left;">'.$supervisor.'</td>';
                                 $html .= '<td style="text-align:left;">'.$remarks.'</td>';
                                 $html .= '</tr>';
                                 
                                
-                                $tot_amt += (float)$amount;
+                                $tot_qty += (float)$Quantity;
                             }
 
                             $html .= '</tbody>';
                             $html .= '<tfoot class="tfoot1">';
                             $html .= '<tr>';
-                            $html .= '<th style="text-align:left;" colspan="5">Total</th>';
-                            $html .= '<th style="text-align:right;">'.number_format_ind($tot_amt).'</th>';
-                            $html .= '<th></th>';
+                            $html .= '<th style="text-align:left;" colspan="6">Total</th>';
+                            $html .= '<th style="text-align:right;">'.number_format_ind($tot_qty).'</th>';
+                            $html .= '<th colspan="4"></th>';
                             $html .= '</tr>';
                             $html .= '</tfoot>';
 

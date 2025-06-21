@@ -5,8 +5,8 @@
 	session_start();
 	
 	if(!empty($_GET['db'])){ $db = $_SESSION['db'] = $_SESSION['dbase'] = $_GET['db']; } else{ $db = ''; }
-	if($db == ''){ include "../config.php"; include "header_head.php"; include "number_format_ind.php"; }
-	else{ include "APIconfig.php"; include "number_format_ind.php"; include "header_head.php"; }
+	if($db == ''){ include "../config.php"; include "number_format_ind.php"; }
+	else{ include "APIconfig.php"; include "number_format_ind.php"; }
 
 	include "../broiler_check_tableavailability.php";
 
@@ -36,7 +36,10 @@
 	$url = "../PHPExcel/Examples/item_WeightLossWCC2-Excel.php?fromdate=".$fromdate."&todate=".$todate."&items=".$idetail."&sectors=".$wname;
 ?>
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+	<head>
+		  <title>Weight Loss with Chicken Conversion Report</title>
+		  <?php include "header_head.php"; ?>
+		<link rel="stylesheet" type="text/css"href="reportstyle.css">
         <script>
             var exptype = '<?php echo $exoption; ?>';
             var url = '<?php echo $url; ?>';

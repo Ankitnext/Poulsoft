@@ -12,7 +12,7 @@ $db = $_SESSION['db'] = $_GET['db'];
 if($db == ''){
 
     include "../config.php";
-	include "header_head.php";
+	// include "header_head.php";
 	include "number_format_ind.php";
 
 	
@@ -22,7 +22,7 @@ if($db == ''){
     //include "../newConfig.php";
     include "APIconfig.php";
     include "number_format_ind.php";
-    include "header_head.php";
+    // include "header_head.php";
 
 	$dbname =  $_GET['db'];
 }
@@ -55,7 +55,10 @@ if($db == ''){
 ?>
 <?php $expoption = "displaypage"; if(isset($_POST['submit'])) { $expoption = $_POST['export']; } if($expoption == "displaypage") { $exoption = "displaypage"; } else { $exoption = $expoption; }; ?>
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+	<head>
+		<title>Weekly Balance Report</title>
+        <?php include "header_head.php"; ?>
+		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<?php
 			if($exoption == "exportexcel") {
 				echo header("Content-type: application/xls");

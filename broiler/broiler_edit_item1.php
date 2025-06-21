@@ -183,11 +183,11 @@ if($link_active_flag > 0){
                                                 <select name="icunit" id="icunit" class="form-control select2" style="width: 100%;" onchange="">
                                                     <option value="select">select</option>
                                                     <?php
-                                                    if($pound_flag > 0 ) {
-                                                        $sql = "SELECT DISTINCT sunits as sunits FROM `item_units` WHERE `sunits` = 'Us Pounds' ORDER BY `sunits` ASC"; $query = mysqli_query($conn,$sql);
-                                                    } else{
+                                                    // if($pound_flag > 0 ) {
+                                                    //     $sql = "SELECT DISTINCT sunits as sunits FROM `item_units` WHERE `sunits` = 'Us Pounds' ORDER BY `sunits` ASC"; $query = mysqli_query($conn,$sql);
+                                                    // } else{
                                                         $sql = "SELECT DISTINCT sunits as sunits FROM `item_units` ORDER BY `sunits` ASC"; $query = mysqli_query($conn,$sql);
-                                                    }
+                                                    // }
                                                         while($row = mysqli_fetch_assoc($query)){
                                                     ?>
                                                             <option value="<?php echo $row['sunits']; ?>" <?php if($sunits == $row['sunits']){ echo 'selected'; } ?>><?php echo $row['sunits']; ?></option>

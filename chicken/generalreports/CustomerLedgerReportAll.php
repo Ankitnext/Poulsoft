@@ -188,19 +188,21 @@
 						<?php } ?>
 							<thead class="thead2" style="background-color: #98fb98;">
 								<tr>
+									<th rowspan="2">Sl No.</th>
 									<th rowspan="2">Name</th>
 									<th rowspan="2">Opening Balance</th>
 									<th colspan="4">Selected Period</th>
 									<th rowspan="2">Balance</th>
 								</tr>
 								<tr>
+									<!-- <th></th> -->
 									<th>Sales Qty</th>
 									<th>Sales</th>
 									<th>Receipt</th>
 									<th>B/w days balance</th>
 								</tr>
 							</thead>
-							<tbody class="tbody1" id="myTable" style="background-color: #f4f0ec;">
+							<tbody class="tbody1" id="myTable1" style="background-color: #f4f0ec;">
 							<?php
 								if(isset($_POST['submit']) == true){
 									if($_POST['export'] != "exportexcel"){
@@ -347,9 +349,11 @@
 											while($obrow = mysqli_fetch_assoc($obquery)){ if($obrow['mode'] == "SCN"){ $bt_sup_ccn[$obrow['ccode']] = $bt_sup_ccn[$obrow['ccode']] + $obrow['amount']; } else { $bt_sup_cdn[$obrow['ccode']] = $bt_sup_cdn[$obrow['ccode']] + $obrow['amount']; } }
 											}
 
-											$ftotal = $ft_ob =  $ft_sq =  $ft_sa =  $ft_rt =  $ft_bb = $total_sales_amt = $total_rct_amt = $total_cdn_amt = $total_ccn_amt = $total_cr_amt = $total_dr_amt = 0;
+											$sl = 0; $ftotal = $ft_ob =  $ft_sq =  $ft_sa =  $ft_rt =  $ft_bb = $total_sales_amt = $total_rct_amt = $total_cdn_amt = $total_ccn_amt = $total_cr_amt = $total_dr_amt = 0;
 											foreach($pcode as $pcodes){
+												$sl++;
 												echo "<tr>";
+												echo "<td>".$sl."</td>";
 												echo "<td style='text-align:left;'>".$pname[$pcodes]."</td>";
 												$ob_cramt = $ob_dramt = $ob_dr = $ob_cr = $ob_fcr = $ob_fdr = $bt_dr = $bt_cr = $bt_fcr = $bt_fdr = $balance = 0;
 												if($obtype[$pcodes] == "Cr"){
@@ -411,7 +415,7 @@
 							</tbody>
 							<thead>
 								<tr class="foottr" style="background-color: #98fb98;">
-									<td align="center"><b>Total</b></td>
+									<td align="center" colspan="2"><b>Total</b></td>
 									<td style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_ob); ?></td>
 									<td style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_sq); ?></td>
 									<td style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($ft_sa); ?></td>

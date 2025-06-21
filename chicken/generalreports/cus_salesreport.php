@@ -388,7 +388,7 @@
 										$tdiscountamt = $tdiscountamt + $row['discountamt'];
 										$ttaxamount = $ttaxamount + $row['taxamount'];
 										$ttotalamt = $ttotalamt + $row['totalamt'];
-										$tavgprice = $ttotalamt / $tnetweight;
+										if($tnetweight != 0){$tavgprice = $ttotalamt / $tnetweight;} else { $tavgprice == 0;}
 									}
 								?>
 									<tr class="foottr" style="background-color: #98fb98;">

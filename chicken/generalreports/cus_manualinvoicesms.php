@@ -175,6 +175,7 @@
 								
 						?>
 							<thead class="thead2" style="background-color: #98fb98;">
+								<th>Sl No.</th>
 								<th>Select<br/><input type="checkbox" name="checkall" id="checkall" onchange="checkedall()" /></th>
 								<th>Date</th>
 								<?php //if($cus_detail == "all"){ ?><th>Customer</th> <?php //} ?>
@@ -190,6 +191,7 @@
 							<tbody class="tbody1" style="background-color: #f4f0ec;">
 							<form action="<?php echo $reloadPageLinkSending; ?>" method="post" onsubmit="return checkval()">
 							<?php
+							$sl = 1;
 								if($module_detail == "SALES"){
 									if($cus_detail == "all"){ $cc = ""; } else{ $cc = " AND `customercode` LIKE '$cus_detail'"; }
 									$groupby = ""; $orderby = "ORDER BY `date`,`invoice` ASC";
@@ -212,7 +214,7 @@
 									$seq = "SELECT DISTINCT(invoice) as invoice,customercode,date FROM `customer_sales` WHERE `date` >= '$fromdate' AND `date` <= '$todate'";
 									$sql = $seq."".$cc."".$orderby; $query = mysqli_query($conn,$sql); $scount = mysqli_num_rows($query);
 									if($scount > 0){
-										$c = 0;
+										$c = 0; 
 										while($row = mysqli_fetch_assoc($query)){
 											$c = $c + 1;
 											$cus_inv = $row['invoice'];
@@ -222,6 +224,7 @@
 											$cus_val = "";
 											$cus_val = $c."&SALE&".$date."&".$customer_name."&".$customer_mobile."&".$cus_inv."&".$item_details[$cus_inv]."&".$sale_amt[$cus_inv]."&".$row['customercode'];
 											echo "<tr>";
+											echo "<td style='text-align:left;'>".$sl++."</td>";
 											echo "<td style='text-align:center;'><input type='checkbox' name='smsdet[]' id='smsdet[]' value='$cus_val' /></td>";
 											echo "<td style='text-align:left;'>".$date."</td>";
 											echo "<td style='text-align:left;'>".$customer_name."</td>";
@@ -237,7 +240,7 @@
 										}
 									}
 									else{
-										echo "<td colspan='6'>No Records Found ..!</td>";
+										echo "<td colspan='7'>No Records Found ..!</td>";
 									}
 								}
 								else if($module_detail == "RECEIPT"){
@@ -256,6 +259,7 @@
 											$cus_val = "";
 											$cus_val = $c."&RECEIPT&".$date."&".$customer_name."&".$customer_mobile."&".$cus_inv."&0&".$row['amount']."&".$row['ccode'];
 											echo "<tr>";
+											echo "<td style='text-align:left;'>".$sl++."</td>";
 											echo "<td style='text-align:center;'><input type='checkbox' name='smsdet[]' id='smsdet[]' value='$cus_val' /></td>";
 											echo "<td style='text-align:left;'>".$date."</td>";
 											echo "<td style='text-align:left;'>".$customer_name."</td>";
@@ -271,7 +275,7 @@
 										}
 									}
 									else{
-										echo "<td colspan='6'>No Records Found ..!</td>";
+										echo "<td colspan='7'>No Records Found ..!</td>";
 									}
 								}
 								else{
@@ -284,7 +288,7 @@
 									</th>
 								</tr>
 								<tr class="foottr" style="background-color: #98fb98;">
-									<th colspan="7" style="padding:10px;text-align:center;"><button type="submit" name="sendsms" id="sendsms" class="btn btn-success btn-md" value="sendsuccess">Send Message</button></th>
+									<th colspan="8" style="padding:10px;text-align:center;"><button type="submit" name="sendsms" id="sendsms" class="btn btn-success btn-md" value="sendsuccess">Send Message</button></th>
 								</tr>
 							</form>
 						</tbody>

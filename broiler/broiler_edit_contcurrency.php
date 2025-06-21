@@ -74,21 +74,21 @@ if($link_active_flag > 0){
                         <div class="card-body">
                             <div class="col-md-12">
                                 <form action="broiler_modify_contcurrency.php" method="post" role="form" onsubmit="return checkval()">
-                                     <div class="row">
-                                        <div class="col-md-4">
+                                     <div class="row" style="display:flex; justify-content: center;">
+                                        <div class="col-md-2">
                                             <div class="form-group">
                                                  <label>Prefix</label>
 									            <input type="text" name="prfx" id="prfx" class="form-control" value="<?php echo $prefix; ?>" placeholder="Enter Prefix Value" onkeyup="">
                                             </div>
                                         </div>
                                        
-                                         <div class="col-md-4">
+                                         <div class="col-md-2">
                                             <div class="form-group">
                                                  <label>Country Name</label>
 									            <input type="text" name="ct_name" id="ct_name" class="form-control" value="<?php echo $cont_name; ?>" placeholder="Enter Country Name" onkeyup="">
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
                                             <div class="form-group">
                                                  <label>Currency Name</label>
 									            <input type="text" name="cr_name" id="cr_name" class="form-control" value="<?php echo $curr_name; ?>" placeholder="Enter Currency Name" onkeyup="">
@@ -118,79 +118,27 @@ if($link_active_flag > 0){
                 window.location.href = 'broiler_display_contcurrency.php?ccid='+ccid;
             }
 			function checkval(){
-				var gdesc = document.getElementById("gdesc").value;
-				var gtype = document.getElementById("gtype").value;
-                var cus_controller_code = cus_prepayment_code = sup_controller_code = sup_prepayment_code = "";
+				var prfx = document.getElementById("prfx").value;
+				var ct_name = document.getElementById("ct_name").value;
+				var cr_name = document.getElementById("cr_name").value;
+                
                 var l = true;
-				if(gdesc.length == 0){
-					alert("Enter Description ..!");
-                    document.getElementById("gdesc").focus();
+				if(prfx == ""){
+					alert("Enter Prefix ..!");
+                    document.getElementById("prfx").focus();
 					l = false;
 				}
-				else if(gtype.match("select")){
-					alert("Select Type ..!");
-                    document.getElementById("gtype").focus();
+				else if(ct_name == ""){
+					alert("Enter Country Name ..!");
+                    document.getElementById("ct_name").focus();
 					l = false;
 				}
-                else {
-                    if(gtype == "C"){
-                        cus_controller_code = document.getElementById("cus_controller_code").value;
-                        cus_prepayment_code = document.getElementById("cus_prepayment_code").value;
-                        if(cus_controller_code == "select"){
-                            alert("Please select Customer Controller Account ..!");
-                            document.getElementById("cus_controller_code").focus();
-                            l = false;
-                        }
-                        else if(cus_prepayment_code == "select"){
-                            alert("Please select Customer Pre-payment Account ..!");
-                            document.getElementById("cus_prepayment_code").focus();
-                            l = false;
-                        }
-                        else{ }
-                    }
-                    else if(gtype == "S"){
-                        sup_controller_code = document.getElementById("sup_controller_code").value;
-                        sup_prepayment_code = document.getElementById("sup_prepayment_code").value;
-                        if(sup_controller_code == "select"){
-                            alert("Please select Supplier Controller Account ..!");
-                            document.getElementById("sup_controller_code").focus();
-                            l = false;
-                        }
-                        else if(sup_prepayment_code == "select"){
-                            alert("Please select Supplier Pre-payment Account ..!");
-                            document.getElementById("sup_prepayment_code").focus();
-                            l = false;
-                        }
-                        else{ }
-                    }
-                    else if(gtype == "S&C"){
-                        cus_controller_code = document.getElementById("cus_controller_code").value;
-                        cus_prepayment_code = document.getElementById("cus_prepayment_code").value;
-                        sup_controller_code = document.getElementById("sup_controller_code").value;
-                        sup_prepayment_code = document.getElementById("sup_prepayment_code").value;
-                        if(cus_controller_code == "select"){
-                            alert("Please select Customer Controller Account ..!");
-                            document.getElementById("cus_controller_code").focus();
-                            l = false;
-                        }
-                        else if(cus_prepayment_code == "select"){
-                            alert("Please select Customer Pre-payment Account ..!");
-                            document.getElementById("cus_prepayment_code").focus();
-                            l = false;
-                        }
-                        else if(sup_controller_code == "select"){
-                            alert("Please select Supplier Controller Account ..!");
-                            document.getElementById("sup_controller_code").focus();
-                            l = false;
-                        }
-                        else if(sup_prepayment_code == "select"){
-                            alert("Please select Supplier Pre-payment Account ..!");
-                            document.getElementById("sup_prepayment_code").focus();
-                            l = false;
-                        }
-                        else{ }
-                    }
-                }
+				else if(cr_name == ""){
+					alert("Enter Currency Name ..!");
+                    document.getElementById("cr_name").focus();
+					l = false;
+				}
+                
                 if(l == true){
                     return true;
                 }
@@ -198,26 +146,6 @@ if($link_active_flag > 0){
 					return false;
 				}
 			}
-            function show_acc(){
-                var gtype = document.getElementById("gtype").value;
-                if(gtype == "C"){
-                    document.getElementById("supplier_acc").style.visibility = "hidden";
-                    document.getElementById("customer_acc").style.visibility = "visible";
-                }
-                else if(gtype == "S"){
-                    document.getElementById("customer_acc").style.visibility = "hidden";
-                    document.getElementById("supplier_acc").style.visibility = "visible";
-                }
-                else if(gtype == "S&C"){
-                    document.getElementById("customer_acc").style.visibility = "visible";
-                    document.getElementById("supplier_acc").style.visibility = "visible";
-                }
-                else{
-                    document.getElementById("customer_acc").style.visibility = "hidden";
-                    document.getElementById("supplier_acc").style.visibility = "hidden";
-                }
-            }
-            show_acc();
             function validatename(x) {
                 expr = /^[a-zA-Z0-9 (.&)_-]*$/;
                 var a = document.getElementById(x).value;

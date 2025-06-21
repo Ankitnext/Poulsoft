@@ -158,6 +158,7 @@ if($access_error_flag == 0){
 								<input type="text" name="sup_famt" id="sup_famt" value=""  class="form-control amount-format" readonly/>
 								<td style="width:1px;visibility:hidden;"><input type="text" name="sup_tamt" id="sup_tamt" class="form-control amount-format" style="width:1px;" readonly></td>							</div>
 						    </div>
+						</div>
 						<div class="col-md-18 row_body2">
 							<table style="width:auto;line-height:30px;" id="tab3">
 								<tr style="line-height:30px;">
@@ -170,9 +171,9 @@ if($access_error_flag == 0){
 									<!-- <th style="text-align:center;"><label>Amount</label></th> -->
 									<th style="text-align:center;"><label>Customer<b style="color:red;">&nbsp;*</b></label></th>
 									<?php
-										if($ifjbwen == 1 || $ifjbw == 1){ echo "<th style='text-align:center;'><label>cJals</label></th>"; }
-										if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo "<th style='text-align:center;'><label>cBirds</label></th>"; }
-										if($ifjbwen == 1){ echo "<th style='text-align:center;'><label>cT. Wt.</label></th><th style='text-align:center;'><label>cE. Wt.</label></th>"; }
+										if($ifjbwen == 1 || $ifjbw == 1){ echo "<th style='text-align:center;'><label>Jals</label></th>"; }
+										if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo "<th style='text-align:center;'><label>Birds</label></th>"; }
+										if($ifjbwen == 1){ echo "<th style='text-align:center;'><label>cT. Wt.</label></th><th style='text-align:center;'><label>E. Wt.</label></th>"; }
 									?>
 									<th style="text-align:center;"><label>Quantity<b style="color:red;">&nbsp;*</b></label></th>
 									<th style="text-align:center;"><label>Price<b style="color:red;">&nbsp;*</b></label></th>
@@ -333,6 +334,11 @@ if($access_error_flag == 0){
 				html = '';
 				html+= '<tr style="margin:5px 0px 5px 0px;" id="tblrow['+e+']">';
 				html+= '<td style="width: 150px;padding-right:5px;"><select name="cnames[]" id="cnames['+e+']" class="form-control select" style="width: 150px;"><option value="select">-select-</option><?php foreach($cus_code as $cc){ ?><option value="<?php echo $cus_code[$cc]."@".$cus_name[$cc]; ?>"><?php echo $cus_name[$cc]; ?></option><?php } ?></select></td>';
+				html+= '<td <?php if($ifjbwen == 1 || $ifjbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" name="cjval[]" id="cjval['+e+']" value="" onkeyup="validate_count(this.id);calfinaltotal();" class="form-control amount-format" /></td>';
+				html+= '<td <?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" name="cbval[]" id="cbval['+e+']" value="" onkeyup="validate_count(this.id);calfinaltotal();" class="form-control amount-format" /></td>';
+				html+= '<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" name="cwval[]" id="cwval['+e+']" value="" onkeyup="validatenum(this.id);calculatenetwt(this.id);calfinaltotal();" onchange="validateamount(this.id)" class="form-control amount-format" /></td>';
+				html+= '<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?>><input type="text" name="cewval[]" id="cewval['+e+']" value="" onkeyup="validatenum(this.id);calculatenetwt(this.id);calfinaltotal();" onchange="validateamount(this.id)" class="form-control amount-format" /></td>';
+				html+= '<td><input type="text" name="cus_qty[]" id="cus_qty['+e+']" onkeyup="validatenum(this.id);calculatetotal();calfinaltotal();" onchange="validateamount(this.id)" class="form-control amount-format"></td>';
 				html+= '<td><input type="text" name="cus_iprice[]" id="cus_iprice['+e+']" onkeyup="validatenum(this.id);calculatetotal();calfinaltotal();" onchange="validateamount(this.id)" class="form-control amount-format"></td>';
 				html+= '<td style="width:1px;visibility:hidden;"><input type="text" name="cus_tamt[]" id="cus_tamt['+e+']" class="form-control amount-format" style="width:1px;" readonly></td>';
 				html+= '<td><input type="text" name="cus_famt[]" id="cus_famt['+e+']" class="form-control amount-format" readonly></td>';

@@ -1,7 +1,7 @@
 <?php
 $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 include "../config.php";
-include "header_head.php";
+// include "header_head.php";
 include "number_format_ind.php";
 
 $sql='SHOW COLUMNS FROM `master_itemfields`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
@@ -27,6 +27,8 @@ if(isset($_POST['submit'])){
 ?>	
 <html>
 	<head>
+		<title>In-active Customer Balance Report</title>
+        <?php include "header_head.php"; ?>
 		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<style>
 			.thead2 th {

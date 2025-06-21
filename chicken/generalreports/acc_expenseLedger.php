@@ -4,8 +4,8 @@
 			session_start();
 			
 			if(!empty($_GET['db'])){ $db = $_SESSION['db'] = $_SESSION['dbase'] = $_GET['db']; } else{ $db = ''; }
-			if($db == ''){ include "../config.php"; include "header_head.php"; include "number_format_ind.php"; }
-			else{ include "APIconfig.php"; include "number_format_ind.php"; include "header_head.php"; }
+			if($db == ''){ include "../config.php"; include "number_format_ind.php"; }
+			else{ include "APIconfig.php"; include "number_format_ind.php"; }
 			
 			$today = date("Y-m-d");
 			$sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' AND `type` IN ('COA-0003') ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $allCoA = "";
@@ -37,7 +37,10 @@
 		
 		
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+	<head>
+		<title>Expense Ledger</title>
+        <?php include "header_head.php"; ?>
+		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		
 		<script>
 			var exptype = '<?php echo $excel_type; ?>';

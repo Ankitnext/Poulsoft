@@ -7,14 +7,14 @@
 	if(!empty($_GET['db'])){ $db = $_SESSION['db'] = $_GET['db']; } else { $db = ''; }
 if($db == ''){
 	include "../config.php";
-	include "header_head.php";
+	// include "header_head.php";
 	include "number_format_ind.php";
 	
 }else{
     //include "../newConfig.php";
     include "APIconfig.php";
     include "number_format_ind.php";
-    include "header_head.php";
+    // include "header_head.php";
 }
 	
 			
@@ -60,7 +60,10 @@ if($db == ''){
 	$url = "../PHPExcel/Examples/acc_expenseLedgerSmart-Excel.php?fromdate=".$exl_fdate."&todate=".$exl_tdate."&coa=".$exl_coa."&whname=".$exl_whname;
 ?>
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+	<head>
+		<title>Expense Ledger</title>
+        <?php include "header_head.php"; ?>
+		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<script>
 			var exptype = '<?php echo $excel_type; ?>';
 			var url = '<?php echo $url; ?>';
@@ -239,6 +242,7 @@ if($db == ''){
 								}
 							?>
 								<thead class="thead2" style="background-color: #98fb98;">
+									<th>Sl No.</th>
 									<th>Date</th>
 									<th>CoA</th>
 									<th>Transaction No</th>
@@ -254,7 +258,7 @@ if($db == ''){
 									<?php
 										$fdate = strtotime($fdate);
 										$tdate = strtotime($tdate);
-										$bt_paid = $bt_received = $c = 0;
+										$bt_paid = $bt_received = $c = 0; $sl = 1;
 										for ($currentDate = $fdate; $currentDate <= $tdate; $currentDate += (86400)) {
 											$date_asc = date('Y-m-d', $currentDate);
 											$ccount = sizeof($bt_fpv_amt);
@@ -264,6 +268,7 @@ if($db == ''){
 													$c = $c + 1;
 													$bt_fpv_val = explode("@",$bt_fpv_amt[$date_asc."@".$i]);
 													echo "<tr style='text-align:left;'>";
+													echo "<td>".$sl++."</td>";
 													echo "<td>".date("d.m.Y",strtotime($bt_fpv_val[1]))."</td>";
 													echo "<td>".$coaname[$bt_fpv_val[7]]."</td>";
 													echo "<td>".$bt_fpv_val[0]."</td>";
@@ -289,6 +294,7 @@ if($db == ''){
 													$c = $c + 1;
 													$bt_frv_val = explode("@",$bt_frv_amt[$date_asc."@".$i]);
 													echo "<tr style='text-align:left;'>";
+													echo "<td>".$sl++."</td>";
 													echo "<td>".date("d.m.Y",strtotime($bt_frv_val[1]))."</td>";
 													echo "<td>".$coaname[$bt_frv_val[7]]."</td>";
 													echo "<td>".$bt_frv_val[0]."</td>";
@@ -314,6 +320,7 @@ if($db == ''){
 													$c = $c + 1;
 													$bt_fjv_val = explode("@",$bt_fjv_amt[$date_asc."@".$i]);
 													echo "<tr style='text-align:left;'>";
+													echo "<td>".$sl++."</td>";
 													echo "<td>".date("d.m.Y",strtotime($bt_fjv_val[1]))."</td>";
 													echo "<td>".$coaname[$bt_fjv_val[7]]."</td>";
 													echo "<td>".$bt_fjv_val[0]."</td>";
@@ -339,6 +346,7 @@ if($db == ''){
 													$c = $c + 1;
 													$bt_foth_vou_val = explode("@",$bt_foth_vou_amt[$date_asc."@".$i]);
 													echo "<tr style='text-align:left;'>";
+													echo "<td>".$sl++."</td>";
 													echo "<td>".date("d.m.Y",strtotime($bt_foth_vou_val[1]))."</td>";
 													echo "<td>".$coaname[$bt_foth_vou_val[7]]."</td>";
 													echo "<td>".$bt_foth_vou_val[0]."</td>";
@@ -364,6 +372,7 @@ if($db == ''){
 													$c = $c + 1;
 													$bt_tpv_val = explode("@",$bt_tpv_amt[$date_asc."@".$i]);
 													echo "<tr style='text-align:left;'>";
+													echo "<td>".$sl++."</td>";
 													echo "<td>".date("d.m.Y",strtotime($bt_tpv_val[1]))."</td>";
 													echo "<td>".$coaname[$bt_tpv_val[7]]."</td>";
 													echo "<td>".$bt_tpv_val[0]."</td>";
@@ -389,6 +398,7 @@ if($db == ''){
 													$c = $c + 1;
 													$bt_trv_val = explode("@",$bt_trv_amt[$date_asc."@".$i]);
 													echo "<tr style='text-align:left;'>";
+													echo "<td>".$sl++."</td>";
 													echo "<td>".date("d.m.Y",strtotime($bt_trv_val[1]))."</td>";
 													echo "<td>".$coaname[$bt_trv_val[7]]."</td>";
 													echo "<td>".$bt_trv_val[0]."</td>";
@@ -414,6 +424,7 @@ if($db == ''){
 													$c = $c + 1;
 													$bt_tjv_val = explode("@",$bt_tjv_amt[$date_asc."@".$i]);
 													echo "<tr style='text-align:left;'>";
+													echo "<td>".$sl++."</td>";
 													echo "<td>".date("d.m.Y",strtotime($bt_tjv_val[1]))."</td>";
 													echo "<td>".$coaname[$bt_tjv_val[7]]."</td>";
 													echo "<td>".$bt_tjv_val[0]."</td>";
@@ -439,6 +450,7 @@ if($db == ''){
 													$c = $c + 1;
 													$bt_toth_vou_val = explode("@",$bt_toth_vou_amt[$date_asc."@".$i]);
 													echo "<tr style='text-align:left;'>";
+													echo "<td>".$sl++."</td>";
 													echo "<td>".date("d.m.Y",strtotime($bt_toth_vou_val[1]))."</td>";
 													echo "<td>".$coaname[$bt_toth_vou_val[7]]."</td>";
 													echo "<td>".$bt_toth_vou_val[0]."</td>";
@@ -461,12 +473,12 @@ if($db == ''){
 								</tbody>
 								<thead style="background-color: #98fb98;">
 									<tr class="foottr">
-										<td colspan="8" align="center"><b>Between Days Total</b></td>
+										<td colspan="9" align="center"><b>Between Days Total</b></td>
 										<td style='padding-right: 5px;text-align:right;' align="right"><b><?php echo number_format_ind($bt_paid); ?></b></td>
 										<td style='padding-right: 5px;text-align:right;' align="right"><b><?php echo number_format_ind($bt_received); ?></b></td>
 									</tr>
 									<tr class="foottr">
-										<td colspan="8" align="center"><b>Closing Balance</b></td>
+										<td colspan="9" align="center"><b>Closing Balance</b></td>
 										<td colspan="2" style='padding-right: 5px;text-align:right;' align="right"><b><?php echo number_format_ind(($pre_received - $pre_paid)+($bt_received - $bt_paid)); ?></b></td>
 									</tr>
 								</thead>
@@ -1016,13 +1028,13 @@ if($db == ''){
 								</tbody>
 								<thead style="background-color: #98fb98;">
 									<tr class="foottr">
-										<td colspan="8" align="center" style="background-color: #98fb98;"><b>Between Days Total</b></td>
+										<td colspan="9" align="center" style="background-color: #98fb98;"><b>Between Days Total</b></td>
 										<td style='padding-right: 5px;text-align:right;'><b><?php echo number_format_ind($bt_paid); ?></b></td>
 										<td style='padding-right: 5px;text-align:right;'><b><?php echo number_format_ind($bt_received); ?></b></td>
 										<td></td>
 									</tr>
 									<tr class="foottr">
-										<td colspan="8" align="center" style="background-color: #98fb98;"><b>Closing Balance</b></td>
+										<td colspan="9" align="center" style="background-color: #98fb98;"><b>Closing Balance</b></td>
 										<td colspan="2" style='padding-right: 5px;text-align:right;'><b><?php echo number_format_ind(($pre_received - $pre_paid)+($bt_received - $bt_paid)); ?></b></td>
 										<td></td>
 									</tr>
@@ -1571,13 +1583,13 @@ if($db == ''){
 								</tbody>
 								<thead style="background-color: #98fb98;">
 									<tr class="foottr">
-										<td colspan="8" align="center"><b>Between Days Total</b></td>
+										<td colspan=9" align="center"><b>Between Days Total</b></td>
 										<td style='padding-right: 5px;text-align:right;' align="right"><b><?php echo number_format_ind($bt_paid); ?></b></td>
 										<td style='padding-right: 5px;text-align:right;' align="right"><b><?php echo number_format_ind($bt_received); ?></b></td>
 										<td></td>
 									</tr>
 									<tr class="foottr">
-										<td colspan="8" align="center"><b>Closing Balance</b></td>
+										<td colspan="9" align="center"><b>Closing Balance</b></td>
 										<td colspan="2" style='padding-right: 5px;text-align:right;' align="right"><b><?php echo number_format_ind(($pre_received - $pre_paid)+($bt_received - $bt_paid)); ?></b></td>
 										<td></td>
 									</tr>

@@ -26,7 +26,12 @@ if($access_error_flag == 0){
     $query = mysqli_query($conn,$sql); $cus_code = $cus_name = array();
     while($row = mysqli_fetch_assoc($query)){ $cus_code[$row['code']] = $row['code']; $cus_name[$row['code']] = $row['name']; $cus_group[$row['code']] = $row['groupcode']; }
     
-    $sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC";
+    $sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%MACHINE%' OR `description` LIKE '%SHOP INVESTMENT%' OR `description` LIKE '%SCALE%' OR `description` LIKE '%BOARD%' OR `description` LIKE '%CASH%' OR `description` LIKE '%OTHERS%') AND `active` = '1' ORDER BY `id`";
+    $query = mysqli_query($conn,$sql); $cat_alist = array();
+    while($row = mysqli_fetch_assoc($query)) { $cat_alist[$row['code']] = $row['code']; }
+    $cat_list = implode("','",$cat_alist);
+
+    $sql = "SELECT * FROM `item_details` WHERE `category` NOT IN ('$cat_list') AND `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $item_code = $item_name = array();
     while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; }
 
@@ -65,7 +70,7 @@ if($access_error_flag == 0){
                             </div>
                             <div class="form-group" style="width:190px;">
                                 <label for="warehouse">Warehouse/Vehicle<b style="color:red;">&nbsp;*</b></label>
-                                <select name="warehouse" id="warehouse" class="form-control select2" style="width:180px;">
+                                <select name="warehouse" id="warehouse" class="form-control select2" style="width:180px;" onchange="fetch_pur_stock();">
                                     <option value="select">select</option>
                                     <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php echo ($st_code == $scode) ? 'selected' : ''; ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
 
@@ -84,6 +89,7 @@ if($access_error_flag == 0){
                                 <label for="bookinvoice">Invoice No.</label>
                                 <input type="text" name="bookinvoice" id="bookinvoice" class="form-control" style="width:110px;" />
                             </div>
+                            <div class="form-group" id="item_wstk_details"></div>
                         </div>
                         <div class="row">
                             <table>
@@ -165,6 +171,45 @@ if($access_error_flag == 0){
                 var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 function return_back(){
                     window.location.href = "chicken_display_multiplesale6.php";
+                }
+                function fetch_pur_stock(){
+                    var date = document.getElementById("date").value;
+                    var warehouse = document.getElementById("warehouse").value;
+                    document.getElementById("item_wstk_details").innerHTML = "";
+                    //document.getElementById("emp_wages").innerHTML = "";
+                    
+                    if(date == ""){
+                        alert("Please select Date");
+                        document.getElementById("date").focus();
+                    }
+                    else if(warehouse == "" || warehouse == "select"){
+                        alert("Please select Warehouse");
+                        document.getElementById("warehouse").focus();
+                    }
+                    else{
+                        var dc_nos = new XMLHttpRequest();
+                        var method = "GET";
+                        var url = "chicken_fetch_sector_stock1.php?date="+date+"&warehouse="+warehouse;
+                        //window.open(url);
+                        var asynchronous = true;
+                        dc_nos.open(method, url, asynchronous);
+                        dc_nos.send();
+                        dc_nos.onreadystatechange = function(){
+                            if(this.readyState == 4 && this.status == 200){
+                                var itemdt1 = this.responseText;
+                                //var item_dt2 = itemdt1.split("[@$&]");
+                                //var item_wstk = item_dt2[0];
+                                //var emp_wages = item_dt2[1];
+                                //var dincr = item_dt2[2];
+                                //var dview = item_dt2[3];
+                                document.getElementById("item_wstk_details").innerHTML = itemdt1;
+                                //document.getElementById("emp_wages").innerHTML = emp_wages;
+                                //document.getElementById("dincr").value = dincr;
+                                //document.getElementById("dview").value = dview;
+                                //$('.select2').select2();
+                            }
+                        }
+                    }
                 }
                 function checkval(){
                     document.getElementById("ebtncount").value = "1"; document.getElementById("submit").style.visibility = "hidden";

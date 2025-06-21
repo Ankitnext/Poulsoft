@@ -6,6 +6,12 @@ global $ufile_name; $ufile_name = $href; include "chicken_check_accessmaster.php
 
 if($access_error_flag == 0){
     include "chicken_fetch_accesslist.php";
+
+    $sql='SHOW COLUMNS FROM `acc_vouchers`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+    while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+    if(in_array("veh_amt", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_vouchers` ADD `veh_amt` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `total_kms`"; mysqli_query($conn,$sql); }
+    if(in_array("veh_rate", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_vouchers` ADD `veh_rate` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `veh_amt`"; mysqli_query($conn,$sql); }
+
     if($acslist_error_flag == 0){
         $fd_id = $href."fdate"; $td_id = $href."tdate";
         if(isset($_POST['bdates']) == true){
@@ -56,7 +62,7 @@ if($access_error_flag == 0){
                 </form>
                 
                 <div align="right">
-                    <?php if($edt_flag == 1){ ?><button type="button" class="btn btn-info" id="editpage" value="chicken_edit_purchasesm.php" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> Edit Multiple</button><?php } ?>
+                    <?php if($acs_edit_flag == 1){ ?><button type="button" class="btn btn-info" id="editpage" value="chicken_edit_generalpurchase2m.php" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> Edit Multiple</button><?php } ?>
                     <?php if($acs_add_flag == 1){ ?><button type="button" class="btn btn-warning" id="addpage" value="<?php echo $acs_add_url; ?>" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> ADD</button><?php } ?>
                 </div>
             </div>

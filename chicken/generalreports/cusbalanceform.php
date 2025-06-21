@@ -2,7 +2,7 @@
 //cusbalanceform.php
 	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 	include "../config.php";
-	include "header_head.php";
+	// include "header_head.php";
 	include "number_format_ind.php";
 	$today = date("Y-m-d");
 	if(isset($_POST['submit']) == true){
@@ -26,7 +26,10 @@
 	$fdate = $tdate = date("d.m.Y");
 ?>	
 <html>
-	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+	<head>
+		<title>Customer Balance Confirmation Form</title>
+        <?php include "header_head.php"; ?>
+		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<style>
 			.thead2 th {
  				top: 0;

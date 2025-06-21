@@ -9,12 +9,12 @@ session_start();
 $db = $_SESSION['db'] = $_GET['db'];
 if ($db == '') {
 	include "../config.php";
-	include "header_head.php";
+	// include "header_head.php";
 	include "number_format_ind.php";
 } else {
 	include "APIconfig.php";
 	include "number_format_ind.php";
-	include "header_head.php";
+	// include "header_head.php";
 }
 
 $today = date("Y-m-d");
@@ -97,6 +97,8 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 <html>
 
 <head>
+	<title>Supplier Ledger</title>
+     <?php include "header_head.php"; ?>
 	<script>
 		var exptype = '<?php echo $exoption; ?>';
 		var url = '<?php echo $url; ?>';
@@ -393,7 +395,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 										} else {
 											$bt_fdr = (float)$bt_dr - (float)$bt_cr;
 										}
-										$balance = ((float)$ob_fdr + (float)$bt_fdr) - ((float)$ob_fcr + (float)$bt_fcr);
+										$balance = round(((float)$ob_fdr + (float)$bt_fdr) - ((float)$ob_fcr + (float)$bt_fcr),6);
 										//echo "<br/>".$ob_fdr."+".$bt_fdr."-".$ob_fcr."+".$bt_fcr;
 										$ftotal = (float)$ftotal + (float)$balance;
 

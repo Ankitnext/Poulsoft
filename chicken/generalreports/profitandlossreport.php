@@ -4,8 +4,8 @@
 	session_start();
 	
 	if(!empty($_GET['db'])){ $db = $_SESSION['db'] = $_SESSION['dbase'] = $_GET['db']; } else{ $db = ''; }
-	if($db == ''){ include "../config.php"; include "header_head.php"; include "number_format_ind.php"; }
-	else{ include "APIconfig.php"; include "number_format_ind.php"; include "header_head.php"; }
+	if($db == ''){ include "../config.php"; include "number_format_ind.php"; }
+	else{ include "APIconfig.php"; include "number_format_ind.php"; }
 			
 	$today = date("Y-m-d");
 	$sql = "SELECT * FROM `master_itemfields` WHERE `type` = 'Birds' AND `id` = '1'"; $query = mysqli_query($conn,$sql);
@@ -56,7 +56,9 @@
 		
 <html>
 	<head>
-	<link rel="stylesheet" type="text/css"href="reportstyle.css">
+		<title>Profit &amp; Loss</title>
+		  <?php include "header_head.php"; ?>
+	      <link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<?php
 			if($exoption == "exportexcel") {
 				echo header("Content-type: application/xls");
@@ -189,7 +191,7 @@
 									$grp = " ORDER BY `code` ASC";
 									$sql = $seq."".$whname."".$grp;
 									$query = mysqli_query($conn,$sql);
-									while($row = mysqli_fetch_assoc($query)){ 
+									while($row = mysqli_fetch_assoc($query)){
 										$ob_qty[$row['code']] = $row['closedquantity'];
 										$ob_amt[$row['code']] = $ob_amt[$row['code']] + ($row['closedquantity'] * $row['price']);
 									}
@@ -269,6 +271,27 @@
 										$rec_amt[$row['tcoa']] = $rec_amt[$row['tcoa']] + $row['amount'];
 										$trec_amt = $trec_amt + $row['amount'];
 									}
+
+									 //cr-out
+									 $sql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$fdate' AND  `date` <= '$tdate' AND `coa` IN ('$coa_code') AND `active` = '1'";
+									 //echo $sql;
+									 $query = mysqli_query($conn,$sql);
+									 while($row = mysqli_fetch_assoc($query)){
+										 if($row['crdr'] == 'Cr'){
+											 $rec_amt[$row['coa']] = $rec_amt[$row['coa']] + (float)$row['amount'];
+											 $trec_amt = $trec_amt + $row['amount'];
+											 // $exp_amt[$row['coa']] = $exp_amt[$row['coa']] + (float)$row['amount'];
+											 // $texp_amt = $texp_amt + $row['amount'];
+										 }else{
+											 // $rec_amt[$row['coa']] = $rec_amt[$row['coa']] + (float)$row['amount'];
+											 // $trec_amt = $trec_amt + $row['amount'];
+											 $exp_amt[$row['coa']] = $exp_amt[$row['coa']] + (float)$row['amount'];
+											 $texp_amt = $texp_amt + $row['amount'];
+										 }
+									 }
+
+
+									 
 									foreach($catcode as $cat_code){
 										foreach($itemdetail as $itm_code){
 											$spl_code = explode("@",$itm_code);

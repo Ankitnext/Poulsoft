@@ -65,7 +65,7 @@ if($_POST['submittrans'] == "addpage"){
 	//$i = 0; foreach($_POST['tds_tamt'] as $tds_tamts){ $i++; if($tds_tamts ==""){ $tds_tamts = 0; } $tds_tamt[$i] = $tds_tamts; }
 	$sup_famts = $_POST['sup_famt'];  if($sup_famts ==""){ $sup_famts = 0; }
 	$sup_ftotal = round($sup_famts);  if($sup_ftotal ==""){ $sup_ftotal = 0; }
-	$cus_ftotal = array();
+	$cus_ftotal = $ctotalweight = $cus_qty = $cjals = $cbirds = array();
 	$i = 0; foreach($_POST['cnames'] as $cnames){ $i++; $cdetails = explode("@",$cnames); $cus_code[$i] = $cdetails[0]; $cus_names[$i] = $cdetails[1]; }
 	$i = 0; foreach($_POST['cjval'] as $cjalss){ $i++; $cjals[$i] = $cjalss; }
 	$i = 0; foreach($_POST['cbval'] as $cbirdss){ $i++; $cbirds[$i] = $cbirdss; }
@@ -81,6 +81,9 @@ if($_POST['submittrans'] == "addpage"){
 	$i = 0; foreach($_POST['narr'] as $narr){ $i++; $remarks[$i] = $narr; }
 	
 	// okkkkkkkkkkkkk
+		
+
+
 
 	$tr_size = sizeof($cus_code);
 	$sql = "SELECT prefix FROM `main_financialyear` WHERE `fdate` <='$date' AND `tdate` >= '$date'"; $query = mysqli_query($conn,$sql);
@@ -91,7 +94,8 @@ if($_POST['submittrans'] == "addpage"){
 	
 	$sql = "SELECT * FROM `master_generator` WHERE `fdate` <='$date' AND `tdate` >= '$date' AND `type` = 'transactions'"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $sales = $row['sales']; $purchases = $row['purchases']; $sms = $row['sms']; $wapp = $row['wapp']; }
-	$incr_sale = $sales + $tr_size; $incr_purchase = $purchases + $tr_size;
+	$incr_sale = $sales + $tr_size; $incr_purchase = $purchases + 1;
+
 	$sql = "UPDATE `master_generator` SET `sales` = '$incr_sale',`purchases` = '$incr_purchase' WHERE `fdate` <='$date' AND `tdate` >= '$date' AND `type` = 'transactions'";
 	if(!mysqli_query($conn,$sql)){ echo "Error:-".mysqli_error($conn); } else { }
 	
@@ -114,8 +118,12 @@ if($_POST['submittrans'] == "addpage"){
 	while($row = mysqli_fetch_assoc($query)){ $instance_id = $row['sms_key']; $access_token = $row['msg_key']; $url_id = $row['url_id']; }
 	$sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1'"; $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $cdetails = $row['cname']." - ".$row['cnum']; }
 	
-	
 	$incr_sale = $sales; $incr_purchase = $purchases;
+
+	$incr_purchase = $incr_purchase + 1;
+	if($incr_purchase < 10){ $incr_purchase = '000'.$incr_purchase; } else if($incr_purchase >= 10 && $incr_purchase < 100){ $incr_purchase = '00'.$incr_purchase; } else if($incr_purchase >= 100 && $incr_purchase < 1000){ $incr_purchase = '0'.$incr_purchase; } else { }
+	$pur_inv = "P".$pfx."-".$incr_purchase;
+
 	for($j = 1;$j <= $tr_size;$j++){
 		$item_dlt = "";
 		if($item_dlt == ""){
@@ -140,9 +148,7 @@ if($_POST['submittrans'] == "addpage"){
 		if($incr_sale < 10){ $incr_sale = '000'.$incr_sale; } else if($incr_sale >= 10 && $incr_sale < 100){ $incr_sale = '00'.$incr_sale; } else if($incr_sale >= 100 && $incr_sale < 1000){ $incr_sale = '0'.$incr_sale; } else { }
 		$sale_inv = "S".$pfx."-".$incr_sale;
 		
-		$incr_purchase = $incr_purchase + 1;
-		if($incr_purchase < 10){ $incr_purchase = '000'.$incr_purchase; } else if($incr_purchase >= 10 && $incr_purchase < 100){ $incr_purchase = '00'.$incr_purchase; } else if($incr_purchase >= 100 && $incr_purchase < 1000){ $incr_purchase = '0'.$incr_purchase; } else { }
-		$pur_inv = "P".$pfx."-".$incr_purchase;
+		
 		
 		$cus_amtinwds = convert_number_to_words($cus_ftotal[$j]); $cus_amtinwds = $cus_amtinwds." Rupees Only";
 		$cus_roundoff = ""; $cus_roundoff = $cus_ftotal[$j] - ($cus_tamt[$j] + $tcs_tamt[$j]);
@@ -374,24 +380,25 @@ if($number > 0 && $baseUnit > 0){ $numBaseUnits = (int) ($number / $baseUnit); }
 					if(!mysqli_query($conns,$sql)) { } else{ }
 				}
                 
-                }
+                }	
 			}
 			else{ }
 		}
 		else{
 			$pur_sms_code = $pur_wapp_code = "NA"; $error_code = 0;
 		}
+
+		 if($cjals[$j] == "" || $cjals[$j] == "0.00" || $cjals[$j] == 0.00 || $cjals[$j] == 0 || $cjals[$j] == "0" || $cjals[$j] == NULL || strlen($cjals[$j]) == 0){ $cjals[$j] = "0.00"; }
+		 if($ctotalweight[$j] == "" || $ctotalweight[$j] == "0.00" || $ctotalweight[$j] == 0.00 || $ctotalweight[$j] == 0 || $ctotalweight[$j] == "0" || $ctotalweight[$j] == NULL || strlen($ctotalweight[$j]) == 0){ $ctotalweight[$j] = "0.00"; }
+		 if($cemptyweight[$j] == "" || $cemptyweight[$j] == "0.00" || $cemptyweight[$j] == 0.00 || $cemptyweight[$j] == 0 || $cemptyweight[$j] == "0" || $cemptyweight[$j] == NULL || strlen($cemptyweight[$j]) == 0){ $cemptyweight[$j] = "0.00"; }
+		 if($cbirds[$j] == "" || $cbirds[$j] == "0.00" || $cbirds[$j] == 0.00 || $cbirds[$j] == 0 || $cbirds[$j] == "0" || $cbirds[$j] == NULL || strlen($cbirds[$j]) == 0){ $cbirds[$j] = "0.00"; }
+		 if($cus_qty[$j] == "" || $cus_qty[$j] == "0.00" || $cus_qty[$j] == 0.00 || $cus_qty[$j] == 0 || $cus_qty[$j] == "0" || $cus_qty[$j] == NULL || strlen($cus_qty[$j]) == 0){ $cus_qty[$j] = "0.00"; }
 		
-		if($jals == "" || $jals == "0.00" || $jals == 0.00 || $jals == 0 || $jals == "0" || $jals == NULL || strlen($jals) == 0){ $jals = "0.00"; }
-		if($cjals == "" || $cjals == "0.00" || $cjals == 0.00 || $cjals == 0 || $cjals == "0" || $cjals == NULL || strlen($cjals) == 0){ $cjals = "0.00"; }
-		if($totalweight == "" || $totalweight == "0.00" || $totalweight == 0.00 || $totalweight == 0 || $totalweight == "0" || $totalweight == NULL || strlen($totalweight) == 0){ $totalweight = "0.00"; }
-		if($ctotalweight == "" || $ctotalweight == "0.00" || $ctotalweight == 0.00 || $ctotalweight == 0 || $ctotalweight == "0" || $ctotalweight == NULL || strlen($ctotalweight) == 0){ $ctotalweight = "0.00"; }
-		if($emptyweight == "" || $emptyweight == "0.00" || $emptyweight == 0.00 || $emptyweight == 0 || $emptyweight == "0" || $emptyweight == NULL || strlen($emptyweight) == 0){ $emptyweight = "0.00"; }
-		if($cemptyweight == "" || $cemptyweight == "0.00" || $cemptyweight == 0.00 || $cemptyweight == 0 || $cemptyweight == "0" || $cemptyweight == NULL || strlen($cemptyweight) == 0){ $cemptyweight = "0.00"; }
-		if($birds == "" || $birds == "0.00" || $birds == 0.00 || $birds == 0 || $birds == "0" || $birds == NULL || strlen($birds) == 0){ $birds = "0.00"; }
-		if($cbirds == "" || $cbirds == "0.00" || $cbirds == 0.00 || $cbirds == 0 || $cbirds == "0" || $cbirds == NULL || strlen($cbirds) == 0){ $cbirds = "0.00"; }
-		if($netweight == "" || $netweight == "0.00" || $netweight == 0.00 || $netweight == 0 || $netweight == "0" || $netweight == NULL || strlen($netweight) == 0){ $netweight = "0.00"; }
-		if($cus_qty == "" || $cus_qty == "0.00" || $cus_qty == 0.00 || $cus_qty == 0 || $cus_qty == "0" || $cus_qty == NULL || strlen($cus_qty) == 0){ $cus_qty = "0.00"; }
+		 if($jals == "" || $jals == "0.00" || $jals == 0.00 || $jals == 0 || $jals == "0" || $jals == NULL || strlen($jals) == 0){ $jals = "0.00"; }
+		 if($totalweight == "" || $totalweight == "0.00" || $totalweight == 0.00 || $totalweight == 0 || $totalweight == "0" || $totalweight == NULL || strlen($totalweight) == 0){ $totalweight = "0.00"; }
+		 if($emptyweight == "" || $emptyweight == "0.00" || $emptyweight == 0.00 || $emptyweight == 0 || $emptyweight == "0" || $emptyweight == NULL || strlen($emptyweight) == 0){ $emptyweight = "0.00"; }
+		 if($birds == "" || $birds == "0.00" || $birds == 0.00 || $birds == 0 || $birds == "0" || $birds == NULL || strlen($birds) == 0){ $birds = "0.00"; }
+		 if($netweight == "" || $netweight == "0.00" || $netweight == 0.00 || $netweight == 0 || $netweight == "0" || $netweight == NULL || strlen($netweight) == 0){ $netweight = "0.00"; }
 		
 		$sql = "INSERT INTO `customer_sales` (date,incr,d,m,y,fy,invoice,link_trnum,bookinvoice,customercode,jals,totalweight,emptyweight,itemcode,birds,netweight,itemprice,totalamt,roundoff,finaltotal,balance,amtinwords,trtype,warehouse,flag,authorization,tdflag,pdflag,drivercode,vehiclecode,discounttype,discountvalue,taxtype,taxvalue,discountamt,taxamount,taxcode,discountcode,remarks,sms_sent,addedemp,addedtime,client) 
 		VALUES ('$date','$incr_sale','$d','$m','$y','$pfx','$sale_inv','$pur_inv','$bnos','$cus_code[$j]','$cjals[$j]','$ctotalweight[$j]','$cemptyweight[$j]','$itemcode','$cbirds[$j]','$cus_qty[$j]','$cus_iprice[$j]','$cus_tamt[$j]','$cus_roundoff','$cus_ftotal[$j]','$cus_ftotal[$j]','$cus_amtinwds','PST','$warehouse','0','0','0','0','$driver[$j]','$vehicle[$j]','0.00','0.00','0.00','0.00','0.00','0.00','0.00','0.00','$remarks[$j]','$sms_code','$addedemp','$addedtime','$client')";

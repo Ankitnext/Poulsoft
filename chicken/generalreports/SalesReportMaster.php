@@ -106,6 +106,7 @@
         $type = "type";
         $code = "code";
         $pattern = "pattern";
+        $field_details[$row['sl_flag']] = "sl_flag";
         $field_details[$row['date_flag']] = "date_flag";
         $field_details[$row['inv_flag']] = "inv_flag";
         $field_details[$row['binv_flag']] = "binv_flag";
@@ -321,7 +322,8 @@
                             $html .= '<tr>';
                             for($i = 1;$i <= $col_count;$i++){
                                 if(!empty($field_details[$i.":".$aflag])){
-                                    if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
+                                    if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<th id="order">Sl&nbsp;No.</th>'; $bwtd_det_col++; }
+                                    else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<th id="order">Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<th id="order">Book Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<th id="order">Customer</th>'; $bwtd_det_col++; }
@@ -454,7 +456,7 @@
                                 }
                                 $i++;
                             }
-                            $ccount = sizeof($sales); $exi_inv = "";
+                            $ccount = sizeof($sales); $exi_inv = ""; $sl = 1;
                             $rowred = 'style="background-color:red;"';
                             for($cdate = strtotime($fdate);$cdate <= strtotime($tdate);$cdate += (86400)){
                                 $adate = date('Y-m-d', $cdate);
@@ -468,6 +470,7 @@
                                             $html .= '<tr>';
                                         }
                                         $tacount = $tacount + (float)$sales_details[11];
+                                        
                                         if($exi_inv != $sales_details[1]){
                                             $exi_inv = $sales_details[1];
                                             if(number_format_ind($slc_finaltotal[$sales_details[1]]) == number_format_ind($rb_amt)){
@@ -480,9 +483,10 @@
                                             $ft_tcds = $ft_tcds + $slc_tcdsamt[$sales_details[1]];
                                             $ft_roundoff = $ft_roundoff + $slc_roundoff[$sales_details[1]];
                                             $fst_famt = $fst_famt + $slc_finaltotal[$sales_details[1]];
-                                            
+                                            // $sl = 0;
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
@@ -523,7 +527,8 @@
                                         }
                                         else{
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }

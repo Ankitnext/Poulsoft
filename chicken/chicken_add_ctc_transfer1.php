@@ -12,7 +12,7 @@ if($access_error_flag == 0){
     while($row = mysqli_fetch_assoc($query)){ $sales = $row['sales']; } $incr = $sales + 1;
     if($incr < 10){ $incr = '000'.$incr; } else if($incr >= 10 && $incr < 100){ $incr = '00'.$incr; } else if($incr >= 100 && $incr < 1000){ $incr = '0'.$incr; } else { }
     $trnum = "S".$pfx."-".$incr; $c = 0;
-
+ 
     $tcds_per = 0;
     $sql = "SELECT * FROM `main_tcds` WHERE `fdate` <= '$fdate' AND `tdate` >= '$fdate' AND `type` = 'TCS' AND `active` = '1' AND `dflag` = '0'";
     $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $tcds_per = $row['tcds']; }

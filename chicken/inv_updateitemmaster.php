@@ -38,7 +38,7 @@ if(in_array("short_name", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 				$code = $prefix."-".$incrs;
 
 				$sql = "INSERT INTO `item_details` (incr,prefix,category,code,description,short_name,sunits,cunits,addedemp,addedtime,approvedtime,client) VALUES 
-				('$incrs','$prefix','$ctype','$code','$cdesc','$short_name','$sunits','$cunits','$empcode','$d','$d','$clients')";
+				('$incrs','$prefix','$ctype','$code','$cdesc','$short_name','$sunits','$sunits','$empcode','$d','$d','$clients')";
 
 				if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { header('location:inv_displayitems.php'); }
 			}
@@ -54,7 +54,7 @@ if(in_array("short_name", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 			<?php
 			}
 			else {
-				$sql = "UPDATE `item_details` SET `category` = '$ctype',`description` = '$cdesc',`short_name` = '$short_name',`sunits` = '$sunits',`cunits` = '$cunits',`updated` = '$d',`client` = '$clients' WHERE `id` = '$id'";
+				$sql = "UPDATE `item_details` SET `category` = '$ctype',`description` = '$cdesc',`short_name` = '$short_name',`sunits` = '$sunits',`cunits` = '$sunits',`updated` = '$d',`client` = '$clients' WHERE `id` = '$id'";
 				if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { header('location:inv_displayitems.php'); }
 			}
 		}

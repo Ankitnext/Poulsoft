@@ -136,7 +136,7 @@
 											<option value="Outstad" <?php if($module_detail == "Outstad"){ echo 'selected'; } ?>>Balance</option>
 											<option value="PaperRate" <?php if($module_detail == "PaperRate"){ echo 'selected'; } ?>>Paper Rate</option>
 											<option value="ledger" <?php if($module_detail == "ledger"){ echo 'selected'; } ?>>Ledger</option>
-											<option value="otp" <?php if($module_detail == "otp"){ echo 'selected'; } ?>>OTP</option>
+											<!--<option value="otp" <?php if($module_detail == "otp"){ echo 'selected'; } ?>>OTP</option>-->
 										</select>&ensp;&ensp;
 										<label class="reportselectionlabel">Status</label>&nbsp;
 										<select name="status" id="status" class="form-control select2">
@@ -168,11 +168,12 @@
 							if(isset($_POST['submit']) == true){
 								$fromdate = date("Y-m-d",strtotime($fromdate));
 								$todate = date("Y-m-d",strtotime($todate. '+1 days'));
-								$module_detail = $_POST['module']; if($module_detail == "all"){ $module_code = ""; } else if($module_detail == "otp"){ $module_code = " AND `smsto` IN ('otp','user')"; } else{ $module_code = " AND `smsto` LIKE '%$module_detail%'"; }
+								$module_detail = $_POST['module']; if($module_detail == "all"){ $module_code = " AND `smsto` NOT IN ('otp','user')"; } else if($module_detail == "otp"){ $module_code = " AND `smsto` IN ('otp','user')"; } else{ $module_code = " AND `smsto` LIKE '%$module_detail%'"; }
 								$status_detail = $_POST['status']; if($status_detail == "all"){ $status_code = ""; } else if($status_detail == "success"){ $status_code = " AND `sms_status` = '$status_detail'"; } else{ $status_code = " AND `sms_status` != 'success'"; }
 								$cus_detail = $_POST['cname'];
 						?>
 							<thead class="thead2" style="background-color: #98fb98;">
+								<th>Sl No.</th>
 								<th>Select</th>
 								<th>Date</th>
 								<th>Type</th>
@@ -204,13 +205,14 @@
 								$orderby = " ORDER BY `id` ASC";
 								$sql = $seq."".$mobile_code."".$module_code."".$status_code."".$orderby;
 								$query = mysqli_query($conn,$sql);
-								$sms_success = $sms_failed = 0; $flno = $smsno = 0;
+								$sms_success = $sms_failed = 0; $flno = $smsno = 0; $sl = 1;
 								while($row = mysqli_fetch_assoc($query)){
 									$msgtypekey = array();
 									$msgtypekey = explode("-",$row['trnum']);
 									$id = $row['id'];
 
 									echo "<tr>";
+									echo "<td style='text-align:left;'>".$sl++."</td>";
 									if($msgtypekey[0] == "WAPP" && strtolower($row['sms_status']) != "success" && $row['sms_status'] != "" && strpos($row['smsto'],"Ledger") == 0){
 										echo "<td style='text-align:center;'><input type='checkbox' name='wapp_failed_ids[]' id='wapp_failed_ids[".$flno."]' value='".$id."' /></td>";
 										$flno++;
@@ -288,7 +290,7 @@
 								}
 							?>
 								<tr class="foottr" style="background-color: #98fb98;">
-									<td colspan="2" align="center"><b>Grand Total</b></td>
+									<td colspan="3" align="center"><b>Grand Total</b></td>
 									<td colspan="1"><?php echo number_format_ind($sms_success + $sms_failed + $wapp_success + $wapp_failed); ?></td>
 									<td colspan="1" align="center"><b>Total Success</b></td>
 									<td colspan="1"><?php echo number_format_ind($sms_success + $wapp_success); ?></td>

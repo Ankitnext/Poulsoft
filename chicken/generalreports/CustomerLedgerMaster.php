@@ -77,6 +77,7 @@
 		$type = "type";
 		$code = "code";
 		$pattern = "pattern";
+		$field_details[$row['sl_flag']] = "sl_flag";
 		$field_details[$row['date_flag']] = "date_flag";
 		$field_details[$row['inv_flag']] = "inv_flag";
 		$field_details[$row['binv_flag']] = "binv_flag";
@@ -278,7 +279,7 @@
 							</thead>
 							<?php }
 							if(isset($_POST['submit']) == true){
-								$prev_bal_col = $item_det_col = $bwtd_det_col = $grnd_tot_col = $clsb_tot_col = 0;
+								$prev_bal_col = $item_det_col = $bwtd_det_col = $grnd_tot_col = $clsb_tot_col = 0; $sl = 1;
 								?>
 								<thead class="thead2" style="background-color: #98fb98;">
 									<?php
@@ -286,7 +287,8 @@
 									for($i = 1;$i <= $col_count;$i++){
 										if(!empty($field_details[$i.":".$active_flag])){
 											//echo "<br/>".$field_details[$i.":".$active_flag];
-											if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<th>Date</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
+											if($field_details[$i.":".$active_flag] == "sl_flag"){ echo "<th>Sl No.</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
+											else if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<th>Date</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<th>Invoice</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<th>Book Invoice</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
 											else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<th>Customer</th>"; $prev_bal_col++; $bwtd_det_col++; $grnd_tot_col++; $clsb_tot_col++; }
@@ -332,11 +334,7 @@
 									
 									$ob_sales = $ob_receipt = $ob_mortality = $ob_returns = $ob_ccn = $ob_cdn = $rb_amt = $ob_cramt = $ob_dramt = $ob_rcv = $ob_pid = 0;
 									if($count14 > 0){
-										if($sltr_flag > 0){ 
-										$obsql = "SELECT * FROM `customer_sales` WHERE `date` < '$fdate' AND `trtype` NOT IN ('PST') AND `customercode` = '$cus_names' AND `active` = '1' ORDER BY `invoice` ASC";
-										} else {
 										$obsql = "SELECT * FROM `customer_sales` WHERE `date` < '$fdate' AND `customercode` = '$cus_names' AND `active` = '1' ORDER BY `invoice` ASC";
-										}
 										$obquery = mysqli_query($conn,$obsql); $old_inv = "";
 										while($obrow = mysqli_fetch_assoc($obquery)){
 											if($old_inv != $obrow['invoice']){
@@ -407,11 +405,7 @@
 									//Sales
 									$sii_count = $slc_finaltotal = $sales = $receipts = $mortality = $returns = $ccns = $cdns = array();
 									if($count14 > 0){
-										if($sltr_flag > 0){ 
-										$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate' AND `customercode` = '$cname' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
-										} else {
 										$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `customercode` = '$cname' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
-										}
 										$query = mysqli_query($conn,$sql); $i = 0; $link_trnums = $inv_cus_code = array();
 										while($row = mysqli_fetch_assoc($query)){
 																						
@@ -509,7 +503,8 @@
 														$fst_famt = $fst_famt + (float)$slc_finaltotal[$sales_details[1]];
 														
 														for($i = 1;$i <= $col_count;$i++){
-															if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($sales_details[0]))."</td>"; }
+															if($field_details[$i.":".$active_flag] == "sl_flag"){ echo "<td>".$sl++."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($sales_details[0]))."</td>"; }
 															else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$sales_details[1]."</td>"; }
 															else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$sales_details[2]."</td>"; }
 															else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$sales_details[3]]."</td>"; }
@@ -554,7 +549,8 @@
 													}
 													else{
 														for($i = 1;$i <= $col_count;$i++){
-															if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($sales_details[0]))."</td>"; }
+															if($field_details[$i.":".$active_flag] == "sl_flag"){ echo "<td>".$sl++."</td>"; }
+															else if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($sales_details[0]))."</td>"; }
 															else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$sales_details[1]."</td>"; }
 															else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$sales_details[2]."</td>"; }
 															else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$sales_details[3]]."</td>"; }
@@ -619,7 +615,8 @@
 													$frt_famt = (float)$frt_famt + (float)$receipts_details[10];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($receipts_details[1]))."</td>"; }
+														if($field_details[$i.":".$active_flag] == "sl_flag"){ echo "<td>".$sl++."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($receipts_details[1]))."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$receipts_details[0]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$receipts_details[3]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$receipts_details[2]]."</td>"; }
@@ -672,7 +669,8 @@
 													$frt_famt = (float)$frt_famt + (float)$return_details[10];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($return_details[1]))."</td>"; }
+														if($field_details[$i.":".$active_flag] == "sl_flag"){ echo "<td>".$sl++."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($return_details[1]))."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$return_details[0]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$return_details[3]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$return_details[2]]."</td>"; }
@@ -728,7 +726,8 @@
 													$frt_famt = (float)$frt_famt + (float)$mortality_details[8];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($mortality_details[1]))."</td>"; }
+														if($field_details[$i.":".$active_flag] == "sl_flag"){ echo "<td>".$sl++."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($mortality_details[1]))."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$mortality_details[0]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td></td>"; }
 														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$mortality_details[2]]."</td>"; }
@@ -783,7 +782,8 @@
 													$fct_famt = (float)$fct_famt + (float)$ccns_details[7];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($ccns_details[2]))."</td>"; }
+														if($field_details[$i.":".$active_flag] == "sl_flag"){ echo "<td>".$sl++."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($ccns_details[2]))."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$ccns_details[1]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$ccns_details[4]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$ccns_details[3]]."</td>"; }
@@ -833,7 +833,8 @@
 													$fdt_famt = (float)$fdt_famt + (float)$cdns_details[7];
 													echo "<tr>";
 													for($i = 1;$i <= $col_count;$i++){
-														if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($cdns_details[2]))."</td>"; }
+														if($field_details[$i.":".$active_flag] == "sl_flag"){ echo "<td>".$sl++."</td>"; }
+														else if($field_details[$i.":".$active_flag] == "date_flag"){ echo "<td>".date("d.m.Y",strtotime($cdns_details[2]))."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "inv_flag"){ echo "<td style='text-align:left;'>".$cdns_details[1]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "binv_flag"){ echo "<td style='text-align:left;'>".$cdns_details[4]."</td>"; }
 														else if($field_details[$i.":".$active_flag] == "vendor_flag"){ echo "<td style='text-align:left;'>".$cus_name[$cdns_details[3]]."</td>"; }

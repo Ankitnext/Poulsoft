@@ -26,10 +26,15 @@ if($access_error_flag == 0){
     $query = mysqli_query($conn,$sql);$jals_flag = $birds_flag = $tweight_flag = $eweight_flag = 0;
     while($row = mysqli_fetch_assoc($query)){ $jals_flag = (int)$row['jals_flag']; $birds_flag = (int)$row['birds_flag']; $tweight_flag = (int)$row['tweight_flag']; $eweight_flag = (int)$row['eweight_flag']; }
 
-    $sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC";
+    $sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%MACHINE%' OR `description` LIKE '%SHOP INVESTMENT%' OR `description` LIKE '%SCALE%' OR `description` LIKE '%BOARD%' OR `description` LIKE '%CASH%' OR `description` LIKE '%OTHERS%') AND `active` = '1' ORDER BY `id`";
+    $query = mysqli_query($conn,$sql); $cat_alist = array();
+    while($row = mysqli_fetch_assoc($query)) { $cat_alist[$row['code']] = $row['code']; }
+    $cat_list = implode("','",$cat_alist);
+
+    $sql = "SELECT * FROM `item_details` WHERE `category` NOT IN ('$cat_list') AND `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $item_code = $item_name = array();
     while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; }
-
+ 
     $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
     while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
@@ -189,7 +194,7 @@ if($access_error_flag == 0){
                                 </tfoot>
                             </table>
                         </div><br/>
-                        <div id="emp_wages" class="row" style="visibility:visible;">
+                        <!--<div id="emp_wages" class="row" style="visibility:visible;">
                             <table>
                                 <thead>
                                     <tr>
@@ -203,21 +208,16 @@ if($access_error_flag == 0){
                                 </thead>
                                 <tbody id="row_body1">
                                     <tr style="margin:5px 0px 5px 0px;">
-                                        <td><select name="fcoa[]" id="fcoa[0]" class="form-control select2" style="width:230px;"><option value="select">-select-</option><?php foreach($driver_code as $dcode){ ?><option value="<?php echo $dcode; ?>"><?php echo $driver_name[$dcode]; ?></option><?php } ?></select></td>
-
-                                        <td><input type="text" name="kgs[]" id="kgs[0]" class="form-control text-right" style="width:90px;" /></td>
-
+                                        <td><select name="fcoa[]" id="fcoa[0]" class="form-control select2" style="width:230px;"><option value="select">-select-</option><?php /*foreach($driver_code as $dcode){ ?><option value="<?php echo $dcode; ?>"><?php echo $driver_name[$dcode]; ?></option><?php }*/ ?></select></td>
+                                        <td><input type="text" name="kgs[]" id="kgs[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" /></td>
                                         <td><input type="text" name="crate[]" id="crate[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" /></td>
-
-                                        <td><input type="text" name="camount[]" id="camount[0]" class="form-control text-right" style="width:90px;" /></td>
-
+                                        <td><input type="text" name="camount[]" id="camount[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" /></td>
                                         <td><textarea name="lremarks[]" id="lremarks[0]" class="form-control" style="width:150px;height:25px;"></textarea></td>
-
                                         <td id="action1[0]"><a href="javascript:void(0);" id="addrow1[0]" onclick="create_row1(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </div>-->
                         <div class="row" style="visibility:hidden;">
                             <div class="form-group" style="width:30px;">
                                 <label>IN</label>
@@ -409,24 +409,25 @@ if($access_error_flag == 0){
                     d++; var html = '';
                     document.getElementById("dincr").value = d;
 
+                    //get pre row data
+                    var x = d-1;
+                    var kgs = document.getElementById("kgs["+x+"]").value;
+                    var crate = document.getElementById("crate["+x+"]").value;
+                    var amt = document.getElementById("camount["+x+"]").value;
+
                     html += '<tr id="row_no1['+d+']">';
                     html += '<td><select name="fcoa[]" id="fcoa['+d+']" class="form-control select2" style="width:230px;"><option value="select">-select-</option><?php foreach($driver_code as $dcode){ ?><option value="<?php echo $dcode; ?>"><?php echo $driver_name[$dcode]; ?></option><?php } ?></select></td>';
-
-                    html += ' <td><input type="text" name="kgs[]" id="kgs['+d+']" class="form-control text-right" style="width:90px;"/></td>';
-
-                    html += '<td><input type="text" name="crate[]" id="crate['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" /></td>';
-
-                    html += '<td><input type="text" name="camount[]" id="camount['+d+']" class="form-control text-right" style="width:90px;" /></td>';
-
+                    html += ' <td><input type="text" name="kgs[]" id="kgs['+d+']" class="form-control text-right" value="'+kgs+'" style="width:90px;"/></td>';
+                    html += '<td><input type="text" name="crate[]" id="crate['+d+']" class="form-control text-right" value="'+crate+'" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" /></td>';
+                    html += '<td><input type="text" name="camount[]" id="camount['+d+']" class="form-control text-right" value="'+amt+'" style="width:90px;" /></td>';
                     html += '<td><textarea name="lremarks[]" id="lremarks['+d+']" class="form-control" style="width:150px;height:25px;"></textarea></td>';
-
                     html += '<td id="action1['+d+']"><a href="javascript:void(0);" id="addrow1['+d+']" onclick="create_row1(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow1['+d+']" onclick="destroy_row1(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
                     html += '</tr>';
 
                     $('#row_body1').append(html);
                     $('.select2').select2();
                     document.getElementById("fcoa["+d+"]").focus();
-                    calculate_driver_wages();
+                    //calculate_driver_wages();
                 }
                 function destroy_row1(a){
                     var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -542,7 +543,7 @@ if($access_error_flag == 0){
 
                     //calculate Emp. Wages
                     var dview =document.getElementById("dview").value; if(dview == ""){ dview = 0; }
-                    if(parseInt(dview) > 0){ calculate_driver_wages(); }
+                    //if(parseInt(dview) > 0){ calculate_driver_wages(); }
                 }
                 function update_row_fields(){
                     var incr = document.getElementById("incr").value;

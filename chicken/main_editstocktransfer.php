@@ -47,12 +47,16 @@
 					$wcode[$row['code']] = $row['code'];
 					$wdesc[$row['code']] = $row['description'];
 				}
-				$sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-				while($row = mysqli_fetch_assoc($query)){
-					$icode[$row['code']] = $row['code'];
-					$idesc[$row['code']] = $row['description'];
-				}
-				
+							
+				$sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%MACHINE%' OR `description` LIKE '%SHOP INVESTMENT%' OR `description` LIKE '%SCALE%' OR `description` LIKE '%BOARD%' OR `description` LIKE '%CASH%' OR `description` LIKE '%OTHERS%') AND `active` = '1' ORDER BY `id`";
+				$query = mysqli_query($conn,$sql); $cat_alist = array();
+				while($row = mysqli_fetch_assoc($query)) { $cat_alist[$row['code']] = $row['code']; }
+				$cat_list = implode("','",$cat_alist);
+
+				$sql = "SELECT * FROM `item_details` WHERE `category` NOT IN ('$cat_list') AND `active` = '1' ORDER BY `description` ASC";
+				$query = mysqli_query($conn,$sql); $icode = $idesc = array();
+				while($row = mysqli_fetch_assoc($query)){ $icode[$row['code']] = $row['code']; $idesc[$row['code']] = $row['description']; }
+
 				$sql = "SELECT * FROM `main_transactionfields` WHERE `field` LIKE 'Stock Transfer' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
 				while($row = mysqli_fetch_assoc($query)){ $jals_flag = $row['jals_flag']; $birds_flag = $row['birds_flag']; }
 				if($jals_flag == "" || $jals_flag == NULL){ $jals_flag = 0; }

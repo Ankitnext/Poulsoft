@@ -1,7 +1,7 @@
 <?php 
 	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 	include "../config.php";
-	include "header_head.php";
+	// include "header_head.php";
 	include "number_format_ind.php";
 			
 	$today = date("Y-m-d");
@@ -52,6 +52,8 @@
 	
 <html>
 	<head>
+		<title>Load wise Ledger</title>
+		<?php include "header_head.php"; ?>
 		<link rel="stylesheet" type="text/css"href="reportstyle.css">
 		<script>
 			var exptype = '<?php echo $excel_type; ?>';
@@ -173,6 +175,7 @@
 						<?php } ?>
 							<thead class="thead2" style="background-color: #98fb98;">
 								<tr>
+									<th>Sl No.</th>
 									<th colspan="9">Purchases</th>
 									<th colspan="5">Sales</th>
 									<th colspan="2">Wt. Loss</th>
@@ -180,6 +183,7 @@
 									<th colspan="2">Profit/Loss</th>
 								</tr>
 								<tr>
+									<th></th>
 									<th>Date</th>
 									<th>Load No</th>
 									<th>Warehouse</th>
@@ -279,13 +283,14 @@
 										$vou_details[$row['date']."&".$row['dcno']] = $vou_details[$row['date']."&".$row['dcno']] + $row['amount'];
 										$vou_sector[$row['date']."&".$row['dcno']] = $row['warehouse'];
 									}
-									$c = $tot_pur_bds = $tot_pur_qty = $tot_pur_amt = $tot_sal_bds = $tot_sal_qty = $tot_sal_amt = $tot_vou_amt = $tot_wht_qty = 0;
+									$sl = 1; $c = $tot_pur_bds = $tot_pur_qty = $tot_pur_amt = $tot_sal_bds = $tot_sal_qty = $tot_sal_amt = $tot_vou_amt = $tot_wht_qty = 0;
 									foreach($pur_docno as $pdno){
 										$c = $c + 1;
 										$pur_val = explode("@",$pur_details[$pdno]);
 										$sal_val = explode("@",$sal_details[$pdno]);
 										$vou_val = $vou_details[$pdno];
 										echo "<tr>";
+										echo "<td style='text-align:left;'>".$sl++."</td>";
 										echo "<td style='text-align:left;'>".date("d.m.Y",strtotime($pur_val[0]))."</td>";
 										if($exoption == "printerfriendly"){
 											echo "<td style='text-align:left;'>".$pur_val[1]."</td>";
@@ -337,7 +342,7 @@
 							</tbody>
 							<thead>
 								<tr class="foottr" style="background-color: #98fb98;">
-									<td align="center" colspan="4"><b>Total</b></td>
+									<td align="center" colspan="5"><b>Total</b></td>
 									<td style='padding-right: 5px;text-align:right;'><?php if(number_format_ind($tot_pur_bds) == "NAN.00" || number_format_ind($tot_pur_bds) == ".00" || number_format_ind($tot_pur_bds) == "0.00"){ echo "0.00"; } else{ echo number_format_ind($tot_pur_bds); } ?></td>
 									<td style='padding-right: 5px;text-align:right;'><?php if(number_format_ind($tot_pur_qty) == "NAN.00" || number_format_ind($tot_pur_qty) == ".00" || number_format_ind($tot_pur_qty) == "0.00"){ echo "0.00"; } else{ echo number_format_ind($tot_pur_qty); } ?></td>
 									<td style='padding-right: 5px;text-align:right;'><?php if($tot_pur_qty > 0 && $tot_pur_bds > 0){ echo number_format_ind($tot_pur_qty / $tot_pur_bds); } else{ echo number_format_ind(0); } ?></td>

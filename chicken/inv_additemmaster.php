@@ -57,11 +57,11 @@
 					<?php
 					if((int)$sname_flag == 1){
 					?>
-					<div class="form-group col-md-3">
+					<div class="form-group col-md-6">
 						<label>Short Name<b style="color:red;">&nbsp;*</b></label>
 						<input type="text" name="short_name" id="short_name" class="form-control" onkeyup="validatename(this.id)">
 					</div>
-					<div class="form-group col-md-3">
+					<div class="form-group col-md-6">
 					<?php
 					}
 					else{
@@ -83,26 +83,41 @@
 							?>
 						</select>
 					</div>
+					<?php
+					if((int)$sname_flag == 1){
+					?>
 					<div class="form-group col-md-6">
-						<label>Storage Unit</label>
-						<select name="istored" id="istored" class="form-control select2" style="width: 100%;" onchange="setcunits()">
-							<option value="select">select</option>
-							<?php
-								$sql = "SELECT DISTINCT sunits as sunits FROM `item_units` ORDER BY `sunits` ASC"; $query = mysqli_query($conn,$sql);
-								while($row = mysqli_fetch_assoc($query)){
-							?>
-									<option value="<?php echo $row['sunits']; ?>"><?php echo $row['sunits']; ?></option>
-							<?php
-								}
-							?>
-						</select>
+						<div class="form-group col-md-12">
+						<?php
+					}
+					else{
+					?>
+					<div class="form-group col-md-12">
+						<div class="form-group col-md-6">
+					<?php
+					}
+					?>
+						
+							<label>Consumption Units<b style="color:red;">&nbsp;*</b></label>
+							<select name="istored" id="istored" class="form-control select2" style="width: 100%;" onchange="">
+								<option value="select">select</option>
+								<?php
+									$sql = "SELECT DISTINCT sunits as sunits FROM `item_units` ORDER BY `sunits` ASC"; $query = mysqli_query($conn,$sql);
+									while($row = mysqli_fetch_assoc($query)){
+								?>
+										<option value="<?php echo $row['sunits']; ?>"><?php echo $row['sunits']; ?></option>
+								<?php
+									}
+								?>
+							</select>
+						</div>
 					</div>
-					<div class="form-group col-md-6">
+					<!-- <div class="form-group col-md-6">
 						<label>Consumption Unit<b style="color:red;">&nbsp;*</b></label>
 						<select name="icunit" id="icunit" class="form-control select2" style="width: 100%;">
 							<option value="select">select</option>
 						</select>
-					</div>
+					</div> -->
 					<div class="box-body" align="center">
 						<button type="submit" name="submittrans" id="submittrans" value="addpage" class="btn btn-flat btn-social btn-linkedin">
 							<i class="fa fa-save"></i> Save
@@ -124,7 +139,7 @@ function checkval(){
 	var b = document.getElementById("icat").value;
 	//var c = document.getElementById("ctype").value;
 	var d = document.getElementById("istored").value;
-	var e = document.getElementById("icunit").value;
+	// var e = document.getElementById("icunit").value;
 	if(a.length == 0){
 		alert("Enter Description ..!");
 				document.getElementById("idesc").focus();
@@ -139,13 +154,13 @@ function checkval(){
 		return false;
 	}*/
 	else if(d.match("select")){
-		alert("Select Storage unit ..!");
-		return false;
-	}
-	else if(e.match("select")){
 		alert("Select Consumption unit ..!");
 		return false;
 	}
+	// else if(e.match("select")){
+	// 	alert("Select Consumption unit ..!");
+	// 	return false;
+	// }
 	else {
 		return true;
 	}

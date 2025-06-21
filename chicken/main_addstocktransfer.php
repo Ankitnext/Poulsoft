@@ -51,12 +51,16 @@
 				while($row = mysqli_fetch_assoc($query)){ $jals_flag = $row['jals_flag']; $birds_flag = $row['birds_flag']; }
 				if($jals_flag == "" || $jals_flag == NULL){ $jals_flag = 0; }
 				if($birds_flag == "" || $birds_flag == NULL){ $birds_flag = 0; }
-				
-				$sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-				while($row = mysqli_fetch_assoc($query)){
-					$icode[$row['code']] = $row['code'];
-					$idesc[$row['code']] = $row['description'];
-				}
+							
+				$sql = "SELECT * FROM `item_category` WHERE (`description` LIKE '%MACHINE%' OR `description` LIKE '%SHOP INVESTMENT%' OR `description` LIKE '%SCALE%' OR `description` LIKE '%BOARD%' OR `description` LIKE '%CASH%' OR `description` LIKE '%OTHERS%') AND `active` = '1' ORDER BY `id`";
+				$query = mysqli_query($conn,$sql); $cat_alist = array();
+				while($row = mysqli_fetch_assoc($query)) { $cat_alist[$row['code']] = $row['code']; }
+				$cat_list = implode("','",$cat_alist);
+
+				$sql = "SELECT * FROM `item_details` WHERE `category` NOT IN ('$cat_list') AND `active` = '1' ORDER BY `description` ASC";
+				$query = mysqli_query($conn,$sql); $icode = $idesc = array();
+				while($row = mysqli_fetch_assoc($query)){ $icode[$row['code']] = $row['code']; $idesc[$row['code']] = $row['description']; }
+
 				$idisplay = ''; $ndisplay = 'style="display:none;';
 			?>
 			
@@ -93,7 +97,7 @@
 												<?php if($jals_flag == 1) { echo '<td><input name="jalqty[]" id="jalqty[0]" class="form-control" value="0" /></td>'; } ?>
 												<?php if($birds_flag == 1) { echo '<td><input name="birdqty[]" id="birdqty[0]" class="form-control" value="0" /></td>'; } ?>
 												<td><input name="qty[]" id="qty[0]" class="form-control" value="0" /></td>
-												<td><input type="text" name="price[]" id="price[0]" class="form-control" value="0" onkeyup=""></td>
+												<td><input type="text" name="price[]" id="price[0]" class="form-control" value="0" onkeyup="granttotalamount()"></td>
 												<td><select name="tsector[]" id="tsector[0]" class="form-control select2" style="width:120px;"> <option value="select">select</option> <?php foreach($wcode as $fcode){ ?> <option value="<?php echo $wcode[$fcode]; ?>"><?php echo $wdesc[$fcode]; ?></option> <?php } ?> </select></td>
 												<td><textarea name="remark[]" id="remark[0]" class="form-control" style="width:120px;height: 23px;"></textarea></td>
 												<td style="width: 100%;"><a href="JavaScript:Void(0);" name="addval[]" id="addval[0]" onclick="rowgen()"><i class="fa fa-plus"></i></a>&ensp;&ensp;<a href="JavaScript:Void(0);" name="rmval[]" id="rmval[0]" onclick="rowdes()" style="visibility:hidden;"><i class="fa fa-minus" style="color:red;"></i></a></td>
