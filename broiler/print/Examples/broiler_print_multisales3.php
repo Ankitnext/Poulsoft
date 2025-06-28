@@ -378,7 +378,7 @@ foreach($day_ccode as $cuscode){
 		
 		$html .= '</th>';
 		$html .= '<th colspan="3" style="padding-left: 10px;text-align:right;">';
-		//$html .= '<b style="padding-left: 10px;text-align:right;">Vehicle : '.$vehicle_code.'</b><br/>';
+		$html .= '<b style="padding-left: 10px;text-align:right;">Invoice No.: '.$inv.'</b><br/>';
 		$html .= '</th>';
 	
 		$html .= '</tr>';

@@ -62,7 +62,7 @@ if(in_array("link_trnum", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 	
 	if(isset($_POST['submit']) == true){
 		$fdate = date("Y-m-d",strtotime($_POST['fromdate'])); $tdate =date("Y-m-d",strtotime( $_POST['todate']));
-		$uname = $_POST['ucode']; $wname = $_POST['wname']; $gname = $_POST['gname']; $cname = $_POST['cname']; $iname = $_POST['iname'];
+		$uname = $_POST['ucode']; $wname = $_POST['wname']; $selected_sectors = $_POST['sectors'] ?? []; $gname = $_POST['gname']; $cname = $_POST['cname']; $iname = $_POST['iname'];
 	}
 	else{
 		$fdate = $tdate = $today;
@@ -95,20 +95,26 @@ if(in_array("link_trnum", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 	if($uname == "all"){ $ecodes = ""; foreach($user_code as $ecode){ if($ecodes == ""){ $ecodes = $ecode; } else{ $ecodes = $ecodes."','".$ecode; } } $user_filter = " AND a.addedemp IN ('$ecodes')"; }
 	else{ $user_filter = " AND a.addedemp = '".$uname."'"; }
 
-	//Location Access Filter
-	if($wname == "all"){
-		if($loc_access == "all" || $loc_access == "All" || $loc_access == "" || $loc_access == NULL){
+		//Location Access Filter
+	if (!is_array($selected_sectors)) {
+		$selected_sectors = [$selected_sectors];
+	}
+
+	if (in_array("all", $selected_sectors)) {
+		if ($loc_access == "all" || $loc_access == "All" || $loc_access == "" || $loc_access == NULL) {
 			$sector_filter = $warehouse_filter = "";
-		}
-		else{
-			$wh_code = str_replace(",","','",$loc_access);
+		} else {
+			$wh_code = str_replace(",", "','", $loc_access);
 			$sector_filter = " AND a.warehouse IN ('$wh_code')";
 			$warehouse_filter = " AND code IN ('$wh_code')";
 		}
-	}
-	else{
-		$sector_filter = " AND a.warehouse IN ('$wname')";
-		$warehouse_filter = " AND code IN ('$wname')";
+	} else {
+		// Sanitize and implode selected sectors
+		$safe_sectors = array_map('addslashes', $selected_sectors);
+		$sector_list = implode("','", $safe_sectors);
+
+		$sector_filter = " AND a.warehouse IN ('$sector_list')";
+		$warehouse_filter = " AND code IN ('$sector_list')";
 	}
 	$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1'".$warehouse_filter." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
@@ -332,17 +338,25 @@ if(in_array("link_trnum", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 											?>
 										</select>
 									<br/>
+										<?php
+										// Initialize selected sectors
+										$selected_sectors = $_POST['sectors'] ?? ['all'];
+
+										// Ensure it's always an array
+										if (!is_array($selected_sectors)) {
+											$selected_sectors = [$selected_sectors];
+										}
+										?>
 										<label class="reportselectionlabel">Warehouse</label>&nbsp;
-										<select name="wname" id="wname" class="form-control select2">
-											<option value="all">-All-</option>
-											<?php
-												foreach($sector_code as $vcode){
-											?>
-													<option <?php if($wname == $vcode) { echo 'selected'; } ?> value="<?php echo $vcode; ?>"><?php echo $sector_name[$vcode]; ?></option>
-											<?php
-												}
-											?>
+										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
+											<option value="all" <?php if(in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
+											<?php foreach($sector_code as $scode) { ?>
+												<option value="<?php echo $scode; ?>" <?php if(in_array($scode, $selected_sectors)) echo "selected"; ?>>
+													<?php echo $sector_name[$scode]; ?>
+												</option>
+											<?php } ?>
 										</select>
+
 										<label class="reportselectionlabel">Export To</label>&nbsp;
 										<select name="export" id="export" class="form-control select2">
 											<option <?php if($exoption == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>

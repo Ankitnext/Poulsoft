@@ -46,24 +46,22 @@
 				$sql = "SELECT * FROM `main_dailypaperrate` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
 				while($row = mysqli_fetch_assoc($query)){ $prates[$row['date']] = $row['new_price']; }
 			}
-		$exports = "display"; $file_name = "Supplier Ledger";
-		if(isset($_POST['submit']) == true){
-			$exports = $_POST['exports'];
-		}
-?>
+		?>
+		<?php $expoption = "displaypage"; if(isset($_POST['submit'])) { $expoption = $_POST['export']; } if($expoption == "displaypage") { $exoption = "displaypage"; } else { $exoption = $expoption; };
+			$url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php";
+	
+		?>
+		
 <html>
 	
-	<head>
-		<link rel="stylesheet" type="text/css"href="reportstyle.css">
-		<!--<script>
-			var exptype = '<?php //echo $excel_type; ?>';
-			var url = '<?php //echo $url; ?>';
+	<head><link rel="stylesheet" type="text/css"href="reportstyle.css">
+		<script>
+			var exptype = '<?php echo $excel_type; ?>';
+			var url = '<?php echo $url; ?>';
 			if(exptype.match("exportexcel")){
 				window.open(url,'_BLANK');
 			}
-		</script>-->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+		</script>
 		<style>
 			.thead2 th {
  				top: 0;
@@ -107,7 +105,7 @@
 		</style>
 	</head>
 	<body class="hold-transition skin-blue sidebar-mini">
-	<?php if($exports == "display" || $exports == "print") { ?>
+	<?php if($exoption == "displaypage" || $exoption == "printerfriendly") { ?>
 		<header align="center">
 			<table align="center" class="reportheadermenu">
 				<tr>
@@ -138,13 +136,13 @@
 		<section class="content" align="center">
 				<div class="col-md-12" align="center">
 				<?php if($db == ''){?>
-					<form action="pur_supplierledgerNewUpdated.php" method="post">
+					<form action="pur_supplierledgerNewUpdated_ta.php" method="post">
 					<?php } else { ?>
-					<form action="pur_supplierledgerNewUpdated.php?db=<?php echo $db; ?>&cid=<?php echo $cid; ?>" method="post"  >
+					<form action="pur_supplierledgerNewUpdated_ta.php?db=<?php echo $db; ?>&cid=<?php echo $cid; ?>" method="post"  >
 					<?php } ?>
 					
 						<table class="table1" style="min-width:auto;line-height:23px;">
-						<?php if($exports == "display" || $exports == "exportpdf") { ?>
+						<?php if($exoption == "displaypage" || $exoption == "exportpdf") { ?>
 							<thead class="thead1" style="background-color: #98fb98;">
 								<tr>
 									<!--<td style='visibility:hidden;'></td>-->
@@ -181,19 +179,15 @@
 										</select>
 										&ensp;&ensp;
 										<label class="reportselectionlabel">Export To</label>&nbsp;
-										<select name="exports" id="exports" class="form-control select2" style="width:140px;" onchange="tableToExcel('main_table', '<?php echo $file_name; ?>','<?php echo $file_name; ?>', this.options[this.selectedIndex].value)">
-											<option value="display" <?php if($exports == "display"){ echo "selected"; } ?>>-Display-</option>
-											<option value="excel" <?php if($exports == "excel"){ echo "selected"; } ?>>-Excel-</option>
-											<option value="print" <?php if($exports == "print"){ echo "selected"; } ?>>-Print-</option>
+										<select name="export" id="export" class="form-control select2">
+											<option <?php if($exoption == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
+											<option <?php if($exoption == "exportexcel") { echo 'selected'; } ?> value="exportexcel">Excel</option>
+											<option <?php if($exoption == "printerfriendly") { echo 'selected'; } ?> value="printerfriendly">Printer friendly</option>
 										</select>&ensp;&ensp;
 										<button type="submit" class="btn btn-warning btn-sm" name="submit" id="submit">Open Report</button>
 									</td>
 								</tr>
 							</thead>
-							<?php if($exports == "display" || $exports == "exportpdf"){ ?>
-							</table>
-							<table class="table1" style="min-width:auto;line-height:23px;" id="main_table">
-							<?php } ?>
 							<?php }
 							if(isset($_POST['submit']) == true){
 								if($cname == "" || $cname == "select"){ }
@@ -417,7 +411,7 @@
 												$sales_details = explode("@",$sales[$date_asc."@".$i]);
 												
 												echo "<tr>";
-												echo "<td class='dates'>".date("d.m.Y",strtotime($sales_details[0]))."</td>";
+												echo "<td>".date("d.m.Y",strtotime($sales_details[0]))."</td>";
 												echo "<td>".$sales_details[1]."</td>";
 												echo "<td>".$sales_details[2]."</td>";
 												echo "<td style='text-align:left;'>".$sector_name[$sales_details[16]]."</td>";
@@ -427,25 +421,15 @@
 												if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo "<td>".str_replace(".00","",number_format_ind($sales_details[8]))."</td>"; }
 												if($ifjbwen == 1){  echo "<td>".number_format_ind($sales_details[5])."</td>"; echo "<td>".number_format_ind($sales_details[6])."</td>"; }
 												echo "<td>".number_format_ind($sales_details[9])."</td>";
-
-												$tbcount = 0;$tjcount = 0;$tncount = 0;$twcount = 0;$tecount = 0;$tdcount = 0;$ttcount = 0;$tacount = 0;
 												if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){
-													// $tbcount = $tbcount + $sales_details[8];
-													$tbcount += isset($sales_details[8]) ? floatval($sales_details[8]) : 0;
-													// $tjcount = $tjcount + $sales_details[4];
-													$tjcount += isset($sales_details[4]) ? floatval($sales_details[4]) : 0;
-													// $tncount = $tncount + $sales_details[9];
-													$tncount += isset($sales_details[9]) ? floatval($sales_details[9]) : 0;
-													// $twcount = $twcount + $sales_details[5];
-													$twcount += isset($sales_details[5]) ? floatval($sales_details[5]) : 0;
-													// $tecount = $tecount + $sales_details[6];
-													$tecount += isset($sales_details[6]) ? floatval($sales_details[6]) : 0;
-													// $tdcount = $tdcount + $sales_details[18];
-													$tdcount += isset($sales_details[18]) ? floatval($sales_details[18]) : 0;
-													// $ttcount = $ttcount + $sales_details[19];
-													$ttcount += isset($sales_details[19]) ? floatval($sales_details[19]) : 0;
-													// $tacount = $tacount + $sales_details[11];
-													$tacount += isset($sales_details[11]) ? floatval($sales_details[11]) : 0;
+													$tbcount = $tbcount + $sales_details[8];
+													$tjcount = $tjcount + $sales_details[4];
+													$tncount = $tncount + $sales_details[9];
+													$twcount = $twcount + $sales_details[5];
+													$tecount = $tecount + $sales_details[6];
+													$tdcount = $tdcount + $sales_details[18];
+													$ttcount = $ttcount + $sales_details[19];
+													$tacount = $tacount + $sales_details[11];
 													if(number_format_ind($sales_details[8]) == "0.00"){
 														echo "<td>0.00</td>";
 													}
@@ -459,14 +443,10 @@
 													}
 												}
 												else {
-													// $tncount = $tncount + $sales_details[9];
-													$tncount += isset($sales_details[9]) ? floatval($sales_details[9]) : 0;
-													// $tdcount = $tdcount + $sales_details[18];
-													$tdcount += isset($sales_details[18]) ? floatval($sales_details[18]) : 0;
-													// $ttcount = $ttcount + $sales_details[19];
-													$ttcount += isset($sales_details[19]) ? floatval($sales_details[19]) : 0;
-													// $tacount = $tacount + $sales_details[11];
-													$tacount += isset($sales_details[11]) ? floatval($sales_details[11]) : 0;
+													$tncount = $tncount + $sales_details[9];
+													$tdcount = $tdcount + $sales_details[18];
+													$ttcount = $ttcount + $sales_details[19];
+													$tacount = $tacount + $sales_details[11];
 												}
 												if($prate_flag == 1 || $prate_flag == "1"){
 													$prate_index = $sales_details[0];
@@ -508,7 +488,7 @@
 												$receipts_details = explode("@",$receipts[$date_asc."@".$i]);
 												
 												echo "<tr>";
-												echo "<td class='dates'>".date("d.m.Y",strtotime($receipts_details[1]))."</td>";
+												echo "<td>".date("d.m.Y",strtotime($receipts_details[1]))."</td>";
 												echo "<td>".$receipts_details[0]."</td>";
 												echo "<td>".$receipts_details[3]."</td>";
 												echo "<td style='text-align:left;'>".$sector_name[$receipts_details[13]]."</td>";
@@ -550,7 +530,7 @@
 												$returns_details = explode("@",$returns[$date_asc."@".$i]);
 												
 												echo "<tr>";
-												echo "<td class='dates'>".date("d.m.Y",strtotime($returns_details[1]))."</td>";
+												echo "<td>".date("d.m.Y",strtotime($returns_details[1]))."</td>";
 												echo "<td>".$returns_details[0]."</td>";
 												echo "<td>".$returns_details[3]."</td>";
 												echo "<td style='text-align:left;'>".$sector_name[$returns_details[11]]."</td>";
@@ -585,7 +565,7 @@
 												$smort_details = explode("@",$smortalities[$date_asc."@".$i]);
 												
 												echo "<tr>";
-												echo "<td class='dates'>".date("d.m.Y",strtotime($smort_details[2]))."</td>";
+												echo "<td>".date("d.m.Y",strtotime($smort_details[2]))."</td>";
 												echo "<td>".$smort_details[0]."</td>";
 												echo "<td>".$smort_details[4]."</td>";
 												echo "<td style='text-align:left;'></td>";
@@ -620,7 +600,7 @@
 												$ccns_details = explode("@",$ccns[$date_asc."@".$i]);
 												
 												echo "<tr>";
-												echo "<td class='dates'>".date("d.m.Y",strtotime($ccns_details[2]))."</td>";
+												echo "<td>".date("d.m.Y",strtotime($ccns_details[2]))."</td>";
 												echo "<td>".$ccns_details[1]."</td>";
 												echo "<td>".$ccns_details[4]."</td>";
 												echo "<td style='text-align:left;'>".$sector_name[$ccns_details[11]]."</td>";
@@ -655,7 +635,7 @@
 												$cdns_details = explode("@",$cdns[$date_asc."@".$i]);
 												
 												echo "<tr>";
-												echo "<td class='dates'>".date("d.m.Y",strtotime($cdns_details[2]))."</td>";
+												echo "<td>".date("d.m.Y",strtotime($cdns_details[2]))."</td>";
 												echo "<td>".$cdns_details[1]."</td>";
 												echo "<td>".$cdns_details[4]."</td>";
 												echo "<td style='text-align:left;'>".$sector_name[$cdns_details[11]]."</td>";
@@ -691,10 +671,10 @@
 									<td colspan="4" align="center"><b>Between Days Total</b></td>
 									<?php if($vehicle_flag == 1 || $vehicle_flag == "1"){ echo "<td></td>"; } ?>
 									<td></td>
-									<?php if($ifjbwen == 1 || $ifjbw == 1){ ?><td style='padding: 0 5px;text-align:right;'><?php echo str_replace(".00","",number_format_ind($tjcount)); ?></td> <?php } ?>
-									<?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ ?><td style='padding: 0 5px;text-align:right;'><?php echo str_replace(".00","",number_format_ind($tbcount)); ?></td> <?php } ?>
-									<?php if($ifjbwen == 1){ ?><td style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($twcount); ?></td><?php } ?>
-									<?php if($ifjbwen == 1){ ?><td style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($tecount); ?></td><?php } ?>
+									<td <?php if($ifjbwen == 1 || $ifjbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?> style='padding: 0 5px;text-align:right;'><?php echo str_replace(".00","",number_format_ind($tjcount)); ?></td>
+									<td <?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?> style='padding: 0 5px;text-align:right;'><?php echo str_replace(".00","",number_format_ind($tbcount)); ?></td>
+									<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?> style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($twcount); ?></td>
+									<td <?php if($ifjbwen == 1){ echo $idisplay; } else { echo $ndisplay; } ?> style='padding-right: 5px;text-align:right;'><?php echo number_format_ind($tecount); ?></td>
 									<td style='padding: 0 5px;text-align:right;'><?php echo number_format_ind($tncount); ?></td>
 									<?php
 									if($tncount > 0 && $tbcount > 0){
@@ -703,7 +683,7 @@
 										$result = 0;
 									}
 									?>
-									<?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ ?><td style='padding: 0 5px;text-align:right;'><?php echo number_format_ind($result); ?></td> <?php } ?>
+									<td <?php if($ifjbwen == 1 || $ifjbw == 1 || $ifbw == 1){ echo $idisplay; } else { echo $ndisplay; } ?> style='padding: 0 5px;text-align:right;'><?php echo number_format_ind($result); ?></td>
 									<?php if($prate_flag == 1 || $prate_flag == "1"){ echo "<td></td>"; } ?>
 									<?php
 									if($tacount >0 && $tncount> 0){
@@ -771,43 +751,8 @@
 					</form>
 				</div>
 		</section>
-		
-        <script type="text/javascript">
-            function tableToExcel(table, name, filename, chosen){
-                if(chosen === 'excel'){
-					cdate_format1();
-                    var table = document.getElementById("main_table");
-                    var workbook = XLSX.utils.book_new();
-                    var worksheet = XLSX.utils.table_to_sheet(table);
-                    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-                    XLSX.writeFile(workbook, filename+".xlsx");
-                    cdate_format2();
-                    $('#exports').select2();
-                    document.getElementById("exports").value = "display";
-                    $('#exports').select2();
-                }
-                else{ }
-            }
-            function cdate_format1() {
-                const dateCells = document.querySelectorAll('#main_table .dates');
-                var adate = [];
-                dateCells.forEach(cell => {
-                    let originalString = cell.textContent;
-                    adate = []; adate = originalString.split(".");
-                    cell.textContent = adate[2]+"-"+adate[1]+"-"+adate[0];
-                });
-            }
-            function cdate_format2() {
-                const dateCells = document.querySelectorAll('#main_table .dates');
-                var adate = [];
-                dateCells.forEach(cell => {
-                    let originalString = cell.textContent;
-                    adate = []; adate = originalString.split("-");
-                    cell.textContent = adate[2]+"."+adate[1]+"."+adate[0];
-                });
-            }
-        </script>
-		<?php if($exports == "display" || $exports == "exportpdf") { ?><footer align="center" style="margin-top:50px;"><?php $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $finish = $time; $total_time = round(($finish - $start), 4); echo "Loaded in ".$total_time." seconds."; ?></footer> <?php } ?>
+
+		<?php if($exoption == "displaypage" || $exoption == "exportpdf") { ?><footer align="center" style="margin-top:50px;"><?php $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $finish = $time; $total_time = round(($finish - $start), 4); echo "Loaded in ".$total_time." seconds."; ?></footer> <?php } ?>
 		<script src="../loading_page_out.js"></script>
 	</body>
 	

@@ -44,9 +44,9 @@
         $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
 	}
 	else{
-		$exl_fdate = $exl_tdate = $today; $exl_cname = $exl_iname = $exl_wname = $exl_user = "all";
+		$exl_fdate = $exl_tdate = $today; $exl_cname = $exl_iname = $exl_wname = $exl_user = "all"; 
 	}
-	$url = "../PHPExcel/Examples/PaymentReport-Excel.php?fromdate=".$exl_fdate."&todate=".$exl_tdate."&ccode=".$exl_cname."&pmode=".$exl_pmode."&pcoa=".$exl_pcoa."&sector=".$exl_wname;
+	$url = "../PHPExcel/Examples/PaymentReport-Excel.php?fromdate=".$exl_fdate."&todate=".$exl_tdate."&ccode=".$exl_cname."&pmode=".$exl_pmode."&pcoa=".$exl_pcoa."&sector=".$sects_list;
 	
     $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Supplier Payment' AND `field_function` = 'Display TCDS Calculations' AND `user_access` = 'all' AND `flag` = '1'";
     $query = mysqli_query($conn,$sql); $dtcds_flag = mysqli_num_rows($query);
@@ -126,9 +126,9 @@
 		<section class="content" align="center">
 				<div class="col-md-12" align="center">
 				<?php if($db == ''){?>
-				<form action="pur_paymentreport.php" method="post" >
+				<form action="pur_paymentreport_ta.php" method="post" >
 					<?php } else { ?>
-					<form action="pur_paymentreport.php?db=<?php echo $db; ?>" method="post">
+					<form action="pur_paymentreport_ta.php?db=<?php echo $db; ?>" method="post">
 					<?php } ?>
 						<table class="table1" style="width:auto;line-height:23px;">
 						<?php if($exoption == "displaypage" || $exoption == "exportpdf") { ?>

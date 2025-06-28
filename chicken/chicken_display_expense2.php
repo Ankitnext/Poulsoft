@@ -1,23 +1,19 @@
 <?php
-//chicken_display_debit.php
+//chicken_display_expense2.php
 include "newConfig.php";
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
 global $ufile_name; $ufile_name = $href; include "chicken_check_accessmaster.php";
+$addedemp = $_SESSION['userid'];
 
 if($access_error_flag == 0){
     include "chicken_fetch_accesslist.php";
 
-     $sql='SHOW COLUMNS FROM `main_mortality`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+    /*Check for Column Availability*/
+    $sql='SHOW COLUMNS FROM `acc_vouchers`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
     while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
-    if(in_array("dflag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_mortality` ADD `dflag` INT(300) NULL DEFAULT NULL COMMENT '' AFTER `active`"; mysqli_query($conn,$sql); }
-    if(in_array("trtype", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_mortality` ADD `trtype` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `dflag`"; mysqli_query($conn,$sql); }
-    if(in_array("trlink", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_mortality` ADD `trlink` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `trtype`"; mysqli_query($conn,$sql); }
-
+    if(in_array("trtype", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_vouchers` ADD `trtype` VARCHAR(300) NULL DEFAULT NULL AFTER `pdflag`"; mysqli_query($conn,$sql); }
+    if(in_array("trlink", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_vouchers` ADD `trlink` VARCHAR(300) NULL DEFAULT NULL AFTER `trtype`"; mysqli_query($conn,$sql); }
     
-    //check and fetch date range
-    global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    include "poulsoft_fetch_daterange_master.php";
-
     if($acslist_error_flag == 0){
         $fd_id = $href."fdate"; $td_id = $href."tdate";
         if(isset($_POST['bdates']) == true){
@@ -52,9 +48,10 @@ if($access_error_flag == 0){
 		<section class="content-header">
 			<ol class="breadcrumb">
 				<li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-				<li class="active">Create Debit Note</li>
+				<li><a href="#">Transactions</a></li>
+				<li class="active">Create Expenses</li>
 			</ol>
-			<h1>Debit Note</h1>
+			<h1>Expense</h1>
 		</section><br/>
             <div class="row" style="margin: 10px 10px 0 10px;">
                 <form action="<?php echo $href; ?>" method="post">
@@ -67,6 +64,7 @@ if($access_error_flag == 0){
                 </form>
                 
                 <div align="right">
+                    <?php /*if($acs_edit_flag == 1){ ?><button type="button" class="btn btn-info" id="editpage" value="chicken_edit_expense2m.php" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> Edit Multiple</button><?php }*/ ?>
                     <?php if($acs_add_flag == 1){ ?><button type="button" class="btn btn-warning" id="addpage" value="<?php echo $acs_add_url; ?>" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> ADD</button><?php } ?>
                 </div>
             </div>
@@ -78,26 +76,36 @@ if($access_error_flag == 0){
                                 <thead>
 									<tr>
 										<th>Date</th>
-										<th>Invoice</th>
-										<th>Company</th>
-										<th>Item</th>
-										<th>Quantity</th>
-										<th>Price</th>
+										<th>Transaction No.</th>
+										<th>From CoA</th>
+										<th>To CoA</th>
+										<th>Doc No.</th>
+										<th>Sector</th>
 										<th>Amount</th>
 										<th>Action</th>
 									</tr>
 								</thead>
                                 <tbody>
                                 <?php
-                                    // Main Contact Details
-                                    $sql='SHOW COLUMNS FROM `main_contactdetails`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
-                                    while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
-                                    if(in_array("sort_order", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `sort_order` INT(100) NOT NULL DEFAULT '0' AFTER `dflag`"; mysqli_query($conn,$sql); }
-                                  
                                     /*Check for Table Availability*/
                                     $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
                                     $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-                                    if(in_array("shop_machine_investment", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.shop_machine_investment LIKE poulso6_admin_chickenmaster.shop_machine_investment;"; mysqli_query($conn,$sql1); }
+                                    if(in_array("broiler_printview_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_printview_master LIKE poulso6_admin_broiler_broilermaster.broiler_printview_master;"; mysqli_query($conn,$sql1); }
+                                    if(in_array("master_generator", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_generator LIKE poulso6_admin_broiler_broilermaster.master_generator;"; mysqli_query($conn,$sql1); }
+                                    if(in_array("prefix_master", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.prefix_master LIKE poulso6_admin_broiler_broilermaster.prefix_master;"; mysqli_query($conn,$sql1); }
+                                    
+                                    /*Check for Column Availability*/
+                                    $sql='SHOW COLUMNS FROM `acc_coa`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+                                    while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+                                    if(in_array("vehexp_aflag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_coa` ADD `vehexp_aflag` INT(100) NOT NULL DEFAULT '0' AFTER `vouexp_flag`"; mysqli_query($conn,$sql); }
+                                    if(in_array("vehexp_sorder", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_coa` ADD `vehexp_sorder` INT(100) NOT NULL DEFAULT '0' AFTER `vehexp_aflag`"; mysqli_query($conn,$sql); }
+                                    if(in_array("vehexp_sorder", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_coa` ADD `vehexp_sorder` INT(100) NOT NULL DEFAULT '0' AFTER `vehexp_sorder`"; mysqli_query($conn,$sql); }
+                                    
+                                    /*Check for Column Availability*/
+                                    // $sql='SHOW COLUMNS FROM `acc_vouchers`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+                                    // while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+                                    // if(in_array("trtype", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `trtype` ADD `vehexp_aflag` VARCHAR(300) NULL DEFAULT NULL AFTER `pdflag`"; mysqli_query($conn,$sql); }
+                                    // if(in_array("trlink", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_vouchers` ADD `trlink` VARCHAR(300) NULL DEFAULT NULL AFTER `trtype`"; mysqli_query($conn,$sql); }
                                     
                                     //Fetch Print-View from Print Master
                                     $i = $pc = 0; $field_name = $print_path = $icon_type = $icon_path = $icon_color = $target = array();
@@ -114,32 +122,32 @@ if($access_error_flag == 0){
                                     }
                                     $pc = $i - 1;
                                     
-                                    $sql = "SELECT * FROM `main_contactdetails` ORDER BY `name` ASC";
-                                    $query = mysqli_query($conn,$sql); $sup_name = array();
-                                    while($row = mysqli_fetch_assoc($query)){ $sup_name[$row['code']] = $row['name']; }
+                                    $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC";
+                                    $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
+                                    while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
-                                    $sql = "SELECT * FROM `item_details` ORDER BY `description` ASC";
-                                    $query = mysqli_query($conn,$sql); $item_name = array();
-                                    while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; }
+                                    $sql = "SELECT * FROM `acc_coa` ORDER BY `id` DESC";
+                                    $query = mysqli_query($conn,$sql); $coa_code = $coa_name = array();
+                                    while($row = mysqli_fetch_assoc($query)){ $coa_code[$row['code']] = $row['description']; $coa_name[$row['code']] = $row['description']; }
 
-                                    $delete_link = $acs_delete_url; $sl = 1;
-                                    $sql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' AND `trtype` = 'debit' ORDER BY `date` ASC";
+                                    $delete_link = $acs_delete_url;
+                                    $sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' AND `trlink` LIKE '$href'";
                                     $query = mysqli_query($conn,$sql);
                                     while($row = mysqli_fetch_assoc($query)){
-                                        $id = $row['code'];
+                                        $id = $row['trnum'];
                                         $edit_link = $acs_edit_url."?utype=edit&trnum=".$id;
                                         $authorize_url = $acs_update_url."?utype=authorize&trnum=".$id;
                                         if($row['active'] == 1){ $update_link = $acs_update_url."?utype=pause&trnum=".$id; }
                                         else{ $update_link = $acs_update_url."?utype=activate&trnum=".$id; }
                                     ?>
                                     <tr>
-                                        <td><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                                        <td><?php echo $row['code']; ?></td>
-                                        <td><?php echo $sup_name[$row['ccode']]; ?></td>
-                                        <td><?php echo $item_name[$row['itemcode']]; ?></td>
-                                        <td><?php echo round($row['quantity'],2); ?></td>
-                                        <td><?php echo round($row['price'],2); ?></td>
-                                        <td><?php echo round($row['amount'],2); ?></td>
+										<td><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
+                                        <td><?php echo $row['trnum']; ?></td>
+                                        <td><?php echo $coa_name[$row['fcoa']]; ?></td>
+                                        <td><?php echo $coa_name[$row['tcoa']]; ?></td>
+                                        <td><?php echo $row['dcno']; ?></td>
+                                        <td><?php echo $sector_name[$row['warehouse']]; ?></td>
+                                        <td style="text-align:right;"><?php echo round($row['amount'],2); ?></td>
 										<td style="width:15%;" align="left">
                                         <?php
                                         if($row['flag'] == 2){ echo "<i class='fa fa-check' style='color:green;' title='Authorized'></i></a>&ensp;"; }
@@ -193,22 +201,6 @@ if($access_error_flag == 0){
             </section>
             <script>
                 function add_page(a){ var b = document.getElementById(a).value; window.location.href = b; }
-                $(document).ready(function(){
-                    var from_d = '<?php echo $from_date; ?>';
-                    //alert(from_d+''+to_d);
-                    $('#datepickers').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true,minDate: from_d});
-                })
-                $(document).ready(function(){
-                    $('#datepickers1').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true});
-                })
-                function displaycalendor(){
-                    var from_d = '<?php echo $from_date; ?>';
-                    $('.dates').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true,minDate: from_d});
-                }
-                $(document).ready(function(){
-                    var from_d = '<?php echo $from_date; ?>';
-                    $('.dates').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true,minDate: from_d});
-                })
                 function checkdelete(a){
                     var b = "<?php echo $delete_link.'?page=delete&id='; ?>"+a;
                     var c = confirm("are you sure you want to delete the transaction "+a+" ?");

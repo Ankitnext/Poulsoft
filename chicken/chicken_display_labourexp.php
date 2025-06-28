@@ -1,5 +1,5 @@
 <?php
-//chicken_display_debit.php
+//chicken_display_labourexp.php
 include "newConfig.php";
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
 global $ufile_name; $ufile_name = $href; include "chicken_check_accessmaster.php";
@@ -7,11 +7,10 @@ global $ufile_name; $ufile_name = $href; include "chicken_check_accessmaster.php
 if($access_error_flag == 0){
     include "chicken_fetch_accesslist.php";
 
-     $sql='SHOW COLUMNS FROM `main_mortality`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+    $sql='SHOW COLUMNS FROM `acc_vouchers`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
     while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
-    if(in_array("dflag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_mortality` ADD `dflag` INT(300) NULL DEFAULT NULL COMMENT '' AFTER `active`"; mysqli_query($conn,$sql); }
-    if(in_array("trtype", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_mortality` ADD `trtype` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `dflag`"; mysqli_query($conn,$sql); }
-    if(in_array("trlink", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_mortality` ADD `trlink` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `trtype`"; mysqli_query($conn,$sql); }
+    if(in_array("veh_amt", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_vouchers` ADD `veh_amt` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `total_kms`"; mysqli_query($conn,$sql); }
+    if(in_array("veh_rate", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `acc_vouchers` ADD `veh_rate` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `veh_amt`"; mysqli_query($conn,$sql); }
 
     
     //check and fetch date range
@@ -52,9 +51,9 @@ if($access_error_flag == 0){
 		<section class="content-header">
 			<ol class="breadcrumb">
 				<li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-				<li class="active">Create Debit Note</li>
+				<li class="active">Create Shop Investment</li>
 			</ol>
-			<h1>Debit Note</h1>
+			<h1>Labour Expense</h1>
 		</section><br/>
             <div class="row" style="margin: 10px 10px 0 10px;">
                 <form action="<?php echo $href; ?>" method="post">
@@ -78,11 +77,11 @@ if($access_error_flag == 0){
                                 <thead>
 									<tr>
 										<th>Date</th>
-										<th>Invoice</th>
-										<th>Company</th>
-										<th>Item</th>
-										<th>Quantity</th>
-										<th>Price</th>
+										<th>Trnum</th>
+										<th>Vehicle</th>
+										<th>Labour Name</th>
+										<th>Sold Kgs</th>
+                                        <th>Cost Per kgs</th>
 										<th>Amount</th>
 										<th>Action</th>
 									</tr>
@@ -90,14 +89,15 @@ if($access_error_flag == 0){
                                 <tbody>
                                 <?php
                                     // Main Contact Details
-                                    $sql='SHOW COLUMNS FROM `main_contactdetails`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+                                    $sql='SHOW COLUMNS FROM `chicken_labveh_expenses`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
                                     while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
-                                    if(in_array("sort_order", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `sort_order` INT(100) NOT NULL DEFAULT '0' AFTER `dflag`"; mysqli_query($conn,$sql); }
+                                    if(in_array("pur_kgs", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `chicken_labveh_expenses` ADD `pur_kgs` DECIMAL(20,2) NULL DEFAULT NULL AFTER `sold_kgs`"; mysqli_query($conn,$sql); }
+                                    if(in_array("bonus", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `chicken_labveh_expenses` ADD `bonus` DECIMAL(20,2) NULL DEFAULT NULL AFTER `amount`"; mysqli_query($conn,$sql); }
                                   
                                     /*Check for Table Availability*/
                                     $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
                                     $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
-                                    if(in_array("shop_machine_investment", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.shop_machine_investment LIKE poulso6_admin_chickenmaster.shop_machine_investment;"; mysqli_query($conn,$sql1); }
+                                    if(in_array("chicken_labveh_expenses", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.chicken_labveh_expenses LIKE poulso6_admin_chickenmaster.chicken_labveh_expenses;"; mysqli_query($conn,$sql1); }
                                     
                                     //Fetch Print-View from Print Master
                                     $i = $pc = 0; $field_name = $print_path = $icon_type = $icon_path = $icon_color = $target = array();
@@ -122,8 +122,18 @@ if($access_error_flag == 0){
                                     $query = mysqli_query($conn,$sql); $item_name = array();
                                     while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; }
 
+                                    //Sector Details
+                                    $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC";
+                                    $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
+                                    while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
+
+                                    //Labour Details
+                                    $sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' AND `driver_flag` = '1' ORDER BY `id` ASC";
+                                    $query = mysqli_query($conn,$sql); $acc_code = $acc_name = array();
+                                    while($row = mysqli_fetch_assoc($query)){ $acc_code[$row['code']] = $row['code']; $acc_name[$row['code']] = $row['description']; }
+                                    
                                     $delete_link = $acs_delete_url; $sl = 1;
-                                    $sql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' AND `trtype` = 'debit' ORDER BY `date` ASC";
+                                    $sql = "SELECT * FROM `chicken_labveh_expenses` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' ORDER BY `date` ASC";
                                     $query = mysqli_query($conn,$sql);
                                     while($row = mysqli_fetch_assoc($query)){
                                         $id = $row['code'];
@@ -135,10 +145,10 @@ if($access_error_flag == 0){
                                     <tr>
                                         <td><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
                                         <td><?php echo $row['code']; ?></td>
-                                        <td><?php echo $sup_name[$row['ccode']]; ?></td>
-                                        <td><?php echo $item_name[$row['itemcode']]; ?></td>
-                                        <td><?php echo round($row['quantity'],2); ?></td>
-                                        <td><?php echo round($row['price'],2); ?></td>
+                                        <td><?php echo $sector_name[$row['warehouse']]; ?></td>
+                                        <td><?php echo $acc_name[$row['labour_code']]; ?></td>
+                                        <td><?php echo $row['sold_weight']; ?></td>
+                                        <td><?php echo $row['rate']; ?></td>
                                         <td><?php echo round($row['amount'],2); ?></td>
 										<td style="width:15%;" align="left">
                                         <?php

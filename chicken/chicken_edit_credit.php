@@ -1,5 +1,5 @@
 <?php
-//chicken_edit_debit.php
+//chicken_edit_credit.php
 include "newConfig.php";
 include "chicken_generate_trnum_details.php";
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
@@ -68,14 +68,14 @@ if($access_error_flag == 0){
             }
             ?>
             <div class="card border-secondary mb-3">
-                <div class="card-header">Edit Debit Note</div>
-                <form action="chicken_modify_debit.php" method="post" onsubmit="return checkval();">
+                <div class="card-header">Edit Credit Note</div>
+                <form action="chicken_modify_credit.php" method="post" onsubmit="return checkval();">
                     <div class="ml-5 card-body">
                         <div class="row">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th colspan="<?php echo $colspan; ?>" style="background-color:#d1ffe4;color:#00722f;text-align:center;">Debit Note Details</th>
+                                        <th colspan="<?php echo $colspan; ?>" style="background-color:#d1ffe4;color:#00722f;text-align:center;">Credit Note Details</th>
                                     </tr>
                                     <tr>
                                          <th style="text-align:center;"><label>Date<b style="color:red;">&nbsp;*</b></label></th>
@@ -91,7 +91,7 @@ if($access_error_flag == 0){
                                 <?php  ?>
                                     <tr id="">
                                         <td style="width:100px;"><input type="text" style="width:100px;" class="form-control range_picker" name="pdate" value="<?php echo $fdate; ?>" id="pdate" readonly></td>
-                                        <td style="width: 250px;"><select name="company" id="company" class="form-control select2" style="width: 250px;"><option value="select">-select-</option><?php foreach($sup_code as $cc){ ?><option value="<?php echo $sup_code[$cc]; ?>" <?php if($ccode == $cc){ echo "selected"; } ?>><?php echo $sup_name[$cc]; ?></option><?php } ?></select></td>
+                                        <td style="width: 250px;"><select name="company" id="company" class="form-control select2" style="width: 250px;"><option value="select">-select-</option><?php foreach($cus_code as $cscode){ ?><option value="<?php echo $cscode; ?>" <?php if($ccode == $cscode){ echo "selected"; } ?>><?php echo $cus_name[$cscode]; ?></option><?php } ?></select></td>
                                         <td style="width: 200px;"><select name="itemcode" id="itemcode" class="form-control select2" style="width: 200px;" onchange=""><option value="select">-select-</option><?php foreach($item_code as $cc){ ?><option value="<?php echo $item_code[$cc]; ?>" <?php if($itemcode == $cc){ echo "selected"; } ?>><?php echo $item_name[$cc]; ?></option><?php } ?></select></td>
                                         <td style="width: 80px;"><input type="text" name="quantity" id="quantity" value="<?php echo $quantity; ?>" style="width: 80px;" onkeyup="validatenum(this.id);calculate_amt(this.id);" onchange="validateamount(this.id)" class="form-control amount-format"></td>
                                         <td style="width: 80px;"><input type="text" name="price" id="price" value="<?php echo $price; ?>" style="width: 80px;" onkeyup="validatenum(this.id);calculate_amt(this.id);" onchange="validateamount(this.id)" class="form-control amount-format"></td>
@@ -125,7 +125,7 @@ if($access_error_flag == 0){
                  //Date Range selection
                 var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 function return_back(){
-                    window.location.href = "chicken_display_debit.php";
+                    window.location.href = "chicken_display_credit.php";
                 }
                 function checkval(){
                     var l = true;

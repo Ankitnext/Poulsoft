@@ -1,5 +1,5 @@
 <?php
-    //SalesReportMaster_ta.php
+    //SalesReportMaster2.php
 	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 	$requested_data = json_decode(file_get_contents('php://input'),true);
 	session_start();
@@ -11,14 +11,14 @@
 		$dbname = $_SESSION['dbase'];
 		$users_code = $_SESSION['userid'];
 
-        $form_reload_page = "SalesReportMaster_ta.php";
+        $form_reload_page = "SalesReportMaster2.php";
 	}
 	else{
 		include "APIconfig.php";
 		include "number_format_ind.php";
 		$dbname = $db;
 		$users_code = $_GET['emp_code'];
-        $form_reload_page = "SalesReportMaster_ta.php?db=".$db;
+        $form_reload_page = "SalesReportMaster2.php?db=".$db;
 	}
 
 	$sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users_code'";
@@ -83,7 +83,7 @@
 	while($row = mysqli_fetch_assoc($query)){ $cus_jalsfreight_flag = $row['cus_jalsfreight_flag']; }
 	if($cus_jalsfreight_flag == ""){ $cus_jalsfreight_flag = 0; }
 
-	$sql = "SELECT *  FROM `main_linkdetails` WHERE `href` LIKE '%SalesReportMaster.php%'"; $query = mysqli_query($conn,$sql);
+	$sql = "SELECT *  FROM `main_linkdetails` WHERE `href` LIKE '%SalesReportMaster2.php%'"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $cid = $row['childid']; }
 
     $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Rename to vehicleno' AND `field_function` = 'Vehicle No' AND `flag` = '1'";
@@ -106,7 +106,6 @@
         $type = "type";
         $code = "code";
         $pattern = "pattern";
-        $field_details[$row['sl_flag']] = "sl_flag";
         $field_details[$row['date_flag']] = "date_flag";
         $field_details[$row['inv_flag']] = "inv_flag";
         $field_details[$row['binv_flag']] = "binv_flag";
@@ -152,21 +151,22 @@
 		$tdate = date("Y-m-d",strtotime($_POST['tdate']));
 		$suppliers = $_POST['suppliers'];
 		$customers = $_POST['customers'];
-		$billnos = $_POST['billnos'];
+		// $billnos = $_POST['billnos'];
 		// $sectors = $_POST['sectors'];
-		$item_cat = $_POST['item_cat'];
+		// $item_cat = $_POST['item_cat'];
 		$items = $_POST['items'];
 		$users = $_POST['users'];
-		$prices = $_POST['prices'];
+		// $prices = $_POST['prices'];
 		$exports = $_POST['exports'];
 
         $sects = $groups = array(); $grp_all_flag = 0;
         foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
         $grp_list = implode("@",$groups);
-        foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-        $sects_list = implode("','", array_map('addslashes', $sects));
+
+        // foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        // $sects_list = implode("','", array_map('addslashes', $sects));
 	}
-	$url = "../PHPExcel/Examples/SalesReportMaster-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&billnos=".$billnos."&item_cat=".$item_cat."&items=".$items."&sectors=".$sectors."&users=".$users."&groups=".$grp_list."&prices=".$prices;
+	$url = "../PHPExcel/Examples/SalesReportMaster-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&items=".$items."&users=".$users."&groups=".$grp_list;
 	
 ?>
 <html>
@@ -243,7 +243,7 @@
                                                 ?>
                                             </select>
                                         </div>
-                                        <div class="form-group" style="width:170px;">
+                                        <div class="form-group" style="width:170px;display:none; !important">
                                             <label>Category</label>
                                             <select name="item_cat" id="item_cat" class="form-control select2" style="width:160px;" onchange="fetch_item_list();">
                                                 <option value="all" <?php if($item_cat == "all"){ echo "selected"; } ?>>-All-</option>
@@ -272,27 +272,27 @@
                                                 ?>
                                             </select>
                                         </div>
-                                        <div class="form-group" style="width:190px;">
+                                        <!-- <div class="form-group" style="width:190px;">
                                             <label for="sectors[]">Warehouse</label>
                                             <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
                                                 <?php
                                                     // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? [];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
+                                                    //$selected_sectors = $_POST['sectors'] ?? [];
+                                                    // if (!is_array($selected_sectors)) {
+                                                    //     $selected_sectors = [$selected_sectors];
+                                                    // }
                                                 ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
-                                                <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
-                                                        <?php echo $sector_name[$scode]; ?>
+                                                <option value="all" <?php //if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
+                                                <?php //foreach($sector_code as $scode) { ?>
+                                                    <option value="<?php //echo $scode; ?>" <?php //if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
+                                                        <?php //echo $sector_name[$scode]; ?>
                                                     </option>
-                                                <?php } ?>
+                                                <?php //} ?>
                                             </select>
-                                        </div>
+                                        </div> -->
                                     </div>
                                     <div class="m-1 p-1 row">
-                                        <div class="form-group" style="width:150px;">
+                                        <div class="form-group" style="width:150px;display:none; !important">
                                             <label for="users">User</label>
                                             <select name="users" id="users" class="form-control select2" style="width:140px;">
                                                 <option value="all" <?php if($users == "all"){ echo "selected"; } ?>>All</option>
@@ -307,18 +307,18 @@
                                                 <option <?php if($exports == "printerfriendly") { echo 'selected'; } ?> value="printerfriendly">Printer friendly</option>
                                             </select>
                                         </div>
-                                        <div class="form-group" style="width: 160px;">
+                                        <!-- <div class="form-group" style="width: 160px;">
                                             <label for="billnos">Book Invoice</label>
-                                            <input type="text" name="billnos" id="billnos" class="form-control" value="<?php echo $billnos; ?>" style="padding:0;padding-left:2px;width:150px;" />
+                                            <input type="text" name="billnos" id="billnos" class="form-control" value="<?php //echo $billnos; ?>" style="padding:0;padding-left:2px;width:150px;" />
                                         </div>
                                         <div class="form-group" style="width: 160px;">
                                             <label for="prices">Price</label>
-                                            <input type="text" name="prices" id="prices" class="form-control" value="<?php echo $prices; ?>" style="padding:0;padding-left:2px;width:150px;" />
+                                            <input type="text" name="prices" id="prices" class="form-control" value="<?php //echo $prices; ?>" style="padding:0;padding-left:2px;width:150px;" />
                                         </div>
                                         <div class="form-group" style="width: 210px;">
                                             <label for="search_table">Search</label>
                                             <input type="text" name="search_table" id="search_table" class="form-control" style="padding:0;padding-left:2px;width:200px;" />
-                                        </div>
+                                        </div> -->
                                         <div class="form-group">
                                             <br/><button type="submit" class="btn btn-warning btn-sm" name="submit" id="submit">Open Report</button>
                                         </div>
@@ -335,14 +335,13 @@
                             $html .= '<tr>';
                             for($i = 1;$i <= $col_count;$i++){
                                 if(!empty($field_details[$i.":".$aflag])){
-                                    if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<th id="order">Sl&nbsp;No.</th>'; $bwtd_det_col++; }
-                                    else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
+                                    if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<th id="order">Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<th id="order">Book Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<th id="order">Customer</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<th id="order">Company</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<th id="order">Item</th>'; $bwtd_det_col++; }
-                                    else if($field_details[$i.":".$aflag] == "jals_flag"){ $html .= '<th id="order_num">Jals</th>'; }
+                                    else if($field_details[$i.":".$aflag] == "jals_flag"){ $html .= '<th id="order_num">Box</th>'; }
                                     else if($field_details[$i.":".$aflag] == "birds_flag"){ $html .= '<th id="order_num">Birds</th>'; }
                                     else if($field_details[$i.":".$aflag] == "tweight_flag"){ $html .= '<th id="order_num">T. Weight</th>'; }
                                     else if($field_details[$i.":".$aflag] == "eweight_flag"){ $html .= '<th id="order_num">E. Weight</th>'; }
@@ -408,29 +407,28 @@
                                 $item_filter = " AND `itemcode` IN ('$icat_list')";
                             }
                             
-                            if($billnos == "") { $binv_filter = ""; } else { $binv_filter = " AND `bookinvoice` = '$billnos'"; }
-                            if($prices == "") { $rate_filter = ""; } else { $rate_filter = " AND `itemprice` = '$prices'"; }
+                            // if($billnos == "") { $binv_filter = ""; } else { $binv_filter = " AND `bookinvoice` = '$billnos'"; }
+                            // if($prices == "") { $rate_filter = ""; } else { $rate_filter = " AND `itemprice` = '$prices'"; }
                             if($users == "all"){ $user_filter = ""; } else{ $user_filter = " AND `addedemp` IN ('$users')"; }
 
                             // if($sectors == "all"){ $sec_list = implode("','",$sector_code); $sector_filter = " AND `warehouse` IN ('$sec_list')"; }
-                            // else{ $sector_filter = " AND `warehouse` IN ('$sects_list')"; }
+                            // else{ $sector_filter = " AND `warehouse` IN ('$sectors')"; }
 
                             // Ensure $sectors is always an array
-                            $sectors = $_POST['sectors'] ?? ['all'];
-                            if (!is_array($sectors)) {
-                                $sectors = [$sectors];
-                            }
+                            // $sectors = $_POST['sectors'] ?? ['all'];
+                            // if (!is_array($sectors)) {
+                            //     $sectors = [$sectors];
+                            // }
 
-                            if (in_array("all", $sectors)) {
-                                // All selected – use all sector codes
-                                $sec_list = implode("','", array_map('addslashes', $sector_code));
-                                $sector_filter = " AND `warehouse` IN ('$sec_list')";
-                            } else {
-                                // Specific selections
-                                $sects_list = implode("','", array_map('addslashes', $sectors));
-                                $sector_filter = " AND `warehouse` IN ('$sects_list')";
-                            }
-
+                            // if (in_array("all", $sectors)) {
+                            //     // All selected – use all sector codes
+                            //     $sec_list = implode("','", array_map('addslashes', $sector_code));
+                            //     $sector_filter = " AND `warehouse` IN ('$sec_list')";
+                            // } else {
+                            //     // Specific selections
+                            //     $sects_list = implode("','", array_map('addslashes', $sectors));
+                            //     $sector_filter = " AND `warehouse` IN ('$sects_list')";
+                            // }
 
                             if($_SESSION['dbase'] == "poulso6_chicken_tg_lsfi"){ $sector_filter = ""; }
 
@@ -438,7 +436,7 @@
 
                             $pur_fltr = "";
                             if($suppliers != "all"){
-                                $sql = "SELECT * FROM `pur_purchase` WHERE `vendorcode` IN ('$suppliers') ".$sector_filter." ORDER BY `date`,`invoice` ASC";
+                                $sql = "SELECT * FROM `pur_purchase` WHERE `vendorcode` IN ('$suppliers') ORDER BY `date`,`invoice` ASC";
                                 $query = mysqli_query($conn,$sql); $pur_alist = array();
                                 while($row = mysqli_fetch_assoc($query)){ $pur_alist[$row['invoice']] = $row['invoice']; }
                                 $ptrno_list = implode("','", $pur_alist);
@@ -449,9 +447,9 @@
                             $query = mysqli_query($conn,$sql); $sltr_flag = mysqli_num_rows($query); //$avou_flag = 1;
                             
                             if($sltr_flag > 0 ){
-                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$item_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
                             } else {
-                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$item_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
                             }
                             $query = mysqli_query($conn,$sql); $link_trnum = array();
                             while($row = mysqli_fetch_assoc($query)){ if($row['link_trnum'] != ""){ $link_trnum[$row['link_trnum']] = $row['link_trnum']; } }
@@ -466,9 +464,9 @@
                            
 	
                             if($sltr_flag > 0 ){
-                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$item_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
                            } else {
-                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$item_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
                            }  
                             $query = mysqli_query($conn,$sql); $i = 0; $sales = $inv_count = $slc_freightamt = $slc_tcdsamt = $slc_roundoff = $slc_finaltotal = array();
                             while($row = mysqli_fetch_assoc($query)){
@@ -487,8 +485,8 @@
                                 }
                                 $i++;
                             }
-                            $ccount = sizeof($sales); $exi_inv = ""; $sl = 1;
-                            $rowred = 'style="background-color:red;"';
+                            $ccount = sizeof($sales); $exi_inv = "";
+                            $rowred = 'style="background-color:#ff00002b;"';
                             for($cdate = strtotime($fdate);$cdate <= strtotime($tdate);$cdate += (86400)){
                                 $adate = date('Y-m-d', $cdate);
                                 for($j = 0;$j <= $ccount;$j++){
@@ -501,7 +499,6 @@
                                             $html .= '<tr>';
                                         }
                                         $tacount = $tacount + (float)$sales_details[11];
-                                        
                                         if($exi_inv != $sales_details[1]){
                                             $exi_inv = $sales_details[1];
                                             if(number_format_ind($slc_finaltotal[$sales_details[1]]) == number_format_ind($rb_amt)){
@@ -514,10 +511,9 @@
                                             $ft_tcds = $ft_tcds + $slc_tcdsamt[$sales_details[1]];
                                             $ft_roundoff = $ft_roundoff + $slc_roundoff[$sales_details[1]];
                                             $fst_famt = $fst_famt + $slc_finaltotal[$sales_details[1]];
-                                            // $sl = 0;
+                                            
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
@@ -558,8 +554,7 @@
                                         }
                                         else{
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }

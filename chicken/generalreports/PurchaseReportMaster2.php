@@ -1,5 +1,5 @@
 <?php
-//PurchaseReportMaster_ta.php
+//PurchaseReportMaster22.php
 $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 $requested_data = json_decode(file_get_contents('php://input'),true);
 session_start();
@@ -57,7 +57,7 @@ if(in_array("link_trnum", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
     if(in_array("pur_supplier_addons", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.pur_supplier_addons LIKE poulso6_admin_chickenmaster.pur_supplier_addons;"; mysqli_query($conn,$sql1); }
     
 	$today = date("Y-m-d");
-	$sql = "SELECT *  FROM `main_linkdetails` WHERE `href` LIKE '%PurchaseReportMaster.php%'"; $query = mysqli_query($conn,$sql);
+	$sql = "SELECT *  FROM `main_linkdetails` WHERE `href` LIKE '%PurchaseReportMaster2.php%'"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $cid = $row['childid']; }
 	
 	if(isset($_POST['submit']) == true){
@@ -95,27 +95,27 @@ if(in_array("link_trnum", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 	if($uname == "all"){ $ecodes = ""; foreach($user_code as $ecode){ if($ecodes == ""){ $ecodes = $ecode; } else{ $ecodes = $ecodes."','".$ecode; } } $user_filter = " AND a.addedemp IN ('$ecodes')"; }
 	else{ $user_filter = " AND a.addedemp = '".$uname."'"; }
 
-	//Location Access Filter
+		//Location Access Filter
 	if (!is_array($selected_sectors)) {
-    $selected_sectors = [$selected_sectors];
-}
+		$selected_sectors = [$selected_sectors];
+	}
 
-if (in_array("all", $selected_sectors)) {
-    if ($loc_access == "all" || $loc_access == "All" || $loc_access == "" || $loc_access == NULL) {
-        $sector_filter = $warehouse_filter = "";
-    } else {
-        $wh_code = str_replace(",", "','", $loc_access);
-        $sector_filter = " AND a.warehouse IN ('$wh_code')";
-        $warehouse_filter = " AND code IN ('$wh_code')";
-    }
-} else {
-    // Sanitize and implode selected sectors
-    $safe_sectors = array_map('addslashes', $selected_sectors);
-    $sector_list = implode("','", $safe_sectors);
+	if (in_array("all", $selected_sectors)) {
+		if ($loc_access == "all" || $loc_access == "All" || $loc_access == "" || $loc_access == NULL) {
+			$sector_filter = $warehouse_filter = "";
+		} else {
+			$wh_code = str_replace(",", "','", $loc_access);
+			$sector_filter = " AND a.warehouse IN ('$wh_code')";
+			$warehouse_filter = " AND code IN ('$wh_code')";
+		}
+	} else {
+		// Sanitize and implode selected sectors
+		$safe_sectors = array_map('addslashes', $selected_sectors);
+		$sector_list = implode("','", $safe_sectors);
 
-    $sector_filter = " AND a.warehouse IN ('$sector_list')";
-    $warehouse_filter = " AND code IN ('$sector_list')";
-}
+		$sector_filter = " AND a.warehouse IN ('$sector_list')";
+		$warehouse_filter = " AND code IN ('$sector_list')";
+	}
 	$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1'".$warehouse_filter." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
 
@@ -203,7 +203,7 @@ if (in_array("all", $selected_sectors)) {
 	else{
 		$exl_fdate = $exl_tdate = $today; $exl_cname = $exl_iname = $exl_wname = $exl_user = $exl_gname = "all";
 	}
-	$url = "../PHPExcel/Examples/PurchaseReportMaster-Excel.php?fromdate=".$exl_fdate."&todate=".$exl_tdate."&ccode=".$exl_cname."&item=".$exl_iname."&sector=".$exl_wname."&user=".$exl_user."&gname=".$exl_gname."&cid=".$cid;
+	$url = "../PHPExcel/Examples/PurchaseReportMaster2-Excel.php?fromdate=".$exl_fdate."&todate=".$exl_tdate."&ccode=".$exl_cname."&item=".$exl_iname."&sector=".$exl_wname."&user=".$exl_user."&gname=".$exl_gname."&cid=".$cid;
 	
 ?>
 <html>
@@ -287,9 +287,9 @@ if (in_array("all", $selected_sectors)) {
 		<section class="content" align="center">
 				<div class="col-md-12" align="center">
 				<?php if($db == ''){?>
-				<form action="PurchaseReportMaster_ta.php" method="post" onSubmit="return checkval()">
+				<form action="PurchaseReportMaster2.php" method="post" onSubmit="return checkval()">
 					<?php } else { ?>
-					<form action="PurchaseReportMaster_ta.php?db=<?php echo $db; ?>&emp_code=<?php echo $users_code; ?>" method="post" onSubmit="return checkval()">
+					<form action="PurchaseReportMaster2.php?db=<?php echo $db; ?>&emp_code=<?php echo $users_code; ?>" method="post" onSubmit="return checkval()">
 					<?php } ?>
 						<table class="table1" style="min-width:100%;line-height:23px;">
 							<?php if($exoption == "displaypage") { ?>
@@ -338,17 +338,6 @@ if (in_array("all", $selected_sectors)) {
 											?>
 										</select>
 									<br/>
-										<label class="reportselectionlabel">Warehouse</label>&nbsp;
-										<select name="wname" id="wname" class="form-control select2">
-											<option value="all">-All-</option>
-											<?php
-												foreach($sector_code as $vcode){
-											?>
-													<option <?php if($wname == $vcode) { echo 'selected'; } ?> value="<?php echo $vcode; ?>"><?php echo $sector_name[$vcode]; ?></option>
-											<?php
-												}
-											?>
-										</select>
 										<?php
 										// Initialize selected sectors
 										$selected_sectors = $_POST['sectors'] ?? ['all'];
@@ -358,7 +347,7 @@ if (in_array("all", $selected_sectors)) {
 											$selected_sectors = [$selected_sectors];
 										}
 										?>
-										<label class="reportselectionlabel">Warehouse</label>&nbsp;
+										<label class="reportselectionlabel">Vehicle</label>&nbsp;
 										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
 											<option value="all" <?php if(in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
 											<?php foreach($sector_code as $scode) { ?>
@@ -368,15 +357,15 @@ if (in_array("all", $selected_sectors)) {
 											<?php } ?>
 										</select>
 
-
 										<label class="reportselectionlabel">Export To</label>&nbsp;
 										<select name="export" id="export" class="form-control select2">
 											<option <?php if($exoption == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
 											<option <?php if($exoption == "exportexcel") { echo 'selected'; } ?> value="exportexcel">Excel</option>
 											<option <?php if($exoption == "printerfriendly") { echo 'selected'; } ?> value="printerfriendly">Printer friendly</option>
 										</select>&ensp;&ensp;
-										<label class="reportselectionlabel">User</label>&nbsp;
-										<select name="ucode" id="ucode" class="form-control select2">
+										<div style="display:none;">
+											<label class="reportselectionlabel">User</label>&nbsp;
+										<select name="ucode" id="ucode" class="form-control select2" style="display:none;">
 											<option value="all">-All-</option>
 											<?php
 												foreach($user_code as $ucodes){
@@ -386,6 +375,7 @@ if (in_array("all", $selected_sectors)) {
 												}
 											?>
 										</select>&ensp;&ensp;
+										</div>
 										<button type="submit" class="btn btn-warning btn-sm" name="submit" id="submit">Open Report</button>
 									</td>
 								</tr>
@@ -466,7 +456,7 @@ if (in_array("all", $selected_sectors)) {
 											else if($field_details[$i.":".$active_flag] == "supbrh_flag"){ echo "<th>Branch</th>"; $bwtd_det_col++; }
 											else if($field_details[$i.":".$active_flag] == "purcus_flag"){ echo "<th>Customer</th>"; $bwtd_det_col++; }
 											else if($field_details[$i.":".$active_flag] == "item_flag"){ echo "<th>Item</th>"; $bwtd_det_col++; }
-											else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<th>Jals</th>"; }
+											else if($field_details[$i.":".$active_flag] == "jals_flag"){ echo "<th>Box</th>"; }
 											else if($field_details[$i.":".$active_flag] == "birds_flag"){ echo "<th>Birds</th>"; }
 											else if($field_details[$i.":".$active_flag] == "tweight_flag"){ echo "<th>T. Weight</th>"; }
 											else if($field_details[$i.":".$active_flag] == "eweight_flag"){ echo "<th>E. Weight</th>"; }

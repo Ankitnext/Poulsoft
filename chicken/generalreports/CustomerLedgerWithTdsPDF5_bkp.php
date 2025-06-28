@@ -32,9 +32,6 @@
 	$query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
 	if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
   
-	$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-	while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description'];}
-
     $sql = "SELECT * FROM `master_loadingscreen` WHERE `project` LIKE 'CTS' AND `type` LIKE 'PDF' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conns,$sql);
     while($row = mysqli_fetch_assoc($query)){ $loading_title = $row['title']; $loading_stitle = $row['sub_title']; }
 
@@ -118,24 +115,6 @@
                                                 <option value="all">All</option>
 											    <?php foreach($grp_code as $gcode){ ?><option value="<?php echo $gcode; ?>"><?php echo $grp_name[$gcode]; ?></option><?php } ?>
                                             </select>
-                                        </div>
-										<div class="form-group" style="width:290px;">
-                                            <label for="sectors[]">Warehouse</label>
-                                            <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:280px;" multiple>
-                                                <?php
-                                                    // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? ['all'];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
-                                                ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
-                                                <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
-                                                        <?php echo $sector_name[$scode]; ?>
-                                                    </option>
-                                                <?php } ?>
-											</select>
                                         </div>
                                         <div class="form-group" style="width:110px;">
                                             <label for="today_sale"><br/>
@@ -241,19 +220,9 @@
 				var ts_id = document.getElementById('today_sale');
                 document.getElementById("tbody1").innerHTML = "";
 				if(ts_id.checked == true){ tsale_flag = 1; }
-
-				 var sectors = [];
-				var selectedOptions = document.querySelectorAll('#sectors\\[0\\] option:checked');
-				selectedOptions.forEach(function(option) {
-					sectors.push(option.value);
-				});
-
-				// ✅ Encode array as URL-safe string (comma-separated)
-				var sectors_param = encodeURIComponent(sectors.join(','));
-
                 var inv_items = new XMLHttpRequest();
 				var method = "GET";
-				var url = "chicken_fetch_wapp_customer_details.php?fdate="+fdate+"&tdate="+tdate+"&groups="+groups+"&tsale_flag="+tsale_flag+"&sectors=" + sectors_param;;
+				var url = "chicken_fetch_wapp_customer_details.php?fdate="+fdate+"&tdate="+tdate+"&groups="+groups+"&tsale_flag="+tsale_flag;
                 //window.open(url);
 				var asynchronous = true;
 				inv_items.open(method, url, asynchronous);

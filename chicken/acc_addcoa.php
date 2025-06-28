@@ -17,6 +17,29 @@
 	$driverd_flag = mysqli_num_rows($query); if($driverd_flag > 0){ } else { $driverd_flag = 0; }
 	$sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'CoA Master' AND `field_function` LIKE 'Purchase: Supplier Add-On Fields Flag' AND `flag` = '1'"; $query = mysqli_query($conn,$sql);
 	$dspaf_flag = mysqli_num_rows($query); if($dspaf_flag > 0){ } else { $dspaf_flag = 0; }
+
+	$sql = "SELECT * FROM `acc_schedules` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+	while($row = mysqli_fetch_assoc($query)){
+		if($row['description'] == "Other Expenses"){
+			$other_exp_code = $row['code'];
+		}
+	}
+
+
+	$sql = "SELECT * FROM `acc_types` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $expensecode = "";
+	while($row = mysqli_fetch_assoc($query)){
+		if($row['description'] == 'Expense'){
+			$expensecode = $row['code'];
+		}
+	}
+
+	$type = $_GET['type'];
+	if($type == "add_labour"){
+
+	}else{
+		$expensecode = "";
+	}
+	//echo $expensecode;
 ?>
 <html>
 	<body class="hold-transition skin-blue sidebar-mini">
@@ -55,7 +78,7 @@
 								$sql = "SELECT * FROM `acc_types` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 							?>
-									<option value="<?php echo $row['code']; ?>"><?php echo $row['description']; ?></option>
+									<option value="<?php echo $row['code']; ?>" <?php if($row['code'] == $expensecode){ echo "selected"; } ?>><?php echo $row['description']; ?></option>
 							<?php
 								}
 							?>
@@ -67,16 +90,53 @@
 							<option value="select">select</option>
 						</select>
 					</div>
+                    <?php if($type == 'add_labour'){  ?>
 					<div class="form-group col-md-5">
 						<label>Schedule<b style="color:red;">&nbsp;*</b></label>
 						<select name="stype" id="stype" class="form-control select2" style="width: 100%;">
+							<?php  
+								$sql = "SELECT * FROM `acc_schedules` WHERE `active` = '1' ORDER BY `description` ASC";
+								$query = mysqli_query($conn,$sql);
+								while($row = mysqli_fetch_assoc($query)){
+									
+										?>
+											<option value="<?php echo $row['code']; ?>" <?php if($row['code'] == $other_exp_code){ echo "selected"; } ?>><?php echo $row['description']; ?></option>
+										<?php
+									
+								}
+
+						    ?>
+						</select>
+					</div>
+                    <?php } else {  ?>
+						<div class="form-group col-md-5">
+						<label>Schedule<b style="color:red;">&nbsp;*</b></label>
+						<select name="stype" id="stype" class="form-control select2" style="width: 100%;" onchange="fetch_auto_category()">
 							<option value="select">select</option>
 						</select>
 					</div>
+					<?php } ?>
 					<div class="form-group col-md-1" style="padding-top: 12px;"><br/>
 						<a href="acc_addschedule.php" target="_new"><i class="fa fa-plus"></i></a>
 					</div>
+
+					<?php if($type == 'add_labour'){  ?>
 					<div class="form-group col-md-6">
+						<label>Category<b style="color:red;">&nbsp;*</b></label>
+						<select name="cptype" id="cptype" class="form-control select2" style="width: 100%;">
+							<option value="select">select</option>
+							<?php
+								$sql = "SELECT * FROM `acc_category` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+								while($row = mysqli_fetch_assoc($query)){
+							?>
+									<option value="<?php echo $row['code']; ?>" <?php  if($row['description'] == "Operating Expenses"){ echo "selected";} ?>><?php echo $row['description']; ?></option>
+							<?php
+								}
+							?>
+						</select>
+					</div>
+					<?php }else{ ?>
+						<div class="form-group col-md-6">
 						<label>Category<b style="color:red;">&nbsp;*</b></label>
 						<select name="cptype" id="cptype" class="form-control select2" style="width: 100%;">
 							<option value="select">select</option>
@@ -90,6 +150,9 @@
 							?>
 						</select>
 					</div>
+					
+					<?php } ?>
+
                     <div class="row col-md-12 justify-content-center align-items-center">
                         <div class="form-group col-md-2" style="width:110px;">
                             <label>Opening Balance</label>
@@ -136,7 +199,9 @@
 							<label><input type="checkbox" name="vouexp_flag" id="vouexp_flag" class="minimal"> Voucher Expense&ensp;&ensp;</label>
 						<?php } ?>
                         <?php if($driverd_flag > 0){ ?>
+							<?php if($type == 'add_labour'){ ?> <label><input type="checkbox" name="driver_flag" id="driver_flag" class="minimal" checked> Driver&ensp;&ensp;</label>  <?php }else{  ?>
 							<label><input type="checkbox" name="driver_flag" id="driver_flag" class="minimal"> Driver&ensp;&ensp;</label>
+							<?php  } ?>
 						<?php } ?>
                         <?php if($dspaf_flag > 0){ ?>
 							<label><input type="checkbox" name="spaof_flag" id="spaof_flag" class="minimal"> Supplier Add-ons&ensp;&ensp;</label>
@@ -165,6 +230,38 @@
 		$('.datepicker').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true,maxDate: today});
 	</script>
 <script>
+	 function fetch_auto_category(){
+                removeAllOptions(document.getElementById("cptype"));
+                
+                myselect1 = document.getElementById("cptype"); 
+                theOption1 = document.createElement("OPTION"); 
+                theText1 = document.createTextNode("select"); 
+                theOption1.value = "select"; 
+                theOption1.appendChild(theText1); 
+                myselect1.appendChild(theOption1);
+                
+                var stype = document.getElementById("stype").value;
+                <?php
+                $sql1 = "SELECT * FROM `acc_schedules` WHERE `active` = '1' ORDER BY `description` ASC";
+                $query1 = mysqli_query($conn,$sql1); $ptype = "";
+                while($row1 = mysqli_fetch_assoc($query1)){
+                    echo "if(stype == '$row1[code]'){";
+                        $ptype = $row1['pstype'];
+                        $sql2 = "SELECT * FROM `acc_category` WHERE `code` = '$ptype' AND `active` = '1' ORDER BY `description` ASC";
+                        $query2 = mysqli_query($conn,$sql2);
+                        while($row2 = mysqli_fetch_assoc($query2)){
+                ?> 
+                        theOption1 = document.createElement("OPTION");
+                        theText1 = document.createTextNode("<?php echo $row2['description']; ?>");
+                        theOption1.value = "<?php echo $row2['code']; ?>";
+                        theOption1.setAttribute('selected', true);
+                        theOption1.appendChild(theText1); myselect1.appendChild(theOption1);	
+                <?php
+                        }
+                    echo "}";
+                }
+                ?>
+            }
 function checkval(){
 	var a = document.getElementById("cdesc").value;
 	var b = document.getElementById("type").value;
@@ -261,6 +358,11 @@ function setparentid(){
 		<?php echo "}"; } ?>
 		
 		
+}
+var type = '<?php echo $type;  ?>';
+if(type == 'add_labour'){
+	//setparentid();
+	//fetch_auto_category();
 }
 function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
 document.getElementById("form_id").onkeypress = function(e) {

@@ -16,6 +16,9 @@
 		$sql = "SELECT * FROM `master_loadingscreen` WHERE `project` LIKE 'CTS' AND `type` LIKE 'SAVE-DATA' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conns,$sql);
 		while($row = mysqli_fetch_assoc($query)){ $loading_title = $row['title']; $loading_stitle = $row['sub_title']; }
 	}
+
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'acc_displayvouchers.php' AND `field_function` = 'E-Button'"; $query = mysqli_query($conn,$sql);
+	$eb_flag = mysqli_num_rows($query);
 ?>
 <html>
 	<head>
@@ -209,7 +212,9 @@
 					html+= '<td style="width: 100%;"><a href="JavaScript:Void(0);" name="addval[]" id="addval['+c+']" onclick="rowgen()"><i class="fa fa-plus"></i></a>&ensp;&ensp;<a href="JavaScript:Void(0);" name="rmval[]" id="rmval['+c+']" class="delete" onclick="rowdes()" style="visibility:visible;"><i class="fa fa-minus" style="color:red;"></i></a></td>';
 					html+= '<td style="visibility:hidden;"><input type="text" name="gtamtinwords[]" id="gtamtinwords['+c+']" class="form-control" readonly /></td>';
 				html+= '</tr>';
-				$('#tab3 tbody').append(html); var row = $('#row_cnt').val(); $('#row_cnt').val(parseInt(row) + parseInt(1)); var newtrlen = c; if(newtrlen > 0){ $('#submit').show(); } else{ $('#submit').hide(); } document.getElementById("incr").value = c;
+				$('#tab3 tbody').append(html); 
+				var row = $('#row_cnt').val(); $('#row_cnt').val(parseInt(row) + parseInt(1)); var newtrlen = c; if(newtrlen > 0){ $('#submit').show(); } else{ $('#submit').hide(); } 
+				document.getElementById("incr").value = c;
 				$('.select2').select2(); granttotalamount();
 			}
 			$(document).on('click','tr',function(){	var index = $('tr').index(this); var newIndex = parseInt(index) - parseInt(1); document.getElementById("incrs").value = newIndex; });
@@ -286,6 +291,26 @@
 					document.getElementById("pdate["+d+"]").value = adate;
 				}
 			}
+
+			document.addEventListener("keydown", function(e) {
+				var ebtn = "<?php echo $eb_flag; ?>";
+				if(ebtn > 0){
+					if (e.key === "Enter") {
+						const ebtnEl = document.getElementById("ebtncount");
+						const count = ebtnEl && ebtnEl.value.trim() !== "" ? parseInt(ebtnEl.value) : 0;
+
+						if (count > 0) {
+							e.preventDefault();  // Proper use of the event object
+						} else {
+							const active = document.activeElement;
+							if (active && /^remark\[\d+\]$/.test(active.id)) {
+								e.preventDefault();  // Prevents unintended form submission
+								rowgen();  // Generate new row
+							}
+						}
+					}
+			    } else {}
+			});
   			document.addEventListener("keydown", (e) => { if (e.key === "Enter"){ var ebtncount = document.getElementById("ebtncount").value; if(ebtncount > 0){ event.preventDefault(); } else{ $(":submit").click(function (){ $('#submittrans').click(); }); } } else{ } });
 		</script>
 		<script src="main_numbertoamount.js"></script>

@@ -1,5 +1,5 @@
 <?php
-    //cus_receiptreport.php
+    //cus_receiptreport_ta.php
 	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 	$requested_data = json_decode(file_get_contents('php://input'),true);
 	session_start();
@@ -11,14 +11,14 @@
 		$dbname = $_SESSION['dbase'];
 		$users_code = $_SESSION['userid'];
 
-        $form_reload_page = "cus_receiptreport.php";
+        $form_reload_page = "cus_receiptreport_ta.php";
 	}
 	else{
 		include "APIconfig.php";
 		include "number_format_ind.php";
 		$dbname = $db;
 		$users_code = $_GET['emp_code'];
-        $form_reload_page = "cus_receiptreport.php?db=".$db;
+        $form_reload_page = "cus_receiptreport_ta.php?db=".$db;
 	}
 
     $sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'Receipt Report' OR `type` = 'All' ORDER BY `id` DESC";
@@ -97,15 +97,15 @@
 		$users = $_POST['users'];
 		$exports = $_POST['exports'];
 
-        $sects = $groups = array(); $grp_all_flag = 0;
+        $sects = $groups = array(); $grp_all_flag = $sec_all_flag = 0;
         foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
-        $grp_list = implode("@",$groups);
-
         foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        $grp_list = implode("@",$groups);
         $sects_list = implode("','", array_map('addslashes', $sects));
+
         $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
 	}
-	$url = "../PHPExcel/Examples/ReceiptReport-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&modes=".$modes."&coas=".$coas."&sectors=".$sects_list."&users=".$users."&groups=".$grp_list;
+	$url = "../PHPExcel/Examples/ReceiptReport-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&modes=".$modes."&coas=".$coas."&sectors=".$sectors."&users=".$users."&groups=".$grp_list;
 	
 ?>
 <html>
@@ -190,25 +190,13 @@
 											    <?php foreach($coa_code as $acode){ ?><option value="<?php echo $acode; ?>" <?php if($coas == $acode){ echo "selected"; } ?>><?php echo $coa_name[$acode]; ?></option><?php } ?>
                                             </select>
                                         </div>
-                                       <div class="form-group" style="width:190px;">
+                                        <div class="form-group" style="width:190px;">
                                             <label for="sectors[0]">Warehouse</label>
                                             <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-                                                <?php
-                                                    // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? [];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
-                                                ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
-                                                <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
-                                                        <?php echo $sector_name[$scode]; ?>
-                                                    </option>
-                                                <?php } ?>
+                                                <option value="all" <?php if(in_array("all", $_POST['sectors'] ?? [])){ echo "selected"; } ?>>All</option>
+											    <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if(in_array($scode, $_POST['sectors'] ?? [])){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
                                             </select>
                                         </div>
-
                                     </div>
                                     <div class="m-1 p-1 row">
                                         <div class="form-group" style="width:150px;">

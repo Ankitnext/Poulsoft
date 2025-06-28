@@ -118,6 +118,12 @@ while($row = mysqli_fetch_assoc($query)){
      $tot_item_amt += (float)$row['item_tamt'];
 }
 
+$sql = "SELECT * FROM `item_stocktransfers` WHERE `towarehouse` = '$farm_code' AND `to_batch` = '$batch_code'";
+$query = mysqli_query($conn,$sql); $mhatchno = array();
+while($row = mysqli_fetch_assoc($query)){
+ $mhatchno[$row['mhatch_no']] = $row['mhatch_no'];
+}
+$hatno = implode(",",$mhatchno);
 
 
 $sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'Farm RC' OR `type` = 'All'"; $query = mysqli_query($conn,$sql);
@@ -239,7 +245,7 @@ else{
 
 
 
-$sql = "SELECT * FROM `broiler_sales` WHERE `farm_batch` = '$batch_code' AND `warehouse` = '$farm_code'";
+$sql = "SELECT * FROM `broiler_sales` WHERE `farm_batch` = '$batch_code' AND `warehouse` = '$farm_code' AND `dflag` = '0'";
 $query = mysqli_query($conn,$sql); $lmbird = $lmbwt = $abwt = $lbcnt = $nbcnt = 0;
 while($row = mysqli_fetch_assoc($query)){
     if($row['lb_flag'] == '1'){
@@ -357,11 +363,11 @@ $html .= '<th width="33%">
 <table style="border-collapse: collapse;">
     <tr>
         <td style="border:1px solid black; padding: 5px;"><strong>Chicks :</strong></td>
-        <td style="border:1px solid black; padding: 5px;">MOTI</td>
+        <td style="border:1px solid black; padding: 5px;">&nbsp;MOTI</td>
     </tr>
     <tr>
         <td style="border:1px solid black; padding: 5px;"><strong>Hatch :</strong></td>
-        <td style="border:1px solid black; padding: 5px;"></td>
+        <td style="border:1px solid black; padding: 5px;">&nbsp;'.$hatno.'</td>
     </tr>
 </table>
 
@@ -653,7 +659,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
       $html .= '  <tr>
             <td style=";width:140px;text-align:left; ">Avg. Sales Price /kg</td>
             <td style=";width:10px; ">:</td>
-            <td style=";text-align:right; "> '.$asppkg.'</td>
+            <td style=";text-align:right; "> '.$totavgqty.'</td>
             <td style="; "></td>
 
             <td style=";width:140px;text-align:left; "></td>
@@ -754,7 +760,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
     <td style="width:80px;text-align:left;border-left:1px solid black;"></td>
     <td style="width:80px; ">'.$lmbird.'</td>
     <td  style="width:50px; ">'.$lmbwt.'</td>
-    <td style="width: 50px;">'.$amt.'</td>
+    <td style="width: 50px;">'.round($amt,2).'</td>
     <td style="width: 60px;border-right:1px solid black;border-right; ">'.$lb_amt.'</td>
 </tr>
 
@@ -789,7 +795,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
             <td style=";width:80px;text-align:left;border-left:1px solid black;  "></td>
             <td style="width:80px;border-top:1px solid black;border-bottom:1px solid black; ">'.$totalqtyplaced.'</td>
             <td style="width:50px;border-top:1px solid black;border-bottom:1px solid black; ">'.$qtykgsold.'</td>
-             <td style="width:50px;border-top:1px solid black;border-bottom:1px solid black; ">'.($totavgqty + $amt).'</td>
+             <td style="width:50px;border-top:1px solid black;border-bottom:1px solid black; ">'.round(($totavgqty + $amt),2).'</td>
             <td style="width:60px;border-right:1px solid black;border-right;border-top:1px solid black;border-bottom:1px solid black; ">'.number_format_ind($tot_item_amt).'</td>
         </tr>
 

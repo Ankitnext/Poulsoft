@@ -1,5 +1,5 @@
 <?php
-    //SalesReportMaster_ta.php
+    //SalesReportMaster.php
 	$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0]; $start = $time;
 	$requested_data = json_decode(file_get_contents('php://input'),true);
 	session_start();
@@ -11,14 +11,14 @@
 		$dbname = $_SESSION['dbase'];
 		$users_code = $_SESSION['userid'];
 
-        $form_reload_page = "SalesReportMaster_ta.php";
+        $form_reload_page = "SalesReportMaster.php";
 	}
 	else{
 		include "APIconfig.php";
 		include "number_format_ind.php";
 		$dbname = $db;
 		$users_code = $_GET['emp_code'];
-        $form_reload_page = "SalesReportMaster_ta.php?db=".$db;
+        $form_reload_page = "SalesReportMaster.php?db=".$db;
 	}
 
 	$sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users_code'";
@@ -106,7 +106,6 @@
         $type = "type";
         $code = "code";
         $pattern = "pattern";
-        $field_details[$row['sl_flag']] = "sl_flag";
         $field_details[$row['date_flag']] = "date_flag";
         $field_details[$row['inv_flag']] = "inv_flag";
         $field_details[$row['binv_flag']] = "binv_flag";
@@ -153,18 +152,16 @@
 		$suppliers = $_POST['suppliers'];
 		$customers = $_POST['customers'];
 		$billnos = $_POST['billnos'];
-		// $sectors = $_POST['sectors'];
+		$sectors = $_POST['sectors'];
 		$item_cat = $_POST['item_cat'];
 		$items = $_POST['items'];
 		$users = $_POST['users'];
 		$prices = $_POST['prices'];
 		$exports = $_POST['exports'];
 
-        $sects = $groups = array(); $grp_all_flag = 0;
+        $groups = array(); $grp_all_flag = 0;
         foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
         $grp_list = implode("@",$groups);
-        foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-        $sects_list = implode("','", array_map('addslashes', $sects));
 	}
 	$url = "../PHPExcel/Examples/SalesReportMaster-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&billnos=".$billnos."&item_cat=".$item_cat."&items=".$items."&sectors=".$sectors."&users=".$users."&groups=".$grp_list."&prices=".$prices;
 	
@@ -273,21 +270,10 @@
                                             </select>
                                         </div>
                                         <div class="form-group" style="width:190px;">
-                                            <label for="sectors[]">Warehouse</label>
-                                            <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-                                                <?php
-                                                    // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? [];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
-                                                ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
-                                                <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
-                                                        <?php echo $sector_name[$scode]; ?>
-                                                    </option>
-                                                <?php } ?>
+                                            <label for="sectors">Warehouse</label>
+                                            <select name="sectors" id="sectors" class="form-control select2" style="width:180px;">
+                                                <option value="all" <?php if($sectors == "all"){ echo "selected"; } ?>>All</option>
+											    <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($sectors == $scode){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
                                             </select>
                                         </div>
                                     </div>
@@ -335,8 +321,7 @@
                             $html .= '<tr>';
                             for($i = 1;$i <= $col_count;$i++){
                                 if(!empty($field_details[$i.":".$aflag])){
-                                    if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<th id="order">Sl&nbsp;No.</th>'; $bwtd_det_col++; }
-                                    else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
+                                    if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<th id="order">Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<th id="order">Book Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<th id="order">Customer</th>'; $bwtd_det_col++; }
@@ -412,33 +397,15 @@
                             if($prices == "") { $rate_filter = ""; } else { $rate_filter = " AND `itemprice` = '$prices'"; }
                             if($users == "all"){ $user_filter = ""; } else{ $user_filter = " AND `addedemp` IN ('$users')"; }
 
-                            // if($sectors == "all"){ $sec_list = implode("','",$sector_code); $sector_filter = " AND `warehouse` IN ('$sec_list')"; }
-                            // else{ $sector_filter = " AND `warehouse` IN ('$sects_list')"; }
-
-                            // Ensure $sectors is always an array
-                            $sectors = $_POST['sectors'] ?? ['all'];
-                            if (!is_array($sectors)) {
-                                $sectors = [$sectors];
-                            }
-
-                            if (in_array("all", $sectors)) {
-                                // All selected – use all sector codes
-                                $sec_list = implode("','", array_map('addslashes', $sector_code));
-                                $sector_filter = " AND `warehouse` IN ('$sec_list')";
-                            } else {
-                                // Specific selections
-                                $sects_list = implode("','", array_map('addslashes', $sectors));
-                                $sector_filter = " AND `warehouse` IN ('$sects_list')";
-                            }
-
-
+                            if($sectors == "all"){ $sec_list = implode("','",$sector_code); $sector_filter = " AND `warehouse` IN ('$sec_list')"; }
+                            else{ $sector_filter = " AND `warehouse` IN ('$sectors')"; }
                             if($_SESSION['dbase'] == "poulso6_chicken_tg_lsfi"){ $sector_filter = ""; }
 
                             $html .= '<tbody class="tbody1">';
 
                             $pur_fltr = "";
                             if($suppliers != "all"){
-                                $sql = "SELECT * FROM `pur_purchase` WHERE `vendorcode` IN ('$suppliers') ".$sector_filter." ORDER BY `date`,`invoice` ASC";
+                                $sql = "SELECT * FROM `pur_purchase` WHERE `vendorcode` IN ('$suppliers') ORDER BY `date`,`invoice` ASC";
                                 $query = mysqli_query($conn,$sql); $pur_alist = array();
                                 while($row = mysqli_fetch_assoc($query)){ $pur_alist[$row['invoice']] = $row['invoice']; }
                                 $ptrno_list = implode("','", $pur_alist);
@@ -487,8 +454,8 @@
                                 }
                                 $i++;
                             }
-                            $ccount = sizeof($sales); $exi_inv = ""; $sl = 1;
-                            $rowred = 'style="background-color:red;"';
+                            $ccount = sizeof($sales); $exi_inv = "";
+                            $rowred = 'style="background-color:#ff00002b;"';
                             for($cdate = strtotime($fdate);$cdate <= strtotime($tdate);$cdate += (86400)){
                                 $adate = date('Y-m-d', $cdate);
                                 for($j = 0;$j <= $ccount;$j++){
@@ -501,7 +468,6 @@
                                             $html .= '<tr>';
                                         }
                                         $tacount = $tacount + (float)$sales_details[11];
-                                        
                                         if($exi_inv != $sales_details[1]){
                                             $exi_inv = $sales_details[1];
                                             if(number_format_ind($slc_finaltotal[$sales_details[1]]) == number_format_ind($rb_amt)){
@@ -514,10 +480,9 @@
                                             $ft_tcds = $ft_tcds + $slc_tcdsamt[$sales_details[1]];
                                             $ft_roundoff = $ft_roundoff + $slc_roundoff[$sales_details[1]];
                                             $fst_famt = $fst_famt + $slc_finaltotal[$sales_details[1]];
-                                            // $sl = 0;
+                                            
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
@@ -558,8 +523,7 @@
                                         }
                                         else{
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }

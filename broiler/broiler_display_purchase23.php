@@ -79,6 +79,9 @@ if($link_active_flag > 0){
     if($user_type == "S"){ $acount = 1; }
     else if($aid == 1){ $acount = 1; }
     else{ $acount = 0; }
+
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'broiler_display_purchase23.php' AND `field_function` = 'Remark Added'"; $query = mysqli_query($conn,$sql);
+	$eb_flag = mysqli_num_rows($query);
 ?>
 <html lang="en">
     <head>
@@ -239,6 +242,7 @@ if($link_active_flag > 0){
                                             <th>Farm/Warehouse</th>
                                             <th>Vehicle</th>
                                             <th>Driver</th>
+                                            <?php if($eb_flag > 0){ ?><th>Remarks</th> <?php } ?>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -299,6 +303,7 @@ if($link_active_flag > 0){
                                             <td><?php echo $sector_name[$row['warehouse']]; ?></td>
                                             <td><?php echo $row['vehicle_code']; ?></td>
                                             <td><?php echo $row['driver_code']; ?></td>
+                                            <?php if($eb_flag > 0){ ?><td><?php echo $row['remarks']; ?></td><?php } ?>
                                             <td style="width:15%;" align="left">
                                             <?php
                                                 if($row['flag'] == 1){

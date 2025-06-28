@@ -37,12 +37,7 @@
 		$fromdate = $_POST['fromdate'];
 		$todate = $_POST['todate'];
 		$sname = $_POST['sname'];
-		// $sectors = $_POST['sectors'];
-
-		$sects = array(); $sec_all_flag = 0;
-		foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-        $sects_list = implode("','", array_map('addslashes', $sects));
-        $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
+		$sectors = $_POST['sectors'];
 	}
 	else{
 		$fromdate = $todate = $today;
@@ -252,21 +247,16 @@
 											?>
 										</select>&ensp;&ensp;
 										<label class="reportselectionlabel">Warehouse</label>&nbsp;
-										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-                                                <?php
-                                                    // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? ['all'];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
-                                                ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
-                                                <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
-                                                        <?php echo $sector_name[$scode]; ?>
-                                                    </option>
-                                                <?php } ?>
-                                            </select>&ensp;&ensp;
+										<select name="sectors" id="sectors" class="form-control select2" style="width:auto;">
+											<option value="all">-All-</option>
+											<?php
+											foreach($sector_code as $wcode){
+											?>
+													<option <?php if($sectors == $wcode) { echo 'selected'; } ?> value="<?php echo $wcode; ?>"><?php echo $sector_name[$wcode]; ?></option>
+											<?php
+												}
+											?>
+										</select>&ensp;&ensp;
 										<label class="reportselectionlabel">Export To</label>&nbsp;
 										<select name="export" id="export" class="form-control select2">
 											<option <?php if($exoption == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
@@ -322,11 +312,11 @@
 										$fdate = date("Y-m-d",strtotime($_POST['fromdate']));
 										$tdate = date("Y-m-d",strtotime($_POST['todate']));
 										$sup_names = $_POST['sname'];
-										// $sectors = $_POST['sectors']; if($sectors == "all"){ $sector_filter = ""; } else{ $sector_filter = " AND `warehouse` = '$sectors'"; }
+										$sectors = $_POST['sectors']; if($sectors == "all"){ $sector_filter = ""; } else{ $sector_filter = " AND `warehouse` = '$sectors'"; }
 										
 										$ob_purchases = $ob_payment = $ob_ccn = $ob_cdn = $ob_smortality = $rb_amt = $ob_cramt = $ob_dramt = $ob_rcv = $ob_pid = 0;
 										if($count57 > 0){
-											$obsql = "SELECT * FROM `pur_purchase` WHERE `date` < '$fdate' AND `vendorcode` = '$sup_names'".$secct_fltr." AND `active` = '1' ORDER BY `date`,`invoice` ASC";
+											$obsql = "SELECT * FROM `pur_purchase` WHERE `date` < '$fdate' AND `vendorcode` = '$sup_names'".$sector_filter." AND `active` = '1' ORDER BY `date`,`invoice` ASC";
 											$obquery = mysqli_query($conn,$obsql); $old_inv = "";
 											while($obrow = mysqli_fetch_assoc($obquery)){
 												if($old_inv != $obrow['invoice']){
@@ -336,7 +326,7 @@
 											}
 										}
 										if($count40 > 0){
-											$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fdate' AND `vcode` = '$sup_names'".$secct_fltr." AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+											$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fdate' AND `vcode` = '$sup_names'".$sector_filter." AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
 											$obquery = mysqli_query($conn,$obsql); while($obrow = mysqli_fetch_assoc($obquery)){ $ob_returns = $ob_returns + $obrow['amount']; }
 										}
 										if($count44 > 0){
@@ -344,11 +334,11 @@
 											$obquery = mysqli_query($conn,$obsql); while($obrow = mysqli_fetch_assoc($obquery)){ $ob_smortality += (float)$obrow['amount']; }
 										}
 										if($count56 > 0){
-											$obsql = "SELECT * FROM `pur_payments` WHERE `date` < '$fdate' AND `ccode` = '$sup_names'".$secct_fltr." AND `active` = '1'";
+											$obsql = "SELECT * FROM `pur_payments` WHERE `date` < '$fdate' AND `ccode` = '$sup_names'".$sector_filter." AND `active` = '1'";
 											$obquery = mysqli_query($conn,$obsql); while($obrow = mysqli_fetch_assoc($obquery)){ $ob_payment = $ob_payment + $obrow['amount']; }
 										}
 										if($count32 > 0){
-											$obsql = "SELECT * FROM `main_crdrnote` WHERE `date` < '$fdate' AND `ccode` = '$sup_names'".$secct_fltr." AND `mode` IN ('SCN','SDN') AND `active` = '1'";
+											$obsql = "SELECT * FROM `main_crdrnote` WHERE `date` < '$fdate' AND `ccode` = '$sup_names'".$sector_filter." AND `mode` IN ('SCN','SDN') AND `active` = '1'";
 											$obquery = mysqli_query($conn,$obsql);
 											while($obrow = mysqli_fetch_assoc($obquery)){ if($obrow['mode'] == "SCN"){ $ob_ccn = $ob_ccn + $obrow['amount']; } else { $ob_cdn = $ob_cdn + $obrow['amount']; } }
 										}
@@ -394,7 +384,7 @@
 										
 										//purchases
 										$sii_count = array();$purchases = array();
-										$sql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `vendorcode` = '$sname'".$secct_fltr." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+										$sql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `vendorcode` = '$sname'".$sector_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
 										$query = mysqli_query($conn,$sql); $i = 0; $link_trnums = $inv_cus_code = array();
 										while($row = mysqli_fetch_assoc($query)){
 											$i = $i + 1; $purchases[$row['date']."@".$i] = $row['date']."@".$row['invoice']."@".$row['bookinvoice']."@".$row['vendorcode']."@".$row['jals']."@".$row['totalweight']."@".$row['emptyweight']."@".$row['itemcode']."@".$row['birds']."@".$row['netweight']."@".$row['itemprice']."@".$row['totalamt']."@".$row['tcdsper']."@".$row['tcdsamt']."@".$row['roundoff']."@".$row['finaltotal']."@".$row['warehouse']."@".$row['narration']."@".$row['discountamt']."@".$row['taxamount']."@".$row['remarks']."@".$row['vehiclecode']."@".$row['drivercode']."@".$row['supbrh_code'];
@@ -423,7 +413,7 @@
 										
 										//Payments
 										$payments = array();
-										$paysql = "SELECT * FROM `pur_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `ccode` = '$sname'".$secct_fltr." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'";
+										$paysql = "SELECT * FROM `pur_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `ccode` = '$sname'".$sector_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'";
 										$payquery = mysqli_query($conn,$paysql); $i = 0;
 										while($row = mysqli_fetch_assoc($payquery)){
 											$i = $i + 1; $payments[$row['date']."@".$i] = $row['trnum']."@".$row['date']."@".$row['ccode']."@".$row['docno']."@".$row['mode']."@".$row['method']."@".$row['type']."@".$row['rcode']."@".$row['cdate']."@".$row['cno']."@".$row['amount']."@".$row['amtinwords']."@".$row['vtype']."@".$row['warehouse']."@".$row['remarks'];
@@ -431,7 +421,7 @@
 									
 										//Returns
 										$returns = array();
-										$rtnsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `vcode` = '$sname'".$secct_fltr." AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+										$rtnsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `vcode` = '$sname'".$sector_filter." AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
 										$rtnquery = mysqli_query($conn,$rtnsql); $i = 0;
 										while($row = mysqli_fetch_assoc($rtnquery)){
 											$avgwt = 0;
@@ -451,7 +441,7 @@
 
 										//CRDR NOTE
 										$ccns = array();$cdns = array();
-										$crdrseq = "SELECT * FROM `main_crdrnote` WHERE `mode` IN ('SDN','SCN') AND `date` >= '$fdate' AND `date` <= '$tdate'"; $flags = $secct_fltr." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'";
+										$crdrseq = "SELECT * FROM `main_crdrnote` WHERE `mode` IN ('SDN','SCN') AND `date` >= '$fdate' AND `date` <= '$tdate'"; $flags = $sector_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'";
 										$crdrname = $_POST['sname']; $i = $j = 0; if($crdrname == "all") { $crdrnames = ""; } else { $crdrnames = " AND `ccode` = '$sname'"; } $crdrsql = $crdrseq."".$crdrnames."".$flags; $crdrquery = mysqli_query($conn,$crdrsql);
 										while($row = mysqli_fetch_assoc($crdrquery)){
 											if($row['mode'] == "SCN"){

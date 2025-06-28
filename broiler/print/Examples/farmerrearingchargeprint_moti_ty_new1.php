@@ -121,6 +121,12 @@ while($row = mysqli_fetch_assoc($query)){
    
 }
 
+$sql = "SELECT * FROM `item_stocktransfers` WHERE `towarehouse` = '$farm_code' AND `to_batch` = '$batch_code'";
+$query = mysqli_query($conn,$sql); $mhatchno = array();
+while($row = mysqli_fetch_assoc($query)){
+ $mhatchno[$row['mhatch_no']] = $row['mhatch_no'];
+}
+$hatno = implode(",",$mhatchno);
 
 
 $sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'Farm RC' OR `type` = 'All'"; $query = mysqli_query($conn,$sql);
@@ -349,7 +355,7 @@ $html .= '<th width="33%">
     </tr>
     <tr>
         <td style="border:1px solid black; padding: 5px;"><strong>Hatch :</strong></td>
-        <td style="border:1px solid black; padding: 5px;"></td>
+        <td style="border:1px solid black; padding: 5px;">'.$hatno.'</td>
     </tr>
 </table>
 

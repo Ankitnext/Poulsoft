@@ -10,7 +10,7 @@ include $num_format_file;
 include "header_head.php";
 $user_code = $_SESSION['userid'];
 
-$file_name = "Supplier History Report";
+$file_name = "Supplier Statement Report";
 
 $sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $branch_access_code = $row['branch_code']; $line_access_code = $row['line_code']; $farm_access_code = $row['farm_code']; $sector_access_code = $row['loc_access']; }
@@ -76,7 +76,6 @@ if(in_array("account_contranotes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREA
 if(in_array("broiler_voucher_notes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_voucher_notes LIKE poulso6_admin_broiler_broilermaster.broiler_voucher_notes;"; mysqli_query($conn,$sql1); }
 if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_receipts LIKE poulso6_admin_broiler_broilermaster.master_receipts;"; mysqli_query($conn,$sql1); }
 
-
 ?>
 <style>
  @page {
@@ -102,6 +101,7 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                 .thead2 { display:none;background-image: linear-gradient(#D5D8DC,#D5D8DC); }
                 .thead2_empty_row { display:none; }
                 .thead3 { background-image: linear-gradient(#ABB2B9,#ABB2B9); }
+                .thead5 { display:block; }
                 .thead4 { background-image: linear-gradient(#D5D8DC,#D5D8DC); }
                 .tbody1 { background-image: linear-gradient(#F5EEF8,#F5EEF8); }
                 .report_head { background-image: linear-gradient(#ABB2B9,#ABB2B9); }
@@ -116,6 +116,7 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                 .thead1 { background-image: linear-gradient(#D5D8DC,#D5D8DC); box-shadow: 0px 0px 10px #EAECEE; }
                 .thead2 { background-image: linear-gradient(#D5D8DC,#D5D8DC); }
                 .thead3 { background-image: linear-gradient(#ABB2B9,#ABB2B9); }
+                .thead5 { display:none; }
                 .thead4 { background-image: linear-gradient(#D5D8DC,#D5D8DC); }
                 .tbody1 { background-image: linear-gradient(#F5EEF8,#F5EEF8); }
                 .report_head { background-image: linear-gradient(#ABB2B9,#ABB2B9); }
@@ -129,7 +130,14 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
             <thead class="thead1" align="center" style="width:1212px;">
                 <tr align="center">
                     <td colspan="2" align="center"><img src="<?php echo $logo_path; ?>" height="110px"/></td>
-                    <th colspan="18" align="center"><?php echo $cdetails; ?><h5><?php echo $file_name; ?></h5> <?php if($vendors != "select"){ echo '<h5>'.$vendor_name[$vendors].'</h5>'; } ?></th>
+                    <th colspan="18" align="center"><?php echo $cdetails; ?><h5><?php echo $file_name; ?></h5> <?php if($vendors != "select"){ echo '<h5>'.$vendor_name[$vendors].'</h5>'; } ?> 
+                    
+                    <span class="thead5">
+                        <h5>From: <?php echo date("d-m-Y", strtotime($fdate)); ?> &nbsp;&nbsp; To: <?php echo date("d-m-Y", strtotime($tdate)); ?></h5>
+                    </span>
+                    
+                </th>
+                    
                 </tr>
             </thead>
             <form action="broiler_supplier_ledger.php" method="post">
@@ -188,7 +196,7 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
             $nhtml .= '<th>Type</th>'; $fhtml .= '<th>Type</th>';
             //$nhtml .= '<th>Supplier</th>'; $fhtml .= '<th>Supplier</th>';
             $nhtml .= '<th>Item</th>'; $fhtml .= '<th>Item</th>';
-            $nhtml .= '<th>Boxes</th>'; $fhtml .= '<th>Boxes</th>';
+            $nhtml .= '<th>Boxes/Bags</th>'; $fhtml .= '<th>Boxes/Bags</th>';
             $nhtml .= '<th>Sent Quantity</th>'; $fhtml .= '<th>Sent Quantity</th>';
             $nhtml .= '<th>Received Quantity</th>'; $fhtml .= '<th>Received Quantity</th>';
             $nhtml .= '<th>Rate</th>'; $fhtml .= '<th>Rate</th>';
@@ -251,6 +259,12 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                     $sql = "SELECT * FROM `broiler_voucher_notes` WHERE `date` < '$fdate' AND `vcode` IN ('$vendors') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){ while($row = mysqli_fetch_assoc($query)){ $opening_vcr += (float)$row['cr_amt']; $opening_vdr += (float)$row['dr_amt']; } }
+
+                    $sql = "SELECT * FROM `feed_bagcapacity` WHERE `active`='1'";
+                    $query = mysqli_query($conn,$sql); $feedbags = array();
+                    while($row = mysqli_fetch_assoc($query)){
+                        $feedbags[$row['code']] = $row['bag_size'];
+                    }
 
                     $ob_cramt = $ob_cramt = 0;
                     if($obtype[$vendors] == "Cr"){ $ob_cramt = $obamt[$vendors]; $ob_dramt = 0; } else{ $ob_dramt = $obamt[$vendors]; $ob_cramt = 0; }
@@ -456,7 +470,12 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
 								echo "<td style='width:70px;text-align:left;'>Purchase Invoice</td>";
 								//echo "<td style='width:130px;text-align:left;'>".$vendor_name[$purchases_details[4]]."</td>";
 								echo "<td style='width:130px;text-align:left;'>".$item_name[$purchases_details[6]]."</td>";
-                                echo "<td style='width:110px;text-align:right;' title='".$purchases_details[47]."'>".number_format_ind($purchases_details[47])."</td>";
+                                $item_bag = $feedbags[$purchases_details[6]]; $item_bag_cnt = 0;
+                                if($item_bag > 0){
+                                    $item_bag_cnt = $purchases_details[9]/$item_bag;
+                                }
+                                
+                                echo "<td style='width:110px;text-align:right;' title='".$purchases_details[47]."'>".(int)$item_bag_cnt."</td>";
                                 echo "<td style='width:110px;text-align:right;'>".number_format_ind($purchases_details[8])."</td>";
 								echo "<td style='width:110px;text-align:right;'>".number_format_ind($purchases_details[9])."</td>";
 								//echo "<td style='width:110px;text-align:right;'>".number_format_ind($purchases_details[11])."</td>";
@@ -620,7 +639,11 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
 								echo "<td style='width:70px;text-align:left;'>Item Returns</td>";
 								//echo "<td style='width:130px;text-align:left;'>".$vendor_name[$return_details[6]]."</td>";
 								echo "<td style='width:130px;text-align:left;'>".$item_name[$return_details[7]]."</td>";
-                                echo "<td style='width:130px;text-align:left;'></td>";
+                                $item_bag = $feedbags[$return_details[7]]; $item_bag_cnt = 0;
+                                if($item_bag > 0){
+                                    $item_bag_cnt = $return_details[9]/$item_bag;
+                                }
+                                echo "<td style='width:130px;text-align:right;'>".$item_bag_cnt."</td>";
                                 echo "<td style='width:130px;text-align:left;'></td>";
 								echo "<td style='width:110px;text-align:right;'>".$return_details[9]."</td>";
 								echo "<td style='width:110px;text-align:right;'>".$return_details[10]."</td>";

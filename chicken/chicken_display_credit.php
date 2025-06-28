@@ -1,5 +1,5 @@
 <?php
-//chicken_display_debit.php
+//chicken_display_credit.php
 include "newConfig.php";
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
 global $ufile_name; $ufile_name = $href; include "chicken_check_accessmaster.php";
@@ -52,9 +52,9 @@ if($access_error_flag == 0){
 		<section class="content-header">
 			<ol class="breadcrumb">
 				<li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-				<li class="active">Create Debit Note</li>
+				<li class="active">Create Note</li>
 			</ol>
-			<h1>Debit Note</h1>
+			<h1>Credit Note</h1>
 		</section><br/>
             <div class="row" style="margin: 10px 10px 0 10px;">
                 <form action="<?php echo $href; ?>" method="post">
@@ -123,7 +123,7 @@ if($access_error_flag == 0){
                                     while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; }
 
                                     $delete_link = $acs_delete_url; $sl = 1;
-                                    $sql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' AND `trtype` = 'debit' ORDER BY `date` ASC";
+                                    $sql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' AND `trtype` = 'credit' ORDER BY `date` ASC";
                                     $query = mysqli_query($conn,$sql);
                                     while($row = mysqli_fetch_assoc($query)){
                                         $id = $row['code'];

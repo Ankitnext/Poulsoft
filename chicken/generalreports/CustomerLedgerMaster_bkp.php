@@ -31,11 +31,6 @@
 		$fromdate = $_POST['fromdate'];
 		$todate = $_POST['todate'];
 		$cname = $_POST['cname'];
-
-		$sects = array(); $sec_all_flag = 0;
-		foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-        $sects_list = implode("','", array_map('addslashes', $sects));
-        $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
 	}
 	else{
 		$fromdate = $todate = $today;
@@ -150,11 +145,6 @@
 	if(isset($_POST['submit'])) { $excel_type = $_POST['export']; if($excel_type == "exportexcel"){ $exoption = "displaypage"; } else{ $exoption = $_POST['export']; } } else{ $excel_type = "displaypage"; }
 	if(isset($_POST['submit']) == true){
 		$exl_fdate = $_POST['fromdate']; $exl_tdate = $_POST['todate']; $exl_cname = $_POST['cname'];
-
-		$sects = array(); $sec_all_flag = 0;
-		foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-        $sects_list = implode("','", array_map('addslashes', $sects));
-        $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
 	}
 	else{
 		$exl_fdate = $exl_tdate = $today; $exl_cname =  "all";
@@ -277,22 +267,6 @@
 												}
 											?>
 										</select>&ensp;&ensp;
-										<label class="reportselectionlabel">Warehouse</label>&nbsp;
-										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-                                                <?php
-                                                    // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? ['all'];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
-                                                ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
-                                                <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
-                                                        <?php echo $sector_name[$scode]; ?>
-                                                    </option>
-                                                <?php } ?>
-                                            </select>&ensp;&ensp;
 										<label class="reportselectionlabel">Export To</label>&nbsp;
 										<select name="export" id="export" class="form-control select2">
 											<option <?php if($exoption == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
@@ -360,7 +334,7 @@
 									
 									$ob_sales = $ob_receipt = $ob_mortality = $ob_returns = $ob_ccn = $ob_cdn = $rb_amt = $ob_cramt = $ob_dramt = $ob_rcv = $ob_pid = 0;
 									if($count14 > 0){
-										$obsql = "SELECT * FROM `customer_sales` WHERE `date` < '$fdate' AND `customercode` = '$cus_names' AND `active` = '1'".$secct_fltr." ORDER BY `invoice` ASC";
+										$obsql = "SELECT * FROM `customer_sales` WHERE `date` < '$fdate' AND `customercode` = '$cus_names' AND `active` = '1' ORDER BY `invoice` ASC";
 										$obquery = mysqli_query($conn,$obsql); $old_inv = "";
 										while($obrow = mysqli_fetch_assoc($obquery)){
 											if($old_inv != $obrow['invoice']){
@@ -431,7 +405,7 @@
 									//Sales
 									$sii_count = $slc_finaltotal = $sales = $receipts = $mortality = $returns = $ccns = $cdns = array();
 									if($count14 > 0){
-										$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `customercode` = '$cname' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'".$secct_fltr." ORDER BY `date`,`invoice` ASC";
+										$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `customercode` = '$cname' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
 										$query = mysqli_query($conn,$sql); $i = 0; $link_trnums = $inv_cus_code = array();
 										while($row = mysqli_fetch_assoc($query)){
 																						
