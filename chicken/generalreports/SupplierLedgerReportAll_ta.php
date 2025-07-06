@@ -9,12 +9,12 @@ session_start();
 $db = $_SESSION['db'] = $_GET['db'];
 if ($db == '') {
 	include "../config.php";
-	include "header_head.php";
+	// include "header_head.php";
 	include "number_format_ind.php";
 } else {
 	include "APIconfig.php";
 	include "number_format_ind.php";
-	include "header_head.php";
+	// include "header_head.php";
 }
 
 $today = date("Y-m-d");
@@ -55,6 +55,9 @@ while ($row = mysqli_fetch_assoc($query)) {
 	$sup_type[$row['code']] = $row['contacttype'];
 }
 
+    $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+	while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; $sector_code[$row['code']] = $row['code']; }
+	
 // Logo Flag
 $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Reports' AND `field_function` LIKE 'Fetch Logo Dynamically' AND `user_access` LIKE 'all' AND `flag` = '1'";
 $query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
@@ -84,6 +87,11 @@ if ($cname == "all" || $cname == "select") {
 <?php $expoption = "displaypage";
 if (isset($_POST['submit'])) {
 	$expoption = $_POST['export'];
+
+	$sects = array(); $sec_all_flag = 0;
+	foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+	$sects_list = implode("','", array_map('addslashes', $sects));
+	$secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
 }
 if ($expoption == "displaypage") {
 	$exoption = "displaypage";
@@ -92,11 +100,13 @@ if ($expoption == "displaypage") {
 }; ?>
 <link rel="stylesheet" type="text/css" href="reportstyle.css">
 <?php
-$url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromdate."&todate=".$todate."&cname=".$cname."&iname=".$iname."&ctype=".$_POST['ctype'];
+$url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromdate."&todate=".$todate."&cname=".$cname."&iname=".$iname."&ctype=".$_POST['ctype']."&warehouse=".$sects_list;
 ?>
 <html>
 
 <head>
+	<title>Supplier Ledger</title>
+     <?php include "header_head.php"; ?>
 	<script>
 		var exptype = '<?php echo $exoption; ?>';
 		var url = '<?php echo $url; ?>';
@@ -184,17 +194,32 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 										<input type="text" name="todate" id="datepickers1" class="formcontrol" value="<?php echo date("d.m.Y", strtotime($todate)); ?>" />
 										&ensp;&ensp;
 										<label class="reportselectionlabel">Supplier</label>&nbsp;
-										<select name="cname" id="checkcname" class="form-control select2">
+										<select name="cname" id="checkcname" class="form-control select2" style="width:150px;">
 											<option value="select">-select-</option>
 											<option value="all" selected>-All-</option>
 										</select>&ensp;&ensp;
 										<label class="reportselectionlabel">Customer &amp; Supplier</label>&nbsp;
-										<input type="checkbox" name="ctype" id="ctype" class="formcontrol" <?php if ($con_code == "S&C") {
-																												echo "checked";
-																											} ?> />
+										<input type="checkbox" name="ctype" id="ctype" class="formcontrol" <?php if ($con_code == "S&C") {echo "checked";} ?> />
 										&ensp;&ensp;
+										<label class="reportselectionlabel">Warehouse</label>&nbsp;
+										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
+											<?php
+												// Ensure sectors is always an array
+												$selected_sectors = $_POST['sectors'] ?? ['all'];
+												if (!is_array($selected_sectors)) {
+													$selected_sectors = [$selected_sectors];
+												}
+											?>
+											<option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
+											<?php foreach($sector_code as $scode) { ?>
+												<option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
+													<?php echo $sector_name[$scode]; ?>
+												</option>
+											<?php } ?>
+										</select>&ensp;&ensp;
+
 										<label class="reportselectionlabel">Export To</label>&nbsp;
-										<select name="export" id="export" class="form-control select2">
+										<select name="export" id="export" class="form-control select2" style="width:150px;">
 											<option <?php if ($exoption == "displaypage") {
 														echo 'selected';
 													} ?> value="displaypage">Display</option>
@@ -248,7 +273,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 
 									//Supplier invoice
 									$ob_purchases = array();
-									$sql = "SELECT * FROM `pur_purchase` WHERE `date` < '$fromdate' AND `active` = '1' ORDER BY `date`,`invoice`,`vendorcode` ASC";
+									$sql = "SELECT * FROM `pur_purchase` WHERE `date` < '$fromdate' AND `active` = '1'".$secct_fltr." ORDER BY `date`,`invoice`,`vendorcode` ASC";
 									$query = mysqli_query($conn, $sql);
 									$old_inv = "";
 									while ($row = mysqli_fetch_assoc($query)) {
@@ -259,7 +284,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 									}
 									//Supplier Receipt
 									$ob_payments = array();
-									$seq = "SELECT SUM(amount) as amount,ccode FROM `pur_payments` WHERE `date` < '$fromdate'";
+									$seq = "SELECT SUM(amount) as amount,ccode FROM `pur_payments`  WHERE `date` < '$fromdate'".$secct_fltr."";
 									$active = " AND `active` = '1'";
 									$orderby = " ORDER BY `ccode` ASC";
 									$groupby = " GROUP BY `ccode`";
@@ -271,7 +296,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 
 									//Supplier Returns
 									$ob_returns = array();
-									$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fromdate' AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+									$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fromdate' AND `mode` = 'supplier' ".$secct_fltr." AND `active` = '1' AND `dflag` = '0'";
 									$obquery = mysqli_query($conn, $obsql);
 									while ($obrow = mysqli_fetch_assoc($obquery)) {
 										$ob_returns[$obrow['vcode']] += (float)$obrow['amount'];
@@ -279,7 +304,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 
 									//Supplier Mortality
 									$ob_smortality = array();
-									$obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$fromdate' AND `mtype` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+									$obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$fromdate' AND `mtype` = 'supplier' ".$secct_fltr." AND `active` = '1' AND `dflag` = '0'";
 									$obquery = mysqli_query($conn, $obsql);
 									while ($obrow = mysqli_fetch_assoc($obquery)) {
 										$ob_smortality[$obrow['ccode']] += (float)$obrow['amount'];
@@ -287,7 +312,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 
 									//Supplier CrDr Note
 									$ob_scn = $ob_sdn = array();
-									$seq = "SELECT SUM(amount) as amount,mode,ccode FROM `main_crdrnote` WHERE `date` < '$fromdate' AND `mode` IN ('SCN','SDN')";
+									$seq = "SELECT SUM(amount) as amount,mode,ccode FROM `main_crdrnote`  WHERE `date` < '$fromdate' ".$secct_fltr." AND `mode` IN ('SCN','SDN')";
 									$active = " AND `active` = '1'";
 									$orderby = " ORDER BY `ccode` ASC";
 									$groupby = " GROUP BY `ccode`,`mode`";
@@ -304,7 +329,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 
 									//Supplier invoice
 									$bt_purchases = $bt_purchases_qty = array();
-									$sql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `active` = '1' ORDER BY `date`,`invoice`,`vendorcode` ASC";
+									$sql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `active` = '1' ".$secct_fltr." ORDER BY `date`,`invoice`,`vendorcode` ASC";
 									$query = mysqli_query($conn, $sql);
 									$old_inv = "";
 									while ($row = mysqli_fetch_assoc($query)) {
@@ -316,7 +341,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 									}
 									//Supplier Receipt
 									$bt_payments = array();
-									$seq = "SELECT SUM(amount) as amount,ccode FROM `pur_payments` WHERE `date` >= '$fromdate' AND `date` <= '$todate'";
+									$seq = "SELECT SUM(amount) as amount,ccode FROM `pur_payments`  WHERE `date` >= '$fromdate' ".$secct_fltr." AND `date` <= '$todate'";
 									$active = " AND `active` = '1'";
 									$orderby = " ORDER BY `ccode` ASC";
 									$groupby = " GROUP BY `ccode`";
@@ -327,7 +352,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 									}
 									//Supplier Returns
 									$bt_returns = array();
-									$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+									$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fromdate' AND `date` <= '$todate' ".$secct_fltr." AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
 									$obquery = mysqli_query($conn, $obsql);
 									while ($obrow = mysqli_fetch_assoc($obquery)) {
 										$bt_returns[$obrow['vcode']] += (float)$obrow['amount'];
@@ -335,7 +360,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 
 									//Supplier Mortality
 									$bt_smortality = array();
-									$obsql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `mtype` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+									$obsql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fromdate' AND `date` <= '$todate' ".$secct_fltr." AND `mtype` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
 									$obquery = mysqli_query($conn, $obsql);
 									while ($obrow = mysqli_fetch_assoc($obquery)) {
 										$bt_smortality[$obrow['ccode']] += (float)$obrow['amount'];
@@ -343,7 +368,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 
 									//Supplier CrDr Note
 									$bt_scn = $bt_sdn = array();
-									$seq = "SELECT SUM(amount) as amount,mode,ccode FROM `main_crdrnote` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `mode` IN ('SCN','SDN')";
+									$seq = "SELECT SUM(amount) as amount,mode,ccode FROM `main_crdrnote` WHERE `date` >= '$fromdate' ".$secct_fltr." AND `date` <= '$todate' AND `mode` IN ('SCN','SDN')";
 									$active = " AND `active` = '1'";
 									$orderby = " ORDER BY `ccode` ASC";
 									$groupby = " GROUP BY `ccode`,`mode`";
@@ -393,7 +418,7 @@ $url = "../PHPExcel/Examples/SupplierLedgerReportAll-Excel.php?fromdate=".$fromd
 										} else {
 											$bt_fdr = (float)$bt_dr - (float)$bt_cr;
 										}
-										$balance = ((float)$ob_fdr + (float)$bt_fdr) - ((float)$ob_fcr + (float)$bt_fcr);
+										$balance = round(((float)$ob_fdr + (float)$bt_fdr) - ((float)$ob_fcr + (float)$bt_fcr),6);
 										//echo "<br/>".$ob_fdr."+".$bt_fdr."-".$ob_fcr."+".$bt_fcr;
 										$ftotal = (float)$ftotal + (float)$balance;
 

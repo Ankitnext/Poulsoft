@@ -48,18 +48,28 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'Customer Ledger Repo
 $query = mysqli_query($conn,$sql); $logopath = $cdetails = "";
 while($row = mysqli_fetch_assoc($query)){ $logopath = $row['logopath']; $cdetails = $row['cdetails']; $cmpy_fname = $row['fullcname']; }
 
+$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
+
 //Customer Group Details
 $sql = "SELECT * FROM `main_groups` WHERE `gtype` LIKE 'C' AND `active` = '1' ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $cgrp_code = $cgrp_name = array();
 while($row = mysqli_fetch_assoc($query)){ $cgrp_code[$row['code']] = $row['code']; $cgrp_name[$row['code']] = $row['description']; }
 
-$fdate = $tdate = date("Y-m-d"); $cgroups = "all"; $exports = "display"; $bwd_aflag = 0;
+$fdate = $tdate = date("Y-m-d"); $cgroups = "all"; $exports = "display"; $bwd_aflag = 0; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
 if(isset($_POST['submit']) == true){
 	$fdate = date("Y-m-d",strtotime($_POST['fdate']));
 	$tdate = date("Y-m-d",strtotime($_POST['tdate']));
 	$cgroups = $_POST['cgroups'];
 	$exports = $_POST['exports'];
 	if($_POST['bwd_aflag'] == "on" || $_POST['bwd_aflag'] == 1 || $_POST['bwd_aflag'] == true){ $bwd_aflag = 1; }
+    
+    $sectors = array(); $sec_list = "";
+    foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+    $sects_list = implode("','", array_map('addslashes', $sectors));
+    $secct_fltr = "";
+    if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
+    else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
 }
 
 ?>
@@ -115,8 +125,18 @@ if(isset($_POST['submit']) == true){
                                             <label for="bwd_aflag">B/w Days</label><br/>
                                             <input type="checkbox" name="bwd_aflag" id="bwd_aflag" <?php if($bwd_aflag == 1){ echo "checked"; } ?> />
                                         </div>
-                                    <!--</div>
-                                    <div class="m-1 p-1 row">-->
+                                        <div class="form-group" style="width:190px;text-align:center;">
+										<label for="sectors[]">Warehouse</label>&nbsp;
+										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
+											<option value="all" <?php if(in_array("all", $sectors)) echo "selected"; ?>>All</option>
+											<?php foreach($sector_code as $scode) { ?>
+												<option value="<?php echo $scode; ?>" <?php if(in_array($scode, $sectors)) echo "selected"; ?>>
+													<?php echo $sector_name[$scode]; ?>
+												</option>
+											<?php } ?>
+										</select>
+                                     </div>
+                                    <!--<div class="m-1 p-1 row">-->
                                         <div class="form-group" style="width:150px;">
                                             <label>Export</label>
                                             <select name="exports" id="exports" class="form-control select2" style="width:140px;" onchange="tableToExcel('main_table', '<?php echo $file_name; ?>','<?php echo $file_name; ?>', this.options[this.selectedIndex].value)">
@@ -181,7 +201,7 @@ if(isset($_POST['submit']) == true){
                             // if($sltr_flag > 0){ 
                             // $sql = "SELECT * FROM `customer_sales` WHERE `date` <= '$tdate' AND `trtype` NOT IN ('PST') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice`,`customercode` ASC";
                             // } else {
-                            $sql = "SELECT * FROM `customer_sales` WHERE `date` <= '$tdate' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice`,`customercode` ASC";
+                            $sql = "SELECT * FROM `customer_sales` WHERE `date` <= '$tdate' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'".$secct_fltr." ORDER BY `date`,`invoice`,`customercode` ASC";
                             // }
                             $query = mysqli_query($conn,$sql); $opn_samt = $btw_sqty = $btw_samt = array(); $old_inv1 = "";
                             while($row = mysqli_fetch_assoc($query)){
@@ -200,7 +220,7 @@ if(isset($_POST['submit']) == true){
                                 }
                             }
                             //Receipt
-                            $sql = "SELECT * FROM `customer_receipts` WHERE `date` <= '$tdate' AND `vtype` = 'C' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $sql = "SELECT * FROM `customer_receipts` WHERE `date` <= '$tdate' AND `vtype` = 'C' AND `active` = '1'".$secct_fltr." AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
                             $query = mysqli_query($conn,$sql); $opn_crct = $btw_crct = array();
                             while($row = mysqli_fetch_assoc($query)){
                                 if(strtotime($row['date']) < strtotime($fdate)){
@@ -212,7 +232,7 @@ if(isset($_POST['submit']) == true){
                             }
 
                             //Customer Crdr
-                            $sql = "SELECT * FROM `main_crdrnote` WHERE `date` <= '$tdate' AND `mode` IN ('CCN','CDN') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $sql = "SELECT * FROM `main_crdrnote` WHERE `date` <= '$tdate' AND `mode` IN ('CCN','CDN') AND `active` = '1'".$secct_fltr." AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
                             $query = mysqli_query($conn,$sql); $opn_ccdn = $opn_cccn = $btw_ccdn = $btw_cccn = array();
                             while($row = mysqli_fetch_assoc($query)){
                                 if(strtotime($row['date']) < strtotime($fdate)){
@@ -226,7 +246,7 @@ if(isset($_POST['submit']) == true){
                             }
                             
                             //Sales Return
-                            $sql = "SELECT * FROM `main_itemreturns` WHERE `date` <= '$tdate' AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
+                            $sql = "SELECT * FROM `main_itemreturns` WHERE `date` <= '$tdate' AND `mode` = 'customer' AND `active` = '1'".$secct_fltr." AND `dflag` = '0' ORDER BY `date`,`trnum`,`id` ASC";
                             $query = mysqli_query($conn,$sql); $opn_csrtn = $btw_csrtn = array();
                             while($row = mysqli_fetch_assoc($query)){
                                 if(strtotime($row['date']) < strtotime($fdate)){
@@ -238,7 +258,7 @@ if(isset($_POST['submit']) == true){
                             }
 
                             //Customer Mortality
-                            $sql = "SELECT * FROM `main_mortality` WHERE `date` <= '$tdate' AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`code`,`id` ASC";
+                            $sql = "SELECT * FROM `main_mortality` WHERE `date` <= '$tdate' AND `mtype` = 'customer' AND `active` = '1'".$secct_fltr." AND `dflag` = '0' ORDER BY `date`,`code`,`id` ASC";
                             $query = mysqli_query($conn,$sql); $opn_csmort = $btw_csmort = array();
                             while($row = mysqli_fetch_assoc($query)){
                                 if(strtotime($row['date']) < strtotime($fdate)){
@@ -277,7 +297,7 @@ if(isset($_POST['submit']) == true){
                                 $t_bamt = (float)$t_samt - (float)$t_ramt;
                                 $c_bamt = (((float)$o_bal + (float)$t_samt) - (float)$t_ramt);
 
-                                if((int)$bwd_aflag == 0 && (float)$c_bamt != 0 || (int)$bwd_aflag == 1 && (float)$t_samt != 0 && (float)$c_bamt != 0 || (int)$bwd_aflag == 1 && (float)$t_ramt != 0 && (float)$c_bamt != 0){
+                                if((int)$bwd_aflag == 0 && (float)$c_bamt != 0 || (int)$bwd_aflag == 1 && (float)$t_samt != 0 && (float)$c_bamt != 0 || (int)$bwd_aflag == 1 && (float)$t_ramt != 0 && (float)$c_bamt != 0 || (float)$b_sqty != 0){
                                     $slno++;
                                     $cname = $cus_name[$ccode];
                                     $cmobl = $cus_mobile[$ccode];

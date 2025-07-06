@@ -62,12 +62,14 @@ if(isset($_POST['submit_report']) == true){
     if($sectors == "all"){
         foreach($sector_code as $prod_code){ if($sector_list == ""){ $sector_list = $prod_code; } else{ $sector_list = $sector_list."','".$prod_code; } }
         $inv_mill_filter = " AND `warehouse` IN ('$sector_list')";
+        $inv_mill_filter1 = " AND `sector_code` IN ('$sector_list')";
         $str_in_mill_filter = " AND `towarehouse` IN ('$sector_list')";
         $str_out_mill_filter = " AND `fromwarehouse` IN ('$sector_list')";
         $consumed_mill_filter = " AND `feed_mill` IN ('$sector_list')";
     }
     else{
         $inv_mill_filter = " AND `warehouse` IN ('$sectors')";
+        $inv_mill_filter1 = " AND `sector_code` IN ('$sectors')";
         $str_in_mill_filter = " AND `towarehouse` IN ('$sectors')";
         $str_out_mill_filter = " AND `fromwarehouse` IN ('$sectors')";
         $consumed_mill_filter = " AND `feed_mill` IN ('$sectors')";
@@ -93,11 +95,13 @@ if(isset($_POST['submit_report']) == true){
     }
     if($item_list == ""){
         $pur_item_filter = "";
+        $pur_item_filter1 = "";
         $str_item_filter = "";
         $consumed_item_filter = "";
     }
     else{
         $pur_item_filter = " AND `icode` IN ('$item_list')";
+        $pur_item_filter1 = " AND `type_code` IN ('$item_list')";
         $str_item_filter = " AND `code` IN ('$item_list')";
         $consumed_item_filter = " AND `item_code` IN ('$item_list')";
     }
@@ -212,8 +216,21 @@ if(isset($_POST['submit_report']) == true){
             </form>
             <?php
             if(isset($_POST['submit_report']) == true){
-                $opn_pur_feed_item_qty = $opn_pur_feed_item_amt = $opn_trin_feed_item_qty = $opn_trin_feed_item_amt = $formula_items = $feed_items = array();
-                $sql_record = "SELECT SUM(rcd_qty) as rcd_qty,SUM(fre_qty) as fre_qty,SUM(item_tamt) as amount,icode as itm_code FROM `broiler_purchases` WHERE `date` < '$fdate'".$pur_item_filter."".$inv_mill_filter." AND `active` = '1' AND `dflag` = '0' GROUP BY `icode` ORDER BY `icode` ASC";
+                $opn_pur_feed_item_qty = $opn_pur_feed_item_amt = $opn_only_qty = $opn_only_amt = $opn_trin_feed_item_qty = $opn_trin_feed_item_amt = $formula_items = $feed_items = array();
+                $sql_record = "SELECT SUM(quantity) as rcd_qty,SUM(amount) as amount,type_code as itm_code FROM `broiler_openings` WHERE `date` < '$fdate'".$pur_item_filter1."".$inv_mill_filter1." AND `active` = '1' AND `dflag` = '0' GROUP BY `type_code` ORDER BY `type_code` ASC";
+                $query = mysqli_query($conn,$sql_record);
+                while($row = mysqli_fetch_assoc($query)){
+                    if(!empty($opn_only_qty[$row['itm_code']])){
+                        $opn_only_qty[$row['itm_code']] = $opn_only_qty[$row['itm_code']] + $row['rcd_qty'];
+                        $opn_only_amt[$row['itm_code']] = $opn_only_amt[$row['itm_code']] + ($row['amount']);
+                    }
+                    else{
+                        $opn_only_qty[$row['itm_code']] = $row['rcd_qty'];
+                        $opn_only_amt[$row['itm_code']] = ($row['amount']);
+                    }
+                    $feed_items[$row['itm_code']] = $row['itm_code'];
+                }
+                 $sql_record = "SELECT SUM(rcd_qty) as rcd_qty,SUM(fre_qty) as fre_qty,SUM(item_tamt) as amount,icode as itm_code FROM `broiler_purchases` WHERE `date` < '$fdate'".$pur_item_filter."".$inv_mill_filter." AND `active` = '1' AND `dflag` = '0' GROUP BY `icode` ORDER BY `icode` ASC";
                 $query = mysqli_query($conn,$sql_record);
                 while($row = mysqli_fetch_assoc($query)){
                     if(!empty($opn_pur_feed_item_qty[$row['itm_code']])){
@@ -283,7 +300,20 @@ if(isset($_POST['submit_report']) == true){
 
                 /* *****Between Date Transactions***** */
                 
-                $btw_pur_feed_item_qty = $btw_pur_feed_item_amt = $btw_trin_feed_item_qty = $btw_trin_feed_item_amt = array();
+                $btw_pur_feed_item_qty = $btw_pur_feed_item_amt = $btw_only_qty = $btw_only_amt = $btw_trin_feed_item_qty = $btw_trin_feed_item_amt = array();
+                $sql_record = "SELECT SUM(quantity) as rcd_qty,SUM(amount) as amount,type_code as itm_code FROM `broiler_openings` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_item_filter1."".$inv_mill_filter1." AND `active` = '1' AND `dflag` = '0' GROUP BY `type_code` ORDER BY `type_code` ASC";
+                $query = mysqli_query($conn,$sql_record);
+                while($row = mysqli_fetch_assoc($query)){
+                    if(!empty($btw_only_qty[$row['itm_code']])){
+                        $btw_only_qty[$row['itm_code']] = $btw_only_qty[$row['itm_code']] + ($row['rcd_qty']);
+                        $btw_only_amt[$row['itm_code']] = $btw_only_amt[$row['itm_code']] + ($row['amount']);
+                    }
+                    else{
+                        $btw_only_qty[$row['itm_code']] = ($row['rcd_qty']);
+                        $btw_only_amt[$row['itm_code']] = ($row['amount']);
+                    }
+                    $feed_items[$row['itm_code']] = $row['itm_code'];
+                }
                 $sql_record = "SELECT SUM(rcd_qty) as rcd_qty,SUM(fre_qty) as fre_qty,SUM(item_tamt) as amount,icode as itm_code FROM `broiler_purchases` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$pur_item_filter."".$inv_mill_filter." AND `active` = '1' AND `dflag` = '0' GROUP BY `icode` ORDER BY `icode` ASC";
                 $query = mysqli_query($conn,$sql_record);
                 while($row = mysqli_fetch_assoc($query)){
@@ -394,8 +424,8 @@ if(isset($_POST['submit_report']) == true){
                 $total_consumed_stock = $total_consumed_rate = $total_consumed_amount = array();
                 foreach($feed_items as $itm_list){
                     $slno++;
-                    $opening_stock = ($opn_pur_feed_item_qty[$itm_list] + $opn_trin_feed_item_qty[$itm_list]) - ($opn_consumed_feed_item_qty[$itm_list] + $opn_sale_feed_item_qty[$itm_list] + $opn_trout_feed_item_qty[$itm_list]);
-                    $opening_amount = ($opn_pur_feed_item_amt[$itm_list] + $opn_trin_feed_item_amt[$itm_list]) - ($opn_consumed_feed_item_amt[$itm_list] + $opn_sale_feed_item_amt[$itm_list] + $opn_trout_feed_item_amt[$itm_list]);
+                    $opening_stock = ($opn_pur_feed_item_qty[$itm_list] + $opn_trin_feed_item_qty[$itm_list] + $opn_only_qty[$itm_list]) - ($opn_consumed_feed_item_qty[$itm_list] + $opn_sale_feed_item_qty[$itm_list] + $opn_trout_feed_item_qty[$itm_list]);
+                    $opening_amount = ($opn_pur_feed_item_amt[$itm_list] + $opn_trin_feed_item_amt[$itm_list] + $opn_only_amt[$itm_list]) - ($opn_consumed_feed_item_amt[$itm_list] + $opn_sale_feed_item_amt[$itm_list] + $opn_trout_feed_item_amt[$itm_list]);
                     
                     if($opening_amount > 0 && $opening_stock > 0){
                         $opening_rate = $opening_amount / $opening_stock;
@@ -404,6 +434,8 @@ if(isset($_POST['submit_report']) == true){
                         $opening_rate = 0;
                     }
 
+                    $bw_qty_stock = $btw_only_qty[$itm_list];
+                    $bw_amt_stock = $btw_only_amt[$itm_list];
                     $purchased_stock = $btw_pur_feed_item_qty[$itm_list];
                     $purchased_amount = $btw_pur_feed_item_amt[$itm_list];
                     if($purchased_amount > 0 && $purchased_stock > 0){
@@ -414,8 +446,8 @@ if(isset($_POST['submit_report']) == true){
                     }
                     
 
-                    $total_opening_stock = ($opening_stock + $purchased_stock);
-                    $total_opening_amount = ($opening_amount + $purchased_amount);
+                    $total_opening_stock = ($opening_stock + $purchased_stock + $bw_qty_stock);
+                    $total_opening_amount = ($opening_amount + $purchased_amount + $bw_amt_stock);
                     if($total_opening_amount > 0 && $total_opening_stock > 0){
                         $total_opening_rate = $total_opening_amount / $total_opening_stock;
                     }

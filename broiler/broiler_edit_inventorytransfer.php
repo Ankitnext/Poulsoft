@@ -98,8 +98,9 @@ if($link_active_flag > 0){
     <link href="datepicker/jquery-ui.css" rel="stylesheet">
     <style>
         body{
+            //transform: scale(0.9);
+            //transform-origin: top left;
             overflow: auto;
-            zoom: 0.9;
         }
         .form-control{
             padding-left: 1px;
@@ -107,6 +108,15 @@ if($link_active_flag > 0){
             margin-right: 10px;
             height: 25px;
         }
+        /*.select2-container {
+            transform: scale(0.9);
+            transform-origin: top left;
+        }
+        .select2-dropdown {
+            transform: scale(0.9);
+            transform-origin: top left;
+        }
+        */
     </style>
     </head>
     <body class="m-0 p-0 hold-transition">
@@ -240,11 +250,11 @@ if($link_active_flag > 0){
                                         </div>
                                         <div class="form-group">
                                             <label>Batch</label>
-                                            <td><input readonly type="text" name="batch" id="batch"  value="<?php echo $rename_batch; ?>" class="form-control" style="width:120px;" /></td>
+                                            <td><input readonly type="text" name="batch" id="batch"  value="<?php echo $rename_batch; ?>" class="form-control" style="width:180px;" /></td>
                                         </div>
                                         <div class="form-group" style="width:130px;">
                                             <label>Vehicle</label>
-							                <select name="vehicle_code" id="vehicle_code" class="form-control select2" style="width:120px;">
+							                <select name="vehicle_code" id="vehicle_code" class="form-control select2" style="width:180px;">
                                                 <option value="select">select</option>
                                                 <?php foreach($vehicle_code as $truck_code){ ?><option value="<?php echo $truck_code; ?>" <?php if($vcode == $truck_code){ echo "selected"; } ?>><?php echo $vehicle_name[$truck_code]; ?></option><?php } ?>
                                             </select>
@@ -405,7 +415,7 @@ if($link_active_flag > 0){
                 if(sector != "select" && item_code != "select"){
                     var fetch_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "broiler_fetch_itemstockmaster_lsfi.php?sector="+sector+"&item_code="+item_code+"&date="+date+"&id="+trnum;
+                    var url = "broiler_fetch_itemstockmaster_lsfi.php?sector="+sector+"&item_code="+item_code+"&date="+date+"&id="+trnum+"&trtype=stk_transfer";
                     //window.open(url);
                     var asynchronous = true;
                     fetch_items.open(method, url, asynchronous);

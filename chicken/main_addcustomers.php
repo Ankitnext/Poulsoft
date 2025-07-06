@@ -49,6 +49,10 @@
 		$query = mysqli_query($conn, $sql); $area_code = $area_name = array();
 		while($row = mysqli_fetch_assoc($query)){ $area_code[$row['code']] = $row['code']; $area_name[$row['code']] = $row['description']; }
 	}
+
+	//Select WhatsApp Flag
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Customer Master' AND `field_function` = 'Display WhatsApp Auto Selection' AND `user_access` = 'all' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $wapp_adflag = mysqli_num_rows($query);
 ?>
 <html>
 	<body class="hold-transition skin-blue sidebar-mini">
@@ -80,7 +84,7 @@
 					$cunits = $row['cunits'];
 				}
 				}
-			?> 
+			?>
 				<div class="box-body">
 					<div class="row">
 						<div class="col-md-12">
@@ -89,6 +93,10 @@
 									<div class="form-group col-md-2">
 										<label>Name<b style="color:red;">&nbsp;*</b></label>
 									<input type="text" name="cname" id="cname" class="form-control" placeholder="Enter Name..." onkeyup="validatename(this.id)" onchange="checkcontacts()">
+									</div>
+									<div class="form-group col-md-2">
+										<label>Cust Code</label>
+									<input type="text" name="cust_code" id="cust_code" class="form-control" placeholder="Enter Customer Code...">
 									</div>
 									<div class="form-group col-md-2">
 										<label>Mobile / Phone<b style="color:red;">&nbsp;*</b></label>
@@ -170,9 +178,16 @@
 									<input type="text" name="fixed_qty" id="fixed_qty" class="form-control" placeholder="Enter Quantity..." onkeyup="validatename(this.id)">
 									</div>-->
 								</div>
+								<?php if((int)$wapp_adflag == 1){ ?>
 								<div class="col-md-12">
 									<label>
-										<input type="checkbox" name="credits" id="credits" value="CD" onClick="showDetails(this.id,this.value)">Credit Limit &amp; Terms <!--Fill Credit / Debit Details-->
+										<input type="checkbox" name="wapp_aflag" id="wapp_aflag">Auto WhatsApp
+									</label>
+								</div>
+								<?php } ?>
+								<div class="col-md-12">
+									<label>
+										<input type="checkbox" name="credits" id="credits" value="CD" onclick="showDetails(this.id,this.value)">Credit Limit &amp; Terms <!--Fill Credit / Debit Details-->
 									</label>
 								</div>
 								<div class="col-md-12" id ="creditdetails" style="display:none">
@@ -188,7 +203,7 @@
 								</div>
 								<div class="col-md-12">
 									<label>
-										<input type="checkbox" name="crdrfields" id="crdrfields" value="OB" onClick="showDetails(this.id,this.value)">Opening Balances <!--Fill Credit / Debit Details-->
+										<input type="checkbox" name="crdrfields" id="crdrfields" value="OB" onclick="showDetails(this.id,this.value)">Opening Balances <!--Fill Credit / Debit Details-->
 									</label>
 								</div>
 								<div class="col-md-12" id ="crdrdetails" style="display:none">
@@ -217,7 +232,7 @@
 								
 								<div class="col-md-12">
 									<label>
-										<input type="checkbox" id="bankfields" name="bankfields" value="BD" onClick="showDetails(this.id,this.value)">Bank Details <!--Fill Credit / Debit Details-->
+										<input type="checkbox" id="bankfields" name="bankfields" value="BD" onclick="showDetails(this.id,this.value)">Bank Details <!--Fill Credit / Debit Details-->
 									</label>
 								</div>
 								<div class="col-md-12" id="bankdetails" style="display:none">
@@ -253,7 +268,7 @@
 									<button type="submit" name="submittrans" id="submittrans" value="addpage" class="btn btn-flat btn-social btn-linkedin">
 										<i class="fa fa-save"></i> Save
 									</button>&ensp;&ensp;&ensp;&ensp;
-									<button type="button" name="cancelled" id="cancelled" class="btn btn-flat btn-social btn-google" onClick="redirection_page()">
+									<button type="button" name="cancelled" id="cancelled" class="btn btn-flat btn-social btn-google" onclick="redirection_page()">
 										<i class="fa fa-trash"></i> Cancel
 									</button>
 								</div>

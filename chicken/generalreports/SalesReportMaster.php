@@ -144,7 +144,7 @@
         $col_count = $row['count'];
     }
 	$fdate = $tdate = date("Y-m-d"); $suppliers = $customers = $sectors = $item_cat = $items = $users = "all"; $billnos = $prices = "";
-    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1;
+    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
     $exports = "displaypage";
 	if(isset($_POST['submit']) == true){
 		$fdate = date("Y-m-d",strtotime($_POST['fdate']));
@@ -159,11 +159,12 @@
 		$prices = $_POST['prices'];
 		$exports = $_POST['exports'];
 
-        $sects = $groups = array(); $grp_all_flag = 0;
-        foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
-        $grp_list = implode("@",$groups);
-        foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-        $sects_list = implode("','", array_map('addslashes', $sects));
+        $sectors = array(); $sec_list = "";
+        foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        $sects_list = implode("','", array_map('addslashes', $sectors));
+        $secct_fltr = "";
+        if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
+        else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
 	}
 	$url = "../PHPExcel/Examples/SalesReportMaster-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&billnos=".$billnos."&item_cat=".$item_cat."&items=".$items."&sectors=".$sectors."&users=".$users."&groups=".$grp_list."&prices=".$prices;
 	
@@ -272,18 +273,11 @@
                                             </select>
                                         </div>
                                         <div class="form-group" style="width:190px;">
-                                            <label for="sectors[]">Warehouse</label>
+                                            <label for="sectors[0]">Warehouse</label>
                                             <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-                                                <?php
-                                                    // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? ['all'];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
-                                                ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
+                                                <option value="all" <?php if (in_array("all", $sectors)) echo "selected"; ?>>All</option>
                                                 <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
+                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $sectors)) echo "selected"; ?>>
                                                         <?php echo $sector_name[$scode]; ?>
                                                     </option>
                                                 <?php } ?>

@@ -202,7 +202,7 @@ for($i = 0;$i < $dsize;$i++){
     }
     
     if($stktr_wapp > 0){
-        $mobile_count = 0; $mobile_no_array = array(); $farmercode = $farm_farmer[$towarehouse[$i]]; $from_sector = $farm_name[$fromwarehouse[$i]];
+        $mobile_count = 0; $mobile_no_array = array(); $farmercode = $farm_farmer[$towarehouse[$i]]; $from_sector = $farm_name[$fromwarehouse[$i]]; $to_sector = $farm_name[$towarehouse[$i]];
         $sql = "SELECT * FROM `broiler_farmer` WHERE `code` LIKE '$farmercode'"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){
 			$m1 = explode(",",$row['mobile1']);
@@ -235,10 +235,10 @@ for($i = 0;$i < $dsize;$i++){
 
         $message .= $msg_header;
 		if($stktr_wapp == 1){
-            $message .= "Dear: ".$cname."%0D%0ADate: ".date('d.m.Y',strtotime($date[$i])).",%0D%0AFrom: ".$from_sector.",%0D%0ADC No: ".$dcno[$i].",%0D%0AVehicle No: ".$vehicles.",%0D%0ADriver: ".$drivers.",%0D%0A".$item_details;	
+            $message .= "Dear: ".$cname."%0D%0ADate: ".date('d.m.Y',strtotime($date[$i])).",%0D%0AFrom: ".$from_sector.",%0D%0ATO: ".$to_sector.",%0D%0ADC No: ".$dcno[$i].",%0D%0AVehicle No: ".$vehicles.",%0D%0ADriver: ".$drivers.",%0D%0A".$item_details;	
         }
         else if($stktr_wapp == 2){
-            $message .= "Dear: ".$cname."%0D%0ADate: ".date('d.m.Y',strtotime($date[$i])).",%0D%0AFrom: ".$from_sector.",%0D%0ADC No: ".$dcno[$i].",%0D%0AVehicle No: ".$vehicles.",%0D%0ADriver: ".$drivers.",%0D%0A".$item_details;	
+            $message .= "Dear: ".$cname."%0D%0ADate: ".date('d.m.Y',strtotime($date[$i])).",%0D%0AFrom: ".$from_sector.",%0D%0ATo: ".$to_sector.",%0D%0ADC No: ".$dcno[$i].",%0D%0AVehicle No: ".$vehicles.",%0D%0ADriver: ".$drivers.",%0D%0A".$item_details;	
         }
         else{ }
         $message .= $msg_footer.",%0D%0AThank You,%0D%0A".$cdetails;

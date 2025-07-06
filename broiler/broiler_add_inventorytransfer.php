@@ -90,16 +90,24 @@ if($link_active_flag > 0){
     <link href="datepicker/jquery-ui.css" rel="stylesheet">
     <style>
         body{
+            //transform: scale(0.9);
+            //transform-origin: top left;
             overflow: auto;
-            zoom: 0.9;
         }
         .form-control{
-            padding:0;
             padding-left: 1px;
-            //padding-right: 1px;
-            //margin-right: 10px;
-            //height: 25px;
+            padding-right: 1px;
+            margin-right: 10px;
+            height: 25px;
         }
+        /*.select2-container {
+            transform: scale(0.9);
+            transform-origin: top left;
+        }
+        .select2-dropdown {
+            transform: scale(0.9);
+            transform-origin: top left;
+        }*/
         ::-webkit-scrollbar { width: 8px; height:8px; } /*display: none;*/
         .row_body2{
             width:100%;
@@ -127,6 +135,7 @@ if($link_active_flag > 0){
                                                 <th><label>UOM</label></th>
                                                 <th style="visibility:visible;">Stock</th>
                                                 <th><label>Quantity<b style="color:red;">&nbsp;*</b></label></th>
+                                                <th><label>Purchase Rate</label></th>
                                                 <th><label>Rate</label></th>
                                                 <th><label>From Location<b style="color:red;">&nbsp;*</b></label></th>
                                                 <th><label>To Location<b style="color:red;">&nbsp;*</b></label></th>
@@ -157,11 +166,12 @@ if($link_active_flag > 0){
                                                 <td><input type="text" name="uom[]" id="uom[0]" class="form-control" style="width:80px;" readonly /></td>
                                                 <td style="visibility:visible;"><input type="text" name="available_stock[]" id="available_stock[0]" class="form-control" placeholder="0.00" style="width:90px;" readonly ></td>
                                                 <td><input type="text" name="quantity[]" id="quantity[0]" class="form-control" style="width:80px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
+                                                <td><input type="text" name="purchaserate[]" id="purchaserate[0]" class="form-control" style="width:80px;" readonly /></td>
                                                 <td><input type="text" readonly name="price[]" id="price[0]" class="form-control" style="width:70px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>
                                                 <td><select name="fromwarehouse[]" id="fromwarehouse[0]" class="form-control select2" style="width:200px;" onchange="fetch_stock_master(this.id);check_medvac_masterprices(this.id);" ><option value="select">select</option><?php foreach($from_sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo str_replace("()","",$from_sector_name[$whouse_code]."(".$farm_code[$whouse_code].")"); ?></option><?php } ?></select></td>
                                                 <td><select name="towarehouse[]" id="towarehouse[0]" class="form-control select2" style="width:200px;" onchange="checkfarm(this.id);fetch_batch(this.id);" ><option value="select">select</option><?php foreach($to_sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo str_replace("()","",$to_sector_name[$whouse_code]."(". $farm_code[$whouse_code].")"); ?></option><?php } ?></select></td>
-                                                <td><input readonly type="text" name="batch[]" id="batch[0]" class="form-control" style="width:120px;" /></td>
-                                                <td><select name="vehicle_code[]" id="vehicle_code[0]" class="form-control select2" style="width:100px;"><option value="select">select</option><?php foreach($vehicle_code as $truck_code){ ?><option value="<?php echo $truck_code; ?>"><?php echo $vehicle_name[$truck_code]; ?></option><?php } ?></select></td>
+                                                <td><input readonly type="text" name="batch[]" id="batch[0]" class="form-control" style="width:180px;" /></td>
+                                                <td><select name="vehicle_code[]" id="vehicle_code[0]" class="form-control select2" style="width:180px;"><option value="select">select</option><?php foreach($vehicle_code as $truck_code){ ?><option value="<?php echo $truck_code; ?>"><?php echo $vehicle_name[$truck_code]; ?></option><?php } ?></select></td>
                                                 <td><select name="driver_code[]" id="driver_code[0]" class="form-control select2" style="width:110px;"><option value="select">select</option><?php foreach($emp_code as $driver_code){ ?><option value="<?php echo $driver_code; ?>"><?php echo $emp_name[$driver_code]; ?></option><?php } ?></select></td>
                                                 <!--<td><input type="text" name="driver_mobile[]" id="driver_mobile[0]" class="form-control" style="width:110px;" onkeyup="validatemobile(this.id);" /></td> --->
                                                 <td><textarea name="remarks[]" id="remarks[0]" class="form-control" style="width:100px;height:25px;"></textarea></td>
@@ -207,6 +217,8 @@ if($link_active_flag > 0){
         <script src="datepicker/jquery/jquery.js"></script>
         <script src="datepicker/jquery-ui.js"></script>
         <script>
+            //Date Range selection
+            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
             function return_back(){
                 var ccid = '<?php echo $ccid; ?>';
                 window.location.href = 'broiler_display_inventorytransfer.php?ccid='+ccid;
@@ -326,11 +338,12 @@ if($link_active_flag > 0){
                 html += '<td><input type="text" name="uom[]" id="uom['+d+']" class="form-control" style="width:80px;" readonly /></td>';
                 html += '<td style="visibility:visible;"><input type="text" name="available_stock[]" id="available_stock['+d+']" class="form-control" placeholder="0.00" style="width:90px;" readonly ></td>';
                 html += '<td><input type="text" name="quantity[]" id="quantity['+d+']" class="form-control" style="width:80px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
+                html += '<td><input type="text" name="purchaserate[]" id="purchaserate['+d+']" class="form-control" style="width:80px;" readonly /></td>';
                 html += '<td><input type="text" readonly name="price[]" id="price['+d+']" class="form-control" style="width:70px;" onkeyup="validatenum(this.id);" onchange="validateamount(this.id);" /></td>';
                 html += '<td><select name="fromwarehouse[]" id="fromwarehouse['+d+']" class="form-control select2" style="width:200px;" onchange="fetch_stock_master(this.id);check_medvac_masterprices(this.id);" ><option value="select">select</option><?php foreach($from_sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo str_replace("()","", $from_sector_name[$whouse_code]."(".$farm_code[$whouse_code].")"); ?></option><?php } ?></select></td>';
                 html += '<td><select name="towarehouse[]" id="towarehouse['+d+']" class="form-control select2" style="width:200px;" onchange="checkfarm(this.id);fetch_batch(this.id);" ><option value="select">select</option><?php foreach($to_sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo str_replace("()","",$to_sector_name[$whouse_code]."(".$farm_code[$whouse_code].")"); ?></option><?php } ?></select></td>';
-                html += '<td><input readonly type="text" name="batch[]" id="batch['+d+']" class="form-control" style="width:120px;" /></td>';
-                html += '<td><select name="vehicle_code[]" id="vehicle_code['+d+']" class="form-control select2" style="width:110px;"><option value="select">select</option><?php foreach($vehicle_code as $truck_code){ ?><option value="<?php echo $truck_code; ?>"><?php echo $vehicle_name[$truck_code]; ?></option><?php } ?></select></td>';
+                html += '<td><input readonly type="text" name="batch[]" id="batch['+d+']" class="form-control" style="width:180px;" /></td>';
+                html += '<td><select name="vehicle_code[]" id="vehicle_code['+d+']" class="form-control select2" style="width:180px;"><option value="select">select</option><?php foreach($vehicle_code as $truck_code){ ?><option value="<?php echo $truck_code; ?>"><?php echo $vehicle_name[$truck_code]; ?></option><?php } ?></select></td>';
                 html += '<td><select name="driver_code[]" id="driver_code['+d+']" class="form-control select2" style="width:110px;"><option value="select">select</option><?php foreach($emp_code as $driver_code){ ?><option value="<?php echo $driver_code; ?>"><?php echo $emp_name[$driver_code]; ?></option><?php } ?></select></td>';
                 //html += '<td><input type="text" name="driver_mobile[]" id="driver_mobile['+d+']" class="form-control" style="width:110px;" onkeyup="validatemobile(this.id);" /></td>';
                 html += '<td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="width:100px;height:25px;"></textarea></td>';
@@ -345,11 +358,7 @@ if($link_active_flag > 0){
                 html += '</tr>';
                 $('#row_body').append(html);
                 $('.select2').select2();
-                //Date Range selection
-                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
-                
-                //$( ".datepicker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", maxDate: today, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
             }
             function destroy_row(a){
                 var b = a.split("["); var c = b[1].split("]"); var d = c[0];
@@ -378,7 +387,7 @@ if($link_active_flag > 0){
                 if(sector != "select" && item_code != "select"){
                     var fetch_items = new XMLHttpRequest();
                     var method = "GET";
-                    var url = "broiler_fetch_itemstockmaster_lsfi.php?sector="+sector+"&item_code="+item_code+"&date="+date;
+                    var url = "broiler_fetch_itemstockmaster_lsfi.php?sector="+sector+"&item_code="+item_code+"&date="+date+"&trtype=stk_transfer";
                     //window.open(url);
                     var asynchronous = true;
                     fetch_items.open(method, url, asynchronous);
@@ -391,12 +400,14 @@ if($link_active_flag > 0){
                                 document.getElementById("available_stock["+d+"]").value = item_dt1[0];
                                 document.getElementById("avg_price["+d+"]").value = item_dt1[1];
                                 document.getElementById("price["+d+"]").value = item_dt1[2];
+                                document.getElementById("purchaserate["+d+"]").value = item_dt1[4]; 
                             }
                             else{
                                 alert("Item Stock not available, Kindly check before saving ...!");
                                 document.getElementById("available_stock["+d+"]").value = 0;
                                 document.getElementById("price["+d+"]").value = 0;
                                 document.getElementById("avg_price["+d+"]").value = 0;
+                                document.getElementById("purchaserate["+d+"]").value = 0; 
                             }
                         }
                     }
@@ -467,12 +478,11 @@ if($link_active_flag > 0){
 			function validateamount(x) { expr = /^[0-9.]*$/; var a = document.getElementById(x).value; if(a.length > 50){ a = a.substr(0,a.length - 1); } while(!a.match(expr)){ a = a.replace(/[^0-9.]/g, ''); } if(a == ""){ a = 0; } else { } var b = parseFloat(a).toFixed(2); document.getElementById(x).value = b; }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
         </script>
+        <?php include "header_foot.php"; ?>
         <script>
             //Date Range selection
-            var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
             $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
         </script>
-        <?php include "header_foot.php"; ?>
     </body>
 </html>
 

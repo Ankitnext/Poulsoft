@@ -21,6 +21,10 @@
 
 			$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 			while($row = mysqli_fetch_assoc($query)){ $whname[$row['code']] = $row['description']; $whcode[$row['code']] = $row['code']; }
+			
+            $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+            while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; $sector_code[$row['code']] = $row['code']; }
+            
 			$sql = "SELECT * FROM `main_contactdetails` WHERE `active` = '1' ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
 			while($row = mysqli_fetch_assoc($query)){ $cpname[$row['code']] = $row['name']; $cpcode[$row['code']] = $row['code']; }
 			$fromdate = $_POST['fromdate']; $todate = $_POST['todate']; $pcoa = $_POST['coa']; $pwhname = $_POST['whname'];
@@ -29,10 +33,25 @@
 			if($pwhname == ""){ $pwhname = "all"; } else { $pwhname = $_POST['whname']; }
 
 
-			$exoption = "displaypage";
-			if(isset($_POST['submit'])) { $excel_type = $_POST['export']; if($excel_type == "exportexcel"){ $exoption = "displaypage"; } else{ $exoption = $_POST['export']; } } else{ $excel_type = "displaypage"; }
+			$exoption = "displaypage"; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
+			if(isset($_POST['submit'])) { 
+                $excel_type = $_POST['export']; 
+
+                $sectors = array(); $sec_list = "";
+				foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+				$sects_list = implode("','", array_map('addslashes', $sectors));
+				$secct_fltr = "";
+				if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
+				else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
+
+                if($excel_type == "exportexcel"){ 
+                    $exoption = "displaypage"; 
+                } else{ 
+                    $exoption = $_POST['export']; 
+                } 
+            } else{ $excel_type = "displaypage"; }
 			
-			$url = "../PHPExcel/Examples/acc_expenseLedger-Excel.php?fromdate=".$fromdate."&todate=".$todate."&coa=".$pcoa."&whname=".$pwhname."&cid=".$cid;
+			$url = "../PHPExcel/Examples/acc_expenseLedger-Excel.php?fromdate=".$fromdate."&todate=".$todate."&coa=".$pcoa."&whname=".$pwhname."&cid=".$cid."&sector=".$sec_list;
 	?>
 		
 		
@@ -132,16 +151,25 @@
 												}
 											?>
 										</select>&ensp;&ensp;
-										<label class="reportselectionlabel">Warehouse</label>&nbsp;
+										<!-- <label class="reportselectionlabel">Warehouse</label>&nbsp;
 										<select name="whname" id="whname" class="form-control select2">
-											<option value="all" <?php if($pwhname == "all") { echo 'selected'; } ?> >-All-</option>
+											<option value="all" <?php //if($pwhname == "all") { echo 'selected'; } ?> >-All-</option>
 											<?php
-												foreach($whcode as $seccode){
+												//foreach($whcode as $seccode){
 											?>
-													<option <?php if($pwhname == $whcode[$seccode]) { echo 'selected'; } ?> value="<?php echo $whcode[$seccode]; ?>"><?php echo $whname[$seccode]; ?></option>
+													<option <?php //if($pwhname == $whcode[$seccode]) { echo 'selected'; } ?> value="<?php //echo $whcode[$seccode]; ?>"><?php //echo $whname[$seccode]; ?></option>
 											<?php
-												}
+												//}
 											?>
+										</select>&ensp;&ensp; -->
+                                        <label class="reportselectionlabel">Warehouse</label>&nbsp;
+										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
+											<option value="all" <?php if (in_array("all", $sectors)) echo "selected"; ?>>All</option>
+											<?php foreach($sector_code as $scode) { ?>
+												<option value="<?php echo $scode; ?>" <?php if (in_array($scode, $sectors)) echo "selected"; ?>>
+													<?php echo $sector_name[$scode]; ?>
+												</option>
+											<?php } ?>
 										</select>&ensp;&ensp;
 										<label class="reportselectionlabel">Export To</label>&nbsp;
 										<select name="export" id="export" class="form-control select2">
@@ -242,7 +270,7 @@
 									</thead>
 						<?php
 							}
-							else if($_POST['coa'] != "all" AND $_POST['whname'] == "all"){
+							else if($_POST['coa'] != "all" && in_array("all", $sectors)){
 								$fdate = date("Y-m-d",strtotime($_POST['fromdate']));
 								$tdate = date("Y-m-d",strtotime($_POST['todate']));
 								$coa = $_POST['coa']; $wname = $_POST['whname'];
@@ -844,15 +872,15 @@
 								</thead>
 						<?php
 							}
-							else if($_POST['coa'] != "all" AND $_POST['whname'] != "all"){
+							else if($_POST['coa'] != "all" && (!in_array("all", $_POST['sectors']) && !empty($_POST['sectors']))){
 								$fdate = date("Y-m-d",strtotime($_POST['fromdate']));
 								$tdate = date("Y-m-d",strtotime($_POST['todate']));
 								$coa = $_POST['coa']; $wname = $_POST['whname'];
-								$sql = "SELECT SUM(amount) as tamt FROM `pur_payments` WHERE `date` < '$fdate' AND `active` = '1' AND `method` = '$coa' AND `warehouse` = '$wname' ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT SUM(amount) as tamt FROM `pur_payments` WHERE `date` < '$fdate' AND `active` = '1' AND `method` = '$coa'".$secct_fltr." ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){ $pre_pur_pay_amt = $row['tamt']; }
-								$sql = "SELECT SUM(amount) as tamt FROM `customer_receipts` WHERE `date` < '$fdate' AND `active` = '1' AND `method` = '$coa' AND `warehouse` = '$wname' ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT SUM(amount) as tamt FROM `customer_receipts` WHERE `date` < '$fdate' AND `active` = '1' AND `method` = '$coa' ".$secct_fltr." ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){ $pre_cus_rct_amt = $row['tamt']; }
-								$sql = "SELECT SUM(amount) as tamt,mode FROM `main_crdrnote` WHERE `date` < '$fdate' AND `active` = '1' AND `coa` = '$coa' AND `warehouse` = '$wname' GROUP BY `mode` ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT SUM(amount) as tamt,mode FROM `main_crdrnote` WHERE `date` < '$fdate' AND `active` = '1' AND `coa` = '$coa' ".$secct_fltr." GROUP BY `mode` ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['mode'] == "CCN"){ $pre_ccn_amt = $row['tamt']; }
 									else if($row['mode'] == "CDN"){ $pre_cdn_amt = $row['tamt']; }
@@ -860,14 +888,14 @@
 									else if($row['mode'] == "SDN"){ $pre_sdn_amt = $row['tamt']; }
 									else { $pre_oth_amt = $row['tamt']; }
 								}
-								$sql = "SELECT SUM(amount) as tamt,prefix FROM `acc_vouchers` WHERE `date` < '$fdate' AND `active` = '1' AND `fcoa` = '$coa' AND `warehouse` = '$wname' GROUP BY `prefix` ORDER BY `fcoa` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT SUM(amount) as tamt,prefix FROM `acc_vouchers` WHERE `date` < '$fdate' AND `active` = '1' AND `fcoa` = '$coa' ".$secct_fltr." GROUP BY `prefix` ORDER BY `fcoa` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['prefix'] == "PV"){ $pre_fpv_amt = $row['tamt']; }
 									else if($row['prefix'] == "RV"){ $pre_frv_amt = $row['tamt']; }
 									else if($row['prefix'] == "JV"){ $pre_fjv_amt = $row['tamt']; }
 									else { $pre_foth_vou_amt = $row['tamt']; }
 								}
-								$sql = "SELECT SUM(amount) as tamt,prefix FROM `acc_vouchers` WHERE `date` < '$fdate' AND `active` = '1' AND `tcoa` = '$coa' AND `warehouse` = '$wname' GROUP BY `prefix` ORDER BY `tcoa` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT SUM(amount) as tamt,prefix FROM `acc_vouchers` WHERE `date` < '$fdate' AND `active` = '1' AND `tcoa` = '$coa' ".$secct_fltr." GROUP BY `prefix` ORDER BY `tcoa` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['prefix'] == "PV"){ $pre_tpv_amt = $row['tamt']; }
 									else if($row['prefix'] == "RV"){ $pre_trv_amt = $row['tamt']; }
@@ -885,19 +913,19 @@
 									$closing_amt = $pending_rct = $pre_received - $pre_paid;
 								}
 								$c = 0;
-								$sql = "SELECT * FROM `pur_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `method` = '$coa' AND `warehouse` = '$wname' ORDER BY `date` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `pur_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `method` = '$coa' ".$secct_fltr." ORDER BY `date` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									$c = $c + 1;
 									$bt_pur_pay_amt[$row['date']."@".$c] = $row['trnum']."@".$row['date']."@".$row['ccode']."@".$row['docno']."@".$row['cdate']."@".$row['cno']."@".$row['amount']."@".$row['vtype']."@".$row['warehouse']."@".$row['remarks'];
 								}
 								$c = 0;
-								$sql = "SELECT * FROM `customer_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `method` = '$coa' AND `warehouse` = '$wname' ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `customer_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `method` = '$coa' ".$secct_fltr." ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									$c = $c + 1;
 									$bt_cus_rct_amt[$row['date']."@".$c] = $row['trnum']."@".$row['date']."@".$row['ccode']."@".$row['docno']."@".$row['cdate']."@".$row['cno']."@".$row['amount']."@".$row['vtype']."@".$row['warehouse']."@".$row['remarks'];
 								}
 								$c = $d = $e = $f = $g = 0;
-								$sql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `coa` = '$coa' AND `warehouse` = '$wname' ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `coa` = '$coa' ".$secct_fltr." ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['mode'] == "CCN"){
 										$c = $c + 1;
@@ -921,7 +949,7 @@
 									}
 								}
 								$c = $d = $e = $f = $g = 0;
-								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `fcoa` = '$coa' AND `warehouse` = '$wname' ORDER BY `fcoa` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `fcoa` = '$coa' ".$secct_fltr." ORDER BY `fcoa` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['prefix'] == "PV"){
 										$c = $c + 1;
@@ -941,7 +969,7 @@
 									}
 								}
 								$c = $d = $e = $f = $g = 0;
-								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `tcoa` = '$coa' AND `warehouse` = '$wname' ORDER BY `tcoa` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `tcoa` = '$coa' ".$secct_fltr." ORDER BY `tcoa` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['prefix'] == "PV"){
 										$c = $c + 1;

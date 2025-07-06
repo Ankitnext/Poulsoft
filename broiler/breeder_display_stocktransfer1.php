@@ -58,8 +58,23 @@ if($link_active_flag > 0){
             
             $sql='SHOW COLUMNS FROM `item_stocktransfers`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+            if(in_array("from_unit", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `from_unit` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `fromwarehouse`"; mysqli_query($conn,$sql); }
+            if(in_array("from_shed", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `from_shed` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `from_unit`"; mysqli_query($conn,$sql); }
+            if(in_array("from_batch", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `from_batch` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `from_shed`"; mysqli_query($conn,$sql); }
+            if(in_array("from_flock", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `from_flock` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `from_batch`"; mysqli_query($conn,$sql); }
+            if(in_array("to_unit", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `to_unit` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `towarehouse`"; mysqli_query($conn,$sql); }
+            if(in_array("to_shed", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `to_shed` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `to_unit`"; mysqli_query($conn,$sql); }
+            if(in_array("to_batch", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `to_batch` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `to_shed`"; mysqli_query($conn,$sql); }
+            if(in_array("to_flock", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `to_flock` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `to_batch`"; mysqli_query($conn,$sql); }
             if(in_array("trtype", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `trtype` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `dflag`"; mysqli_query($conn,$sql); }
             if(in_array("trlink", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `trlink` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `trtype`"; mysqli_query($conn,$sql); }
+            
+            $sql='SHOW COLUMNS FROM `account_summary`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+            while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+            if(in_array("batch", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `account_summary` ADD `batch` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `location`"; mysqli_query($conn,$sql); }
+            if(in_array("unit_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `account_summary` ADD `unit_code` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `batch`"; mysqli_query($conn,$sql); }
+            if(in_array("shed_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `account_summary` ADD `shed_code` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `unit_code`"; mysqli_query($conn,$sql); }
+            if(in_array("flock_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `account_summary` ADD `flock_code` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `shed_code`"; mysqli_query($conn,$sql); }
             
             $sql='SHOW COLUMNS FROM `item_category`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }

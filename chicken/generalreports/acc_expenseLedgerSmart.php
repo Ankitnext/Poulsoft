@@ -39,6 +39,9 @@ if($db == ''){
 	$sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $coaname[$row['code']] = $row['description']; }
 	
+    $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+	while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; $sector_code[$row['code']] = $row['code']; }
+	
 	$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $whname[$row['code']] = $row['description']; $whcode[$row['code']] = $row['code']; }
 	$sql = "SELECT * FROM `main_contactdetails` WHERE `active` = '1' ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
@@ -48,11 +51,19 @@ if($db == ''){
 	if($pcoa == ""){ $pcoa = "all"; } else { $pcoa = $_POST['coa']; }
 	if($pwhname == ""){ $pwhname = "all"; } else { $pwhname = $_POST['whname']; }
 		
-	$exoption = "displaypage"; $tr_type = "all";
+	$exoption = "displaypage"; $tr_type = "all"; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
 	if(isset($_POST['submit'])) { $excel_type = $_POST['export']; if($excel_type == "exportexcel"){ $exoption = "displaypage"; } else{ $exoption = $_POST['export']; } } else{ $excel_type = "displaypage"; }
 	if(isset($_POST['submit']) == true){
 		$tr_type = $_POST['tr_type'];
-		$exl_fdate = $_POST['fromdate']; $exl_tdate = $_POST['todate']; $exl_coa = $_POST['coa']; $exl_whname = $_POST['whname'];
+		$exl_fdate = $_POST['fromdate']; $exl_tdate = $_POST['todate']; $exl_coa = $_POST['coa']; 
+        // $exl_whname = $_POST['whname'];
+
+        $sectors = array(); $sec_list = "";
+		foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+		$sects_list = implode("','", array_map('addslashes', $sectors));
+		$secct_fltr = "";
+		if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
+		else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
 	}
 	else{
 		$exl_fdate = $exl_tdate = $today; $exl_sname =  $exl_coa = $exl_whname = "all";
@@ -154,16 +165,25 @@ if($db == ''){
 												}
 											?>
 										</select>&ensp;&ensp;
-										<label class="reportselectionlabel">Warehouse</label>&nbsp;
+										<!-- <label class="reportselectionlabel">Warehouse</label>&nbsp;
 										<select name="whname" id="whname" class="form-control select2">
-											<option value="all" <?php if($pwhname == "all") { echo 'selected'; } ?> >-All-</option>
+											<option value="all" <?php //if($pwhname == "all") { echo 'selected'; } ?> >-All-</option>
 											<?php
-												foreach($whcode as $seccode){
+												//foreach($whcode as $seccode){
 											?>
-													<option <?php if($pwhname == $whcode[$seccode]) { echo 'selected'; } ?> value="<?php echo $whcode[$seccode]; ?>"><?php echo $whname[$seccode]; ?></option>
+													<option <?php //if($pwhname == $whcode[$seccode]) { echo 'selected'; } ?> value="<?php //echo $whcode[$seccode]; ?>"><?php //echo $whname[$seccode]; ?></option>
 											<?php
-												}
+												//}
 											?>
+										</select>&ensp;&ensp; -->
+                                        <label class="reportselectionlabel">Warehouse</label>&nbsp;
+										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
+											<option value="all" <?php if (in_array("all", $sectors)) echo "selected"; ?>>All</option>
+											<?php foreach($sector_code as $scode) { ?>
+												<option value="<?php echo $scode; ?>" <?php if (in_array($scode, $sectors)) echo "selected"; ?>>
+													<?php echo $sector_name[$scode]; ?>
+												</option>
+											<?php } ?>
 										</select>&ensp;&ensp;
 										<label class="reportselectionlabel">Transaction Type</label>&nbsp;
 										<select name="tr_type" id="tr_type" class="form-control select2">
@@ -201,7 +221,7 @@ if($db == ''){
 								
 								$bt_fpv_amt = $bt_frv_amt = $bt_fjv_amt = $bt_foth_vou_amt = $bt_tpv_amt = $bt_trv_amt = $bt_tjv_amt = $bt_toth_vou_amt = array();
 
-								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$prx_fltr." AND `active` = '1' AND `fcoa` IN ('$coa')".$wname." ORDER BY `fcoa` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$prx_fltr." AND `active` = '1' AND `fcoa` IN ('$coa')".$secct_fltr." ORDER BY `fcoa` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['prefix'] == "PV"){
 										$c = $c + 1;
@@ -221,7 +241,7 @@ if($db == ''){
 									}
 								}
 								$c = $d = $e = $f = $g = 0;
-								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$prx_fltr." AND `active` = '1' AND `tcoa` IN ('$coa')".$wname." ORDER BY `tcoa` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$prx_fltr." AND `active` = '1' AND `tcoa` IN ('$coa')".$secct_fltr." ORDER BY `tcoa` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['prefix'] == "PV"){
 										$c = $c + 1;
@@ -1119,7 +1139,7 @@ if($db == ''){
 								}*/
 								$c = $d = $e = $f = $g = 0;
 								$bt_fpv_amt = $bt_frv_amt = $bt_fjv_amt = $bt_foth_vou_amt = $bt_tpv_amt = $bt_trv_amt = $bt_tjv_amt = $bt_toth_vou_amt = array();
-								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$prx_fltr." AND `active` = '1' AND `fcoa` IN ('$coa') AND `warehouse` = '$wname' ORDER BY `fcoa` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$prx_fltr." AND `active` = '1' AND `fcoa` IN ('$coa') ".$secct_fltr." ORDER BY `fcoa` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['prefix'] == "PV"){
 										$c = $c + 1;
@@ -1139,7 +1159,7 @@ if($db == ''){
 									}
 								}
 								$c = $d = $e = $f = $g = 0;
-								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$prx_fltr." AND `active` = '1' AND `tcoa` IN ('$coa') AND `warehouse` = '$wname' ORDER BY `tcoa` ASC"; $query = mysqli_query($conn,$sql);
+								$sql = "SELECT * FROM `acc_vouchers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$prx_fltr." AND `active` = '1' AND `tcoa` IN ('$coa') ".$secct_fltr." ORDER BY `tcoa` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									if($row['prefix'] == "PV"){
 										$c = $c + 1;

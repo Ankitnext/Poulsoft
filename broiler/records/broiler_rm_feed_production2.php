@@ -20,7 +20,7 @@ else{
 }
 include "decimal_adjustments.php";
 
-$file_name = "Feed Production Report";
+$file_name = "Formula Wise RM Consumption";
 $sql = "SELECT * FROM `main_companyprofile` WHERE `type` = 'All' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; $img_logo = "../".$row['logopath']; $cdetails = $row['cdetails']; $company_name = $row['cname']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
@@ -119,7 +119,7 @@ $sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%feed%' AND `dfl
 while($row = mysqli_fetch_assoc($query)){ $feed_acat[$row['code']] = $row['code']; }
 $feed_list = implode("','",$feed_acat);
 $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$feed_list') AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $feed_code = array();
-while($row = mysqli_fetch_assoc($query)){ $feed_code[$row['code']] = $row['code']; }
+while($row = mysqli_fetch_assoc($query)){ $feed_code[$row['code']] = $row['code']; $feed_code[$row['code']] = $row['code']; }
 
 $item_code = $item_name = array();
 $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); 
@@ -137,15 +137,21 @@ $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Chick%' 
 $query = mysqli_query($conn,$sql); $chick_code = $chick_category = "";
 while($row = mysqli_fetch_assoc($query)){ $chick_code = $row['code']; $chick_category = $row['category']; }
 
+//Chick/Bird Items
+$sql = "SELECT DISTINCT feed_code FROM `broiler_feed_consumed` WHERE `active` = '1' AND `dflag` = '0' ORDER BY feed_code";
+$query = mysqli_query($conn,$sql); $feeds_code =  array();
+while($row = mysqli_fetch_assoc($query)){ $feeds_code[$row['feed_code']] = $row['feed_code']; $feeds_name[$row['feed_code']] = $item_name[$row['feed_code']];  }
+
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Bird%' AND `dflag` = '0'";
 $query = mysqli_query($conn,$sql); $bird_code = "";
 while($row = mysqli_fetch_assoc($query)){ $bird_code = $row['code']; }
 
-$fdate = $tdate = date("Y-m-d"); $sectors = $item_categories = $items = "all"; $excel_type = "display";
+$fdate = $tdate = date("Y-m-d"); $sectors = $item_categories = $items = $feeds = "all"; $excel_type = "display";
 if(isset($_POST['submit_report']) == true){
     $sectors = $_POST['sectors'];
     $item_categories = $_POST['item_categories'];
     $items = $_POST['items'];
+    $feeds = $_POST['feeds'];
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
     $tdate = date("Y-m-d",strtotime($_POST['tdate']));
     $sector_list = "";
@@ -243,6 +249,13 @@ if(isset($_POST['submit_report']) == true){
                                         <?php foreach($mill_item_code as $mi_codes){ ?><option value="<?php echo $mi_codes; ?>" <?php if($items == $mi_codes){ echo "selected"; } ?>><?php echo $mill_item_name[$mi_codes]; ?></option><?php } ?>
                                     </select>
                                 </div>
+                                <div class="m-2 form-group">
+                                   <label>Formula</label>
+                                    <select name="feeds" id="feeds" class="form-control select2">
+                                        <option value="all" <?php if($feeds == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <?php foreach($feeds_code as $fd_codes){ ?><option value="<?php echo $fd_codes; ?>" <?php if($feeds == $fd_codes){ echo "selected"; } ?>><?php echo $item_name[$fd_codes]; ?></option><?php } ?>
+                                    </select>
+                                </div>
                                 <!-- <div class="m-2 form-group" style="width: 210px;">
                                     <label for="lot_nos">Lot No</label>
                                     <input type="text" name="lot_nos" id="lot_nos" class="form-control" value="<?php echo $lot_nos; ?>" style="padding:0;padding-left:2px;width:200px;" />
@@ -281,8 +294,8 @@ if(isset($_POST['submit_report']) == true){
             $fhtml .= '<tr style="text-align:center;" align="center">';
 
             $nhtml .= '<th>Sl No.</th>'; $fhtml .= '<th id="order">Sl No.</th>';
-            $nhtml .= '<th>From Date</th>'; $fhtml .= '<th id="order">From Date</th>';
-            $nhtml .= '<th>To Date</th>'; $fhtml .= '<th id="order">To Date</th>';
+            $nhtml .= '<th>From Date</th>'; $fhtml .= '<th id="order_date">From Date</th>';
+            $nhtml .= '<th>To Date</th>'; $fhtml .= '<th id="order_date">To Date</th>';
             $nhtml .= '<th>Formula Name</th>'; $fhtml .= '<th id="order">Formula Name</th>';
             $nhtml .= '<th>Item Name</th>'; $fhtml .= '<th id="order">Item Name</th>';
             $nhtml .= '<th>Consumed Quantity</th>'; $fhtml .= '<th id="order_num">Consumed Quantity</th>';
@@ -299,10 +312,10 @@ if(isset($_POST['submit_report']) == true){
                 /* *****Between Date Transactions***** */
                 
                 $pitem_count = sizeof($formula_items) * 2; $sln = 1;
+                $fd_fltr = ""; if($feeds == "all"){ $fd_fltr = ""; } else { $fd_fltr = "AND `feed_code` IN ('$feeds')";}
 
-            
                 $btw_consumed_feed_item_qty = $btw_consumed_feed_item_amt = array();
-                $sql_record = "SELECT feed_code,item_code,SUM(quantity) as quantity FROM `broiler_feed_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$consumed_item_filter."".$consumed_mill_filter." AND `active` = '1' AND `dflag` = '0' GROUP BY `formula_code`,`item_code` ORDER BY `item_code` ASC";
+                $sql_record = "SELECT feed_code,item_code,SUM(quantity) as quantity FROM `broiler_feed_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$consumed_item_filter."".$consumed_mill_filter."".$fd_fltr." AND `active` = '1' AND `dflag` = '0' GROUP BY `formula_code`,`item_code` ORDER BY `feed_code` ASC";
                 $query = mysqli_query($conn,$sql_record);
                 while($row = mysqli_fetch_assoc($query)){
                     // echo $itemm_code;
@@ -349,9 +362,25 @@ if(isset($_POST['submit_report']) == true){
                     
                 var table = document.getElementById("main_table");
                 var workbook = XLSX.utils.book_new();
-                var worksheet = XLSX.utils.table_to_sheet(table);
+
+                // var worksheet = XLSX.utils.table_to_sheet(table);
+                // XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+                 // ─── only this line changed ───
+                var worksheet = XLSX.utils.table_to_sheet(table, {
+                raw: true,
+                cellDates: true,
+                dateNF: 'dd.mm.yyyy'
+                });
+
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-                XLSX.writeFile(workbook, filename+".xlsx");
+
+                // ─── and only this one ───
+                XLSX.writeFile(workbook, filename + ".xlsx", {
+                dateNF: 'dd.mm.yyyy'
+                });
+
+                // XLSX.writeFile(workbook, filename+".xlsx");
                     
                 document.getElementById("head_names").innerHTML = "";
                 var html = '';

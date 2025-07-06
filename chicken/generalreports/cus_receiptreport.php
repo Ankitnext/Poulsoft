@@ -84,14 +84,13 @@
 		//$addedemp = " AND `addedemp` LIKE '$users_code'";
 	}
 	
-	$fdate = $tdate = date("Y-m-d"); $customers = $sectors = $modes = $coas = $users = "all";
-    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1;
+	$fdate = $tdate = date("Y-m-d"); $customers = $modes = $coas = $users = "all"; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
+    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1; 
     $exports = "displaypage";
 	if(isset($_POST['submit']) == true){
 		$fdate = date("Y-m-d",strtotime($_POST['fdate']));
 		$tdate = date("Y-m-d",strtotime($_POST['tdate']));
 		$customers = $_POST['customers'];
-		// $sectors = $_POST['sectors'];
 		$modes = $_POST['modes'];
 		$coas = $_POST['coas'];
 		$users = $_POST['users'];
@@ -101,11 +100,14 @@
         foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
         $grp_list = implode("@",$groups);
 
-        foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-        $sects_list = implode("','", array_map('addslashes', $sects));
-        $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
+        $sectors = array(); $sec_list = "";
+        foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        $sects_list = implode("','", array_map('addslashes', $sectors));
+        $secct_fltr = "";
+        if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
+        else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
 	}
-	$url = "../PHPExcel/Examples/ReceiptReport-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&modes=".$modes."&coas=".$coas."&sectors=".$sects_list."&users=".$users."&groups=".$grp_list;
+	$url = "../PHPExcel/Examples/ReceiptReport-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&modes=".$modes."&coas=".$coas."&sectors=".$sec_list."&users=".$users."&groups=".$grp_list;
 	
 ?>
 <html>
@@ -193,16 +195,9 @@
                                        <div class="form-group" style="width:190px;">
                                             <label for="sectors[0]">Warehouse</label>
                                             <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-                                                <?php
-                                                    // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? [];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
-                                                ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
+                                                <option value="all" <?php if (in_array("all", $sectors)) echo "selected"; ?>>All</option>
                                                 <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
+                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $sectors)) echo "selected"; ?>>
                                                         <?php echo $sector_name[$scode]; ?>
                                                     </option>
                                                 <?php } ?>

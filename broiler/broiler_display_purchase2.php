@@ -267,7 +267,7 @@ if($link_active_flag > 0){
                                             if($sectors != "all"){ $sector_fltr = " AND `warehouse` IN ('$sectors')"; }
 
                                             $delete_url = $delete_link."?utype=delete&trnum=";
-                                            $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0'".$item_fltr."".$sector_fltr."  $cond_assigned ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                            $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' AND `icode` NOT IN ('$chick_code') ".$item_fltr."".$sector_fltr."  $cond_assigned ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                             while($row = mysqli_fetch_assoc($query)){
                                                 $id = $row['trnum'];
                                                 $edit_url = $edit_link."?utype=edit&trnum=".$id;
@@ -276,6 +276,7 @@ if($link_active_flag > 0){
                                                 //$delivernote_url = "print/Examples/purchase_delivery_note1.php?trnum=".$row['trnum']."&sector=".$row['warehouse'];
                                                 $delivernote_url = "print/Examples/broiler_purchase_invoice.php?trnum=".$row['trnum']."&sector=".$row['warehouse']."&type=inv";
                                                 $delivernote_url2 = "print/Examples/broiler_purchase_invoice3.php?trnum=".$row['trnum']."&sector=".$row['warehouse']."&type=inv";
+                                                $delivernote_url3 = "print/Examples/broiler_purchase_invoice4.php?trnum=".$row['trnum']."&sector=".$row['warehouse']."&type=inv";
 
                                                 
                                                 $refs_download = $refs_view = "";
@@ -349,6 +350,7 @@ if($link_active_flag > 0){
                                                     echo "<a href='".$print_url."'><i class='fa fa-print' style='color:black;' title='Print'></i></a>&ensp;&ensp;";
                                                     echo "<a href='".$delivernote_url."' target='_BLANK'><i class='fa fa-print' style='color:green;' title='Purchase Delivery Note'></i></a>&ensp;&ensp;";
                                                     echo "<a href='".$delivernote_url2."' target='_BLANK'><i class='fa fa-print' style='color:brown;' title='Purchase Delivery Note'></i></a>&ensp;&ensp;";
+                                                    echo "<a href='".$delivernote_url3."' target='_BLANK'><i class='fa fa-print' style='color:brown;' title='Purchase Delivery Note'></i></a>&ensp;&ensp;";
                                                 }
                                                 if($refs_download != ""){
                                                     echo $refs_download;

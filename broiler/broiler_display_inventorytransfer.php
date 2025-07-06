@@ -43,10 +43,6 @@ if($link_active_flag > 0){
     else if($aid == 1){ $acount = 1; }
     else{ $acount = 0; }
 
-    //check and fetch date range
-    global $drng_cday; $drng_cday = 1; global $drng_furl; $drng_furl = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
-    include "poulsoft_fetch_daterange_master.php";
-
 ?>
 <html lang="en">
     <head>
@@ -57,6 +53,10 @@ if($link_active_flag > 0){
     <body class="m-0 hold-transition sidebar-mini">
         <?php
         if($acount == 1){
+            //check and fetch date range
+            global $drng_cday; $drng_cday = 1; global $drng_furl; $drng_furl = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+            include "poulsoft_fetch_daterange_master.php";
+
             /*Check for Table Availability*/
             $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
             $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
@@ -77,6 +77,8 @@ if($link_active_flag > 0){
             if(in_array("emp_ecoa", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `emp_ecoa` VARCHAR(200) NULL DEFAULT NULL COMMENT 'Employee Expense CoA Code' AFTER `emp_code`"; mysqli_query($conn,$sql); }
             if(in_array("emp_bcoa", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `emp_bcoa` VARCHAR(200) NULL DEFAULT NULL COMMENT 'Branch CoA Code' AFTER `emp_ecoa`"; mysqli_query($conn,$sql); }
             if(in_array("emp_eamt", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `emp_eamt` DECIMAL(20,5) NOT NULL DEFAULT '0' COMMENT 'Branch CoA Code' AFTER `emp_bcoa`"; mysqli_query($conn,$sql); }
+            if(in_array("trtype", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `trtype` VARCHAR(200) NULL DEFAULT NULL COMMENT 'trtype' AFTER `stk_itemid`"; mysqli_query($conn,$sql); }
+            if(in_array("trlink", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_stocktransfers` ADD `trlink` VARCHAR(200) NULL DEFAULT NULL COMMENT 'trlink' AFTER `trtype`"; mysqli_query($conn,$sql); }
 
             $sql='SHOW COLUMNS FROM `broiler_medicine_record`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
@@ -187,6 +189,12 @@ if($link_active_flag > 0){
             $print_dt = ""; $print_dt = json_encode($msg1);
             broiler_create_print_links($print_dt);
 
+            $module = "Stock Transfer"; $field_name = "Purchase Order-8"; $file_name = "broiler_display_inventorytransfer.php"; $print_path = "/print/Examples/delivery_challen.php";
+            $sort_order = "7"; $icon_type = "icon"; $icon_path = "fa fa-print"; $icon_color = "pink"; $target = "_BLANK";
+            $msg1 = array(); $msg1 = array("module"=>$module, "field_name"=>$field_name, "file_name"=>$file_name, "print_path"=>$print_path, "sort_order"=>$sort_order, "icon_type"=>$icon_type, "icon_path"=>$icon_path, "icon_color"=>$icon_color, "target"=>$target);
+            $print_dt = ""; $print_dt = json_encode($msg1);
+            broiler_create_print_links($print_dt);
+
             //Fetch Print-View from Print Master
             $i = $pc = 0; $field_name = $print_path = $icon_type = $icon_path = $icon_color = $target = array();
             $psql = "SELECT * FROM `broiler_printview_master` WHERE `file_name` LIKE '$href' AND `active` = '1' AND `dflag` = '0' ORDER BY `sort_order`,`id` ASC";
@@ -291,7 +299,7 @@ if($link_active_flag > 0){
                                        
                                         
                                         $delete_url = $delete_link."?utype=delete&id=";
-                                        $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' $from_warehouse_condition $to_warehouse_condition $cond_assigned ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $sql = "SELECT * FROM `".$table_name."` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND (`trtype` NOT LIKE '%ChickTransfer%' OR `trtype` != '' OR `trtype` IS NULL) AND `dflag` = '0' $from_warehouse_condition $to_warehouse_condition $cond_assigned ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
                                             if($row['link_trnum'] == ""){
                                             $id = $row['id'];

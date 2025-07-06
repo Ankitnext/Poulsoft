@@ -43,6 +43,10 @@
 		}
 		$ab++;
 	}
+
+    $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+    while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; $sector_code[$row['code']] = $row['code']; }
+    
 	$sql = "SELECT * FROM `item_details` WHERE `active` = '1'"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $itemname[$row['code']] = $row['description']; }
 	$fromdate = $_POST['fromdate'];
@@ -52,7 +56,16 @@
 	if($cname == "all" || $cname == "select") { $cnames = ""; } else { $cnames = " AND `customercode` = '$cname'"; }
 	$cname == "all";
 	$exoption = "displaypage";
-	if(isset($_POST['submit'])) { $excel_type = $_POST['export']; } else{ $excel_type = "displaypage"; }
+	if(isset($_POST['submit'])) { 
+        $excel_type = $_POST['export']; 
+
+        $sects = array(); $sec_all_flag = 0;
+        foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        $sects_list = implode("','", array_map('addslashes', $sects));
+        $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
+    } else{ 
+        $excel_type = "displaypage"; 
+    }
 	if(isset($_POST['submit']) == true){
 		$exl_fdate = $_POST['fromdate']; $exl_tdate = $_POST['todate']; $exl_cname = $_POST['cname'];
 	}
@@ -172,6 +185,22 @@
 										 <label class="reportselectionlabel">Customer &amp; Supplier</label>&nbsp;
 										<input type="checkbox" name="ctype" id="ctype" class="formcontrol" <?php if($con_code == "S&C"){ echo "checked"; } ?> />
 									&ensp;&ensp; --->
+                                    <label class="reportselectionlabel">Warehouse</label>&nbsp;
+										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
+                                                <?php
+                                                    // Ensure sectors is always an array
+                                                    $selected_sectors = $_POST['sectors'] ?? ['all'];
+                                                    if (!is_array($selected_sectors)) {
+                                                        $selected_sectors = [$selected_sectors];
+                                                    }
+                                                ?>
+                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
+                                                <?php foreach($sector_code as $scode) { ?>
+                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
+                                                        <?php echo $sector_name[$scode]; ?>
+                                                    </option>
+                                                <?php } ?>
+                                            </select>&ensp;&ensp;
 										<label class="reportselectionlabel">Export To</label>&nbsp;
 										<select name="export" id="export" class="form-control select2">
 											<option <?php if($exoption == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
@@ -212,7 +241,7 @@
 											if($cname == "all" || $cname == "select") { $cnames = ""; } else { $cnames = " AND `customercode` = '$cname'"; }
 											
 											//sales invoice
-											$sql = "SELECT * FROM `customer_sales` WHERE `date` < '$fromdate' AND customercode IN ($selected_customers) AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice`,`customercode` ASC";
+											$sql = "SELECT * FROM `customer_sales` WHERE `date` < '$fromdate' AND customercode IN ($selected_customers) AND `active` = '1'".$secct_fltr." AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice`,`customercode` ASC";
 											$query = mysqli_query($conn,$sql); $old_inv = ""; $ob_sales = array();
 											while($row = mysqli_fetch_assoc($query)){
 												if($old_inv != $row['invoice']){
@@ -221,13 +250,13 @@
 												}
 											}
 											//Customer Receipt
-											$sql = "SELECT * FROM `customer_receipts` WHERE `date` < '$fromdate' AND ccode IN ($selected_customers) AND `active` = '1' ORDER BY `ccode` ASC";
+											$sql = "SELECT * FROM `customer_receipts` WHERE `date` < '$fromdate' AND ccode IN ($selected_customers) AND `active` = '1'".$secct_fltr." ORDER BY `ccode` ASC";
 											$query = mysqli_query($conn,$sql); $ob_receipts = array();
 											while($row = mysqli_fetch_assoc($query)){
 												$ob_receipts[$row['ccode']] = $ob_receipts[$row['ccode']] + $row['amount'];
 											}
 											//Customer CrDr Note
-											$sql = "SELECT * FROM `main_crdrnote` WHERE `date` < '$fromdate' AND ccode IN ($selected_customers) AND `mode` IN ('CCN','CDN') AND `active` = '1' ORDER BY `ccode` ASC";
+											$sql = "SELECT * FROM `main_crdrnote` WHERE `date` < '$fromdate' AND ccode IN ($selected_customers) AND `mode` IN ('CCN','CDN') AND `active` = '1'".$secct_fltr." ORDER BY `ccode` ASC";
 											$query = mysqli_query($conn,$sql); $ob_ccn = $ob_cdn = array();
 											while($row = mysqli_fetch_assoc($query)){
 												if($row['mode'] == "CCN"){
@@ -239,14 +268,14 @@
 											}
 
 											if ($count40 > 0) {
-												$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fromdate' AND `vcode` IN ($selected_customers) AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'";
+												$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fromdate' AND `vcode` IN ($selected_customers) AND `mode` = 'customer' AND `active` = '1'".$secct_fltr." AND `dflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$ob_returns[$obrow['vcode']] = (float)$ob_returns[$obrow['vcode']] + $obrow['amount'];
 												}
 											}
 											if ($count44 > 0) {
-												$obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$fromdate' AND `ccode` IN ($selected_customers) AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'";
+												$obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$fromdate' AND `ccode` IN ($selected_customers) AND `mtype` = 'customer' AND `active` = '1'".$secct_fltr." AND `dflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$ob_mortality[$obrow['ccode']] = (float)$ob_mortality[$obrow['amount']] + (float)$obrow['amount'];
@@ -255,7 +284,7 @@
 	
 											$old_inv = "";
 											if ($count57 > 0) {
-												$obsql = "SELECT * FROM `pur_purchase` WHERE `date` < '$fromdate' AND `vendorcode` IN ($selected_customers) AND `active` = '1' ORDER BY `date`,`invoice` ASC";
+												$obsql = "SELECT * FROM `pur_purchase` WHERE `date` < '$fromdate' AND `vendorcode` IN ($selected_customers) AND `active` = '1'".$secct_fltr." ORDER BY `date`,`invoice` ASC";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													if ($old_inv != $obrow['invoice']) {
@@ -266,28 +295,28 @@
 												}
 											}
 											if ($count56 > 0) {
-												$obsql = "SELECT * FROM `pur_payments` WHERE `date` < '$fromdate' AND `ccode` IN ($selected_customers) AND `active` = '1'";
+												$obsql = "SELECT * FROM `pur_payments` WHERE `date` < '$fromdate' AND `ccode` IN ($selected_customers) AND `active` = '1'".$secct_fltr."";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$ob_payments[$obrow['ccode']] = $ob_payments[$obrow['ccode']] + $obrow['amount'];
 												}
 											}
 											if ($count40 > 0) {
-												$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fromdate' AND `vcode` IN ($selected_customers) AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+												$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` < '$fromdate' AND `vcode` IN ($selected_customers) AND `mode` = 'supplier' AND `active` = '1'".$secct_fltr." AND `dflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$ob_sreturns[$obrow['vcode']] =  (float)$ob_sreturns[$obrow['vcode']] + (float)$obrow['amount'];
 												}
 											}
 											if ($count44 > 0) {
-												$obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$fromdate' AND `ccode` IN ($selected_customers) AND `mtype` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+												$obsql = "SELECT * FROM `main_mortality` WHERE `date` < '$fromdate' AND `ccode` IN ($selected_customers) AND `mtype` = 'supplier' AND `active` = '1'".$secct_fltr." AND `dflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$ob_smortality[$obrow['ccode']] = (float)$ob_smortality[$obrow['ccode']] + (float)$obrow['amount'];
 												}
 											}
 											if ($count32 > 0) {
-												$obsql = "SELECT * FROM `main_crdrnote` WHERE `date` < '$fromdate' AND `ccode` IN ($selected_customers) AND `mode` IN ('SCN','SDN') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'";
+												$obsql = "SELECT * FROM `main_crdrnote` WHERE `date` < '$fromdate' AND `ccode` IN ($selected_customers) AND `mode` IN ('SCN','SDN') AND `active` = '1'".$secct_fltr." AND `tdflag` = '0' AND `pdflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													if ($obrow['mode'] == "SCN") {
@@ -299,7 +328,7 @@
 											}
 											
 											//sales invoice
-											$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND customercode IN ($selected_customers) AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
+											$sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND customercode IN ($selected_customers) AND `active` = '1'".$secct_fltr." AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
 											$query = mysqli_query($conn,$sql); $old_inv = ""; $bt_sales = array();
 											while($row = mysqli_fetch_assoc($query)){
 												if($old_inv != $row['invoice']){
@@ -310,13 +339,13 @@
 												$bt_sales_qty[$row['customercode']] = $bt_sales_qty[$row['customercode']] + $row['netweight'];
 											}
 											//Customer Receipt
-											$sql = "SELECT * FROM `customer_receipts` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND ccode IN ($selected_customers) AND `active` = '1' ORDER BY `ccode` ASC";
+											$sql = "SELECT * FROM `customer_receipts` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND ccode IN ($selected_customers) AND `active` = '1'".$secct_fltr." ORDER BY `ccode` ASC";
 											$query = mysqli_query($conn,$sql); $bt_receipts = array();
 											while($row = mysqli_fetch_assoc($query)){
 												$bt_receipts[$row['ccode']] = $bt_receipts[$row['ccode']] + $row['amount'];
 											}
 											//Customer CrDr Note
-											$sql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND ccode IN ($selected_customers) AND `mode` IN ('CCN','CDN') AND `active` = '1' ORDER BY `ccode` ASC";
+											$sql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND ccode IN ($selected_customers) AND `mode` IN ('CCN','CDN') AND `active` = '1'".$secct_fltr." ORDER BY `ccode` ASC";
 											$query = mysqli_query($conn,$sql); $bt_ccn = $bt_cdn = array();
 											while($row = mysqli_fetch_assoc($query)){
 												if($row['mode'] == "CCN"){
@@ -327,14 +356,14 @@
 												}
 											}
 											if ($count40 > 0) {
-												$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `vcode` IN ($selected_customers) AND `mode` = 'customer' AND `active` = '1' AND `dflag` = '0'";
+												$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `vcode` IN ($selected_customers) AND `mode` = 'customer' AND `active` = '1'".$secct_fltr." AND `dflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$bt_returns[$obrow['vcode']] = (float)$bt_returns[$obrow['vcode']] + $obrow['amount'];
 												}
 											}
 											if ($count44 > 0) {
-												$obsql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `ccode` IN ($selected_customers) AND `mtype` = 'customer' AND `active` = '1' AND `dflag` = '0'";
+												$obsql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `ccode` IN ($selected_customers) AND `mtype` = 'customer' AND `active` = '1'".$secct_fltr." AND `dflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$bt_mortality[$obrow['ccode']] = (float)$bt_mortality[$obrow['amount']] + (float)$obrow['amount'];
@@ -343,7 +372,7 @@
 	
 											$old_inv = "";
 											if ($count57 > 0) {
-												$obsql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `vendorcode` IN ($selected_customers) AND `active` = '1' ORDER BY `date`,`invoice` ASC";
+												$obsql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `vendorcode` IN ($selected_customers) AND `active` = '1'".$secct_fltr." ORDER BY `date`,`invoice` ASC";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													if ($old_inv != $obrow['invoice']) {
@@ -354,28 +383,28 @@
 												}
 											}
 											if ($count56 > 0) {
-												$obsql = "SELECT * FROM `pur_payments` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `ccode` IN ($selected_customers) AND `active` = '1'";
+												$obsql = "SELECT * FROM `pur_payments` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `ccode` IN ($selected_customers) AND `active` = '1'".$secct_fltr."";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$bt_payments[$obrow['ccode']] = $bt_payments[$obrow['ccode']] + $obrow['amount'];
 												}
 											}
 											if ($count40 > 0) {
-												$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `vcode` IN ($selected_customers) AND `mode` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+												$obsql = "SELECT * FROM `main_itemreturns` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `vcode` IN ($selected_customers) AND `mode` = 'supplier' AND `active` = '1'".$secct_fltr." AND `dflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$bt_sreturns[$obrow['vcode']] =  (float)$bt_sreturns[$obrow['vcode']] + (float)$obrow['amount'];
 												}
 											}
 											if ($count44 > 0) {
-												$obsql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `ccode` IN ($selected_customers) AND `mtype` = 'supplier' AND `active` = '1' AND `dflag` = '0'";
+												$obsql = "SELECT * FROM `main_mortality` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `ccode` IN ($selected_customers) AND `mtype` = 'supplier' AND `active` = '1'".$secct_fltr." AND `dflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													$bt_smortality[$obrow['ccode']] = (float)$bt_smortality[$obrow['ccode']] + (float)$obrow['amount'];
 												}
 											}
 											if ($count32 > 0) {
-												$obsql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `ccode` IN ($selected_customers) AND `mode` IN ('SCN','SDN') AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'";
+												$obsql = "SELECT * FROM `main_crdrnote` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `ccode` IN ($selected_customers) AND `mode` IN ('SCN','SDN') AND `active` = '1'".$secct_fltr." AND `tdflag` = '0' AND `pdflag` = '0'";
 												$obquery = mysqli_query($conn, $obsql);
 												while ($obrow = mysqli_fetch_assoc($obquery)) {
 													if ($obrow['mode'] == "SCN") {
@@ -469,7 +498,7 @@
 							if($profit_flag == 1){
 								$pre_date = date('Y-m-d', strtotime($fromdate.'-1 days'));
 								
-								$sql = "SELECT * FROM `item_closingstock` WHERE `date` = '$pre_date' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'";
+								$sql = "SELECT * FROM `item_closingstock` WHERE `date` = '$pre_date' AND `active` = '1'".$secct_fltr." AND `tdflag` = '0' AND `pdflag` = '0'";
 								$query = mysqli_query($conn,$sql);
 								$ob_stk_qty = $ob_stk_price = $ob_stk_amt = $ob_stk_fqty = $ob_stk_famt = $bt_pur_amt = $bt_pur_qty = $cls_stk_qty = $cls_stk_price = $cls_stk_amt = $cls_stk_fqty = $cls_stk_famt = 0;
 								while($row = mysqli_fetch_assoc($query)){
@@ -480,7 +509,7 @@
 									$ob_stk_fqty = $ob_stk_fqty + $ob_stk_qty;
 									$ob_stk_famt = $ob_stk_famt + $ob_stk_amt;
 								}
-								$sql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `active` = '1' ORDER BY `date`,`invoice`,`vendorcode` ASC";
+								$sql = "SELECT * FROM `pur_purchase` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `active` = '1'".$secct_fltr." ORDER BY `date`,`invoice`,`vendorcode` ASC";
 								$query = mysqli_query($conn,$sql); $old_inv = "";
 								while($row = mysqli_fetch_assoc($query)){
 									if($old_inv != $row['invoice']){
@@ -489,7 +518,7 @@
 									}
 									$bt_pur_qty = $bt_pur_qty + $row['netweight'];
 								}
-								$sql = "SELECT * FROM `item_closingstock` WHERE `date` = '$todate' AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0'";
+								$sql = "SELECT * FROM `item_closingstock` WHERE `date` = '$todate' AND `active` = '1' AND `tdflag` = '0'".$secct_fltr." AND `pdflag` = '0'";
 								$query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									$cls_stk_qty = $row['closedquantity'];
@@ -503,12 +532,12 @@
 								$query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){ if($coa_code == ""){ $coa_code = $row['code']; } else { $coa_code = $coa_code."','".$row['code']; } }
 									
-								$sql = "SELECT SUM(amount) as amount FROM `acc_vouchers` WHERE `date` >='$fromdate' AND `date` <= '$todate' AND `prefix` ='PV' AND `tcoa` IN ('$coa_code') AND `active` = '1' ORDER BY `date` ASC";
+								$sql = "SELECT SUM(amount) as amount FROM `acc_vouchers` WHERE `date` >='$fromdate' AND `date` <= '$todate' AND `prefix` ='PV' AND `tcoa` IN ('$coa_code') AND `active` = '1'".$secct_fltr." ORDER BY `date` ASC";
 								$query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									$texp_amt = $row['amount'];
 								}	
-								$sql = "SELECT SUM(amount) as amount,SUM(quantity) as quantity FROM `main_mortality` WHERE `date` >='$fromdate' AND `date` <= '$todate' AND `active` = '1' ORDER BY `date` ASC";
+								$sql = "SELECT SUM(amount) as amount,SUM(quantity) as quantity FROM `main_mortality` WHERE `date` >='$fromdate' AND `date` <= '$todate' AND `active` = '1'".$secct_fltr." ORDER BY `date` ASC";
 								$query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
 									$tmort_qty = $row['quantity'];
