@@ -237,12 +237,12 @@
 										</select>
 									&ensp;&ensp;
 										<label class="reportselectionlabel">Item</label>&nbsp;
-										<select name="iname" id="iname" class="form-control select2">
-											<option value="all">-All-</option>
+										<select name="iname[]" id="iname[0]" class="form-control select2" multiple>
+											<option value="all" <?php if(in_array("all",$iname)){ echo "selected";} ?>>-All-</option>
 											<?php
 												foreach($item_code as $icode){
 											?>
-													<option <?php if($iname == $icode) { echo 'selected'; } ?> value="<?php echo $icode; ?>"><?php echo $item_name[$icode]; ?></option>
+													<option value="<?php echo $icode; ?>" <?php if($iname == $icode) { echo 'selected'; } ?> ><?php echo $item_name[$icode]; ?></option>
 											<?php
 												}
 											?>

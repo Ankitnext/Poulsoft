@@ -101,6 +101,7 @@ while($row = mysqli_fetch_assoc($query)){
      $actual_medicine_cost = $row['actual_medicine_cost'];
      $mgmt_admin_prc = $row['mgmt_admin_prc'];
      $advance_deduction  =$row['advance_deduction'];
+     $brdliftage  = $row['age'];
 }
 
 $sql = "SELECT * FROM `broiler_batch` WHERE `code` = '$batch_code' AND `active` = '1' AND `dflag` = '0'";
@@ -398,7 +399,7 @@ $html .= '
        
         if((float)$placed_birds != 0){ $t1 = $chick_cost_amt / $placed_birds; } else{ $t1 = 0; }
        $html .= ' <tr>
-            <td style=";width:140px;text-align:left; ">Chicks Placeed(Pcs)</td>
+            <td style=";width:140px;text-align:left; ">Chicks Placed(Pcs)</td>
             <td style=";width:10px; ">:</td>
             <td style=";width:50px;text-align:right; ">'.number_format_ind(round($placed_birds)).'</td>
             <td style=";width:50px; "></td>
@@ -508,7 +509,7 @@ if($actual_prod_cost < 89){ $prod_incentive = "50%"; }else { $prod_incentive = "
 
             <td style=";width:140px;text-align:left; ">Admin,Supervision Cost @ '.round(($mgmt_admin_prc),2).'</td>
             <td style=";width:10px; ">:</td>
-            <td style=";text-align:right ">'.number_format_ind(round($admin_cost_amt,2)).'</td>
+            <td style=";text-align:right ">'.number_format_ind(round($placed_birds * $mgmt_admin_prc,2)).'</td>
 
             <td style=";width:140px;text-align:left; ">Extra Payment</td>
             <td style=";text-align:right; "></td>
@@ -627,7 +628,7 @@ if((float)$sold_weight != 0){ $t1 = $actual_prod_amount / $sold_weight; } else{ 
         <tr>
             <td style=";width:140px;text-align:left; ">Birds Lifted During in age</td>
             <td style=";width:10px; ">:</td>
-            <td style=";text-align:right; ">39</td>
+            <td style=";text-align:right; ">'.$brdliftage.'</td>
             <td style="; "></td>
 
             <td style=";width:140px;text-align:left; "></td>

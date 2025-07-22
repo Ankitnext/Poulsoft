@@ -77,18 +77,28 @@ if($link_active_flag > 0){
             if(!empty($pnt_acc[$gp_id."P"])){ $print_flag = 1; $print_link = $gp_link[$gp_id."P"]; } else { $print_link = ""; $print_flag = 0; }
             if(!empty($upd_acc[$gp_id."U"])){ $update_flag = 1; $update_link = $gp_link[$gp_id."U"]; } else { $update_link = ""; $update_flag = 0; }
 
-            $fsdate = $cid."-fdate"; $tsdate = $cid."-tdate"; 
+            $fsdate = $cid."-fdate"; $tsdate = $cid."-tdate"; $tsunit = $cid."-units"; $units = "all";
             if(isset($_POST['submit']) == true){
                 $fdate = date("Y-m-d",strtotime($_POST['fdate']));
                 $tdate = date("Y-m-d",strtotime($_POST['tdate']));
+                $units = $_POST['units'];
                 $_SESSION[$fsdate] = $fdate;
                 $_SESSION[$tsdate] = $tdate;
+                $_SESSION[$tsunit] = $units;
             }
             else {
-                $fdate = $tdate = date("Y-m-d");
+                $fdate = $tdate = date("Y-m-d"); $units = "all";
                 if(!empty($_SESSION[$fsdate])){ $fdate = date("Y-m-d",strtotime($_SESSION[$fsdate])); }
                 if(!empty($_SESSION[$tsdate])){ $tdate = date("Y-m-d",strtotime($_SESSION[$tsdate])); }
+                if(!empty($_SESSION[$tsunit])){ $units = $_SESSION[$tsunit]; }
             }
+
+            $sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
+            $query = mysqli_query($conn,$sql); $unit_code = $unit_name = array();
+            while($row = mysqli_fetch_assoc($query)){ $unit_code[$row['code']] = $row['code']; $unit_name[$row['code']] = $row['description']; }
+
+            $sql = "SELECT *  FROM `breeder_extra_access` WHERE `field_name` LIKE 'Breeder Daily Entry' AND `field_function` LIKE 'Import Daily Entries' AND `user_access` LIKE 'all' AND `flag` = '1'";
+            $query = mysqli_query($conn,$sql); $bde_iflag = mysqli_num_rows($query);
 
             //Fetch Print-View from Print Master
             $i = $pc = 0; $field_name = $field_name = $field_name = $field_name = $field_name = $field_name = array();
@@ -104,6 +114,7 @@ if($link_active_flag > 0){
                 $i++;
             }
             $pc = $i - 1;
+            $unit_fltr = ""; if($units != 'all'){ $unit_fltr = " AND `unit_code` LIKE '$units'"; }
         ?>
         <div class="m-0 p-0 wrapper">
             <section class="m-0 p-0 content">
@@ -116,18 +127,30 @@ if($link_active_flag > 0){
                                         <div class="row" align="left">
                                             <div class="form-group" style="width:100px;">
                                                 <label for="fdate">From Date: </label>
-                                                <input type="text" name="fdate" id="fdate" class="form-control datepicker" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="width:90px;">
+                                                <input type="text" name="fdate" id="fdate" class="form-control rc_datepicker" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="width:90px;">
                                             </div>
                                             <div class="form-group" style="width:100px;">
                                                 <label for="tdate">To Date: </label>
-                                                <input type="text" name="tdate" id="tdate" class="form-control datepicker" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="width:90px;">
+                                                <input type="text" name="tdate" id="tdate" class="form-control rc_datepicker" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="width:90px;">
                                             </div>
                                             <div class="form-group" style="width:100px;">
+                                                <label for="units">Units </label>
+                                                    <select name="units" id="units" class="form-control select2">
+                                                        <option value="all" <?php if($units == "all"){ echo "selected"; } ?>>All</option>
+                                                        <?php foreach($unit_code as $ucode){ if($unit_name[$ucode] != ""){ ?>
+                                                        <option value="<?php echo $ucode; ?>" <?php if($units == $ucode){ echo "selected"; } ?>><?php echo $unit_name[$ucode]; ?></option>
+                                                        <?php } } ?>
+                                                    </select>
+                                            </div>
+                                            <div class="form-group" style="width:100px;margin-left:10px;">
                                                 <br/><button type="submit" name="submit" id="submit" class="btn btn-success btn-sm">Submit</button>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-4" align="right">
+                                        <?php if($bde_iflag == 1){ ?>
+                                            <button type="button" class="btn bg-info" id="addpage" value="breeder_import_dailyentry1.php" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> Import</button>
+                                        <?php } ?>
                                         <?php if($add_flag == 1){ ?>
                                             <button type="button" class="btn bg-purple" id="addpage" value="<?php echo $add_link; ?>" onclick="add_page(this.id)" ><i class="fa fa-align-left"></i> ADD</button>
                                         <?php } ?>
@@ -147,7 +170,7 @@ if($link_active_flag > 0){
 										<th>F.Feed</th>
 										<th>M.Mort</th>
 										<th>M.Feed</th>
-										<th>Action</th> 
+										<th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -159,14 +182,14 @@ if($link_active_flag > 0){
                                             if((int)$row['cls_flag'] == 0){ $bflk_alist[$row['code']] = $row['code']; }
                                         }
                                         $bflk_list = implode("','", $bflk_alist);
-                                        $sql = "SELECT MAX(breed_age) as breed_age,flock_code FROM `breeder_dayentry_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `flock_code` IN ('$bflk_list') AND `dflag` = '0' GROUP BY `flock_code` ORDER BY `id` DESC";
+                                        $sql = "SELECT MAX(breed_age) as breed_age,flock_code FROM `breeder_dayentry_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$unit_fltr." AND `flock_code` IN ('$bflk_list') AND `dflag` = '0' GROUP BY `flock_code` ORDER BY `id` DESC";
                                         $query = mysqli_query($conn,$sql);
                                         while($row = mysqli_fetch_assoc($query)){ $flk_ages[$row['flock_code']] = $row['breed_age']; }
 
                                         $delete_url = $delete_link."?utype=delete&trnum=";
-                                        $sql = "SELECT * FROM `breeder_dayentry_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `dflag` = '0' AND `trtype` = 'dailyentry1' AND `trlink` = 'breeder_display_dailyentry1.php' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
+                                        $sql = "SELECT * FROM `breeder_dayentry_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$unit_fltr." AND `dflag` = '0' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $c = 0;
                                         while($row = mysqli_fetch_assoc($query)){
-                                            $id = $row['trnum']; 
+                                            $id = $row['trnum'];
                                             $edit_url = $edit_link."?utype=edit&trnum=".$id;
                                             $print_url = $print_link."?utype=print&trnum=".$id;
                                             $authorize_url = $update_link."?utype=authorize&trnum=".$id;

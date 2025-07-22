@@ -6,7 +6,7 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+global $page_title; $page_title = "Stock Report with Amount";
 include "header_head.php";
 
 include "../broiler_check_tableavailability.php";
@@ -269,6 +269,8 @@ if(isset($_POST['submit_report']) == true){
                     <th colspan="3">Purchase</th>
                     <th colspan="3">Transfer In</th>
                     <th colspan="3">Consumption/Transferout</th>
+                    <th colspan="3">Stock Adjustment Add</th>
+                    <th colspan="3">Stock Adjustment Deduct</th>
                     <th colspan="3">Sold</th>
                     <th colspan="3">Purchase Return</th>
                     <th colspan="3">Sale Return</th>
@@ -278,6 +280,8 @@ if(isset($_POST['submit_report']) == true){
             <thead class="thead3" id="head_row2" align="center">
                 <tr>
                     <th colspan="4"></th>
+                    <th>Quantity</th><th>Price</th><th>Amount</th>
+                    <th>Quantity</th><th>Price</th><th>Amount</th>
                     <th>Quantity</th><th>Price</th><th>Amount</th>
                     <th>Quantity</th><th>Price</th><th>Amount</th>
                     <th>Quantity</th><th>Price</th><th>Amount</th>
@@ -953,7 +957,7 @@ if(isset($_POST['submit_report']) == true){
                                 if(!empty($between_stkadj_add_qty[$akey])){ } else{ $between_stkadj_add_qty[$akey] = 0; }
                                 if(!empty($between_stk_rcvd_qty[$akey])){ } else{ $between_stk_rcvd_qty[$akey] = 0; }
 
-                                $avg_stock_qty = $avg_stock_qty + ((float)$between_stock_qty[$akey] + (float)$between_purchases_qty[$akey] + (float)$between_hprod_qty[$akey] + (float)$between_to_sector_qty[$akey] + (float)$between_fmproduce_qty[$akey] + (float)$between_sreturns_qty[$akey] + (float)$between_stkadj_add_qty[$akey] + (float)$between_stk_rcvd_qty[$akey]);
+                                $avg_stock_qty = $avg_stock_qty + ((float)$between_stock_qty[$akey] + (float)$between_purchases_qty[$akey] + (float)$between_hprod_qty[$akey] + (float)$between_to_sector_qty[$akey] + (float)$between_fmproduce_qty[$akey] + (float)$between_sreturns_qty[$akey] + (float)$between_stk_rcvd_qty[$akey] + (float)$between_stkadj_add_qty[$akey]);
                                 
                                 if(!empty($between_stock_amt[$akey])){ } else{ $between_stock_amt[$akey] = 0; }
                                 if(!empty($between_purchases_amt[$akey])){ } else{ $between_purchases_amt[$akey] = 0; }
@@ -1015,16 +1019,28 @@ if(isset($_POST['submit_report']) == true){
                                 $final_purin_amt[$ikey] += (float)$between_purchases_amt[$akey];
 
                                 /*Opening + TransferIn + Feedmill Production + Stock Adj add Qty + Stock Received*/
-                                $final_in_quantity[$ikey] += ((float)$between_stock_qty[$akey] + (float)$between_hprod_qty[$akey] + (float)$between_to_sector_qty[$akey] + (float)$between_fmproduce_qty[$akey] + (float)$between_stk_rcvd_qty[$akey] + (float)$between_stkadj_add_qty[$akey]);
+                                $final_in_quantity[$ikey] += ((float)$between_stock_qty[$akey] + (float)$between_hprod_qty[$akey] + (float)$between_to_sector_qty[$akey] + (float)$between_fmproduce_qty[$akey] + (float)$between_stk_rcvd_qty[$akey]);
                                 //echo "<br/>$final_in_quantity[$ikey] += ((float)$between_stock_qty[$akey] + (float)$between_hprod_qty[$akey] + (float)$between_to_sector_qty[$akey] + (float)$between_fmproduce_qty[$akey] + (float)$between_stk_rcvd_qty[$akey] + (float)$between_stkadj_add_qty[$akey]);";
                                 $final_in_amounts[$ikey] += ((float)$between_stock_amt[$akey] + (float)$between_hprod_amt[$akey] + (float)$between_to_sector_amt[$akey] + (float)$between_fmproduce_amt[$akey] + (float)$between_stk_rcvd_amt[$akey] + (float)$between_stkadj_add_amt[$akey]);
 
                                 /*Daily Entry + Transfer Out + MedVac Entry + Feedmill Consumption + Stock Adj deduct Qty + Stock Issued*/
-                                $cqty = ((float)$between_dentry_qty[$akey] + (float)$between_from_sector_qty[$akey] + (float)$between_medvac_qty[$akey] + (float)$between_fmconsume_qty[$akey] + (float)$between_trayset_qty[$akey] + (float)$between_stk_isud_qty[$akey] + (float)$between_stkadj_deduct_qty[$akey]);
+                                $cqty = ((float)$between_dentry_qty[$akey] + (float)$between_from_sector_qty[$akey] + (float)$between_medvac_qty[$akey] + (float)$between_fmconsume_qty[$akey] + (float)$between_trayset_qty[$akey] + (float)$between_stk_isud_qty[$akey] );
                                 $camt = $cqty * $avg_stock_prc;
                                 $final_consumed_quantity[$ikey] += (float)$cqty;
                                 $final_consumed_amounts[$ikey] += (float)$camt;
 
+                                /* Stock Adjustment Add*/
+                                $st_adj_add = (float)$between_stkadj_add_qty[$akey];
+                                $stadj_add_amt = $st_adj_add * $avg_stock_prc;
+                                $final_stkadj_add_quantity[$ikey] += (float)$st_adj_add;
+                                $final_stkadj_add_amounts[$ikey] += (float)$stadj_add_amt;
+                                
+                                /* Stock Adjustment Deduct*/
+                                $st_adj_ded = (float)$between_stkadj_deduct_qty[$akey];
+                                $stadj_amt = $st_adj_ded * $avg_stock_prc;
+                                $final_stkadj_ded_quantity[$ikey] += (float)$st_adj_ded;
+                                $final_stkadj_ded_amounts[$ikey] += (float)$stadj_amt;
+                                
                                 /*Sold*/
                                 $final_sold_quantity[$ikey] += (float)$between_sales_qty[$akey];
                                 $final_sold_amounts[$ikey] += ((float)$avg_stock_prc * (float)$between_sales_qty[$akey]);
@@ -1070,6 +1086,10 @@ if(isset($_POST['submit_report']) == true){
                             $total_consumd_amt = $total_consumd_amt + $final_consumed_amounts[$ikey]; if($total_consumd_amt == ""){ $total_consumd_amt = 0; }
                             $total_sales_qty = $total_sales_qty + $final_sold_quantity[$ikey]; if($total_sales_qty == ""){ $total_sales_qty = 0; }
                             $total_sales_amt = $total_sales_amt + $final_sold_amounts[$ikey]; if($total_sales_amt == ""){ $total_sales_amt = 0; }
+                            $total_stkadj_add_qty = $total_stkadj_add_qty + $final_stkadj_add_quantity[$ikey]; if($total_stkadj_add_qty == ""){ $total_stkadj_add_qty = 0; }
+                            $total_stkadj_add_amt = $total_stkadj_add_amt + $final_stkadj_add_amounts[$ikey]; if($total_stkadj_add_amt == ""){ $total_stkadj_add_amt = 0; }
+                            $total_stkadj_ded_qty = $total_stkadj_ded_qty + $final_stkadj_ded_quantity[$ikey]; if($total_stkadj_ded_qty == ""){ $total_stkadj_ded_qty = 0; }
+                            $total_stkadj_ded_amt = $total_stkadj_ded_amt + $final_stkadj_ded_amounts[$ikey]; if($total_stkadj_ded_amt == ""){ $total_stkadj_ded_amt = 0; }
                             $total_preturn_qty = $total_preturn_qty + $final_purreturn_quantity[$ikey]; if($total_preturn_qty == ""){ $total_preturn_qty = 0; }
                             $total_preturn_amt = $total_preturn_amt + $final_purreturn_amounts[$ikey]; if($total_preturn_amt == ""){ $total_preturn_amt = 0; }
                             $total_sreturn_qty = $total_sreturn_qty + $final_salereturn_quantity[$ikey]; if($total_sreturn_qty == ""){ $total_sreturn_qty = 0; }
@@ -1118,6 +1138,29 @@ if(isset($_POST['submit_report']) == true){
                             
 
                             echo "<td title='Consumption/Transferout' style='text-align:right;'>".number_format_ind($final_consumed_amounts[$ikey])."</td>";
+                            
+                            /*Stock Adjustment Add*/
+                            echo "<td title='Stock Adjustment Add' style='text-align:right;'>".number_format_ind($final_stkadj_add_quantity[$ikey])."</td>";
+                            if(!empty($final_stkadj_add_amounts[$ikey]) && $final_stkadj_add_amounts[$ikey] > 0 && !empty($final_stkadj_add_quantity[$ikey]) && $final_stkadj_add_quantity[$ikey] > 0){
+                                echo "<td title='Stock Adjustment Add' style='text-align:right;'>".number_format_ind(round(($final_stkadj_add_amounts[$ikey] / $final_stkadj_add_quantity[$ikey]),2))."</td>";
+                            }
+                            else{
+                                echo "<td title='Stock Adjustment Add' style='text-align:right;'>".number_format_ind(0)."</td>";
+                            }
+                            echo "<td title='Stock Adjustment Add' style='text-align:right;'>".number_format_ind($final_stkadj_add_amounts[$ikey])."</td>";
+                           
+                            /*Stock Adjustment Add*/
+                            echo "<td title='Stock Adjustment Deduct' style='text-align:right;'>".number_format_ind($final_stkadj_ded_quantity[$ikey])."</td>";
+                            if(!empty($final_stkadj_ded_amounts[$ikey]) && $final_stkadj_ded_amounts[$ikey] > 0 && !empty($final_stkadj_ded_quantity[$ikey]) && $final_stkadj_ded_quantity[$ikey] > 0){
+                                echo "<td title='Stock Adjustment Deduct' style='text-align:right;'>".number_format_ind(round(($final_stkadj_ded_amounts[$ikey] / $final_stkadj_ded_quantity[$ikey]),2))."</td>";
+                            }
+                            else{
+                                echo "<td title='Stock Adjustment Deduct' style='text-align:right;'>".number_format_ind(0)."</td>";
+                            }
+                            
+
+                            echo "<td title='Stock Adjustment Deduct' style='text-align:right;'>".number_format_ind($final_stkadj_ded_amounts[$ikey])."</td>";
+                            
                             echo "<td title='Sold' style='text-align:right;'>".number_format_ind($final_sold_quantity[$ikey])."</td>";
 
                             if(!empty($final_sold_amounts[$ikey]) && $final_sold_amounts[$ikey] > 0 && !empty($final_sold_quantity[$ikey]) && $final_sold_quantity[$ikey] > 0){
@@ -1154,7 +1197,7 @@ if(isset($_POST['submit_report']) == true){
                                 $final_closing_stock[$ikey] = $final_closing_prices[$ikey] = $final_closing_amounts[$ikey] = 0;
                             }
                             $total_closed_qty = $total_closed_qty + $final_closing_stock[$ikey]; if($total_closed_qty == ""){ $total_closed_qty = 0; }
-                            $total_closed_amt = (($total_opening_amt + $total_purtrin_amt + $total_stkin_amt + $total_sreturn_amt) - ($total_consumd_amt + $total_sales_amt));
+                            $total_closed_amt = (($total_opening_amt + $total_purtrin_amt + $total_stkin_amt + $total_sreturn_amt + $total_stkadj_add_amt) - ($total_consumd_amt + $total_sales_amt + $total_stkadj_ded_amt));
                             echo "<td title='Closing' style='text-align:right;'>".number_format_ind($final_closing_stock[$ikey])."</td>";
                             echo "<td title='Closing' style='text-align:right;'>".number_format_ind($final_closing_prices[$ikey])."</td>";
                             echo "<td title='Closing' style='text-align:right;'>".number_format_ind($final_closing_amounts[$ikey])."</td>";
@@ -1193,8 +1236,29 @@ if(isset($_POST['submit_report']) == true){
                     else{
                         echo "<td title='Opening' style='text-align:right;font-weight:bold;'>".number_format_ind(0)."</td>";
                     }
-                    
                     echo "<td title='Opening' style='text-align:right;font-weight:bold;'>".number_format_ind($total_consumd_amt)."</td>";
+                    
+                    /* Stock Adjustment Add*/
+                    echo "<td title='Stock Adjustment Add' style='text-align:right;font-weight:bold;'>".number_format_ind($total_stkadj_add_qty)."</td>";
+                    if($total_stkadj_add_amt > 0 && $total_stkadj_add_qty > 0){
+                        echo "<td title='Stock Adjustment Add' style='text-align:right;font-weight:bold;'>".number_format_ind(round(($total_stkadj_add_amt / $total_stkadj_add_qty),2))."</td>";
+                    }
+                    else{
+                        echo "<td title='Stock Adjustment Add' style='text-align:right;font-weight:bold;'>".number_format_ind(0)."</td>";
+                    }
+                    echo "<td title='Stock Adjustment Add' style='text-align:right;font-weight:bold;'>".number_format_ind($total_stkadj_add_amt)."</td>";
+                   
+                    /* Stock Adjustment Deduct*/
+                    echo "<td title='Stock Adjustment Deduct' style='text-align:right;font-weight:bold;'>".number_format_ind($total_stkadj_ded_qty)."</td>";
+                    if($total_stkadj_ded_amt > 0 && $total_stkadj_ded_qty > 0){
+                        echo "<td title='Stock Adjustment Deduct' style='text-align:right;font-weight:bold;'>".number_format_ind(round(($total_stkadj_ded_amt / $total_stkadj_ded_qty),2))."</td>";
+                    }
+                    else{
+                        echo "<td title='Stock Adjustment Deduct' style='text-align:right;font-weight:bold;'>".number_format_ind(0)."</td>";
+                    }
+                    echo "<td title='Stock Adjustment Deduct' style='text-align:right;font-weight:bold;'>".number_format_ind($total_stkadj_ded_amt)."</td>";
+                    
+                    
                     echo "<td title='Sold' style='text-align:right;font-weight:bold;'>".number_format_ind($total_sales_qty)."</td>";
                     if($total_sales_amt > 0 && $total_sales_qty > 0){
                         echo "<td title='Opening' style='text-align:right;font-weight:bold;'>".number_format_ind(round(($total_sales_amt / $total_sales_qty),2))."</td>";

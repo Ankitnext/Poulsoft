@@ -8,12 +8,14 @@ if(!empty($_GET['db']) && $_GET['db'] != ""){ $db = $_SESSION['db'] = $_SESSION[
 if($db == ''){
     $user_code = $_SESSION['userid'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Live Batch Summary";
     include "header_head.php";
     $form_path = "broiler_liveflocksummary_masterreport.php";
 }
 else{
     $user_code = $_GET['userid'];
     include "APIconfig.php";
+    global $page_title; $page_title = "Live Batch Summary";
     include "header_head.php";
     $form_path = "broiler_liveflocksummary_masterreport.php?db=$db&userid=".$user_code;
 }
@@ -185,6 +187,15 @@ $query = mysqli_query($conn,$sql); $day_entryfeed_flag = mysqli_num_rows($query)
 $sql = "SELECT * FROM `extra_access` WHERE `field_name` IN ('Live Flock Summary') AND `field_function` LIKE 'Add Bird Sending to Bird Sales Count' AND `user_access` LIKE 'all' AND `flag` = '1'";
 $query = mysqli_query($conn,$sql); $bsend_entrytbsale_flag = mysqli_num_rows($query);
 
+// kalings client extracess
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'SoldWeight' AND `field_function` LIKE 'Show Records SoldWt is zero' AND `user_access` LIKE 'all' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $showsoldwtzero = mysqli_num_rows($query);
+$recqtyfreqty = "";
+if($showsoldwtzero > 0){
+    $recqtyfreqty = " HAVING rcd_qty > 0";
+}
+
+
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Bird%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $bird_code = $row['code']; $bird_name = $row['description']; }
 $fdate = $tdate = $today = date("Y-m-d"); $branches = $lines = $supervisors = $farms = "all"; $excel_type = "display"; $abirds = $max_age = $min_age = "";
@@ -240,7 +251,6 @@ if(isset($_REQUEST['submit_report']) == true){
 ?>
 <html>
     <head>
-        <title>Poulsoft Solutions</title>
         <link href="../datepicker/jquery-ui.css" rel="stylesheet">
         <?php if($excel_type == "print"){ include "headerstyle_wprint_font.php"; } else{ include "headerstyle_woprint_font.php"; } ?>
     </head>
@@ -736,7 +746,7 @@ if(isset($_REQUEST['submit_report']) == true){
                 }*/
 
                 //Sales
-                $sql_record = "SELECT SUM(birds) as birds,SUM(rcd_qty) as rcd_qty,SUM(fre_qty) as fre_qty,SUM(item_tamt) as item_tamt,MIN(date) as sdate,MAX(date) as edate,icode,farm_batch FROM `broiler_sales` WHERE `farm_batch` IN ('$batch2') AND `active` = '1' AND `dflag` = '0' GROUP BY `farm_batch`,`icode` ORDER BY `date`,`trnum` ASC";
+                $sql_record = "SELECT SUM(birds) as birds,SUM(rcd_qty) as rcd_qty,SUM(fre_qty) as fre_qty,SUM(item_tamt) as item_tamt,MIN(date) as sdate,MAX(date) as edate,icode,farm_batch FROM `broiler_sales` WHERE `farm_batch` IN ('$batch2') AND `active` = '1' AND `dflag` = '0' GROUP BY `farm_batch`,`icode` ".$recqtyfreqty." ORDER BY `date`,`trnum` ASC"; 
                 $query = mysqli_query($conn,$sql_record);
                 while($row = mysqli_fetch_assoc($query)){
                     $key_code = $row['farm_batch']."@".$row['icode'];
@@ -744,6 +754,7 @@ if(isset($_REQUEST['submit_report']) == true){
                         $sale_bird_nos[$key_code] += (float)$row['birds'];
                         $sale_bird_qty[$key_code] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
                         if(empty($sale_start_date[$key_code])){ $sale_start_date[$key_code] = strtotime($row['sdate']); }else{ if(strtotime($row['sdate']) <= $sale_start_date[$key_code]){ $sale_start_date[$key_code] = strtotime($row['sdate']); } }
+                        $fltrbatch[$row['farm_batch']] = $row['farm_batch'];
                     }
                     else if(!empty($feed_code[$row['icode']])){
                         $sale_feed_qty[$key_code] = $row['rcd_qty'] + $row['fre_qty'];
@@ -757,6 +768,7 @@ if(isset($_REQUEST['submit_report']) == true){
                     if(empty($start_date[$row['farm_batch']])){ $start_date[$row['farm_batch']] = strtotime($row['sdate']); }else{ if(strtotime($row['sdate']) <= $start_date[$row['farm_batch']]){ $start_date[$row['farm_batch']] = strtotime($row['sdate']); } }
                     if(empty($end_date[$row['farm_batch']])){ $end_date[$row['farm_batch']] = strtotime($row['edate']); }else{ if(strtotime($row['edate']) >= $end_date[$row['farm_batch']]){ $end_date[$row['farm_batch']] = strtotime($row['edate']); } }
                 }
+              
                 $sql = "SELECT * FROM `broiler_sales` WHERE `farm_batch` IN ('$batch2') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC"; $query = mysqli_query($conn,$sql);
                 while($row = mysqli_fetch_assoc($query)){
                     $key = $row['date']."@".$row['icode']."@".$row['farm_batch'];
@@ -765,13 +777,14 @@ if(isset($_REQUEST['submit_report']) == true){
                     
                 }
                 //In-House Processing
-                $sql_record = "SELECT SUM(birds) as birds,SUM(`weight`) as rcd_qty,SUM(avg_amount) as item_tamt,MIN(date) as sdate,MAX(date) as edate,item_code,from_batch FROM `broiler_bird_transferout` WHERE `from_batch` IN ('$batch2') AND `active` = '1' AND `dflag` = '0' GROUP BY `from_batch`,`item_code` ORDER BY `date`,`trnum` ASC";
+                $sql_record = "SELECT SUM(birds) as birds,SUM(`weight`) as rcd_qty,SUM(avg_amount) as item_tamt,MIN(date) as sdate,MAX(date) as edate,item_code,from_batch FROM `broiler_bird_transferout` WHERE `from_batch` IN ('$batch2') AND `active` = '1' AND `dflag` = '0'  GROUP BY `from_batch`,`item_code` ".$recqtyfreqty."  ORDER BY `date`,`trnum` ASC";
                 $query = mysqli_query($conn,$sql_record);
                 while($row = mysqli_fetch_assoc($query)){
                     $key_code = $row['from_batch']."@".$row['item_code'];
                     if(!empty($chick_codes[$row['item_code']]) || !empty($bird_codes[$row['item_code']])){
                         $sale_bird_nos[$key_code] += (float)$row['birds'];
                         $sale_bird_qty[$key_code] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
+                        $fltrbatch[$row['farm_batch']] = $row['farm_batch'];
                         if(empty($sale_start_date[$key_code])){ $sale_start_date[$key_code] = strtotime($row['sdate']); }else{ if(strtotime($row['sdate']) <= $sale_start_date[$key_code]){ $sale_start_date[$key_code] = strtotime($row['sdate']); } }
                     }
                     else if(!empty($feed_code[$row['item_code']])){
@@ -887,7 +900,7 @@ if(isset($_REQUEST['submit_report']) == true){
                     if(empty($end_date[$row['from_batch']])){ $end_date[$row['from_batch']] = strtotime($row['edate']); }else{ if(strtotime($row['edate']) >= $end_date[$row['from_batch']]){ $end_date[$row['from_batch']] = strtotime($row['edate']); } }
                 }
                 //Day record
-                $sql_record = "SELECT SUM(mortality) as mortality,SUM(culls) as culls,SUM(kgs1) as kgs1,SUM(kgs2) as kgs2,MIN(date) as sdate,MAX(date) as edate,MAX(brood_age) as brood_age,batch_code,supervisor_code FROM `broiler_daily_record` WHERE `batch_code` IN ('$batch2') AND `active` = '1' AND `dflag` = '0' GROUP BY `batch_code` ORDER BY brood_age DESC";
+                $sql_record = "SELECT SUM(mortality) as mortality,SUM(culls) as culls,SUM(kgs1) as kgs1,SUM(kgs2) as kgs2,MIN(date) as sdate,MAX(date) as edate,MAX(brood_age) as brood_age,batch_code,supervisor_code FROM `broiler_daily_record` WHERE `batch_code` IN ('$batch2')".$farm_query2." AND `active` = '1' AND `dflag` = '0' GROUP BY `batch_code` ORDER BY brood_age DESC";
                 $query = mysqli_query($conn,$sql_record); $i = 1;
                 while($row = mysqli_fetch_assoc($query)){
                     $key_code = $row['batch_code'];
@@ -941,7 +954,15 @@ if(isset($_REQUEST['submit_report']) == true){
                 
                 //Display section
                 //echo implode(",",$batch_list);
-                foreach($batch_list as $batches){
+                $final_batch_list = array();
+                if($showsoldwtzero > 0){
+                    $arraydiff = array_diff($batch_list, $fltrbatch);
+                    $final_batch_list = $arraydiff;
+                }else{
+                    $final_batch_list = $batch_list;
+                }
+
+                foreach($final_batch_list as $batches){
                     $brood_age = $batch_age[$batches];
                     $fetch_fcode = $batch_farm[$batches];
                     if($batches != ""){
@@ -1244,6 +1265,8 @@ if(isset($_REQUEST['submit_report']) == true){
                                     $display_feeds_in_farm = $farm_transferin_feeds;
                                     $display_feeds_consumed = $consumed_feeds;
                                     $display_feeds_out_farm = $farm_transferout_feeds;
+
+                                    $display_fd_balance = ($purchase_feeds + $sector_transferin_feeds) - ($display_feeds_consumed + $display_feeds_out_farm + $sector_transferout_feeds);
                                 
                                     $display_feeds_balance = (($display_feeds_transferred + $display_feeds_in_farm) - ($display_feeds_consumed + $display_feeds_out_farm + $sales_feeds + $sector_transferout_feeds));
                                     //echo "<br/>$display_feeds_balance = (($display_feeds_transferred + $display_feeds_in_farm) - ($display_feeds_consumed + $display_feeds_out_farm + $sales_feeds + $sector_transferout_feeds));";

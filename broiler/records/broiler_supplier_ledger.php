@@ -204,8 +204,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
             $nhtml .= '<th>Freight</th>'; $fhtml .= '<th>Freight</th>';
             $nhtml .= '<th>GST</th>'; $fhtml .= '<th>GST</th>';
             $nhtml .= '<th>TDS</th>'; $fhtml .= '<th>TDS</th>';
-            $nhtml .= '<th>Credit</th>'; $fhtml .= '<th>Credit</th>';
             $nhtml .= '<th>Debit</th>'; $fhtml .= '<th>Debit</th>';
+            $nhtml .= '<th>Credit</th>'; $fhtml .= '<th>Credit</th>';
             $nhtml .= '<th>Balance</th>'; $fhtml .= '<th>Balance</th>';
             $nhtml .= '<th>Sector</th>'; $fhtml .= '<th>Sector</th>';
             $nhtml .= '<th>Farm Code</th>'; $fhtml .= '<th>Farm Code</th>';
@@ -292,8 +292,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                     echo "<td></td>";
                     echo "<td colspan='12' style='font-weight:bold;'>Previous Balance</td>";
                     if($ob_rcv >= $ob_pid){
-                        echo "<td style='font-weight:bold;text-align:right;'>".number_format_ind($ob_rcv - $ob_pid)."</td>";
                         echo "<td></td>";
+                        echo "<td style='font-weight:bold;text-align:right;'>".number_format_ind($ob_rcv - $ob_pid)."</td>";
                         echo "<td style='font-weight:bold;text-align:right;'>".number_format_ind($ob_rcv - $ob_pid)."</td>";
                         $rb_amt = $rb_amt + ($ob_rcv - $ob_pid);
 						$ob_rev_amt = $ob_rcv - $ob_pid;
@@ -493,8 +493,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
 								echo "<td style='width:110px;text-align:right;'>".number_format_ind($purchases_details[17])."</td>";
                                 if($exist_inv != $purchases_details[2]){
                                     $exist_inv = $purchases_details[2];
-                                    echo "<td style='width:100px;text-align:right;' rowspan=".$inv_count[$purchases_details[2]].">".number_format_ind($purchases_details[25])."</td>";
                                     echo "<td style='width:100px;text-align:right;' rowspan=".$inv_count[$purchases_details[2]].">".number_format_ind(0.00)."</td>";
+                                    echo "<td style='width:100px;text-align:right;' rowspan=".$inv_count[$purchases_details[2]].">".number_format_ind($purchases_details[25])."</td>";
                                     $bt_pur_amt = $bt_pur_amt + $purchases_details[25];
                                     $ob_rev_amt = $ob_rev_amt + $purchases_details[25];
                                     $rb_amt = $rb_amt + $purchases_details[25];
@@ -536,8 +536,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
 								echo "<td style='width:110px;text-align:right;'></td>";
 								echo "<td style='width:110px;text-align:right;'></td>";
 								echo "<td style='width:110px;text-align:right;'>".number_format_ind($purchases_details[11])."</td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($purchases_details[4])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($purchases_details[4])."</td>";
                                 $bt_pur_amt = $bt_pur_amt + $purchases_details[4];
                                 $ob_rev_amt = $ob_rev_amt + $purchases_details[4];
                                 $rb_amt = $rb_amt + $purchases_details[4];
@@ -576,8 +576,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($payment_details[8])."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 $bt_pay_amt = $bt_pay_amt + $payment_details[8];
                                 $ob_pid_amt = $ob_pid_amt + $payment_details[8];
                                 $rb_amt = $rb_amt - $payment_details[8];
@@ -611,8 +611,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($rct_details[8])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($rct_details[8])."</td>";
                                 $bt_pur_amt = $bt_pur_amt + $rct_details[8];
                                // $bt_pay_amt = $bt_pay_amt + $rct_details[8];
                                // $ob_pid_amt = $ob_pid_amt + $rct_details[8];
@@ -651,8 +651,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($return_details[11])."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 $bt_pay_amt = $bt_pay_amt + $return_details[11];
                                 $ob_pid_amt = $ob_pid_amt + $return_details[11];
                                 $rb_amt = $rb_amt - $return_details[11];
@@ -685,8 +685,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($scn_details[9])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($scn_details[9])."</td>";
                                 $bt_pur_amt = $bt_pur_amt + $scn_details[9];
                                 $ob_rev_amt = $ob_rev_amt + $scn_details[9];
                                 $rb_amt = $rb_amt + $scn_details[9];
@@ -719,8 +719,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($sdn_details[9])."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 $bt_pay_amt = $bt_pay_amt + $sdn_details[9];
                                 $ob_pid_amt = $ob_pid_amt + $sdn_details[9];
                                 $rb_amt = $rb_amt - $sdn_details[9];
@@ -753,8 +753,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($ccr_details[8])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($ccr_details[8])."</td>";
                                 $bt_pur_amt = $bt_pur_amt + $ccr_details[8];
                                 $ob_rev_amt = $ob_rev_amt + $ccr_details[8];
                                 $rb_amt = $rb_amt + $ccr_details[8];
@@ -787,8 +787,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($cdr_details[8])."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 $bt_pay_amt = $bt_pay_amt + $cdr_details[8];
                                 $ob_pid_amt = $ob_pid_amt + $cdr_details[8];
                                 $rb_amt = $rb_amt - $cdr_details[8];
@@ -820,8 +820,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($vcr_details[5])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind($vcr_details[5])."</td>";
                                 $bt_pur_amt = $bt_pur_amt + $vcr_details[5];
                                 $ob_rev_amt = $ob_rev_amt + $vcr_details[5];
                                 $rb_amt = $rb_amt + $vcr_details[5];
@@ -854,8 +854,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
                                 echo "<td style='width:100px;text-align:right;'></td>";
-                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($vdr_details[5])."</td>";
+                                echo "<td style='width:100px;text-align:right;'>".number_format_ind(0.00)."</td>";
                                 $bt_pay_amt = $bt_pay_amt + $vdr_details[5];
                                 $ob_pid_amt = $ob_pid_amt + $vdr_details[5];
                                 $rb_amt = $rb_amt - $vdr_details[5];
@@ -887,8 +887,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
 					echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($tot_freight)."</td>";
 					echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($tot_gst)."</td>";
 					echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($tot_tds)."</td>";
-                    echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($bt_pur_amt)."</td>";
                     echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($bt_pay_amt)."</td>";
+                    echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($bt_pur_amt)."</td>";
                     echo "<td style='width:100px;text-align:right;'></td>";
                     echo "<td style='width:130px;text-align:left;'></td>";
                     echo "<td style='width:130px;text-align:left;'></td>";
@@ -907,8 +907,8 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                     echo "<td style='width:130px;text-align:left;'></td>";
                     echo "<td style='width:130px;text-align:left;'></td>";
                     echo "<td style='width:130px;text-align:left;'></td>";
-                    echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($ob_rev_amt)."</td>";
                     echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($ob_pid_amt)."</td>";
+                    echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($ob_rev_amt)."</td>";
                     echo "<td style='width:100px;text-align:right;'></td>";
                     echo "<td style='width:130px;text-align:left;'></td>";
                     echo "<td style='width:130px;text-align:left;'></td>";
@@ -933,12 +933,12 @@ if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE T
                         echo "<td style='width:100px;text-align:right;'></td>";
                     }
                     else if($ob_rev_amt >= $ob_pid_amt){
-                        echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($ob_rev_amt - $ob_pid_amt)."</td>";
                         echo "<td style='width:100px;text-align:right;'></td>";
+                        echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($ob_rev_amt - $ob_pid_amt)."</td>";
                     }
                     else{
-                        echo "<td style='width:100px;text-align:right;'></td>";
                         echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($ob_pid_amt - $ob_rev_amt)."</td>";
+                        echo "<td style='width:100px;text-align:right;'></td>";
                     }
                     
 					echo "<td style='width:110px;text-align:left;'></td>";

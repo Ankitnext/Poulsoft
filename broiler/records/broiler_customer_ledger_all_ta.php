@@ -47,9 +47,15 @@ else{
         $vengrp_filter = "";
     }
     else{
-        $glist = "";
-        foreach($vengrp_code as $gcode){ if($vengrp_gtype[$gcode] == "C"){ if($glist == ""){ $glist = $gcode; } else{ $glist = $glist."','".$gcode; } } }
-        $vengrp_filter = " AND `groupcode` IN ('$glist')";
+        // $glist = "";
+        // foreach($vengrp_code as $gcode){ if($vengrp_gtype[$gcode] == "C"){ if($glist == ""){ $glist = $gcode; } else{ $glist = $glist."','".$gcode; } } }
+        // $vengrp_filter = " AND `groupcode` IN ('$glist')";
+
+         $glist = [];
+    foreach($vengrp_code as $gcode){
+        if($vengrp_gtype[$gcode] == "C") $glist[] = $gcode;
+    }
+    $vengrp_filter = !empty($glist) ? " AND `groupcode` IN ('" . implode("','", $glist) . "')" : "";
     }
 }
 
@@ -65,6 +71,7 @@ while($row = mysqli_fetch_assoc($query)){
     $obtype[$row['code']] = $row['obtype'];
     $obtrnum[$row['code']] = $row['opn_trnum'];
     $obamt[$row['code']] = $row['obamt'];
+    $olimitamt[$row['code']] = $row['creditamt'];
 }
 $customer_filter = "";
 $customer_filter = implode("','",$vendor_code);
@@ -214,6 +221,9 @@ while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code
                     <th colspan="5">Selected Period</th>
                     <th colspan="2" >Balance</th>
                     <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                 </tr>
                 <tr align="center">
                     <th>Birds</th>
@@ -223,6 +233,9 @@ while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code
                     <th>B/w days balance</th>
                     <th>Credit</th>
                     <th>Debit</th>
+                    <th>Credit Limit</th>
+                    <th>Limit Exceded</th>
+                    <th>Available Limit</th>
                     <th>Last Receipt Gap Days</th>
                 </tr>
             </thead>
@@ -463,8 +476,17 @@ while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code
                                 $tot_dr_amt += (float)$final_customer_balance_amt;
                             }
                             //echo "<td style='text-align:right;'>".number_format_ind($final_customer_balance_amt)."</td>";
+                            $limit_amt = $olimitamt[$vcode]; $exd_limit = 0;
                             $rct_gapdays = 0; if(!empty($last_rdate[$vcode]) && $last_rdate[$vcode] != ""){ $rct_gapdays = (INT)((strtotime($today) - strtotime($last_rdate[$vcode])) / 60 / 60 / 24); }
-                            echo "<td style='text-align:right;'>".round($rct_gapdays)."</td>";
+                            echo "<td style='text-align:right;'>".round($limit_amt)."</td>";
+                            if((float)$final_customer_balance_amt > (float)$limit_amt){ $exd_limit = (float)$final_customer_balance_amt - (float)$limit_amt; $red = "color:red;";
+                                echo "<td style='text-align:right;color:red;'>".number_format_ind($exd_limit)."</td>"; } else {
+                                    echo "<td style='text-align:right;'>".number_format_ind($exd_limit)."</td>"; 
+                                }
+                                if((float)$final_customer_balance_amt < (float)$limit_amt){ $avl_limit = (float)$limit_amt - (float)$final_customer_balance_amt; } else { $avl_limit = 0; }
+                                echo "<td style='text-align:right;'>".number_format_ind($avl_limit)."</td>";
+                                echo "<td style='text-align:right;'>".round($rct_gapdays)."</td>";
+
                             echo "</tr>";
 
                             /*Final Total */
@@ -475,6 +497,8 @@ while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code
                             $final_between_rct_amt += (float)round($current_rct_amt,5);
                             $final_between_balance_amt += (float)round($current_Balance_amt,5);
                             $final_all_customer_balance_amt += (float)round($final_customer_balance_amt,5);
+                            $final_credit_limit_amt += (float)round($limit_amt,5);
+                            $final_credit_limit_exceed_amt += (float)round($exd_limit,5);
                         }
                     }
                     echo "<tr class='thead3'>";
@@ -487,7 +511,9 @@ while($row = mysqli_fetch_assoc($query)){ $cline_code[$row['code']] = $row['code
                     echo "<td style='text-align:right;font-weight:bold;'>".number_format_ind($final_between_balance_amt)."</td>";
                     echo "<td style='text-align:right;font-weight:bold;'>".str_replace("-","",number_format_ind($tot_cr_amt))."</td>";
                     echo "<td style='text-align:right;font-weight:bold;'>".number_format_ind($tot_dr_amt)."</td>";
-                    //echo "<td style='text-align:right;font-weight:bold;'>".number_format_ind($final_all_customer_balance_amt)."</td>";
+                    echo "<td style='font-weight:bold;'></td>";
+                    echo "<td style='text-align:right;font-weight:bold;'>".number_format_ind($final_credit_limit_exceed_amt)."</td>";
+                    echo "<td style='font-weight:bold;'></td>";
                     echo "<td style='font-weight:bold;'></td>";
                     echo "</tr>";
                 ?>

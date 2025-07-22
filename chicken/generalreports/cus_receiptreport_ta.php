@@ -52,6 +52,10 @@
     $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Reports' AND `field_function` LIKE 'Fetch Logo Dynamically' AND `user_access` LIKE 'all' AND `flag` = '1'";
     $query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
     if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
+
+    // COA Flag
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'cus_receiptreport.php' AND `field_function` LIKE 'multiple' AND `user_access` LIKE 'all' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $mult_flag = mysqli_num_rows($query); //$avou_flag = 1;
     
 	$sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users_code'";
 	$query = mysqli_query($conn,$sql);
@@ -84,28 +88,106 @@
 		//$addedemp = " AND `addedemp` LIKE '$users_code'";
 	}
 	
-	$fdate = $tdate = date("Y-m-d"); $customers = $sectors = $modes = $coas = $users = "all";
-    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1;
-    $exports = "displaypage";
+	$fdate = $tdate = date("Y-m-d"); $sectors = array(); 
+    $groups = array(); $groups['all'] = "all"; $sectors["all"] = $modes["all"] = "all";
+    $exports = "displaypage"; $cus_all_flag = $grp_all_flag = $sec_all_flag = $mod_all_flag = $coa_all_flag = $user_all_flag = 0;
 	if(isset($_POST['submit']) == true){
 		$fdate = date("Y-m-d",strtotime($_POST['fdate']));
 		$tdate = date("Y-m-d",strtotime($_POST['tdate']));
-		$customers = $_POST['customers'];
-		// $sectors = $_POST['sectors'];
-		$modes = $_POST['modes'];
-		$coas = $_POST['coas'];
-		$users = $_POST['users'];
+		// $customers = $_POST['customers'];
+		// $modes = $_POST['modes'];
+		// $coas = $_POST['coas'];
+		// $users = $_POST['users'];
 		$exports = $_POST['exports'];
 
-        $sects = $groups = array(); $grp_all_flag = $sec_all_flag = 0;
+        $sects = $groups = array(); $grp_all_flag = 0;
         foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
-        foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
         $grp_list = implode("@",$groups);
-        $sects_list = implode("','", array_map('addslashes', $sects));
 
-        $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
+        //Sector Filter
+        $sectors = array(); $sec_list = "";
+        foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        $sects_list = implode("','", array_map('addslashes', $sectors));
+        $secct_fltr = "";
+        if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
+        else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
+
+        if($mult_flag > 0){ 
+            $customers["all"] = $coas["all"] = $modes["all"] = $users["all"] = "all";
+            //customers Filter
+            // $customers = array(); $cust_list = "";
+            // foreach($_POST['customers'] as $cst){ $customers[$cst] = $cst; if($cst == "all"){ $cus_all_flag = 1; } }
+            // $custs_list = implode("','", array_map('addslashes', $customers));
+            // $cus_filter = "";
+            // if($cus_all_flag == 1 ){ $cus_filter = ""; $cust_list = "all"; }
+            // else { $cus_filter = "AND `ccode` IN ('$custs_list')"; $cust_list = implode(",",$customers); }
+            $customers = array(); $cust_list = "";
+            foreach($_POST['customers'] as $cst){
+                // Only include customer if it's in the selected group(s) or if "all" is selected
+                if(in_array("all", $_POST['groups']) || in_array($cus_group[$cst], $_POST['groups']) || $cst == "all") {
+                    $customers[$cst] = $cst;
+                    if($cst == "all"){ $cus_all_flag = 1; }
+                }
+            }
+            $custs_list = implode("','", array_map('addslashes', $customers));
+            $cus_filter = "";
+
+            if($cus_all_flag == 1){
+                $cus_filter = "";
+                $cust_list = "all";
+            } else {
+                $cus_filter = "AND `ccode` IN ('$custs_list')";
+                $cust_list = implode(",", $customers);
+            }
+
+            //Mode Filter
+            $modes = array(); $mod_list = "";
+            foreach($_POST['modes'] as $md){ $modes[$md] = $md; if($md == "all"){ $mod_all_flag = 1; } }
+            $mode_list = implode("','", array_map('addslashes', $modes));
+            $mode_filter = "";
+            if($mod_all_flag == 1 ){ $mode_filter = ""; $mod_list = "all"; }
+            else { $mode_filter = "AND `mode` IN ('$mode_list')"; $mod_list = implode(",",$modes); }
+            //coas Filter
+            $coas = array(); $coa_list = "";
+            foreach($_POST['coas'] as $co){ $coas[$co] = $co; if($co == "all"){ $coa_all_flag = 1; } }
+            $coas_list = implode("','", array_map('addslashes', $coas));
+            $coa_filter = "";
+            if($coa_all_flag == 1 ){ $coa_filter = ""; $coa_list = "all"; }
+            else { $coa_filter = "AND `method` IN ('$coas_list')"; $coa_list = implode(",",$coas); }
+            //users Filter
+            $users = array(); $user_list = "";
+            foreach($_POST['users'] as $us){ $users[$us] = $us; if($us == "all"){ $user_all_flag = 1; } }
+            $users_list = implode("','", array_map('addslashes', $users));
+            $user_filter = "";
+            if($user_all_flag == 1 ){ $user_filter = ""; $user_list = "all"; }
+            else { $user_filter = "AND `addedemp` IN ('$users_list')"; $user_list = implode(",",$users); }
+
+        } else {
+            $customers = $modes = $coas = $users = "all";
+
+            $customers = $_POST['customers'];
+            $modes = $_POST['modes'];
+            $coas = $_POST['coas'];
+            $users = $_POST['users'];
+
+            $cus_filter = "";
+            if($customers != "all"){ $cus_filter = " AND `ccode` IN ('$customers')"; }
+            else if($grp_all_flag == 0){
+                foreach($cus_code as $ccode){
+                    $gcode = $cus_group[$ccode];
+                    if(empty($groups[$gcode]) || $groups[$gcode] == ""){ }
+                    else{ if($cus_list == ""){ $cus_list = $ccode; } else{ $cus_list = $cus_list."','".$ccode; } }
+                }
+                $cus_filter = " AND `ccode` IN ('$cus_list')";
+            } else{ }
+
+            if($modes == "all"){ $mode_filter = ""; } else{ $mode_filter = " AND `mode` IN ('$modes')"; }
+            if($coas == "all"){ $coa_filter = ""; } else{ $coa_filter = " AND `method` IN ('$coas')"; }
+            if($users == "all"){ $user_filter = ""; } else{ $user_filter = " AND `addedemp` IN ('$users')"; }
+
+        }
 	}
-	$url = "../PHPExcel/Examples/ReceiptReport-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&modes=".$modes."&coas=".$coas."&sectors=".$sectors."&users=".$users."&groups=".$grp_list;
+	$url = "../PHPExcel/Examples/ReceiptReport-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&modes=".$modes."&coas=".$coas."&sectors=".$sec_list."&users=".$users."&groups=".$grp_list;
 	
 ?>
 <html>
@@ -134,8 +216,13 @@
 					<td><?php echo $cdetails; } ?></td>
 					<td align="center">
 						<h3>Receipt Report</h3>
-						<?php if($customers == "all" || $customers == "select" || $customers == ""){ ?><label><b style="color: green;">Customer:</b>&nbsp;<?php echo "All"; ?></label><br/><?php }
-                        else{ ?><label><b style="color: green;">Customer:</b>&nbsp;<?php echo $cus_name[$customers]; ?></label><br/><?php } ?>
+                        <?php if($mult_flag > 0){ ?>
+                            <?php if(in_array("all", $customers) || empty($customers)) { ?><label><b style="color: green;">Customer:</b>&nbsp;<?php echo "All"; ?></label><br/><?php }
+                            else { ?><label><b style="color: green;">Customer:</b>&nbsp;<?php $names = []; foreach ($customers as $cust_id) { $names[] = $cus_name[$cust_id]; } echo implode(", ", $names); ?></label><br/><?php } ?>
+                        <?php } else { ?>
+                            <?php if($customers == "all" || $customers == "select" || $customers == ""){ ?><label><b style="color: green;">Customer:</b>&nbsp;<?php echo "All"; ?></label><br/><?php }
+                            else{ ?><label><b style="color: green;">Customer:</b>&nbsp;<?php echo $cus_name[$customers]; ?></label><br/><?php } ?>
+                        <?php } ?>
 						<label><b style="color: green;">From Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($fdate)); ?></label>&ensp;&ensp;&ensp;&ensp;
 						<label><b style="color: green;">To Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($tdate)); ?></label>
 					</td>
@@ -166,6 +253,18 @@
 											    <?php foreach($grp_code as $gcode){ ?><option value="<?php echo $gcode; ?>" <?php foreach($groups as $grps){ if($grps == $gcode){ echo "selected"; } } ?>><?php echo $grp_name[$gcode]; ?></option><?php } ?>
                                             </select>
                                         </div>
+                                        <?php if($mult_flag > 0){ ?>
+                                        <div class="form-group" style="width:170px;">
+                                            <label for="customers[0]">Customer</label>
+                                            <select name="customers[]" id="customers[0]" class="form-control select2" style="width:160px;" multiple>
+                                                <option value="all" <?php if (in_array("all", $customers)) echo "selected"; ?>>All</option>
+											    <?php
+                                                if($grp_all_flag == 1){ foreach($cus_code as $vcode){ ?><option value="<?php echo $vcode; ?>" <?php if(in_array($vcode,$customers)){ echo "selected"; } ?>><?php echo $cus_name[$vcode]; ?></option><?php } }
+                                                else{ foreach($cus_code as $vcode){ if(!empty($groups[$cus_group[$vcode]])){ ?><option value="<?php echo $vcode; ?>" <?php if(in_array($vcode,$customers)){ echo "selected"; } ?>><?php echo $cus_name[$vcode]; ?></option><?php } } }
+                                                ?>
+                                            </select>
+                                        </div>
+                                        <?php } else { ?>
                                         <div class="form-group" style="width:170px;">
                                             <label for="customers">Customer</label>
                                             <select name="customers" id="customers" class="form-control select2" style="width:160px;">
@@ -176,6 +275,16 @@
                                                 ?>
                                             </select>
                                         </div>
+                                        <?php } ?>
+                                        <?php if($mult_flag > 0){ ?>
+                                        <div class="form-group" style="width:150px;">
+                                            <label for="modes[0]">Payment Mode</label>
+                                            <select name="modes[]" id="modes[0]" class="form-control select2" style="width:140px;" multiple>
+                                                <option value="all" <?php foreach($modes as $mds){ if($mds == "all"){ echo "selected"; } } ?>>All</option>
+											    <?php foreach($mode_code as $mcode){ ?><option value="<?php echo $mcode; ?>" <?php if($modes == $mcode){ echo "selected"; } ?>><?php echo $mode_name[$mcode]; ?></option><?php } ?>
+                                            </select>
+                                        </div>
+                                        <?php } else { ?>
                                         <div class="form-group" style="width:150px;">
                                             <label for="modes">Payment Mode</label>
                                             <select name="modes" id="modes" class="form-control select2" style="width:140px;">
@@ -183,6 +292,16 @@
 											    <?php foreach($mode_code as $mcode){ ?><option value="<?php echo $mcode; ?>" <?php if($modes == $mcode){ echo "selected"; } ?>><?php echo $mode_name[$mcode]; ?></option><?php } ?>
                                             </select>
                                         </div>
+                                        <?php } ?>
+                                        <?php if($mult_flag > 0){ ?>
+                                        <div class="form-group" style="width:150px;">
+                                            <label for="coas[0]">Cash/Bank</label>
+                                            <select name="coas[]" id="coas[0]" class="form-control select2" style="width:140px;" multiple>
+                                                <option value="all" <?php foreach($coas as $grps){ if($grps == "all"){ echo "selected"; } } ?>>All</option>
+											    <?php foreach($coa_code as $acode){ ?><option value="<?php echo $acode; ?>" <?php if($coas == $acode){ echo "selected"; } ?> ><?php echo $coa_name[$acode]; ?></option><?php } ?>
+                                            </select>
+                                        </div>
+                                        <?php } else { ?>
                                         <div class="form-group" style="width:150px;">
                                             <label for="coas">Cash/Bank</label>
                                             <select name="coas" id="coas" class="form-control select2" style="width:140px;">
@@ -190,15 +309,30 @@
 											    <?php foreach($coa_code as $acode){ ?><option value="<?php echo $acode; ?>" <?php if($coas == $acode){ echo "selected"; } ?>><?php echo $coa_name[$acode]; ?></option><?php } ?>
                                             </select>
                                         </div>
-                                        <div class="form-group" style="width:190px;">
+                                        <?php } ?>
+                                       <div class="form-group" style="width:190px;">
                                             <label for="sectors[0]">Warehouse</label>
                                             <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-                                                <option value="all" <?php if(in_array("all", $_POST['sectors'] ?? [])){ echo "selected"; } ?>>All</option>
-											    <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if(in_array($scode, $_POST['sectors'] ?? [])){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
+                                                <option value="all" <?php if (in_array("all", $sectors)) echo "selected"; ?>>All</option>
+                                                <?php foreach($sector_code as $scode) { ?>
+                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $sectors)) echo "selected"; ?>>
+                                                        <?php echo $sector_name[$scode]; ?>
+                                                    </option>
+                                                <?php } ?>
                                             </select>
                                         </div>
+
                                     </div>
                                     <div class="m-1 p-1 row">
+                                        <?php if($mult_flag > 0){ ?>
+                                        <div class="form-group" style="width:150px;">
+                                            <label for="users[0]">User</label>
+                                            <select name="users[]" id="users[0]" class="form-control select2" style="width:140px;">
+                                                <option value="all" <?php if($users == "all"){ echo "selected"; } ?>>All</option>
+											    <?php foreach($user_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($users == $ucode){ echo "selected"; } ?>><?php echo $user_name[$ucode]; ?></option><?php } ?>
+                                            </select>
+                                        </div>
+                                        <?php } else { ?>
                                         <div class="form-group" style="width:150px;">
                                             <label for="users">User</label>
                                             <select name="users" id="users" class="form-control select2" style="width:140px;">
@@ -206,6 +340,7 @@
 											    <?php foreach($user_code as $ucode){ ?><option value="<?php echo $ucode; ?>" <?php if($users == $ucode){ echo "selected"; } ?>><?php echo $user_name[$ucode]; ?></option><?php } ?>
                                             </select>
                                         </div>
+                                         <?php } ?>
                                         <div class="form-group" style="width:150px;">
                                             <label for="exports">Export To</label>
                                             <select name="exports" id="exports" class="form-control select2" style="width:140px;">
@@ -257,20 +392,20 @@
 						</thead>
 						<?php
                         if(isset($_POST['submit']) == true){
-                            $cus_filter = "";
-                            if($customers != "all"){ $cus_filter = " AND `ccode` IN ('$customers')"; }
-                            else if($grp_all_flag == 0){
-                                foreach($cus_code as $ccode){
-                                    $gcode = $cus_group[$ccode];
-                                    if(empty($groups[$gcode]) || $groups[$gcode] == ""){ }
-                                    else{ if($cus_list == ""){ $cus_list = $ccode; } else{ $cus_list = $cus_list."','".$ccode; } }
-                                }
-                                $cus_filter = " AND `ccode` IN ('$cus_list')";
-                            } else{ }
+                            // $cus_filter = "";
+                            // if($customers != "all"){ $cus_filter = " AND `ccode` IN ('$customers')"; }
+                            // else if($grp_all_flag == 0){
+                            //     foreach($cus_code as $ccode){
+                            //         $gcode = $cus_group[$ccode];
+                            //         if(empty($groups[$gcode]) || $groups[$gcode] == ""){ }
+                            //         else{ if($cus_list == ""){ $cus_list = $ccode; } else{ $cus_list = $cus_list."','".$ccode; } }
+                            //     }
+                            //     $cus_filter = " AND `ccode` IN ('$cus_list')";
+                            // } else{ }
 
-                            if($modes == "all"){ $mode_filter = ""; } else{ $mode_filter = " AND `mode` IN ('$modes')"; }
-                            if($coas == "all"){ $coa_filter = ""; } else{ $coa_filter = " AND `method` IN ('$coas')"; }
-                            if($users == "all"){ $user_filter = ""; } else{ $user_filter = " AND `addedemp` IN ('$users')"; }
+                            // if($modes == "all"){ $mode_filter = ""; } else{ $mode_filter = " AND `mode` IN ('$modes')"; }
+                            // if($coas == "all"){ $coa_filter = ""; } else{ $coa_filter = " AND `method` IN ('$coas')"; }
+                            // if($users == "all"){ $user_filter = ""; } else{ $user_filter = " AND `addedemp` IN ('$users')"; }
                             
                             $html = '';
                             $html .= '<tbody class="tbody1">';

@@ -8,6 +8,7 @@ if($db == ''){
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Farmer Batch History Report";
     include "header_head.php";
     $form_path = "broiler_farmwise_batchhistory1.php";
 }
@@ -15,6 +16,7 @@ else{
     $user_code = $_GET['userid'];
     $dbname = $db;
     include "APIconfig.php";
+    global $page_title; $page_title = "Farmer Batch History Report";
     include "header_head.php";
     $form_path = "broiler_farmwise_batchhistory1.php?db=$db&userid=".$user_code;
 }

@@ -168,7 +168,12 @@ if(isset($_POST['submit_report']) == true){
             $nhtml .= '<th>Box / Crates</th>'; $fhtml .= '<th id="order_num">Box / Crates</th>';
             $nhtml .= '<th>Order Qty</th>'; $fhtml .= '<th id="order_num">Order Qty</th>';
             $nhtml .= '<th>Delivery Date</th>'; $fhtml .= '<th id="order_date">Delivery Date</th>';
-            $nhtml .= '<th>Remarks</th>'; $fhtml .= '<th id="order_date">Remarks</th>';
+            $nhtml .= '<th>Remarks</th>'; $fhtml .= '<th id="order">Remarks</th>';
+            $nhtml .= '<th>Company</th>'; $fhtml .= '<th id="order">Company</th>';
+            $nhtml .= '<th>Labour 1</th>'; $fhtml .= '<th id="order">Labour 1</th>';
+            $nhtml .= '<th>Labour 2</th>'; $fhtml .= '<th id="order">Labour 2</th>';
+            $nhtml .= '<th>Lifter</th>'; $fhtml .= '<th id="order">Lifter</th>';
+            $nhtml .= '<th>Lifter Mob.</th>'; $fhtml .= '<th id="order_num">Lifter Mob.</th>';
             
             $nhtml .= '</tr>';
             $fhtml .= '</tr>';
@@ -187,6 +192,11 @@ if(isset($_POST['submit_report']) == true){
             while($row = mysqli_fetch_assoc($query)){
                 $so_date = date("d.m.Y", strtotime($row['so_date']));
                 $vehicle = $row['vehicle'];
+                $company = $row['company'];
+                $labour1 = $row['labour1'];
+                $labour2 = $row['labour2'];
+                $lifter = $row['lifter'];
+                $lifter_mob = $row['lifter_mob'];
                 $route_no = $row['route_no'];
                 $sorder_no = $row['sorder_no'];
                 $so_trnum = $row['so_trnum'];
@@ -223,6 +233,11 @@ if(isset($_POST['submit_report']) == true){
                 $html .= '<td style="text-align:right;">'.number_format_ind(round($order_qty, 5)).'</td>';
                 $html .= '<td style="text-align:right;" class="dates">'.$delivery_date.'</td>';
                 $html .= '<td>'.$all_remarks.'</td>';
+                $html .= '<td>'.$company.'</td>';
+                $html .= '<td>'.$labour1.'</td>';
+                $html .= '<td>'.$labour2.'</td>';
+                $html .= '<td>'.$lifter.'</td>';
+                $html .= '<td>'.$lifter_mob.'</td>';
                 $html .= '</tr>';
 
                 $tot_boxes += (float)$boxes;
@@ -237,7 +252,7 @@ if(isset($_POST['submit_report']) == true){
                 $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tot_boxes,5))).'</th>';
                 $html .= '<th style="text-align:right;">'.number_format_ind(round($tot_oqty,5)).'</th>';
                 $html .= '<th style="text-align:right;"></th>';
-                $html .= '<th style="text-align:right;"></th>';
+                $html .= '<th colspan="6" style="text-align:right;"></th>';
                 $html .= '</tr>';
                 $html .= '</tfoot>';
             }

@@ -96,7 +96,6 @@
 								</tr>
 							</thead>
 							<thead class="thead2" style="background-color: #98fb98;">
-								<th>Sl No.</th>
 								<th>Item</th>
 								<th colspan="2">Opening</th>
 								<th colspan="2">Purchased</th>
@@ -106,7 +105,6 @@
 								<th colspan="2">closing</th>
 							</thead>
 							<thead class="thead2" style="background-color: #98fb98;">
-								<th></th>
 								<th></th>
 								<th>Quantity</th>
 								<th>Amount</th>

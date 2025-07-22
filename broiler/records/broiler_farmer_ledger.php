@@ -6,26 +6,26 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+global $page_title; $page_title = "Farmer History Report";
 include "header_head.php";
 $user_code = $_SESSION['userid'];
 
 $sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $branch_access_code = $row['branch_code']; $line_access_code = $row['line_code']; $farm_access_code = $row['farm_code']; $sector_access_code = $row['loc_access']; }
-if($branch_access_code == "all"){ $branch_access_filter1 = ""; }
-else{ $branch_access_list = implode("','", explode(",",$branch_access_code)); $branch_access_filter1 = " AND `code` IN ('$branch_access_list')"; $branch_access_filter2 = " AND `branch_code` IN ('$branch_access_list')"; }
-if($line_access_code == "all"){ $line_access_filter1 = ""; }
-else{ $line_access_list = implode("','", explode(",",$line_access_code)); $line_access_filter1 = " AND `code` IN ('$line_access_list')"; $line_access_filter2 = " AND `line_code` IN ('$line_access_list')"; }
-if($farm_access_code == "all"){ $farm_access_filter1 = ""; }
-else{ $farm_access_list = implode("','", explode(",",$farm_access_code)); $farm_access_filter1 = " AND `code` IN ('$farm_access_list')"; }
+if($branch_access_code == "all"){ $branch_access_filter1 = ""; } else{ $branch_access_list = implode("','", explode(",",$branch_access_code)); $branch_access_filter1 = " AND `code` IN ('$branch_access_list')"; $branch_access_filter2 = " AND `branch_code` IN ('$branch_access_list')"; }
+if($line_access_code == "all"){ $line_access_filter1 = ""; } else{ $line_access_list = implode("','", explode(",",$line_access_code)); $line_access_filter1 = " AND `code` IN ('$line_access_list')"; $line_access_filter2 = " AND `line_code` IN ('$line_access_list')"; }
+if($farm_access_code == "all"){ $farm_access_filter1 = ""; } else{ $farm_access_list = implode("','", explode(",",$farm_access_code)); $farm_access_filter1 = " AND `code` IN ('$farm_access_list')"; }
 
 
-/*$sql = "SELECT * FROM `inv_sectors`"; $query = mysqli_query($conn,$sql);panno
-while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }*/
+/*Check for Table Availability*/
+$database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
+$sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
+if(in_array("account_contranotes", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.account_contranotes LIKE poulso6_admin_broiler_broilermaster.account_contranotes;"; mysqli_query($conn,$sql1); }
+if(in_array("master_payments", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_payments LIKE poulso6_admin_broiler_broilermaster.master_payments;"; mysqli_query($conn,$sql1); }
+if(in_array("master_receipts", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.master_receipts LIKE poulso6_admin_broiler_broilermaster.master_receipts;"; mysqli_query($conn,$sql1); }
 
 $sql = "SELECT * FROM `broiler_farmer`  WHERE `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $farmer_code[$row['code']] = $row['code']; $farmer_panno[$row['code']] = $row['panno']; }
-
 $farmer_pann = implode("','",$farmer_panno);
 
 $sql = "SELECT * FROM `broiler_farm`  WHERE 1 ".$farm_access_filter1."".$branch_access_filter2."".$line_access_filter2." order by description ASC"; $query = mysqli_query($conn,$sql);
@@ -228,8 +228,9 @@ $url = "";
                     <th <?php if($excel_type == "display" || $excel_type == "excel"){ echo 'style="width:110px;"'; } ?>>Type</th>
                     <th <?php if($excel_type == "display" || $excel_type == "excel"){ echo 'style="width:110px;"'; } ?>>Trnum</th>
                     <th <?php if($excel_type == "display" || $excel_type == "excel"){ echo 'style="width:110px;"'; } ?>>Remarks</th>
-                    <th <?php if($excel_type == "display" || $excel_type == "excel"){ echo 'style="width:110px;"'; } ?>>Cr Amount</th>
+                   
                     <th <?php if($excel_type == "display" || $excel_type == "excel"){ echo 'style="width:100px;"'; } ?>>Dr Amount</th>
+                    <th <?php if($excel_type == "display" || $excel_type == "excel"){ echo 'style="width:110px;"'; } ?>>Cr Amount</th>
                     <th <?php if($excel_type == "display" || $excel_type == "excel"){ echo 'style="width:100px;"'; } ?>>Balance</th>
                 </tr>
             </thead>
@@ -238,13 +239,14 @@ $url = "";
             ?>
             <tbody class="tbody1">
                 <?php
-                    $old_inv = ""; $opening_purchases = $opening_tds = $opening_oded = $opening_payments = $opening_receipts = $opening_scn = $opening_sdn = $opening_returns = $rb_amt = 0;
+                    $old_inv = ""; $opening_purchases = $opening_tds = $opening_oded = $opening_receipts = $opening_payments = $opening_scn = $opening_sdn = $opening_returns = $rb_amt = 0;
                     $sql_record = "SELECT * FROM `broiler_rearingcharge` WHERE `date` < '$fdate' AND `farm_code` = '$vendors' AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){
                         while($row = mysqli_fetch_assoc($query)){
                             if($old_inv != $row['trnum']){
-                                $opening_purchases = $opening_purchases + $row['amount_payable'];
+                                $oppur = ($row['amount_payable'] > 0) ? $row['amount_payable'] : 0;
+                                $opening_purchases = $opening_purchases + $oppur;
                                 $opening_tds = $opening_tds + $row['tds_amt'];
                                 $opening_oded = $opening_oded + $row['other_deduction'];
                                 
@@ -280,11 +282,32 @@ $url = "";
                             $opening_receipts = $opening_receipts + $row['amount'];
                         }
                     }
-                    else{
-                        $opening_receipts = 0;
+
+                    $sql_record = "SELECT * FROM `master_receipts` WHERE `date` < '$fdate' AND `to_account` = '$vendors' AND `t_type` IN ('Farmer Receipt') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){
+                        while($row = mysqli_fetch_assoc($query)){
+                            $opening_receipts = $opening_receipts + $row['amount'];
+                        }
                     }
 
-                    $sql_record = "SELECT * FROM `broiler_sales` WHERE `date` < '$fdate' AND (`warehouse` = '$vendors' OR `vcode` = '$vendors') AND (`sale_type` IN ('FarmerSale') OR `sale_type` IN ('FormMBSale')) AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $sql_record = "SELECT * FROM `master_payments` WHERE `date` < '$fdate' AND `to_account` = '$vendors' AND `t_type` IN ('Farmer Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){
+                        while($row = mysqli_fetch_assoc($query)){
+                            $opening_payments = $opening_payments + $row['amount'];
+                        }
+                    }
+
+                    $sql_record = "SELECT * FROM `account_contranotes` WHERE `date` < '$fdate' AND `tcoa` = '$vendors' AND `type` IN ('ContraNote') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){
+                        while($row = mysqli_fetch_assoc($query)){
+                            $opening_payments = $opening_payments + $row['amount'];
+                        }
+                    }
+
+                    $sql_record = "SELECT * FROM `broiler_sales` WHERE `date` < '$fdate' AND (`warehouse` = '$vendors' OR `vcode` = '$vendors') AND (`sale_type` IN ('FarmerSale') OR `sale_type` IN ('FormMBSale') OR `sale_type` IN ('FeedSingleSale')) AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC"; //echo $sql_record;
                     $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){
                         while($row = mysqli_fetch_assoc($query)){
@@ -325,6 +348,7 @@ $url = "";
                     $ob_cramt = $ob_cramt = 0;
                     if($obtype[$vendors] == "Cr"){ $ob_cramt = $obamt[$vendors]; $ob_dramt = 0; } else{ $ob_dramt = $obamt[$vendors]; $ob_cramt = 0; }
 
+
                     $ob_rcv = $opening_purchases + $opening_scn + $ob_dramt + $opening_advance_payments +  $opening_receipts ;
 					$ob_pid = $opening_payments + $opening_returns + $opening_sdn + $ob_cramt + $opening_tds + $opening_oded +  $opening_salesamount;
 
@@ -334,9 +358,10 @@ $url = "";
                     echo "<td></td>";
                     echo "<td colspan='3' style='font-weight:bold;'>Previous Balance</td>";
                     if($ob_rcv >= $ob_pid){
-                        echo "<td style='font-weight:bold;text-align:right;'>".number_format_ind($ob_rcv - $ob_pid)."</td>";
+                      
                    
                         echo "<td style='font-weight:bold;text-align:right;'>".""."</td>";
+                        echo "<td style='font-weight:bold;text-align:right;'>".number_format_ind($ob_rcv - $ob_pid)."</td>";
                         $rb_amt = $rb_amt + ($ob_rcv - $ob_pid);
 						$ob_rev_amt = $ob_rcv - $ob_pid;
 						$ob_pid_amt = 0;
@@ -345,8 +370,9 @@ $url = "";
                         $type = "Cr";
                     }
                     else{
-                        echo "<td style='font-weight:bold;text-align:right;'>".""."</td>";
                         echo "<td style='font-weight:bold;text-align:right;'>".number_format_ind($ob_pid - $ob_rcv)."</td>";
+                        echo "<td style='font-weight:bold;text-align:right;'>".""."</td>";
+                        
                         $rb_amt = $rb_amt + ($ob_rcv - $ob_pid);
 						$ob_pid_amt = $ob_pid - $ob_rcv;
 						$ob_rev_amt = 0;
@@ -377,7 +403,7 @@ $url = "";
                     }
                     
                     $sql_record = "SELECT * FROM `broiler_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `ccode` = '$farmer_code[$vendors]' AND `warehouse` = '$vendors' AND `vtype` IN ('FarmerPay') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
-                    $query = mysqli_query($conn,$sql_record); $i = 0; $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    $query = mysqli_query($conn,$sql_record); $i = 0; $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); } $payment_info = array();
                     if($transaction_count > 0){
                         while($row = mysqli_fetch_assoc($query)){
                             $i++; $key_code = $row['date']."[@$&]".$i;
@@ -398,10 +424,25 @@ $url = "";
                           //  $payment_info[$key_code] = $row['incr']."[@$&]".$row['prefix']."[@$&]".$row['trnum']."[@$&]".$row['date']."[@$&]".$row['ccode']."[@$&]".$row['docno']."[@$&]".$row['mode']."[@$&]".$row['method']."[@$&]".$row['amount']."[@$&]".$row['amtinwords']."[@$&]".$row['vtype']."[@$&]".$row['warehouse']."[@$&]".$row['remarks']."[@$&]".$row['sms_sent']."[@$&]".$row['whapp_sent']."[@$&]".$row['flag']."[@$&]".$row['active']."[@$&]".$row['dflag']."[@$&]".$row['addedemp']."[@$&]".$row['addedtime']."[@$&]".$row['updatedemp']."[@$&]".$row['updatedtime']."[@$&]".$row['c10']."[@$&]".$row['c20']."[@$&]".$row['c50']."[@$&]".$row['c100']."[@$&]".$row['c500']."[@$&]".$row['c2000']."[@$&]".$row['ccoins']."[@$&]".$row['c200'];
                         }
                     }
-                    else{
-                        $payment_info = array();
+
+                    $sql_record = "SELECT * FROM `master_payments` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `to_account` = '$vendors' AND `t_type` IN ('Farmer Payment') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){
+                        while($row = mysqli_fetch_assoc($query)){
+                            $i++; $key_code = $row['date']."[@$&]".$i;
+                            $payment_info[$key_code] = $row['date']."[@$&]".$row['t_type']."[@$&]".$row['trnum']."[@$&]".$row['amount']."[@$&]"."0"."[@$&]".$row['remarks'];
+                        }
                     }
 
+                    $sql_record = "SELECT * FROM `account_contranotes` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `tcoa` = '$vendors' AND `type` IN ('ContraNote') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){
+                        while($row = mysqli_fetch_assoc($query)){
+                            $i++; $key_code = $row['date']."[@$&]".$i;
+                            $payment_info[$key_code] = $row['date']."[@$&]Journal[@$&]".$row['trnum']."[@$&]".$row['amount']."[@$&]"."0"."[@$&]".$row['remarks'];
+                        }
+                    }
+                    
                     $sql_record = "SELECT * FROM `broiler_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `ccode` = '$farmer_code[$vendors]' AND `vtype` IN ('Farmer') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql_record); $i = 0; $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){
@@ -415,8 +456,16 @@ $url = "";
                         $receipt_info = array();
                     }
 
-                    
-                    $sql_record = "SELECT * FROM `broiler_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND (`warehouse` = '$vendors' OR `vcode` = '$vendors') AND (`sale_type` IN ('FarmerSale') OR `sale_type` IN ('FormMBSale')) AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $sql_record = "SELECT * FROM `master_receipts` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `to_account` = '$vendors' AND `t_type` IN ('Farmer Receipt') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                    $query = mysqli_query($conn,$sql_record); $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
+                    if($transaction_count > 0){
+                        while($row = mysqli_fetch_assoc($query)){
+                            $i++; $key_code = $row['date']."[@$&]".$i;
+                            $receipt_info[$key_code] = $row['date']."[@$&]"."Receipt"."[@$&]".$row['trnum']."[@$&]".$row['amount']."[@$&]"."0"."[@$&]".$row['remarks'];
+                        }
+                    }
+
+                    $sql_record = "SELECT * FROM `broiler_sales` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND (`vcode` = '$vendors' OR `warehouse` = '$vendors') AND (`sale_type` IN ('FarmerSale') OR `sale_type` IN ('FormMBSale') OR `sale_type` IN ('FeedSingleSale')) AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC"; 
                     $query = mysqli_query($conn,$sql_record); $i = 0; $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){
                         while($row = mysqli_fetch_assoc($query)){
@@ -433,7 +482,7 @@ $url = "";
                     else{
                         $sales_info = array();
                     }
-                    
+                   // print_r($sales_info);
                     $sql_record = "SELECT * FROM `broiler_itemreturns` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `warehouse` = '$vendors' AND `type` IN ('Farmer') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                     $query = mysqli_query($conn,$sql_record); $i = 0; $transaction_count = 0; if(!empty($query)){ $transaction_count = mysqli_num_rows($query); }
                     if($transaction_count > 0){
@@ -482,19 +531,20 @@ $url = "";
                                 $purchases_details = explode("[@$&]",$purchase_info[$date_asc."[@$&]".$i]);
 
 
-                                $bal =  $bal +   $purchases_details[3];
+                                $bal =  $bal +  max(0, $purchases_details[3]);
 
                                 echo "<tr>";
 								echo "<td style='width:93px;'>".date("d.m.Y",strtotime($purchases_details[0]))."</td>";
 								echo "<td style='width:110px;text-align:left;'>".$purchases_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$purchases_details[2]."</td>";
                                 echo "<td style='width:100px;text-align:right;font-weight:bold;'></td>";
-                                echo "<td style='width:110px;text-align:right;'>" . number_format_ind(max(0, $purchases_details[3])) . "</td>";
+                              
 								echo "<td style='width:70px;text-align:right;'>".number_format_ind($purchases_details[4])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>" . number_format_ind(max(0, $purchases_details[3])) . "</td>";
                                 echo "<td style='width:70px;text-align:right;'>".number_format_ind($bal)."</td>";
 								
                                 
-                                $bt_pur_amt = $bt_pur_amt + $purchases_details[3];
+                                $bt_pur_amt = $bt_pur_amt + max(0, $purchases_details[3]);
                                 echo "</tr>";
                             }
                         }
@@ -512,8 +562,9 @@ $url = "";
 								echo "<td style='width:110px;text-align:left;'>".$tds_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$tds_details[2]."</td>";
                                 echo "<td style='width:100px;text-align:right;font-weight:bold;'></td>";
-                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($tds_details[3])."</td>";
+                                
 								echo "<td style='width:70px;text-align:right;'>".number_format_ind($tds_details[4])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($tds_details[3])."</td>";
                                 echo "<td style='width:70px;text-align:right;'>".number_format_ind($bal)."</td>";
 								
                                 
@@ -535,8 +586,9 @@ $url = "";
 								echo "<td style='width:110px;text-align:left;'>".$tds_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$tds_details[2]."</td>";
                                 echo "<td style='width:100px;text-align:right;font-weight:bold;'></td>";
-                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($tds_details[3])."</td>";
+                                
 								echo "<td style='width:70px;text-align:right;'>".number_format_ind($tds_details[4])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($tds_details[3])."</td>";
                                 echo "<td style='width:70px;text-align:right;'>".number_format_ind($bal)."</td>";
 								
                                 
@@ -560,8 +612,9 @@ $url = "";
 								echo "<td style='width:110px;text-align:left;'>".$payment_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$payment_details[2]."</td>";
                                 echo "<td style='width:70px;text-align:left;'>".$payment_details[5]."</td>";
-								echo "<td style='width:110px;text-align:right;'>".number_format_ind($payment_details[4])."</td>";
+								
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($payment_details[3])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($payment_details[4])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($bal)."</td>";
                                
                                 echo "</tr>";
@@ -586,8 +639,9 @@ $url = "";
 								echo "<td style='width:110px;text-align:left;'>".$sales_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$sales_details[2]."</td>";
                                 echo "<td style='width:70px;text-align:left;'>".$sales_details[5]."</td>";
-								echo "<td style='width:110px;text-align:right;'>".number_format_ind($sales_details[3])."</td>";
+								
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($sales_details[4])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($sales_details[3])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($bal)."</td>";
                                
                                 echo "</tr>";
@@ -609,8 +663,9 @@ $url = "";
 								echo "<td style='width:110px;text-align:left;'>".$receipt_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$receipt_details[2]."</td>";
                                 echo "<td style='width:100px;text-align:right;font-weight:bold;'></td>";
-                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($receipt_details[3])."</td>";
+                               
 								echo "<td style='width:70px;text-align:right;'>".number_format_ind($receipt_details[4])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($receipt_details[3])."</td>";
                                 echo "<td style='width:70px;text-align:right;'>".number_format_ind($bal)."</td>";
 								
                                 
@@ -648,8 +703,9 @@ $url = "";
 								echo "<td style='width:110px;text-align:left;'>".$scn_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$scn_details[2]."</td>";
                                 echo "<td style='width:70px;text-align:left;'>".$scn_details[5]."</td>";
-								echo "<td style='width:110px;text-align:right;'>".number_format_ind($scn_details[3])."</td>";
+								
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($scn_details[4])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($scn_details[3])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($bal)."</td>";
                                 
                                 echo "</tr>";
@@ -669,8 +725,9 @@ $url = "";
 								echo "<td style='width:110px;text-align:left;'>".$sdn_details[1]."</td>";
 								echo "<td style='width:70px;text-align:left;'>".$sdn_details[2]."</td>";
                                 echo "<td style='width:70px;text-align:left;'>".$sdn_details[5]."</td>";
-								echo "<td style='width:110px;text-align:right;'>".number_format_ind($sdn_details[3])."</td>";
+								
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($sdn_details[4])."</td>";
+                                echo "<td style='width:110px;text-align:right;'>".number_format_ind($sdn_details[3])."</td>";
                                 echo "<td style='width:100px;text-align:right;'>".number_format_ind($bal)."</td>";
                                 echo "</tr>";
 
@@ -680,24 +737,28 @@ $url = "";
                     }
                     echo "<tr>";
 					echo "<td style='width:403px;text-align:center;font-weight:bold;' colspan='4'>Between Dates Total</td>";
-					echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($bt_pur_amt)."</td>";
+					
 					echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($bt_pay_amt)."</td>";
+                    echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($bt_pur_amt)."</td>";
                     echo "<td style='width:100px;text-align:right;font-weight:bold;'></td>";
                     echo "</tr>";
                     echo "<tr>";
 					echo "<td style='width:403px;text-align:center;font-weight:bold;' colspan='4'>Closing Total</td>";
-                    echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($prev_bal_cr+$bt_pur_amt)."</td>";
+                   
                     echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($prev_bal_dr+$bt_pay_amt)."</td>";
+                    echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind($prev_bal_cr+$bt_pur_amt)."</td>";
                     echo "<td style='width:100px;text-align:right;'></td>";
                     echo "</tr>";
                     echo "<tr>";
 					echo "<td style='width:403px;text-align:center;font-weight:bold;' colspan='4'>Outstanding</td>";
                     if(($prev_bal_cr+$bt_pur_amt) > ($prev_bal_dr+$bt_pay_amt)){
-                        echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind(($prev_bal_cr+$bt_pur_amt) - ($prev_bal_dr+$bt_pay_amt))."</td>";
+                       
                         echo "<td style='width:100px;text-align:right;'></td>";
+                        echo "<td style='width:100px;text-align:right;font-weight:bold;'>".number_format_ind(($prev_bal_cr+$bt_pur_amt) - ($prev_bal_dr+$bt_pay_amt))."</td>";
                     }else{
-                        echo "<td style='width:100px;text-align:right;font-weight:bold;'></td>";
                         echo "<td style='width:100px;text-align:right;'>".number_format_ind(($prev_bal_dr+$bt_pay_amt) - ($prev_bal_cr+$bt_pur_amt) )."</td>";
+                        echo "<td style='width:100px;text-align:right;font-weight:bold;'></td>";
+                      
                     }
 					
 					echo "<td style='width:110px;text-align:right;'></td>";

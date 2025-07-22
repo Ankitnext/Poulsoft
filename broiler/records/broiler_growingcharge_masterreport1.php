@@ -5,6 +5,7 @@ session_start();
 if(!empty($_GET['db'])){ $db = $_SESSION['db'] = $_SESSION['dbase'] = $_GET['db']; } else { $db = ''; }
 if($db == ''){
     include "../newConfig.php";
+    global $page_title; $page_title = "Growing Charge Statement Report";
     include "header_head.php";
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
@@ -12,6 +13,7 @@ if($db == ''){
 }
 else{
     include "APIconfig.php";
+    global $page_title; $page_title = "Growing Charge Statement Report";
     include "header_head.php";
     $user_code = $_GET['userid'];
     $dbname = $db;
@@ -30,6 +32,9 @@ include $num_format_file;
 $database_name = $dbname; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
 $sql1 = "SHOW TABLES;"; $query1 = mysqli_query($conn,$sql1); while($row1 = mysqli_fetch_assoc($query1)){ $exist_tbl_names[$i] = $row1[$table_head]; $i++; }
 if(in_array("broiler_bird_transferout", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_bird_transferout LIKE poulso6_admin_broiler_broilermaster.broiler_bird_transferout;"; mysqli_query($conn,$sql1); }
+
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'broiler_growingcharge_masterreport1.php' AND `field_function` LIKE 'Show three decimal' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $threedecimal = mysqli_num_rows($query);
 
 
 $sql='SHOW COLUMNS FROM `main_access`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
@@ -89,12 +94,13 @@ while($row = mysqli_fetch_assoc($query)){ $supervisor_code[$row['code']] = $row[
 $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $sector_name[$row['code']] = $row['description']; }
 
-$chick_code = $chick_name = $bird_code = $bird_name = "";
+$chick_code = $chick_name = $bird_code = $bird_list = $bird_name = ""; $bird_alist = array();
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Chick%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $chick_code = $row['code']; $chick_name = $row['description']; }
 
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Bird%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-while($row = mysqli_fetch_assoc($query)){ $bird_code = $row['code']; $bird_name = $row['description']; }
+while($row = mysqli_fetch_assoc($query)){ $bird_code = $row['code']; $bird_alist[$row['code']] = $row['code']; $bird_name = $row['description']; }
+$bird_list = implode("','",$bird_alist);
 
 $item_code = $item_name = array();
 $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
@@ -411,6 +417,7 @@ if(isset($_POST['submit_report']) == true){
             <tbody class="tbody1">
                 <?php
                 $tsc_qty = $tfc_qty = $tmc_qty = $trc_qty = $trc_amt = 0; $cpdate = "";
+                
                 $sql = "SELECT * FROM `broiler_purchases` WHERE `icode` = '$chick_code' AND `warehouse` = '$farms' AND `farm_batch` = '$batches' AND `active` = '1' AND `dflag` = '0' ORDER BY `date` ASC";
                 $query = mysqli_query($conn, $sql);
                 while($row = mysqli_fetch_assoc($query)){
@@ -424,10 +431,30 @@ if(isset($_POST['submit_report']) == true){
                     $trc_qty += (($row['rcd_qty'] + $row['fre_qty']));
                     $trc_amt += $amount;
                     if($cpdate == ""){ $cpdate = strtotime($row['date']); } else{ if($cpdate > strtotime($row['date'])){ $cpdate = strtotime($row['date']); } }
+                    $added_emp = $row['updatedemp'];
+                  
                 ?>
                 <tr>
                     <td style="text-align:left;" colspan="2"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                    <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                    <?php  
+                        if($added_emp != ""){
+                            $htype = "trnum"; $htbl = "broiler_purchases"; $hetype = "edit"; $httype = "purchases";
+                            $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                            echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                            echo $row['trnum'] . " ";
+                            echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                            echo "</td>";                         
+                            }else {
+                              //  echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>";     
+                              $htype = "trnum"; $htbl = "broiler_purchases"; $hetype = "add"; $httype = "purchases";
+                              $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                              echo "<td style='text-align:left;' colspan='2'>";
+                              echo $row['trnum'] . " ";
+                              echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                              echo "</td>";    
+                             }
+                    ?>
+                    
                     <td style="text-align:left;" colspan="2"><?php echo $row['billno']; ?></td>
                     <td style="text-align:left;" colspan="2"><?php echo $vendor_name[$row['vcode']]; ?></td>
                     <td style="text-align:right;" colspan="2"><?php echo $row['snt_qty']; ?></td>
@@ -464,10 +491,31 @@ if(isset($_POST['submit_report']) == true){
                     $trc_qty += $row['quantity'];
                     $trc_amt += $amount;
                     if($cpdate == ""){ $cpdate = strtotime($row['date']); } else{ if($cpdate > strtotime($row['date'])){ $cpdate = strtotime($row['date']); } }
+                    $updt_emp = $row['updatedemp'];
                 ?>
                 <tr>
                     <td style="text-align:left;" colspan="2"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                    <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+
+                    <?php  
+                        if($updt_emp != ""){
+                            $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "edit"; $httype = "transfers";
+                            $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                            echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                            echo $row['trnum'] . " ";
+                            echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                            echo "</td>";                              
+                            }else {
+                               // echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>"; 
+                               $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "add"; $httype = "transfers";
+                               $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                               echo "<td style='text-align:left;' colspan='2'>";
+                               echo $row['trnum'] . " ";
+                               echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                               echo "</td>";   
+                            }
+                    ?>
+
+                   
                     <td style="text-align:left;" colspan="2"><?php echo $row['dcno']; ?></td>
                     <td style="text-align:left;" colspan="2"><?php echo $sector_name[$row['fromwarehouse']]; ?></td>
                     <?php if($row['trtype'] == 'ChickTransfer') {?>
@@ -563,10 +611,31 @@ if(isset($_POST['submit_report']) == true){
                             $feedb_bqty += (float)(round((($row['rcd_qty'] + $row['fre_qty']) / 50),2));
                         }
                     }
+                    $updt_emp = $row['updatedemp'];
+                 
                     ?>
                     <tr>
                         <td style="text-align:left;" colspan="2"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                        <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+
+                        <?php  
+                            if($updt_emp != ""){
+                                $htype = "trnum"; $htbl = "broiler_purchases"; $hetype = "edit"; $httype = "purchases";
+                                $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                                echo $row['trnum'] . " ";
+                                echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                echo "</td>";          
+                                }else {
+                                   // echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>"; 
+                                   $htype = "trnum"; $htbl = "broiler_purchases"; $hetype = "add"; $httype = "purchases";
+                                    $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                    echo "<td style='text-align:left;' colspan='2'>";
+                                    echo $row['trnum'] . " ";
+                                    echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                    echo "</td>";         
+                                }
+                    ?>
+                       
                         <td style="text-align:left;" colspan="2"><?php echo $row['billno']; ?></td>
                         <td style="text-align:left;" colspan="2"><?php echo $item_name[$row['icode']]; ?></td>
                         <td style="text-align:left;" colspan="3"><?php echo $vendor_name[$row['vcode']]; ?></td>
@@ -674,10 +743,29 @@ if(isset($_POST['submit_report']) == true){
                             $feedb_bqty += (float)(round(($row['quantity'] / 50),2));
                         }
                     }
+                    $updt_emp = strtotime($row['updatedemp']);
+
                     ?>
                     <tr>
                         <td style="text-align:left;" colspan="2"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                        <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                        <?php  
+                            if($updt_emp != ""){
+                                $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "edit"; $httype = "transfers";
+                                $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                                echo $row['trnum'] . " ";
+                                echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                echo "</td>";       
+                                }else {
+                                  //  echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>";   
+                                  $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "add"; $httype = "transfers";
+                                  $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                  echo "<td style='text-align:left;' colspan='2'>";
+                                  echo $row['trnum'] . " ";
+                                  echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                  echo "</td>";   
+                                    }
+                    ?>
                         <td style="text-align:left;" colspan="2"><?php echo $row['dcno']; ?></td>
                         <td style="text-align:left;" colspan="2"><?php echo $item_name[$row['code']]; ?></td>
                         <td style="text-align:left;" colspan="3"><?php echo $sector_name[$row['fromwarehouse']]; ?></td>
@@ -787,10 +875,28 @@ if(isset($_POST['submit_report']) == true){
                             $feedb_bqty -= (float)(round(($row['quantity'] / 50),2));
                         }
                     }
+                    $updt_emp = strtotime($row['updatedemp']);
                     ?>
                     <tr>
                         <td style="text-align:left;" colspan="2"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                        <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                        <?php  
+                            if($updt_emp != ""){
+                                $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "edit"; $httype = "transfers";
+                                $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                                echo $row['trnum'] . " ";
+                                echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                echo "</td>";
+                                }else {
+                                   // echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>"; 
+                                   $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "add"; $httype = "transfers";
+                                   $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                   echo "<td style='text-align:left;' colspan='2'>";
+                                   echo $row['trnum'] . " ";
+                                   echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                   echo "</td>";
+                                }
+                    ?>
                         <td style="text-align:left;" colspan="2"><?php echo $row['dcno']; ?></td>
                         <td style="text-align:left;" colspan="2"><?php echo $item_name[$row['code']]; ?></td>
                         <td style="text-align:left;" colspan="3"><?php echo $sector_name[$row['towarehouse']]; ?></td>
@@ -860,10 +966,29 @@ if(isset($_POST['submit_report']) == true){
                                 $feedb_bqty -= (float)(round(($row['quantity'] / 50),2));
                             }
                         }
+                        $updt_emp = $row['updatedemp'];
                         ?>
                         <tr>
                             <td style="text-align:left;" colspan="2"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                            <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                            <?php  
+                            if($updt_emp != ""){
+                                $htype = "trnum"; $htbl = "broiler_itemreturns"; $hetype = "edit"; $httype = "returns";
+                                $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                                echo $row['trnum'] . " ";
+                                echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                echo "</td>";
+                                }else {
+                                  //  echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>";
+                                  $htype = "trnum"; $htbl = "broiler_itemreturns"; $hetype = "add"; $httype = "returns";
+                                  $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                  echo "<td style='text-align:left;' colspan='2'>";
+                                  echo $row['trnum'] . " ";
+                                  echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                  echo "</td>";
+                                    
+                                    }
+                    ?>
                             <td style="text-align:left;" colspan="2"><?php echo ""; ?></td>
                             <td style="text-align:left;" colspan="2"><?php echo $item_name[$row['itemcode']]; ?></td>
                             <td style="text-align:left;" colspan="3"><?php echo $sector_name[$row['warehouse']]; ?></td>
@@ -1078,7 +1203,8 @@ if(isset($_POST['submit_report']) == true){
                     $cum_mort += (float)$mortality + (float)$culls;
                     $week_mort += (float)$mortality;
                     $week_culls += (float)$culls;
-
+                    $tranid = $row['trnum'];
+                    $updt_emp = $row['updatedemp'];
                     if( (int)$brood_age > 0 && (int)$brood_age <= 7){ $days7_morts += ((float)$mortality + (float)$culls); $days30_mort += ((float)$mortality + (float)$culls); }
                     else if((int)$brood_age > 7 && (int)$brood_age <= 30){ $days30_mort += ((float)$mortality + (float)$culls); }
                     else if((int)$brood_age > 30){ $daysge30_mort += ((float)$mortality + (float)$culls); }
@@ -1123,7 +1249,24 @@ if(isset($_POST['submit_report']) == true){
                     if($row['brood_age'] > 0){ if($mstart_date == ""){ $mstart_date = $row['date']; } else{ if(strtotime($mstart_date) >= strtotime($row['date'])){ $mstart_date = $row['date']; } } }
                 ?>
                 <tr align="center">
-                    <td style="text-align:left;width:110px;"><?php echo date("d.m.Y",strtotime($date)); ?></td>
+                    <?php 
+                        if($updt_emp != ""){
+                        $htype = "trnum"; $htbl = "broiler_daily_record"; $hetype = "edit"; $httype = "daily_entry";
+                        $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                        echo "<td style='text-align:left;width:110px;color:orange;' >";
+                        echo date("d.m.Y",strtotime($date)) . " ";
+                        echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                        echo "</td>";      
+                        }else {
+                           // echo "<td style='text-align:left;width:110px;'>".date("d.m.Y",strtotime($date))."</td>";    
+                           $htype = "trnum"; $htbl = "broiler_daily_record"; $hetype = "add"; $httype = "daily_entry";
+                           $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                           echo "<td style='text-align:left;width:110px;' >";
+                           echo date("d.m.Y",strtotime($date)) . " ";
+                           echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                           echo "</td>";      
+                            }
+                    ?>
                     <td style="text-align:right;width:60px;"><?php echo round($brood_age); ?></td>
                     <td style="text-align:right;"><?php echo str_replace(".00","",number_format_ind(round($opn_qty,2))); ?></td>
                     <td style="text-align:right;"><?php echo str_replace(".00","",number_format_ind(round($mortality))); ?></td>
@@ -1189,6 +1332,7 @@ if(isset($_POST['submit_report']) == true){
                     <td style="text-align:right;" title="<?php echo $title; ?>"><?php echo number_format_ind(round($feed_bqty,2)); ?></td>
                     <td style="text-align:right;" title="<?php echo $title; ?>"><?php echo number_format_ind(round(($feedb_bqty),2)); ?></td>
                     <td style="text-align:left;"><?php echo $row['remarks']; ?></td>
+                   
                 </tr>
                 <?php
                 if($i == 1){
@@ -1486,10 +1630,29 @@ if(isset($_POST['submit_report']) == true){
                         $amount = $row['amount'];
                     }
                     else{ }
+                    $updt_emp = $row['updatedemp'];
                 ?>
                 <tr>
                     <td style="text-align:left;" colspan="1"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                    <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                    <?php  
+                        if($updt_emp != ""){
+                            $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "edit"; $httype = "transfers";
+                            $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                            echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                            echo $row['trnum'] . " ";
+                            echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                            echo "</td>";
+                            }else {
+                              //  echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>";
+                              $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "add"; $httype = "transfers";
+                              $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                              echo "<td style='text-align:left;' colspan='2'>";
+                              echo $row['trnum'] . " ";
+                              echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                              echo "</td>";
+                                
+                                }
+                    ?>
                     <td style="text-align:left;" colspan="2"><?php echo $row['dcno']; ?></td>
                     <td style="text-align:left;" colspan="3"><?php echo $sector_name[$row['fromwarehouse']]; ?></td>
                     <td style="text-align:left;" colspan="2"><?php echo $row['code']; ?></td>
@@ -1597,11 +1760,29 @@ if(isset($_POST['submit_report']) == true){
                         $price = $tmv_price[$row['item_code']];
                     }
                     $amount = $price * $row['quantity'];
-
+                    $updt_emp = $row['updatedemp'];
                 ?>
                 <tr>
                     <td style="text-align:left;" colspan="1"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                    <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                    <?php  
+                            if($updt_emp != ""){
+                                $htype = "trnum"; $htbl = "broiler_medicine_record"; $hetype = "edit"; $httype = "medvac_entry";
+                                $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                                echo $row['trnum'] . " ";
+                                echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                echo "</td>";
+                                }else {
+                                   // echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>";
+                                   $htype = "trnum"; $htbl = "broiler_medicine_record"; $hetype = "add"; $httype = "medvac_entry";
+                                   $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                   echo "<td style='text-align:left;' colspan='2'>";
+                                   echo $row['trnum'] . " ";
+                                   echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                   echo "</td>";
+                                    
+                                    }
+                    ?>
                     <td style="text-align:left;" colspan="2"><?php echo $row['item_code']; ?></td>
                     <td style="text-align:left;" colspan="3"><?php echo $item_name[$row['item_code']]; ?></td>
                     <td style="text-align:right;" colspan="2"><?php echo number_format_ind(round(($row['quantity']),2)); ?></td>
@@ -1705,11 +1886,30 @@ if(isset($_POST['submit_report']) == true){
                         $price = $row['price']; $amount = $row['amount'];
                     }
                     else{ }
-
+                    $updt_emp = $row['updatedemp'];
                 ?>
                 <tr>
                     <td style="text-align:left;" colspan="2"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
-                    <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                    <?php  
+                            if($updt_emp != ""){
+                                $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "edit"; $httype = "transfers";
+                                $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                                echo $row['trnum'] . " ";
+                                echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                echo "</td>";
+                                
+                                }else {
+                                   // echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>";
+                                   $htype = "trnum"; $htbl = "item_stocktransfers"; $hetype = "add"; $httype = "transfers";
+                                   $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                   echo "<td style='text-align:left;' colspan='2'>";
+                                   echo $row['trnum'] . " ";
+                                   echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                   echo "</td>";
+                
+                                    }
+                    ?>
                     <td style="text-align:left;" colspan="2"><?php echo $row['dcno']; ?></td>
                     <td style="text-align:left;" colspan="2"><?php echo $sector_name[$row['towarehouse']]; ?></td>
                     <td style="text-align:left;" colspan="2"><?php echo $row['code']; ?></td>
@@ -1782,7 +1982,7 @@ if(isset($_POST['submit_report']) == true){
             <tbody class="tbody1">
             <?php
                 $i = 0;
-                $sql = "SELECT * FROM `broiler_sales` WHERE `icode` = '$bird_code' AND `warehouse` = '$farms' AND `farm_batch` = '$batches' AND `active` = '1' AND `dflag` = '0' ORDER BY `date` ASC"; $query = mysqli_query($conn, $sql);
+                $sql = "SELECT * FROM `broiler_sales` WHERE `icode` IN ('$bird_list') AND `warehouse` = '$farms' AND `farm_batch` = '$batches' AND `active` = '1' AND `dflag` = '0' ORDER BY `date` ASC"; $query = mysqli_query($conn, $sql);
                 while($row = mysqli_fetch_assoc($query)){
                     if($i == 0){
                         $sale_sdate = date("d.m.Y",strtotime($row['date']));
@@ -1795,11 +1995,29 @@ if(isset($_POST['submit_report']) == true){
                         $sbirds = (float)$row['birds'];
                         $sold_mean_total += ($dlist2 * $sbirds);
                     }
+                    $updt_emp = $row['updatedemp'];
                     ?>
                     <tr>
                         <td style="text-align:left;" colspan="1"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
                         <td style="text-align:left;" colspan="1"><?php echo ((strtotime($row['date']) - strtotime($mstart_date)) / 60 / 60 / 24) + 1; ?></td>
-                        <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                        <?php  
+                            if($updt_emp != ""){
+                                $htype = "trnum"; $htbl = "broiler_sales"; $httype = "sales"; $hetype = "edit";
+                                $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                echo "<td style='text-align:left; color:orange;' colspan='2'>";
+                                echo $row['trnum'] . " ";
+                                echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                echo "</td>";     
+                                }else {
+                                    $htype = "trnum"; $htbl = "broiler_sales"; $httype = "sales"; $hetype = "add";
+                                    $path = 'openPopup("broiler_transaction_history1.php?htrnum='.$row['trnum'].'&htype='.$htype.'&htbl='.$htbl.'&trans_type='.$httype.'&hetype='.$hetype.'")';
+                                    echo "<td style='text-align:left;' colspan='2'>";
+                                    echo $row['trnum'] . " ";
+                                    echo "<a href='javascript:void(0);' onclick=".$path."><i class='fa-solid fa-user-clock' style='color:green;'></i></a>";
+                                    echo "</td>"; 
+                                   // echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>";          
+                                }
+                        ?>
                         <td style="text-align:left;" colspan="2"><?php echo $row['billno']; ?></td>
                         <td style="text-align:left;" colspan="4"><?php if($row['sale_type'] == "FormMBSale"){ echo $farm_name[$farms]; } else{ echo $vendor_name[$row['vcode']]; } ?></td>
                         <td style="text-align:right;" colspan="2"><?php echo str_replace(".00","",number_format_ind(round(($row['birds'])))); ?></td>
@@ -1807,7 +2025,12 @@ if(isset($_POST['submit_report']) == true){
                         <td style="text-align:right;" colspan="1">
                         <?php
                         if((float)$row['birds'] > 0){
-                            echo number_format_ind(((float)$row['rcd_qty'] + (float)$row['fre_qty']) / (float)$row['birds']);
+                            if($threedecimal > 0){
+                                echo round(((float)$row['rcd_qty'] + (float)$row['fre_qty']) / (float)$row['birds'],3);
+                            }else{
+                                echo number_format_ind(((float)$row['rcd_qty'] + (float)$row['fre_qty']) / (float)$row['birds']);
+                            }
+                            
                         }
                         else{
                             echo number_format_ind(0);
@@ -1849,7 +2072,7 @@ if(isset($_POST['submit_report']) == true){
 
                 if($count131 > 0){
                     $i = 0;
-                $sql = "SELECT * FROM `broiler_bird_transferout` WHERE `item_code` = '$bird_code' AND `fromwarehouse` = '$farms' AND `from_batch` = '$batches' AND `active` = '1' AND `dflag` = '0' ORDER BY `date` ASC"; $query = mysqli_query($conn, $sql);
+                $sql = "SELECT * FROM `broiler_bird_transferout` WHERE `item_code` IN ('$bird_list') AND `fromwarehouse` = '$farms' AND `from_batch` = '$batches' AND `active` = '1' AND `dflag` = '0' ORDER BY `date` ASC"; $query = mysqli_query($conn, $sql);
                 while($row = mysqli_fetch_assoc($query)){
                     if($i == 0){
                         $sale_sdate = date("d.m.Y",strtotime($row['date']));
@@ -1862,11 +2085,20 @@ if(isset($_POST['submit_report']) == true){
                         $sbirds = (float)$row['birds'];
                         $sold_mean_total += ($dlist2 * $sbirds);
                     }
+                    $updt_emp = $row['updatedemp'];
                     ?>
                     <tr>
                         <td style="text-align:left;" colspan="1"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
                         <td style="text-align:left;" colspan="1"><?php echo ((strtotime($row['date']) - strtotime($mstart_date)) / 60 / 60 / 24) + 1; ?></td>
-                        <td style="text-align:left;" colspan="2"><?php echo $row['trnum']; ?></td>
+                        <?php  
+                            if($updt_emp != ""){
+                                 echo "<td style='text-align:left;color:red' colspan='2' >".$row['trnum']."</td>";
+                                
+                                }else {
+                                    echo "<td style='text-align:left;' colspan='2'>".$row['trnum']."</td>";
+                                    
+                                    }
+                    ?>
                         <td style="text-align:left;" colspan="2"><?php echo $row['dcno']; ?></td>
                         <td style="text-align:left;" colspan="4"><?php echo $sector_name[$row['towarehouse']]; ?></td>
                         <td style="text-align:right;" colspan="2"><?php echo str_replace(".00","",number_format_ind(round(($row['birds'])))); ?></td>
@@ -1965,7 +2197,7 @@ if(isset($_POST['submit_report']) == true){
                             if($fetch_type == "farmer"){
                                 $smr_placement_date = date("d.m.Y",strtotime($row['start_date']));
                                 $smr_placed_chicks = $row['placed_birds'];
-                                $smr_mortality = $cum_mort;
+                                $smr_mortality = $total_mort;
                                 $smr_culls = $tculls;
                                 $smr_excess = $row['excess'];
                                 $smr_shortage = $row['shortage'];
@@ -2002,7 +2234,7 @@ if(isset($_POST['submit_report']) == true){
                             else if($fetch_type == "mgmt"){
                                 $smr_placement_date = date("d.m.Y",strtotime($row['start_date']));
                                 $smr_placed_chicks = $row['placed_birds'];
-                                $smr_mortality = $cum_mort;
+                                $smr_mortality = $total_mort;
                                 $smr_culls = $tculls;
                                 $smr_excess = $row['excess'];
                                 $smr_shortage = $row['shortage'];
@@ -2027,7 +2259,7 @@ if(isset($_POST['submit_report']) == true){
                                 $smr_actual_chick_cost = $row['actual_chick_cost'];
                                 $smr_feed_cost_amt = $row['actual_feed_cost'];
                                 $smr_total_cost_amt = $row['actual_chick_cost'] + $row['actual_feed_cost'] + $row['actual_medicine_cost'] + $row['mgmt_admin_amt'];
-                                $smr_total_cost_unit = (($row['actual_chick_cost'] + $row['actual_feed_cost'] + $row['actual_medicine_cost'] + $row['mgmt_admin_amt']) / $row['sold_weight']);
+                                $smr_total_cost_unit = 0; if((float)$row['sold_weight'] != 0){ $smr_total_cost_unit = (($row['actual_chick_cost'] + $row['actual_feed_cost'] + $row['actual_medicine_cost'] + $row['mgmt_admin_amt']) / $row['sold_weight']); }
                                 $smr_admin_cost_amt = $row['mgmt_admin_amt'];
                                 $smr_admin_cost_unit = $row['mgmt_admin_prc'];
                                 $smr_medvac_in = $row['transfer_in'];
@@ -2053,15 +2285,15 @@ if(isset($_POST['submit_report']) == true){
                         $smr_sale_amount = $ts_amt;
 
                         $smr_placed_chicks = $trc_qty;
-                        $smr_mortality = $cum_mort;
+                        $smr_mortality = $total_mort;
                         $smr_culls = $tculls;
-                        if(((float)$trc_qty - ((float)$cum_mort + (float)$tculls + (float)$smr_sold_birds)) >= 0){
-                            $smr_shortage = ((float)$trc_qty - ((float)$cum_mort + (float)$tculls + (float)$smr_sold_birds));
-                            $sht_title = "$smr_shortage = ((float)$trc_qty - ((float)$cum_mort + (float)$tculls + (float)$smr_sold_birds));";
+                        if(((float)$trc_qty - ((float)$total_mort + (float)$tculls + (float)$smr_sold_birds)) >= 0){
+                            $smr_shortage = ((float)$trc_qty - ((float)$total_mort + (float)$tculls + (float)$smr_sold_birds));
+                            $sht_title = "$smr_shortage = ((float)$trc_qty - ((float)$total_mort + (float)$tculls + (float)$smr_sold_birds));";
                         }
                         else{
-                            $smr_excess = ((float)$trc_qty - ((float)$cum_mort + (float)$tculls + (float)$smr_sold_birds));
-                            $sht_title = "$smr_shortage = ((float)$trc_qty - ((float)$cum_mort + (float)$tculls + (float)$smr_sold_birds));";
+                            $smr_excess = ((float)$trc_qty - ((float)$total_mort + (float)$tculls + (float)$smr_sold_birds));
+                            $sht_title = "$smr_shortage = ((float)$trc_qty - ((float)$total_mort + (float)$tculls + (float)$smr_sold_birds));";
                         }
                         $smr_grade = "";
                         if((float)$smr_placed_chicks != 0){
@@ -2368,6 +2600,21 @@ var tableToExcel = (function() {
   }
 
 })()
+
+function openPopup(url){
+                window.open(url,'_BLANK');
+                /*var popup = window.open(url, 'popupWindow', 'width=1500,height=1000,scrollbars=yes,resizable=yes');
+                if(popup){
+                    popup.focus();
+
+                    var popupChecker = setInterval(function () {
+                        if (popup.closed) {
+                            clearInterval(popupChecker);
+                            document.getElementById("submit_report").click();
+                        }
+                    }, 500);
+                }*/
+            }
 </script>
    
     </body>

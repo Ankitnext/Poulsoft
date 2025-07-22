@@ -10,7 +10,7 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+    global $page_title; $page_title = "Sales Report";
     include "header_head.php";
     $user_code = $_SESSION['userid'];
     $user_name = $_SESSION['users'];
@@ -20,10 +20,12 @@ else{
     //include "../newConfig.php";
     include "APIconfig.php";
     include "number_format_ind.php";
+    global $page_title; $page_title = "Sales Report";
     include "header_head.php";
     $user_code = $_GET['userid'];
     $dbname = $db;
 }
+$file_name = "Sales Report";
 
 /*Check for Table Availability*/
 $database_name = $dbname; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
@@ -267,14 +269,6 @@ if(isset($_POST['submit_report']) == true){
 <html>
     <head>
         <title>Poulsoft Solutions</title>
-        <!-- Datatable CSS 
-        <link href='../../col/jquery.dataTables.min.css' rel='stylesheet' type='text/css'>-->
-
-        <!-- jQuery Library -->
-        <script src="../../col/jquery-3.5.1.js"></script>
-        
-        <!-- Datatable JS -->
-        <script src="../../col/jquery.dataTables.min.js"></script>
         <script>
             var exptype = '<?php echo $excel_type; ?>';
             var url = '<?php echo $url; ?>';
@@ -303,6 +297,7 @@ if(isset($_POST['submit_report']) == true){
             inset-block-end: 0; /* "bottom" */
             }
         </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <?php
             if($excel_type == "print"){
                 echo '<style>body { padding:10px;text-align:center; }
@@ -511,7 +506,7 @@ if(isset($_POST['submit_report']) == true){
                                 ?>
                                 <div class="m-2 form-group">
                                     <label>Export</label>
-                                    <select name="export" id="export" class="form-control select2">
+                                    <select name="export" id="export" class="form-control select2" onchange="download_to_excel2('main_table','<?php echo $file_name; ?>', this.options[this.selectedIndex].value);">
                                         <option value="display" <?php if($excel_type == "display"){ echo "selected"; } ?>>-Display-</option>
                                         <option value="excel" <?php if($excel_type == "excel"){ echo "selected"; } ?>>-Excel-</option>
                                         <option value="print" <?php if($excel_type == "print"){ echo "selected"; } ?>>-Print-</option>
@@ -592,60 +587,65 @@ if(isset($_POST['submit_report']) == true){
             <tr><td><br></td></tr>
         </table>
         <input type="text" class="cd-search table-filter" data-table="tbl" placeholder="Search here..." />
-        <table id="mine" class="tbl" align="center"  style="width:1300px;">
-            <thead class="thead3" align="center" style="width:1212px;">
+        <table id="main_table" class="tbl" align="center"  style="width:1300px;">
+            <thead id="head_names" class="thead3" align="center" style="width:1212px;">
                 <tr align="center">
                 <?php
+                $nhtml = $fhtml = '';
+                $nhtml .= '<tr>';
                 for($i = 1;$i <= $col_count;$i++){
                     $key_id = "A:1:".$i;
-                    if($act_col_numbs[$key_id] == "date"){ echo "<th id='order_date'>Date</th>"; }
-                    else if($act_col_numbs[$key_id] == "vendor_name"){ echo "<th id='order'>Customer</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_address"){ echo "<th id='order'>Address</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_gst_no"){ echo "<th id='order'>GST No</th>"; }
-                    else if($act_col_numbs[$key_id] == "transaction_type"){ echo "<th id='order'>Voucher Type</th>"; }
-                    else if($act_col_numbs[$key_id] == "trnum"){ echo "<th id='order'>Invoice</th>"; }
-                    else if($act_col_numbs[$key_id] == "book_no"){ echo "<th id='order'>Dc No.</th>"; }
-                    else if($act_col_numbs[$key_id] == "sold_birdsno"){ echo "<th id='order_num'>Birds</th>"; }
-                    else if($act_col_numbs[$key_id] == "sold_birdswt"){ echo "<th id='order_num'>Weight</th>"; }
-                    else if($act_col_numbs[$key_id] == "avg_bodywt"){ echo "<th id='order_num'>Avg Wt</th>"; }
-                    else if($act_col_numbs[$key_id] == "sold_perkg_price"){ echo "<th id='order_num'>Rate</th>"; }
-                    else if($act_col_numbs[$key_id] == "sold_amount"){ echo "<th id='order_num'>Amount</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_gst_per"){ echo "<th id='order_num'>GST %</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_gst_amt"){ echo "<th id='order_num'>GST Amt</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_cgst_amt"){ echo "<th id='order_num'>CGST Amt</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_sgst_amt"){ echo "<th id='order_num'>SGST Amt</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_igst_amt"){ echo "<th id='order_num'>IGST Amt</th>"; }
-                    else if($act_col_numbs[$key_id] == "tcds_amount"){ echo "<th id='order_num'>TCS Amount</th>"; }
-                    else if($act_col_numbs[$key_id] == "total_sale_amount"){ echo "<th id='order_num'>Total Amount</th>"; }
-                    else if($act_col_numbs[$key_id] == "cash_receipt_amt"){ echo "<th id='order_num'>Cash Receipt</th>"; }
-                    else if($act_col_numbs[$key_id] == "bank_receipt_amt"){ echo "<th id='order_num'>Bank Receipt</th>"; }
-                    else if($act_col_numbs[$key_id] == "receipt_amount"){ echo "<th id='order_num'>Receipt Amount</th>"; }
-                    else if($act_col_numbs[$key_id] == "branch_name"){ echo "<th id='order'>Branch</th>"; }
-                    else if($act_col_numbs[$key_id] == "line_name"){ echo "<th id='order'>Line</th>"; }
-                    else if($act_col_numbs[$key_id] == "supervisor_name"){ echo "<th id='order'>Supervisor</th>"; }
-                    else if($act_col_numbs[$key_id] == "farm_name"){ echo "<th id='order'>Farm</th>"; }
-                    else if($act_col_numbs[$key_id] == "batch_name"){ echo "<th id='order'>Batch</th>"; }
-                    else if($act_col_numbs[$key_id] == "mean_age"){ echo "<th id='order_num'>Mean Age</th>"; }
-                    else if($act_col_numbs[$key_id] == "vehicle_no"){ echo "<th id='order'>Vehicle</th>"; }
-                    else if($act_col_numbs[$key_id] == "driver_name"){ echo "<th id='order'>Driver</th>"; }
-                    else if($act_col_numbs[$key_id] == "remakrs"){ echo "<th id='order'>Remarks</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_marketing_executive"){ echo "<th id='order'>Marketing Executive</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_itemname"){ echo "<th id='order'>Item Name</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_addedemp"){ echo "<th id='order'>Entry By</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_addedtime"){ echo "<th id='order'>Entry Time</th>"; }
-                    else if($act_col_numbs[$key_id] == "cus_total_weight"){ echo "<th id='order_num'>Total Weight</th>"; }
-                    else if($act_col_numbs[$key_id] == "cus_empty_weight"){ echo "<th id='order_num'>Empty Weight</th>"; }
-                    else if($act_col_numbs[$key_id] == "day_gain"){ echo "<th id='order_num'>Day Gain</th>"; }
-                    else if($act_col_numbs[$key_id] == "daily_prate"){ echo "<th id='order_num'>Daily Paper Rate</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_diff_amt"){ echo "<th id='order_num'>Diff</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_supervisor_code"){ echo "<th id='order'>Lifting Supervisor</th>"; }
-                    else if($act_col_numbs[$key_id] == "brood_age"){ echo "<th id='order_num'>Mean Age</th>"; }
-                    else if($act_col_numbs[$key_id] == "sale_amt_wtcds"){ echo "<th id='order_num'>Total with TCS</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_ccode"){ echo "<th id='order_num'>Customer Code</th>"; }
-                    else if($act_col_numbs[$key_id] == "customer_sale_image"){ echo "<th id='order_num'>DC Images</th>"; }
-                    else if($act_col_numbs[$key_id] == "item_hsncode"){ echo "<th id='order_num'>HSN Code</th>"; }
+                    if ($act_col_numbs[$key_id] == "date") { $nhtml .= '<th>Date</th>'; $fhtml .= '<th id="order_date">Date</th>'; }
+                    else if ($act_col_numbs[$key_id] == "vendor_name") { $nhtml .= '<th>Customer</th>'; $fhtml .= '<th id="order">Customer</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_address") { $nhtml .= '<th>Address</th>'; $fhtml .= '<th id="order">Address</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_gst_no") { $nhtml .= '<th>GST No</th>'; $fhtml .= '<th id="order">GST No</th>'; }
+                    else if ($act_col_numbs[$key_id] == "transaction_type") { $nhtml .= '<th>Voucher Type</th>'; $fhtml .= '<th id="order">Voucher Type</th>'; }
+                    else if ($act_col_numbs[$key_id] == "trnum") { $nhtml .= '<th>Invoice</th>'; $fhtml .= '<th id="order">Invoice</th>'; }
+                    else if ($act_col_numbs[$key_id] == "book_no") { $nhtml .= '<th>Dc No.</th>'; $fhtml .= '<th id="order">Dc No.</th>'; }
+                    else if ($act_col_numbs[$key_id] == "sold_birdsno") { $nhtml .= '<th>Birds</th>'; $fhtml .= '<th id="order_num">Birds</th>'; }
+                    else if ($act_col_numbs[$key_id] == "sold_birdswt") { $nhtml .= '<th>Weight</th>'; $fhtml .= '<th id="order_num">Weight</th>'; }
+                    else if ($act_col_numbs[$key_id] == "avg_bodywt") { $nhtml .= '<th>Avg Wt</th>'; $fhtml .= '<th id="order_num">Avg Wt</th>'; }
+                    else if ($act_col_numbs[$key_id] == "sold_perkg_price") { $nhtml .= '<th>Rate</th>'; $fhtml .= '<th id="order_num">Rate</th>'; }
+                    else if ($act_col_numbs[$key_id] == "sold_amount") { $nhtml .= '<th>Amount</th>'; $fhtml .= '<th id="order_num">Amount</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_gst_per") { $nhtml .= '<th>GST %</th>'; $fhtml .= '<th id="order_num">GST %</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_gst_amt") { $nhtml .= '<th>GST Amt</th>'; $fhtml .= '<th id="order_num">GST Amt</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_cgst_amt") { $nhtml .= '<th>CGST Amt</th>'; $fhtml .= '<th id="order_num">CGST Amt</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_sgst_amt") { $nhtml .= '<th>SGST Amt</th>'; $fhtml .= '<th id="order_num">SGST Amt</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_igst_amt") { $nhtml .= '<th>IGST Amt</th>'; $fhtml .= '<th id="order_num">IGST Amt</th>'; }
+                    else if ($act_col_numbs[$key_id] == "tcds_amount") { $nhtml .= '<th>TCS Amount</th>'; $fhtml .= '<th id="order_num">TCS Amount</th>'; }
+                    else if ($act_col_numbs[$key_id] == "total_sale_amount") { $nhtml .= '<th>Total Amount</th>'; $fhtml .= '<th id="order_num">Total Amount</th>'; }
+                    else if ($act_col_numbs[$key_id] == "cash_receipt_amt") { $nhtml .= '<th>Cash Receipt</th>'; $fhtml .= '<th id="order_num">Cash Receipt</th>'; }
+                    else if ($act_col_numbs[$key_id] == "bank_receipt_amt") { $nhtml .= '<th>Bank Receipt</th>'; $fhtml .= '<th id="order_num">Bank Receipt</th>'; }
+                    else if ($act_col_numbs[$key_id] == "receipt_amount") { $nhtml .= '<th>Receipt Amount</th>'; $fhtml .= '<th id="order_num">Receipt Amount</th>'; }
+                    else if ($act_col_numbs[$key_id] == "branch_name") { $nhtml .= '<th>Branch</th>'; $fhtml .= '<th id="order">Branch</th>'; }
+                    else if ($act_col_numbs[$key_id] == "line_name") { $nhtml .= '<th>Line</th>'; $fhtml .= '<th id="order">Line</th>'; }
+                    else if ($act_col_numbs[$key_id] == "supervisor_name") { $nhtml .= '<th>Supervisor</th>'; $fhtml .= '<th id="order">Supervisor</th>'; }
+                    else if ($act_col_numbs[$key_id] == "farm_name") { $nhtml .= '<th>Farm</th>'; $fhtml .= '<th id="order">Farm</th>'; }
+                    else if ($act_col_numbs[$key_id] == "batch_name") { $nhtml .= '<th>Batch</th>'; $fhtml .= '<th id="order">Batch</th>'; }
+                    else if ($act_col_numbs[$key_id] == "mean_age") { $nhtml .= '<th>Mean Age</th>'; $fhtml .= '<th id="order_num">Mean Age</th>'; }
+                    else if ($act_col_numbs[$key_id] == "vehicle_no") { $nhtml .= '<th>Vehicle</th>'; $fhtml .= '<th id="order">Vehicle</th>'; }
+                    else if ($act_col_numbs[$key_id] == "driver_name") { $nhtml .= '<th>Driver</th>'; $fhtml .= '<th id="order">Driver</th>'; }
+                    else if ($act_col_numbs[$key_id] == "remakrs") { $nhtml .= '<th>Remarks</th>'; $fhtml .= '<th id="order">Remarks</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_marketing_executive") { $nhtml .= '<th>Marketing Executive</th>'; $fhtml .= '<th id="order">Marketing Executive</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_itemname") { $nhtml .= '<th>Item Name</th>'; $fhtml .= '<th id="order">Item Name</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_addedemp") { $nhtml .= '<th>Entry By</th>'; $fhtml .= '<th id="order">Entry By</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_addedtime") { $nhtml .= '<th>Entry Time</th>'; $fhtml .= '<th id="order">Entry Time</th>'; }
+                    else if ($act_col_numbs[$key_id] == "cus_total_weight") { $nhtml .= '<th>Total Weight</th>'; $fhtml .= '<th id="order_num">Total Weight</th>'; }
+                    else if ($act_col_numbs[$key_id] == "cus_empty_weight") { $nhtml .= '<th>Empty Weight</th>'; $fhtml .= '<th id="order_num">Empty Weight</th>'; }
+                    else if ($act_col_numbs[$key_id] == "day_gain") { $nhtml .= '<th>Day Gain</th>'; $fhtml .= '<th id="order_num">Day Gain</th>'; }
+                    else if ($act_col_numbs[$key_id] == "daily_prate") { $nhtml .= '<th>Daily Paper Rate</th>'; $fhtml .= '<th id="order_num">Daily Paper Rate</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_diff_amt") { $nhtml .= '<th>Diff</th>'; $fhtml .= '<th id="order_num">Diff</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_supervisor_code") { $nhtml .= '<th>Lifting Supervisor</th>'; $fhtml .= '<th id="order">Lifting Supervisor</th>'; }
+                    else if ($act_col_numbs[$key_id] == "brood_age") { $nhtml .= '<th>Mean Age</th>'; $fhtml .= '<th id="order_num">Mean Age</th>'; }
+                    else if ($act_col_numbs[$key_id] == "sale_amt_wtcds") { $nhtml .= '<th>Total with TCS</th>'; $fhtml .= '<th id="order_num">Total with TCS</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_ccode") { $nhtml .= '<th>Customer Code</th>'; $fhtml .= '<th id="order_num">Customer Code</th>'; }
+                    else if ($act_col_numbs[$key_id] == "customer_sale_image") { $nhtml .= '<th>DC Images</th>'; $fhtml .= '<th id="order_num">DC Images</th>'; }
+                    else if ($act_col_numbs[$key_id] == "item_hsncode") { $nhtml .= '<th>HSN Code</th>'; $fhtml .= '<th id="order_num">HSN Code</th>'; }
                     else{ }
                 }
+                echo $fhtml;
+                
+                $nhtml .= '</tr>';
                 ?>
                 </tr>
             </thead>
@@ -845,7 +845,7 @@ if(isset($_POST['submit_report']) == true){
                     echo "<tr>";
                     for($i = 1;$i <= $col_count;$i++){
                         $key_id = "A:1:".$i; $key_id1 = "A:0:".$i;
-                        if($act_col_numbs[$key_id] == "date"){ echo "<td title='Date'>".date('d.m.Y',strtotime($row['date']))."</td>"; }
+                        if($act_col_numbs[$key_id] == "date"){ echo "<td title='Date' class='dates'>".date('d.m.Y',strtotime($row['date']))."</td>"; }
                         else if($act_col_numbs[$key_id] == "vendor_name"){ if(!empty($vendor_name[$row['vcode']])){ echo "<td title='Customer'>".$vendor_name[$row['vcode']]."</td>"; } else{ echo "<td title='Customer'>".$farm_name[$row['warehouse']]."</td>"; } }
                         else if($act_col_numbs[$key_id] == "customer_address"){ echo "<td title='Customer'>".$vendor_addr[$row['vcode']]."</td>"; }
                         else if($act_col_numbs[$key_id] == "customer_gst_no"){ echo "<td title='Customer'>".$vendor_gstno[$row['vcode']]."</td>"; }
@@ -1162,13 +1162,11 @@ if(isset($_POST['submit_report']) == true){
         </script>
         <script>
             function table_sort() {
-		        console.log("test");
                 const styleSheet = document.createElement('style');
                 styleSheet.innerHTML = `.order-inactive span { visibility:hidden; } .order-inactive:hover span { visibility:visible; } .order-active span { visibility: visible; }`;
                 document.head.appendChild(styleSheet);
 
                 document.querySelectorAll('#order').forEach(th_elem => {
-                    console.log("test1");
 
                     let asc = true;
                     const span_elem = document.createElement('span');
@@ -1207,7 +1205,6 @@ if(isset($_POST['submit_report']) == true){
             }
             function convertDate(d){ var p = d.split("."); return (p[2]+p[1]+p[0]); }
             function table_sort3() {
-                console.log("test");
                 const styleSheet = document.createElement('style');
                 styleSheet.innerHTML = `
                         .order-inactive span {
@@ -1223,7 +1220,6 @@ if(isset($_POST['submit_report']) == true){
                 document.head.appendChild(styleSheet);
 
                 document.querySelectorAll('#order_date').forEach(th_elem => {
-                    console.log("test1");
 
                     let asc = true;
                     const span_elem = document.createElement('span');
@@ -1264,7 +1260,6 @@ if(isset($_POST['submit_report']) == true){
             function convertNumber(d) { var p = intval(d); return (p); }
 
             function table_sort2() {
-                console.log("test");
                 const styleSheet = document.createElement('style');
                 styleSheet.innerHTML = `
                         .order-inactive span {
@@ -1280,7 +1275,6 @@ if(isset($_POST['submit_report']) == true){
                 document.head.appendChild(styleSheet);
 
                 document.querySelectorAll('#order_num').forEach(th_elem => {
-                    console.log("test1");
 
                     let asc = true;
                     const span_elem = document.createElement('span');
@@ -1372,6 +1366,61 @@ if(isset($_POST['submit_report']) == true){
         function openImage(url) {
             window.open(url, '_blank');
         }
+        </script>
+        
+        <script>
+            function download_to_excel2(tbl_name, filename, chosen){
+                if(chosen === 'excel'){
+                    table_heading_to_normal1();
+                    cdate_format1();
+
+                    var table = document.getElementById("main_table");
+                    var workbook = XLSX.utils.book_new();
+                    var worksheet = XLSX.utils.table_to_sheet(table);
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+                    XLSX.writeFile(workbook, filename+".xlsx");
+
+                    cdate_format2();
+                    table_heading_to_standard_filters();
+                }
+            }
+            function cdate_format1() {
+                const dateCells = document.querySelectorAll('#main_table .dates');
+                var adate = [];
+                dateCells.forEach(cell => {
+                    let originalString = cell.textContent;
+                    adate = []; adate = originalString.split(".");
+                    cell.textContent = adate[2]+"-"+adate[1]+"-"+adate[0];
+                });
+            }
+            function cdate_format2() {
+                const dateCells = document.querySelectorAll('#main_table .dates');
+                var adate = [];
+                dateCells.forEach(cell => {
+                    let originalString = cell.textContent;
+                    adate = []; adate = originalString.split("-");
+                    cell.textContent = adate[2]+"."+adate[1]+"."+adate[0];
+                });
+            }
+            function table_heading_to_normal1(){
+                document.getElementById("head_names").innerHTML = "";
+                var html = '';
+                html += '<?php echo $nhtml; ?>';
+                $('#head_names').append(html);
+            }
+            function table_heading_to_standard_filters(){
+                document.getElementById("head_names").innerHTML = "";
+                var html = '';
+                html += '<?php echo $fhtml; ?>';
+                document.getElementById("head_names").innerHTML = html;
+                    
+                $('#export').select2();
+                document.getElementById("export").value = "display";
+                $('#export').select2();
+                table_sort();
+                table_sort2();
+                table_sort3();
+            }
         </script>
     </body>
 </html>

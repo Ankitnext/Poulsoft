@@ -59,10 +59,10 @@ for($i = 0;$i < $dsize;$i++){
         if($lb_batch_no > 2){
             $blb_batch_no = $lb_batch_no - 1;
             $olb_batch_no = $blb_batch_no - 1;
-            $sql = "SELECT * FROM `broiler_batch` WHERE `farm_code` = '$farm_code' AND `batch_no` = '$lb_batch_no' AND `dflag` = '0' AND `gc_flag` = '1' ORDER BY `description` ASC";
+            $sql = "SELECT * FROM `broiler_batch` WHERE `farm_code` = '$fmcode[$i]' AND `batch_no` = '$lb_batch_no' AND `dflag` = '0' AND `gc_flag` = '1' ORDER BY `description` ASC";
             $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $lb_code = $row['code']; }
     
-            $sql = "SELECT * FROM `broiler_rearingcharge` WHERE `farm_code` = '$farm_code' AND `batch_code` = '$lb_code' AND `dflag` = '0' AND `active` = '1'";
+            $sql = "SELECT * FROM `broiler_rearingcharge` WHERE `farm_code` = '$fmcode[$i]' AND `batch_code` = '$lb_code' AND `dflag` = '0' AND `active` = '1'";
             $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
                 $lb_fcr = $row['fcr'];
@@ -73,10 +73,10 @@ for($i = 0;$i < $dsize;$i++){
                 $lb_gc_date = $row['date'];
             }
     
-            $sql = "SELECT * FROM `broiler_batch` WHERE `farm_code` = '$farm_code' AND `batch_no` = '$blb_batch_no' AND `dflag` = '0' AND `gc_flag` = '1' ORDER BY `description` ASC";
+            $sql = "SELECT * FROM `broiler_batch` WHERE `farm_code` = '$fmcode[$i]' AND `batch_no` = '$blb_batch_no' AND `dflag` = '0' AND `gc_flag` = '1' ORDER BY `description` ASC";
             $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $blb_code = $row['code']; }
     
-            $sql = "SELECT * FROM `broiler_rearingcharge` WHERE `farm_code` = '$farm_code' AND `batch_code` = '$blb_code' AND `dflag` = '0' AND `active` = '1'";
+            $sql = "SELECT * FROM `broiler_rearingcharge` WHERE `farm_code` = '$fmcode[$i]' AND `batch_code` = '$blb_code' AND `dflag` = '0' AND `active` = '1'";
             $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
                 $blb_fcr = $row['fcr'];
@@ -87,10 +87,10 @@ for($i = 0;$i < $dsize;$i++){
                 $blb_gc_date = $row['date'];
             }
     
-            $sql = "SELECT * FROM `broiler_batch` WHERE `farm_code` = '$farm_code' AND `batch_no` = '$olb_batch_no' AND `dflag` = '0' AND `gc_flag` = '1' ORDER BY `description` ASC";
+            $sql = "SELECT * FROM `broiler_batch` WHERE `farm_code` = '$fmcode[$i]' AND `batch_no` = '$olb_batch_no' AND `dflag` = '0' AND `gc_flag` = '1' ORDER BY `description` ASC";
             $query = mysqli_query($conn,$sql); while($row = mysqli_fetch_assoc($query)){ $olb_code = $row['code']; }
     
-            $sql = "SELECT * FROM `broiler_rearingcharge` WHERE `farm_code` = '$farm_code' AND `batch_code` = '$olb_code' AND `dflag` = '0' AND `active` = '1'";
+            $sql = "SELECT * FROM `broiler_rearingcharge` WHERE `farm_code` = '$fmcode[$i]' AND `batch_code` = '$olb_code' AND `dflag` = '0' AND `active` = '1'";
             $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
                 $olb_fcr = $row['fcr'];

@@ -19,6 +19,7 @@ if(in_array("vdoc_path3", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 if(in_array("vdoc_path4", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `vdoc_path4` VARCHAR(1500) NULL DEFAULT NULL AFTER `vdoc_path3`"; mysqli_query($conn,$sql); }
 if(in_array("vdoc_path5", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `vdoc_path5` VARCHAR(1500) NULL DEFAULT NULL AFTER `vdoc_path4`"; mysqli_query($conn,$sql); }
 if(in_array("aadhar_no", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `aadhar_no` VARCHAR(1500) NULL DEFAULT NULL AFTER `pan_no`"; mysqli_query($conn,$sql); }
+if(in_array("cline_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_contactdetails` ADD `cline_code` VARCHAR(100) NULL DEFAULT NULL AFTER `aadhar_no`"; mysqli_query($conn,$sql); }
       
 $sql='SHOW COLUMNS FROM `master_generator`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
 while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
@@ -36,6 +37,7 @@ $mobile2 = $_POST['mobile2'];
 $emails = $_POST['emails'];
 $pan_no = $_POST['pan'];
 $aadhar_no = $_POST['aadhar_no'];
+$cline_code = $_POST['cline_code'];
 $birth_date = date("Y-m-d",strtotime($_POST['bday']));
 
 $contacttype = $_POST['stype'];
@@ -43,11 +45,14 @@ $groupcode = $_POST['sgrp'];
 $gstinno = $_POST['cgstin'];
 if($_POST['processing_flag'] == "on" || $_POST['processing_flag'] == true || $_POST['processing_flag'] == 1){ $processing_flag = 1; } else{ $processing_flag = 0; }
 
+$country = $_POST['country'];
+$currency = $_POST['currency'];
 $company_details = $_POST['company'];
 $state_code = $_POST['state'];
 $branch_code = $_POST['branch_code'];
 $baddress = $_POST['baddress'];
 $saddress = $_POST['saddress'];
+$cterms = $_POST['cterms'];
 
 if(!empty($_POST['obamount'])){
     $obamt = $_POST['obamount'];
@@ -116,8 +121,8 @@ if($updoc_flag > 0){
         move_uploaded_file($filetmp,$link_path5);
     }
 }
-$sql = "INSERT INTO `main_contactdetails` (incr,prefix,code,cus_ccode,cus_prefix,name,mobile1,mobile2,emails,pan_no,aadhar_no,birth_date,contacttype,groupcode,gstinno,company_details,state_code,branch_code,baddress,saddress,obamt,obtype,obdate,obremarks,creditdays,creditamt,bank_accno,bank,vdoc_path1,vdoc_path2,vdoc_path3,vdoc_path4,vdoc_path5,flag,active,dflag,processing_flag,addedemp,addedtime,updatedtime) 
-value('$incr','$prefix','$code','$cus_ccode','$cus_prefix','$name','$mobile1','$mobile2','$emails','$pan_no','$aadhar_no','$birth_date','$contacttype','$groupcode','$gstinno','$company_details','$state_code','$branch_code','$baddress','$saddress','$obamt','$obtype','$obdate','$obremarks','$creditdays','$creditamt','$bank_accno','$bank','$link_path1','$link_path2','$link_path3','$link_path4','$link_path5','0','1','0','$processing_flag','$addedemp','$addedtime','$addedtime')";
+$sql = "INSERT INTO `main_contactdetails` (incr,prefix,code,cus_ccode,cus_prefix,name,mobile1,mobile2,emails,pan_no,aadhar_no,birth_date,country,currency,contacttype,groupcode,gstinno,company_details,state_code,branch_code,baddress,saddress,obamt,obtype,obdate,obremarks,creditdays,creditamt,bank_accno,bank,vdoc_path1,vdoc_path2,vdoc_path3,vdoc_path4,vdoc_path5,flag,active,dflag,processing_flag,addedemp,addedtime,updatedtime,cline_code,cterms) 
+value('$incr','$prefix','$code','$cus_ccode','$cus_prefix','$name','$mobile1','$mobile2','$emails','$pan_no','$aadhar_no','$birth_date','$country','$currency','$contacttype','$groupcode','$gstinno','$company_details','$state_code','$branch_code','$baddress','$saddress','$obamt','$obtype','$obdate','$obremarks','$creditdays','$creditamt','$bank_accno','$bank','$link_path1','$link_path2','$link_path3','$link_path4','$link_path5','0','1','0','$processing_flag','$addedemp','$addedtime','$addedtime','$cline_code','$cterms')";
 if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); }
 else {
     if($obamt != "" && (float)$obamt != 0){
@@ -188,6 +193,48 @@ else {
                 if(!mysqli_query($conn,$to_post)){ die("Error 3:-".mysqli_error($conn)); }
                 else{ }
             }
+        }
+    }
+
+    //check and Insert Billing and Shipping Details
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'E-Invoices' AND `field_function` = 'Generate Auto E-Invoices' AND `user_access` = 'all' AND `flag` = '1'";
+    $query = mysqli_query($conn,$sql); $einv_gflag = mysqli_num_rows($query);
+    if((int)$einv_gflag > 0){
+        //Billing Details
+        $ven_legalname = $_POST['blegal_name'];
+        $ven_tradename = $_POST['btrade_name'];
+        $ven_gstin = $_POST['bgstin'];
+        $ven_addr1 = $_POST['baddr1'];
+        $ven_addr2 = $_POST['baddr2'];
+        $ven_loc = $_POST['blocation'];
+        $ven_pincode = $_POST['bpincode'];
+        $ven_statecode = $_POST['bstate'];
+        $ven_phone = $_POST['bphone'];
+        $ven_email = $_POST['bemail'];
+        $trlink = "broiler_display_customer.php";
+        $addr_type = "billing_address";
+        if($ven_legalname != "" && $ven_gstin != ""){
+            $from_post = "INSERT INTO `broiler_ebill_shipping_details` (`addr_type`,`vcode`,`ven_gstin`,`ven_legalname`,`ven_tradename`,`ven_addr1`,`ven_addr2`,`ven_loc`,`ven_pincode`,`ven_statecode`,`ven_phone`,`ven_email`,`trlink`,`addedemp`,`addedtime`,`updatedtime`) 
+            VALUES ('$addr_type','$code','$ven_gstin','$ven_legalname','$ven_tradename','$ven_addr1','$ven_addr2','$ven_loc','$ven_pincode','$ven_statecode','$ven_phone','$ven_email','$trlink','$addedemp','$addedtime','$addedtime')";
+            if(!mysqli_query($conn,$from_post)){ die("Error 4:-".mysqli_error($conn)); } else{ }
+        }
+        //Shipping Details
+        $ven_legalname = $_POST['slegal_name'];
+        $ven_tradename = $_POST['strade_name'];
+        $ven_gstin = $_POST['sgstin'];
+        $ven_addr1 = $_POST['saddr1'];
+        $ven_addr2 = $_POST['saddr2'];
+        $ven_loc = $_POST['slocation'];
+        $ven_pincode = $_POST['spincode'];
+        $ven_statecode = $_POST['sstate'];
+        $ven_phone = $_POST['sphone'];
+        $ven_email = $_POST['semail'];
+        $trlink = "broiler_display_customer.php";
+        $addr_type = "shipping_address";
+        if($ven_legalname != "" && $ven_gstin != ""){
+            $from_post = "INSERT INTO `broiler_ebill_shipping_details` (`addr_type`,`vcode`,`ven_gstin`,`ven_legalname`,`ven_tradename`,`ven_addr1`,`ven_addr2`,`ven_loc`,`ven_pincode`,`ven_statecode`,`ven_phone`,`ven_email`,`trlink`,`addedemp`,`addedtime`,`updatedtime`) 
+            VALUES ('$addr_type','$code','$ven_gstin','$ven_legalname','$ven_tradename','$ven_addr1','$ven_addr2','$ven_loc','$ven_pincode','$ven_statecode','$ven_phone','$ven_email','$trlink','$addedemp','$addedtime','$addedtime')";
+            if(!mysqli_query($conn,$from_post)){ die("Error 5:-".mysqli_error($conn)); } else{ }
         }
     }
     header('location:broiler_display_customer.php?ccid='.$ccid);

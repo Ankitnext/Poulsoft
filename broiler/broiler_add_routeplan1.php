@@ -49,6 +49,31 @@ if($link_active_flag > 0){
         $trno_dt1 = generate_transaction_details($date,"routeplan1","RPS","display",$_SESSION['dbase']);
         $trno_dt2 = explode("@",$trno_dt1);
         $incr = $trno_dt2[0]; $prefix = $trno_dt2[1]; $trnum = $trno_dt2[2]; $fyear = $trno_dt2[3];
+
+        $sql = "SELECT * FROM `broiler_designation` WHERE `description` LIKE 'Driver'"; $query = mysqli_query($conn,$sql); $desig_code = "";
+        while($row = mysqli_fetch_assoc($query)){
+            $desig_code = $row['code'];
+        }
+
+        $sql = "SELECT * FROM `broiler_employee` WHERE `dflag` = '0' AND `desig_code` = '$desig_code' ORDER BY `id` DESC"; $query = mysqli_query($conn,$sql); $driver_code = $driver_name = array();
+        while($row = mysqli_fetch_assoc($query)){
+            $driver_code[$row['code']] = $row['code'];
+            $driver_name[$row['code']] = $row['name'];
+        }
+
+        $sql = "SELECT * FROM `broiler_vehicle` WHERE `active` = '1'"; $query = mysqli_query($conn,$sql); $vehicle_code = $vehicle_regno = array();
+        while($row = mysqli_fetch_assoc($query)){
+            $vehicle_code[$row['code']] = $row['code'];
+            $vehicle_regno[$row['code']] = $row['registration_number'];
+        }
+
+        $sql = "SELECT * FROM `breeder_cus_lines` WHERE `dflag` = '0' AND `trtype` = 'breedname1' AND `trlink` = 'vendor_display_breedname.php' ORDER BY `id` DESC";
+        $query = mysqli_query($conn,$sql); $cuslinecode = $cuslinename = array();
+        while($row = mysqli_fetch_assoc($query)){
+            $cuslinecode[$row['code']] = $row['code'];
+            $cuslinename[$row['code']] = $row['description'];
+        }
+
         
 ?>
 <html lang="en">
@@ -97,17 +122,64 @@ if($link_active_flag > 0){
                                             <label>Route Date<b style="color:red;">&nbsp;*</b></label>
 							                <input type="text" name="date" id="date" class="form-control range_picker" style="width:100px;" value="<?php echo date('d.m.Y'); ?>" />
                                         </div>
-                                        <div class="form-group">
+                                        <!-- <div class="form-group">
                                             <label>Vehicle</label>
                                             <input type="text" name="vehicle" id="vehicle" class="form-control" style="width:100px;" onkeyup="validatename(this.id);" />
-                                        </div>
+                                        </div> -->
                                         <div class="form-group">
+                                            <label>Vehicle</label>
+                                            <select name="vehicle" id="vehicle" class="form-control select2">
+                                                <option></option> <!-- Empty placeholder option -->
+                                                <?php foreach($vehicle_code as $lcode){ ?>
+                                                    <option value="<?php echo $vehicle_regno[$lcode]; ?>"><?php echo $vehicle_regno[$lcode]; ?></option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
+                                        <!-- <div class="form-group">
                                             <label>Driver</label>
                                             <input type="text" name="driver" id="driver" class="form-control" style="width:100px;" onkeyup="validatename(this.id);" />
-                                        </div>
+                                        </div> -->
                                         <div class="form-group">
+                                            <label>Driver</label>
+                                            <select name="driver" id="driver" class="form-control select2" >   
+                                            <option></option>
+                                                <?php foreach($driver_code as $lcode){ ?>
+                                                <option value="<?php echo $lcode; ?>" ><?php echo $driver_name[$lcode]; ?></option>
+                                                <?php  } ?>
+                                            </select>
+                                        </div>
+                                        <!-- <div class="form-group">
                                             <label>Route/Line</label>
                                             <input type="text" name="route_no" id="route_no" class="form-control" style="width:100px;" onkeyup="validatename(this.id);" />
+                                        </div> -->
+                                        <div class="form-group">
+                                            <label>Route/Line</label>
+                                            <select name="route_no" id="route_no" class="form-control select2" >   
+                                            <option></option>
+                                                <?php foreach($cuslinecode as $lcode){ ?>
+                                                <option value="<?php echo $lcode; ?>" ><?php echo $cuslinename[$lcode]; ?></option>
+                                                <?php  } ?>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Company<b style="color:red;">&nbsp;*</b></label>
+							                <input type="text" name="company" id="company" class="form-control"  />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Labour 1<b style="color:red;">&nbsp;*</b></label>
+							                <input type="text" name="labour1" id="labour1" class="form-control"  />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Labour 2<b style="color:red;">&nbsp;*</b></label>
+							                <input type="text" name="labour2" id="labour2" class="form-control" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Lifter<b style="color:red;">&nbsp;*</b></label>
+							                <input type="text" name="lifter" id="lifter" class="form-control"  />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Lifter Mob<b style="color:red;">&nbsp;*</b></label>
+							                <input type="text" name="lifter_mob" id="lifter_mob" class="form-control" />
                                         </div>
                                     </div>
                                     <div class="p-0 col-md-12" id="row_body">
@@ -247,3 +319,60 @@ else{
     echo "You don't have access to this page \n Kindly contact your admin for more information";
 }
 ?>
+<script>
+$(document).ready(function() {
+    $('#vehicle').select2({
+        tags: true,
+        placeholder: 'Select or enter vehicle',
+        allowClear: true,
+        width: '100%',
+        createTag: function (params) {
+            return {
+                id: params.term,
+                text: params.term,
+                newOption: true
+            };
+        },
+        insertTag: function (data, tag) {
+            // Put custom entry at the end
+            data.push(tag);
+        }
+    });
+
+    $('#driver').select2({
+        tags: true,
+        placeholder: 'Select or enter driver',
+        allowClear: true,
+        width: '100%',
+        createTag: function (params) {
+            return {
+                id: params.term,
+                text: params.term,
+                newOption: true
+            };
+        },
+        insertTag: function (data, tag) {
+            // Put custom entry at the end
+            data.push(tag);
+        }
+    });
+
+    $('#route_no').select2({
+        tags: true,
+        placeholder: 'Select or enter route',
+        allowClear: true,
+        width: '100%',
+        createTag: function (params) {
+            return {
+                id: params.term,
+                text: params.term,
+                newOption: true
+            };
+        },
+        insertTag: function (data, tag) {
+            // Put custom entry at the end
+            data.push(tag);
+        }
+    });
+});
+</script>

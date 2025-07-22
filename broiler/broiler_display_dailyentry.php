@@ -10,6 +10,13 @@ $sql = "SELECT * FROM `main_linkdetails` WHERE `childid` = '$cid' AND `active` =
 $query = mysqli_query($conn,$sql); $link_active_flag = mysqli_num_rows($query);
 if($link_active_flag > 0){
     while($row = mysqli_fetch_assoc($query)){ $cname = $row['name']; }
+
+//     /*Check for Column Availability*/
+// $sql='SHOW COLUMNS FROM `'.$table_name.'`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+// while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+// if(in_array("egg_weight", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `'..'` ADD `egg_weight` VARCHAR(300) NULL DEFAULT NULL COMMENT '' AFTER `remarks`"; mysqli_query($conn,$sql); }
+
+
     $sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$user_code' AND `active` = '1'"; $query = mysqli_query($conn,$sql);
     $dlink = $alink = $elink = $rlink = $plink = $ulink = $flink = array(); $sector_access = $cgroup_access = $user_type = "";
     while($row = mysqli_fetch_assoc($query)){
@@ -74,6 +81,19 @@ if($link_active_flag > 0){
     if($user_type == "S"){ $acount = 1; }
     else if($aid == 1){ $acount = 1; }
     else{ $acount = 0; }
+
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'broiler_display_dailyentry.php' AND `field_function` LIKE 'Hide Columns' AND `flag` = '1'";
+    $query = mysqli_query($conn,$sql);
+    while($row = mysqli_fetch_assoc($query)){
+        $fieldvalue = $row["field_value"];
+    }
+    if (!empty($fieldvalue)) {
+        $hidecolumns = explode(",", $fieldvalue);
+    } else {
+        $hidecolumns = [];
+    }
+   // echo $fieldvalue; 
+   // print_r($hidecolumns);
 ?>
 <html lang="en">
     <head>
@@ -135,7 +155,27 @@ if($link_active_flag > 0){
             while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['name']; }
 
             $sql = "SELECT * FROM `broiler_farm` WHERE `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-            while($row = mysqli_fetch_assoc($query)){ $farm_code[$row['code']] = $row['code']; $farm_name[$row['code']] = $row['description']; }
+            while($row = mysqli_fetch_assoc($query)){ $farm_code[$row['code']] = $row['code']; $farm_name[$row['code']] = $row['description']; $farmbranch[$row['code']] = $row['branch_code']; }
+
+            $sql = "SELECT * FROM `location_branch` WHERE `active` = '1'";
+            $query = mysqli_query($conn,$sql);
+            while($row = mysqli_fetch_assoc($query)){
+                $branchn[$row['code']] = $row['description'];
+            }
+
+            $sql = "SELECT * FROM `main_access` WHERE `active` = '1'";
+            $query = mysqli_query($conn,$sql);
+            while($row = mysqli_fetch_assoc($query)){
+                $employ[$row['empcode']] = $row['db_emp_code'];
+            }
+           // print_r($employ);
+
+            $sql = "SELECT * FROM `broiler_employee` WHERE `active` = '1' AND `dflag` = '0'";
+            $query = mysqli_query($conn,$sql); $empname = array();
+            while($row = mysqli_fetch_assoc($query)){
+                $empname[$row['code']] = $row['name'];
+            }
+          //  print_r($empname);
         ?>
         <div class="m-0 p-0 wrapper">
             <section class="m-0 p-0 content">
@@ -148,11 +188,11 @@ if($link_active_flag > 0){
                                         <div class="row" align="left">
                                             <div class="form-group" style="width:100px;">
                                                 <label for="fdate">From Date: </label>
-                                                <input type="text" name="fdate" id="fdate" class="form-control datepicker" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="width:90px;">
+                                                <input type="text" name="fdate" id="fdate" class="form-control rc_datepicker" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>" style="width:90px;">
                                             </div>
                                             <div class="form-group" style="width:100px;">
                                                 <label for="tdate">To Date: </label>
-                                                <input type="text" name="tdate" id="tdate" class="form-control datepicker" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="width:90px;">
+                                                <input type="text" name="tdate" id="tdate" class="form-control rc_datepicker" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" style="width:90px;">
                                             </div>
                                             <div class="form-group" style="width:250px;">
                                                 <label for="tdate">Farm: </label>
@@ -181,15 +221,24 @@ if($link_active_flag > 0){
                                     <tr>
                                         <th>Date</th>
                                         <th>Trnum</th>
+                                        <th>Branch</th>
                                         <th>Farm</th>
 										<th>Batch</th>
 										<th>Age</th>
 										<th>Mortality</th>
-										<th>Feed 1</th>
-										<th>Qty 1</th>
-										<th>Feed 2</th>
-										<th>Qty 2</th>
+
+                                        <?php echo in_array("feed1", $hidecolumns) ? "" : "<th>Feed 1</th>"; ?>
+										<?php echo in_array("qty1", $hidecolumns) ? "" : "<th>Qty 1</th>"; ?>
+										<?php echo in_array("feed2", $hidecolumns) ? "" : "<th>Feed 2</th>"; ?>
+										<?php echo in_array("qty2", $hidecolumns) ? "" : "<th>Qty 2</th>"; ?>
+										
+
 										<th>Avg Wt.(Gms)</th>
+
+                                        <?php echo in_array("entryby", $hidecolumns) ? "" : "<th>Entry By</th>"; ?>
+                                        <?php echo in_array("entrytime", $hidecolumns) ? ""  : "<th>Entry Time</th>"; ?>
+                                        
+                                        
 										<th>Action</th>
                                     </tr>
                                 </thead>
@@ -222,11 +271,14 @@ if($link_active_flag > 0){
                                     <tr>
 										<td data-sort="<?= strtotime($row['date']) ?>"><?= date('d.m.Y',strtotime($row['date'])) ?></td>
 										<td><?php echo $row['trnum']; ?></td>
+                                        <td><?php echo $branchn[$farmbranch[$row['farm_code']]]; ?></td>
 										<td><?php echo $farm_name[$row['farm_code']]; ?></td>
 										<td><?php echo $batch_name[$row['batch_code']]; ?></td>
 										<td><?php echo round($row['brood_age']); ?></td>
 										<td><?php echo round($row['mortality']); ?></td>
-										<td><?php echo $item_name[$row['item_code1']]; ?></td>
+                                        <?php echo in_array("feed1", $hidecolumns) ? "" : "<td>".$item_name[$row['item_code1']]."</td>"; ?>
+										
+                                        <?php  if(!in_array("qty1", $hidecolumns)){  ?>
 										<td>
                                             <?php
                                             if($bag_access_flag > 0){
@@ -258,7 +310,12 @@ if($link_active_flag > 0){
                                                 echo round($available_stock_qty,2);
                                             ?>
                                         </td>
-                                        <td><?php echo $item_name[$row['item_code2']]; ?></td>
+                                        <?php  }  ?>
+
+                                        <?php echo in_array("feed2", $hidecolumns) ? "" : "<td>".$item_name[$row['item_code2']]."</td>"; ?>
+                                       
+
+                                        <?php  if(!in_array("qty2", $hidecolumns)){  ?>
 										<td>
                                             <?php
                                             if($bag_access_flag > 0){
@@ -290,7 +347,13 @@ if($link_active_flag > 0){
                                                 echo round($available_stock_qty,2);
                                             ?>
                                         </td>
+                                        <?php  }  ?>
+
+
 										<td><?php echo round($row['avg_wt']); ?></td>
+                                        <?php echo in_array("entryby", $hidecolumns) ? "" : "<td>".$empname[$employ[$row['addedemp']]]."</td>"; ?>
+                                        <?php echo in_array("entrytime", $hidecolumns) ? ""  : "<td>".date('d.m.Y H:m:s a',strtotime($row['addedtime']))."</td>"; ?>
+                                      
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){

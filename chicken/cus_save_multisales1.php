@@ -8,6 +8,7 @@ $addedemp = $_SESSION['userid'];
 $addedtime = date('Y-m-d H:i:s');
 $client = $_SESSION['client'];
 include "chicken_send_wapp_master2.php";
+include "poulsoft_convert_langmst1.php";
 
 /*Check for Table Availability*/
 $database_name = $_SESSION['dbase']; $table_head = "Tables_in_".$database_name; $exist_tbl_names = array(); $i = 0;
@@ -34,6 +35,22 @@ $sql = "SELECT * FROM `whatsapp_keygenerate_master` WHERE `file_type` = 'Multipl
 $query = mysqli_query($conn,$sql); $w_cnt = mysqli_num_rows($query);
 if($w_cnt > 0){ while($row = mysqli_fetch_assoc($query)){ $sms_type = $row['sms_type']; $wapp_ptrn = $row['pattern']; } }
 
+$sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE '$file_name' AND `field_function` LIKE 'Send Language Translated WhatsApp' AND `user_access` LIKE 'all' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $slt_wflag = mysqli_num_rows($query); $from = $to = "";
+if((int)$slt_wflag > 0){
+    while($row = mysqli_fetch_assoc($query)){ $field_value = $row['field_value']; }
+    if($field_value != ""){ $l1 = array(); $l1 = explode(",",$field_value); $from = $l1[0]; $to = $l1[1]; }
+}
+//WhatsApp Master
+$sql = "SELECT * FROM `sms_master` WHERE `sms_type` = '$sms_type' AND  `msg_type` IN ('WAPP') AND `active` = '1'";
+$query = mysqli_query($conn,$sql); $msg_header = $msg_footer = "";
+while($row = mysqli_fetch_assoc($query)){ $msg_header = $row['msg_header']; $msg_footer = $row['msg_footer']; }
+
+
+//Change WhatsApp Format-1
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'cus_displaymultisales.php' AND `field_function` LIKE 'User Specific WhatsApp Format-1' AND `user_access` LIKE 'all' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $wapp_nfmt1 = mysqli_num_rows($query);
+
 //Fetch Company Details
 $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $company_name = $row['cname']; $cdetails = $row['cname']." - ".$row['cnum']; }
@@ -49,7 +66,7 @@ if(in_array("trlink", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `cu
 $sql1 = "SELECT * FROM `extra_access` WHERE `field_name` = 'Authorization' AND `field_function` = 'cus_add_multisales1.php' AND `user_access` = 'all'";
 $query1 = mysqli_query($conn,$sql1); $tcount = mysqli_num_rows($query1); $aut_flag = 0;
 if($tcount > 0){ while($row1 = mysqli_fetch_assoc($query1)){ $aut_flag = $row1['flag']; } }
-else{ $sql1 = "INSERT INTO `extra_access` (`field_name`,`field_function`,`user_access`,`flag`) VALUES ('Send WhatsApp Timer','cus_add_multisales1.php','all','0');"; mysqli_query($conn,$sql1); }
+else{ $sql1 = "INSERT INTO `extra_access` (`field_name`,`field_function`,`user_access`,`flag`) VALUES ('Authorization','cus_add_multisales1.php','all','0');"; mysqli_query($conn,$sql1); }
 if((int)$aut_flag == 1){ $active = 0; } else{ $active = 1; }
 
 //COA check
@@ -254,30 +271,58 @@ Thank You,
 							$message = json_encode($msg1);
 						}
 						else{
-							if((float)$new_wflag > 0){
+							if((int)$wapp_nfmt1 > 0){
 								$item_dlt = "";
-								$item_dlt = $item_name[$itemcode[$j]];
+								if($birds[$j] != ""){ $item_birds = $birds[$j]."No. "; } else{ $item_birds = ""; }
+								$item_dlt = $item_name[$itemcode[$j]].": ".$item_birds."%0D%0AWeight: ".$netweight[$j]."Kgs @ Rs/-: ".$itemprice[$j];
+								$old_bamt = (float)$out_amt;
 								
-								if((int)$jals_flag == 1){
-									$item_dlt .= "%0D%0AJals: ".str_replace(".00","",number_format_ind($jals[$j]));
-								}
-								if((int)$birds_flag == 1){
-									$item_dlt .= "%0D%0ABirds: ".str_replace(".00","",number_format_ind($birds[$j]));
-								}
-								if((int)$tweight_flag == 1){
-									$item_dlt .= "%0D%0AGross Wt: ".str_replace(".00","",number_format_ind($totalweight[$j]));
-								}
-								if((int)$eweight_flag == 1){
-									$item_dlt .= "%0D%0AEmpty Wt: ".str_replace(".00","",number_format_ind($emptyweight[$j]));
-								}
-								$item_dlt .= "%0D%0ANet Wt: ".number_format_ind($netweight[$j]);
-								$item_dlt .= "%0D%0APrice: ".number_format_ind($itemprice[$j]);
-								$item_dlt .= "%0D%0ATotal Amount: ".number_format_ind($totalamt[$j]);
-								$item_dlt .= "%0D%0A";
-							}
+                                if((int)$slt_wflag > 0 && $from != "" && $to != ""){
+                                    $words = ['Sale Details', 'Dear', 'Date', 'This Bill Amount', 'Old Balance', 'Balance: Rs.', 'Thank You']; if(!empty($msg_header)){ $words[] = $msg_header; } if(!empty($msg_footer)){ $words[] = $msg_footer; }
+                                    $res_words = convert_language($conns, $from, $to, $words);
 
-							$message = "*Sale Details*%0D%0ADear: ".$customer_name."%0D%0ADate: ".date("d.m.Y",strtotime($date)).",%0D%0A".$item_dlt."%0D%0ASale Amt: ".$totalamount."/-%0D%0ABalance: Rs. ".$bal."/-%0D%0AThank You,%0D%0A".$cdetails;
-							$message = str_replace(" ","+",$message);
+                                    $message = "*".$res_words[strtolower("Sale Details")]."*%0D%0A".$res_words[strtolower("Dear")].": ".$customer_name."%0D%0A".$res_words[strtolower("Date")].": ".date("d.m.Y",strtotime($date)).",%0D%0A".$item_dlt.",%0D%0A".$res_words[strtolower("Old Balance")].": ".number_format_ind($old_bamt).",%0D%0A".$res_words[strtolower("This Bill Amount")].": ".$totalamount."/-,%0D%0A".$res_words[strtolower("Balance: Rs.")]." ".$bal."/-%0D%0A".$res_words[strtolower("Thank You")].",%0D%0A".$cdetails;
+								    $message = str_replace(" ","+",$message);
+                                }
+                                else{
+								    $message = "*Sale Details*%0D%0ADear: ".$customer_name."%0D%0ADate: ".date("d.m.Y",strtotime($date)).",%0D%0A".$item_dlt.",%0D%0AOld Balance: ".number_format_ind($old_bamt).",%0D%0ASale Amt: ".$totalamount."/-,%0D%0ABalance: Rs. ".$bal."/-%0D%0AThank You,%0D%0A".$cdetails;
+								    $message = str_replace(" ","+",$message);
+                                }
+							}
+							else{
+								if((float)$new_wflag > 0){
+									$item_dlt = "";
+									$item_dlt = $item_name[$itemcode[$j]];
+									
+									if((int)$jals_flag == 1){
+										$item_dlt .= "%0D%0AJals: ".str_replace(".00","",number_format_ind($jals[$j]));
+									}
+									if((int)$birds_flag == 1){
+										$item_dlt .= "%0D%0ABirds: ".str_replace(".00","",number_format_ind($birds[$j]));
+									}
+									if((int)$tweight_flag == 1){
+										$item_dlt .= "%0D%0AGross Wt: ".str_replace(".00","",number_format_ind($totalweight[$j]));
+									}
+									if((int)$eweight_flag == 1){
+										$item_dlt .= "%0D%0AEmpty Wt: ".str_replace(".00","",number_format_ind($emptyweight[$j]));
+									}
+									$item_dlt .= "%0D%0ANet Wt: ".number_format_ind($netweight[$j]);
+									$item_dlt .= "%0D%0APrice: ".number_format_ind($itemprice[$j]);
+									$item_dlt .= "%0D%0ATotal Amount: ".number_format_ind($totalamt[$j]);
+									$item_dlt .= "%0D%0A";
+								}
+                                if((int)$slt_wflag > 0 && $from != "" && $to != ""){
+                                    $words = ['Sale Details', 'Dear', 'Date', 'This Bill Amount', 'Balance: Rs.', 'Thank You']; if(!empty($msg_header)){ $words[] = $msg_header; } if(!empty($msg_footer)){ $words[] = $msg_footer; }
+                                    $res_words = convert_language($conns, $from, $to, $words);
+
+                                    $message = "*".$res_words[strtolower("Sale Details")]."*%0D%0A".$res_words[strtolower("Dear")].": ".$customer_name."%0D%0A".$res_words[strtolower("Date")].": ".date("d.m.Y",strtotime($date)).",%0D%0A".$item_dlt."%0D%0A".$res_words[strtolower("This Bill Amount")].": ".$totalamount."/-%0D%0A".$res_words[strtolower("Balance: Rs.")]." ".$bal."/-%0D%0A".$res_words[strtolower("Thank You")].",%0D%0A".$cdetails;
+                                    $message = str_replace(" ","+",$message);
+                                }
+                                else{
+                                    $message = "*Sale Details*%0D%0ADear: ".$customer_name."%0D%0ADate: ".date("d.m.Y",strtotime($date)).",%0D%0A".$item_dlt."%0D%0ASale Amt: ".$totalamount."/-%0D%0ABalance: Rs. ".$bal."/-%0D%0AThank You,%0D%0A".$cdetails;
+                                    $message = str_replace(" ","+",$message);
+                                }
+                            }
 						}
 				
 						$wapp_date = date("Y-m-d");

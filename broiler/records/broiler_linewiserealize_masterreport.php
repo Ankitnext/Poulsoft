@@ -12,13 +12,14 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+    global $page_title; $page_title = "Line Wise Realization";
     include "header_head.php";
     $user_code = $_SESSION['userid'];
 }
 else{
     include "APIconfig.php";
     include "number_format_ind.php";
+    global $page_title; $page_title = "Line Wise Realization";
     include "header_head.php";
     $user_code = $_GET['userid'];
 }
@@ -100,6 +101,13 @@ while($row = mysqli_fetch_assoc($query)){ $supervisor_code[$row['code']] = $row[
 $chick_code = "";
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Chick%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $chick_code = $row['code']; }
+
+/* admin cost include flag check*/
+$sql3 = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Farmwise Realization' AND `field_function` LIKE 'Include Admin Cost'  AND (`user_access` LIKE '%$addedemp%' OR `user_access` = 'all')";
+$query3 = mysqli_query($conn, $sql3); $ccount3 = mysqli_num_rows($query3);
+if($ccount3 > 0){ while($row3 = mysqli_fetch_assoc($query3)){ $admincost_include_flag = $row3['flag']; } }
+else{ mysqli_query($conn, "INSERT INTO `extra_access` ( `field_name`, `field_function`, `user_access`, `flag`) VALUES ( 'Farmwise Realization', 'Include Admin Cost', 'all', '1')"); $admincost_include_flag =  1; }
+if($admincost_include_flag == ''){ $admincost_include_flag =  0; }
 
 $fdate = $tdate = date("Y-m-d"); $regions = $branches = $lines = $supervisors = $farms = "all"; $excel_type = "display"; $report_view = "hd";
 if(isset($_REQUEST['submit_report']) == true){
@@ -412,35 +420,35 @@ if(isset($_POST['submit_report']) == true){
 
         <tr>
                        
-            <th colspan="14">
-                        <div class="row">
-                        <div class="m-2 form-group">
-                                <label>Report View: <?php echo $export_report_view; ?></label>
-                            </div>
-                            <div class="m-2 form-group">
-                                <label>From Date: <?php echo date("d.m.Y",strtotime($fdate)); ?></label>
-                            </div>
-                            <div class="m-2 form-group">
-                                <label>To Date: <?php echo date("d.m.Y",strtotime($tdate)); ?></label>
-                            </div>
-                            
-                            <div class="m-2 form-group">
-                                <label>Branch: <?php echo $ebranches; ?></label>
-                                
-                            </div>
-                            <div class="m-2 form-group">
-                                <label>Line: <?php echo $elines; ?></label>
-                                
-                            </div>
-                            
-                            <div class="m-2 form-group">
-                                <label><br/></label>
-        
-                            </div>
-                            
-                    </th>
-                
-            </tr>
+                       <th colspan="14">
+                                   <div class="row">
+                                    <div class="m-2 form-group">
+                                           <label>Report View: <?php echo $export_report_view; ?></label>
+                                       </div>
+                                       <div class="m-2 form-group">
+                                           <label>From Date: <?php echo date("d.m.Y",strtotime($fdate)); ?></label>
+                                       </div>
+                                       <div class="m-2 form-group">
+                                           <label>To Date: <?php echo date("d.m.Y",strtotime($tdate)); ?></label>
+                                       </div>
+                                       
+                                       <div class="m-2 form-group">
+                                           <label>Branch: <?php echo $ebranches; ?></label>
+                                           
+                                       </div>
+                                       <div class="m-2 form-group">
+                                           <label>Line: <?php echo $elines; ?></label>
+                                           
+                                       </div>
+                                       
+                                      <div class="m-2 form-group">
+                                           <label><br/></label>
+                   
+                                       </div>
+                                       
+                               </th>
+                           
+                       </tr>
        
         </thead>
             <thead class="thead3" align="center" style="width:1212px;">
@@ -606,14 +614,26 @@ if(isset($_POST['submit_report']) == true){
                     $supr_totfarm_cnt[$key] += 1;
 
                     $supr_tap_amt[$key] += (float)$row['total_amount_payable'];
-                    $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$row['total_amount_payable']; //+ (float)$row['farmer_payable'];
+
+                    if((float)$row['total_amount_payable'] > 0){
+                        $total_amount_payable = (float)$row['total_amount_payable'];
+                    }else{
+                        $total_amount_payable = 0;
+                    }
+                    if($admincost_include_flag == 1){
+                        $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    }
+                    else{
+                        $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    }
+                    //$total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //+ (float)$row['farmer_payable'];
                     if(empty($act_prod_amt[$key])){ $act_prod_amt[$key] = (float)$total_prod; } else{ $act_prod_amt[$key] += (float)$total_prod; }
                     if(empty($pl_amt[$key])){ $pl_amt[$key] = ((float)$row['sale_amount'] - (float)$total_prod); } else{ $pl_amt[$key] += ((float)$row['sale_amount'] - (float)$total_prod); }
                 }
 
                 $line_list = ""; $line_list = implode("','",$line_arr_codes);
                 $ln_code = array();
-                $sql = "SELECT * FROM `location_line` WHERE `active` = '1' AND `code` IN ('$line_list') AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
+                $sql = "SELECT * FROM `location_line` WHERE `code` IN ('$line_list') AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
                 while($row = mysqli_fetch_assoc($query)){ $ln_code[$row['code']] = $row['code']; }
 
                 $slno = $t_meanage = $t_chick_placed = $t_morta_count = $t_mort7_count = $t_mort30_count = $t_mort31g_count = $t_shortage = $t_excess = $t_feed_con_kgs = 

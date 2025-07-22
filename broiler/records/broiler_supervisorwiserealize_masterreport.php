@@ -12,13 +12,14 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+    global $page_title; $page_title = "Supervisor Wise Realization Report";
     include "header_head.php";
     $user_code = $_SESSION['userid'];
 }
 else{
     include "APIconfig.php";
     include "number_format_ind.php";
+    global $page_title; $page_title = "Supervisor Wise Realization Report";
     include "header_head.php";
     $user_code = $_GET['userid'];
 }
@@ -102,6 +103,13 @@ while($row = mysqli_fetch_assoc($query)){ $supervisor_code_display[$row['code']]
 $chick_code = "";
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Chick%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $chick_code = $row['code']; }
+
+/* admin cost include flag check*/
+$sql3 = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Farmwise Realization' AND `field_function` LIKE 'Include Admin Cost'  AND (`user_access` LIKE '%$addedemp%' OR `user_access` = 'all')";
+$query3 = mysqli_query($conn, $sql3); $ccount3 = mysqli_num_rows($query3);
+if($ccount3 > 0){ while($row3 = mysqli_fetch_assoc($query3)){ $admincost_include_flag = $row3['flag']; } }
+else{ mysqli_query($conn, "INSERT INTO `extra_access` ( `field_name`, `field_function`, `user_access`, `flag`) VALUES ( 'Farmwise Realization', 'Include Admin Cost', 'all', '1')"); $admincost_include_flag =  1; }
+if($admincost_include_flag == ''){ $admincost_include_flag =  0; }
 
 $fdate = $tdate = date("Y-m-d"); $regions = $branches = $lines = $supervisors = $farms = "all"; $excel_type = "display"; $report_view = "hd";
 if(isset($_REQUEST['submit_report']) == true){
@@ -614,8 +622,17 @@ if(isset($_POST['submit_report']) == true){
                     $supr_lifteff_tval[$key] += (float)round($row['lifting_efficiency'],3);
                     $supr_totfarm_cnt[$key] += 1;
 
+                    if((float)$row['total_amount_payable'] > 0){ $total_amount_payable = (float)$row['total_amount_payable']; }else{ $total_amount_payable = 0; }
+
                     $supr_tap_amt[$key] += (float)$row['total_amount_payable'];
-                    $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$row['total_amount_payable']; //+ (float)$row['farmer_payable'];
+                    if($admincost_include_flag == 1){
+                        $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    }
+                    else{
+                        $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    }
+                    //$total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //+ (float)$row['farmer_payable'];
+                    
                     if(empty($act_prod_amt[$key])){ $act_prod_amt[$key] = (float)$total_prod; } else{ $act_prod_amt[$key] += (float)$total_prod; }
                     if(empty($pl_amt[$key])){ $pl_amt[$key] = ((float)$row['sale_amount'] - (float)$total_prod); } else{ $pl_amt[$key] += ((float)$row['sale_amount'] - (float)$total_prod); }
 

@@ -10,7 +10,7 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+    global $page_title; $page_title = "Age wise available Birds Report";
     include "header_head.php";
     $user_code = $_SESSION['userid'];
 }
@@ -18,6 +18,7 @@ else{
     //include "../newConfig.php";
     include "APIconfig.php";
     include "number_format_ind.php";
+    global $page_title; $page_title = "Age wise available Birds Report";
     include "header_head.php";
     $user_code = $_GET['userid'];
 }

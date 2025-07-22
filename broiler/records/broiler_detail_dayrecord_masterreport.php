@@ -10,7 +10,7 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+    global $page_title; $page_title = "Detail Day Record Report";
     include "header_head.php";
     $user_code = $_SESSION['userid'];
 }
@@ -18,6 +18,7 @@ else{
     //include "../newConfig.php";
     include "APIconfig.php";
     include "number_format_ind.php";
+    global $page_title; $page_title = "Detail Day Record Report";
     include "header_head.php";
     $user_code = $_GET['userid'];
 }
@@ -423,6 +424,7 @@ else{
                 <td colspan="<?php echo $tblcol_size; ?>">
                 <div id='control_sh'>
                     <?php
+                        //for($i = 1;$i <= $col_count;$i++){ $key_id = "A:1:".$i; $key_id1 = "A:0:".$i; if(!empty($act_col_numbs[$key_id])){ echo "<br/>".$act_col_numbs[$key_id]."@".$key_id; } else if(!empty($nac_col_numbs[$key_id1])){ echo "<br/>".$nac_col_numbs[$key_id1]."@".$key_id1; } else{ } }
                         for($i = 1;$i <= $col_count;$i++){
                             $key_id = "A:1:".$i; $key_id1 = "A:0:".$i;
                             if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sl_no" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "sl_no"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="sl_no" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Sl.No.</span>'; }
@@ -454,6 +456,10 @@ else{
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedin_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedin_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed In</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedout_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedout_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Out</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedconsumed_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedconsumed_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Con</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_item1" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedconsumed_item1"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedconsumed_item1" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed-1 Item</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count1" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedconsumed_count1"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedconsumed_count1" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed-1 Con</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_item2" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedconsumed_item2"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedconsumed_item2" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed-2 Item</span>'; }
+                            else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count2" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedconsumed_count2"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedconsumed_count2" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed-2 Con</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feed_balance_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feed_balance_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Stock</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feedcumconsumed_count"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feedcumconsumed_count" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Cum. Feed</span>'; }
                             else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_img" || !empty($nac_col_numbs[$key_id1]) && $nac_col_numbs[$key_id1] == "feed_img"){ if(!empty($act_col_numbs[$key_id])){ $checked = "checked"; } else{ $checked = ""; } echo '<input type="checkbox" class="hide_show" id="feed_img" onclick="update_masterreport_status(this.id);" '.$checked.'><span>Feed Images</span>'; }
@@ -515,6 +521,10 @@ else{
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_count"){ echo "<th>Feed In</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_count"){ echo "<th>Feed Out</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){ echo "<th>Feed Con</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_item1"){ echo "<th>Feed-1 Item</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count1"){ echo "<th>Feed-1 Con</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_item2"){ echo "<th>Feed-2 Item</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count2"){ echo "<th>Feed-2 Con</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ echo "<th>Feed Stock</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count"){ echo "<th>Cum. Feed</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_img"){ echo "<th>Feed Images</th>"; }
@@ -689,7 +699,7 @@ else{
 
                             }
                         }
-                        $sql_record = "SELECT MAX(date) as last_entry_Date,sum(mortality) as mortality ,sum(culls) as culls,sum(kgs1) as kgs1,sum(kgs2) as kgs2,batch_code,`date`,mort_image,feed_photos,cull_photos,addedemp,addedtime,latitude,longitude,brood_age FROM `broiler_daily_record` WHERE `date` BETWEEN '$from_date' ANd '$till_date' AND `active` = '1' AND `dflag` = '0' GROUP BY date,batch_code ORDER BY `date`,`trnum` ASC";
+                        $sql_record = "SELECT MAX(date) as last_entry_Date,sum(mortality) as mortality ,sum(culls) as culls,sum(kgs1) as kgs1,sum(kgs2) as kgs2,batch_code,`date`,mort_image,feed_photos,cull_photos,addedemp,addedtime,latitude,longitude,brood_age,item_code1,item_code2 FROM `broiler_daily_record` WHERE `date` BETWEEN '$from_date' ANd '$till_date' AND `active` = '1' AND `dflag` = '0' GROUP BY date,batch_code ORDER BY `date`,`trnum` ASC";
                         $query = mysqli_query($conn,$sql_record); $sqlc = mysqli_num_rows($query); $i = 1;
                         if($sqlc > 0){
                             while($row = mysqli_fetch_assoc($query)){
@@ -705,6 +715,10 @@ else{
                                 $datewise_present_mort_consume_array[$key_code] += (float)$row['mortality'];
                                 $datewise_present_culls_consume_array[$key_code] += (float)$row['culls'];
                                 $datewise_present_feed_consume_array[$key_code] += ((float)$row['kgs1'] + (float)$row['kgs2']);
+                                $datewise_present_feed_consume_array1[$key_code] += ((float)$row['kgs1']);
+                                $datewise_present_feed_consume_array2[$key_code] += ((float)$row['kgs2']);
+                                $datewise_present_feed_consume_items1[$key_code] = $item_name[$row['item_code1']];
+                                $datewise_present_feed_consume_items2[$key_code] = $item_name[$row['item_code2']];
                                 $datewise_act_body_weight_array[$key_code] = $row['avg_wt'];
                                 $datewise_remarks_array[$key_code] = $row['remarks'];
                                 $datewise_dieases_codes_array[$key_code] = $row['dieases_codes'];
@@ -876,7 +890,7 @@ else{
                                 }
 
                                 $open_mort_consume  = $open_culls_consume  = $open_feed_consume  = $act_body_weight = 
-                                $present_mort_consume = $present_culls_consume = $present_feed_consume = $latest_avg_wt = $consumed_feeds = $open_pp_sent = 0;
+                                $present_mort_consume = $present_culls_consume = $present_feed_consume = $present_feed_consume1 = $present_feed_consume2 = $latest_avg_wt = $consumed_feeds = $open_pp_sent = 0;
                                 $remarks = $dieases_codes = "";
 
                                 $key_code_dailyentry = $opening_date."@".$batches;
@@ -901,6 +915,13 @@ else{
                                 $present_mort_consume = (float)$datewise_present_mort_consume_array[$key_code_dailyentry1];
                                 $present_culls_consume = (float)$datewise_present_culls_consume_array[$key_code_dailyentry1];
                                 $present_feed_consume = ((float)$datewise_present_feed_consume_array[$key_code_dailyentry1]);
+                                $present_feed_consume1 = ((float)$datewise_present_feed_consume_array1[$key_code_dailyentry1]);
+                                $present_feed_consume2 = ((float)$datewise_present_feed_consume_array2[$key_code_dailyentry1]);
+
+                                
+                                $display_feed_conitem1 = $datewise_present_feed_consume_items1[$key_code_dailyentry1];
+                                $display_feed_conitem2 = $datewise_present_feed_consume_items2[$key_code_dailyentry1];
+
                                 $act_body_weight = $datewise_act_body_weight_array[$key_code_dailyentry1];
                                 $remarks = $datewise_remarks_array[$key_code_dailyentry1];
                                 $dieases_codes = $datewise_dieases_codes_array[$key_code_dailyentry1];
@@ -1021,6 +1042,8 @@ else{
                                     //echo $today . "//". (float)$open_feeds_in ."--". (float)$open_feed_consume ."--". (float)$open_feeds_sale ."--". (float)$open_feeds_trout."<br/>";
                                     $display_feeds_in = $present_feeds_in;
                                     $display_feed_consume = $present_feed_consume;
+                                    $display_feed_consume1 = $present_feed_consume1;
+                                    $display_feed_consume2 = $present_feed_consume2;
                                     $display_feed_out = (float)$present_feeds_sale + (float)$present_feeds_trout;
                                   
                                     $display_feed_stock = (((float)$display_feeds_open + (float)$display_feeds_in) - ((float)$display_feed_consume + (float)$display_feed_out));
@@ -1241,6 +1264,8 @@ else{
                                                 $total_feeds_open += (float)$display_feeds_open;
                                                 $total_feeds_in += (float)$display_feeds_in;
                                                 $total_feed_consumed += (float)$display_feed_consume;
+                                                $total_feed_consumed1 += (float)$display_feed_consume1;
+                                                $total_feed_consumed2 += (float)$display_feed_consume2;
                                                 $total_feed_stock += (float)$display_feed_stock;
                                                 $total_feed_cumulate += (float)$display_feed_cumulate;
                                                 $total_obirds += (float)$display_obirds;
@@ -1260,6 +1285,8 @@ else{
                                                 $total_feeds_open += (float)$display_feeds_open;
                                                 $total_feeds_in += (float)$display_feeds_in;
                                                 $total_feed_consumed += (float)$display_feed_consume;
+                                                $total_feed_consumed1 += (float)$display_feed_consume1;
+                                                $total_feed_consumed2 += (float)$display_feed_consume2;
                                                 $total_feed_stock += (float)$display_feed_stock;
                                                 $total_feed_cumulate += (float)$display_feed_cumulate;
                                                 $total_obirds += (float)$display_obirds;
@@ -1351,6 +1378,10 @@ else{
                                                 else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_count"){ echo "<td title='Feed In' style='text-align:right;'>".number_format_ind(round(($display_feeds_in),2))."</td>"; }
                                                 else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_count"){ echo "<td title='Feed Out' style='text-align:right;'>".number_format_ind(round(($display_feed_out),2))."</td>"; }
                                                 else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){ echo "<td title='Feed Con' style='text-align:right;'>".number_format_ind(round(($display_feed_consume),2))."</td>"; }
+                                                else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_item1"){ echo "<td title='Feed-1 Item' style='text-align:left;'>".$display_feed_conitem1."</td>"; }
+                                                else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count1"){ echo "<td title='Feed-1 Con' style='text-align:right;'>".number_format_ind(round(($display_feed_consume1),2))."</td>"; }
+                                                else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_item2"){ echo "<td title='Feed-2 Item' style='text-align:left;'>".$display_feed_conitem2."</td>"; }
+                                                else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count2"){ echo "<td title='Feed-2 Con' style='text-align:right;'>".number_format_ind(round(($display_feed_consume2),2))."</td>"; }
                                                 else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ echo "<td title='Feed Stock' style='text-align:right;'>".number_format_ind(round(($display_feed_stock),2))."</td>"; }
                                                 else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count"){ echo "<td title='Cum. Feed' style='text-align:right;'>".number_format_ind(round(($display_feed_cumulate),2))."</td>"; }
                                                 else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_img"){
@@ -1442,6 +1473,10 @@ else{
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedin_count"){ echo "<th style='text-align:right;'>".number_format_ind($total_feeds_in)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedout_count"){ echo "<th style='text-align:right;'>".number_format_ind($display_feed_out)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_consumed)."</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_item1"){ echo "<th style='text-align:left;'></th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count1"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_consumed1)."</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_item2"){ echo "<th style='text-align:left;'></th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedconsumed_count2"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_consumed2)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_balance_count"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_stock)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feedcumconsumed_count"){ echo "<th style='text-align:right;'>".number_format_ind($total_feed_cumulate)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "feed_img"){ echo "<th style='text-align:left;'></th>"; }

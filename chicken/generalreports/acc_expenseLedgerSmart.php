@@ -51,19 +51,17 @@ if($db == ''){
 	if($pcoa == ""){ $pcoa = "all"; } else { $pcoa = $_POST['coa']; }
 	if($pwhname == ""){ $pwhname = "all"; } else { $pwhname = $_POST['whname']; }
 		
-	$exoption = "displaypage"; $tr_type = "all"; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
+	$exoption = "displaypage"; $tr_type = "all";
 	if(isset($_POST['submit'])) { $excel_type = $_POST['export']; if($excel_type == "exportexcel"){ $exoption = "displaypage"; } else{ $exoption = $_POST['export']; } } else{ $excel_type = "displaypage"; }
 	if(isset($_POST['submit']) == true){
 		$tr_type = $_POST['tr_type'];
 		$exl_fdate = $_POST['fromdate']; $exl_tdate = $_POST['todate']; $exl_coa = $_POST['coa']; 
         // $exl_whname = $_POST['whname'];
 
-        $sectors = array(); $sec_list = "";
-		foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-		$sects_list = implode("','", array_map('addslashes', $sectors));
-		$secct_fltr = "";
-		if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
-		else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
+        $sects = array(); $sec_all_flag = 0;
+		foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        $sects_list = implode("','", array_map('addslashes', $sects));
+        $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
 	}
 	else{
 		$exl_fdate = $exl_tdate = $today; $exl_sname =  $exl_coa = $exl_whname = "all";
@@ -178,13 +176,20 @@ if($db == ''){
 										</select>&ensp;&ensp; -->
                                         <label class="reportselectionlabel">Warehouse</label>&nbsp;
 										<select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-											<option value="all" <?php if (in_array("all", $sectors)) echo "selected"; ?>>All</option>
-											<?php foreach($sector_code as $scode) { ?>
-												<option value="<?php echo $scode; ?>" <?php if (in_array($scode, $sectors)) echo "selected"; ?>>
-													<?php echo $sector_name[$scode]; ?>
-												</option>
-											<?php } ?>
-										</select>&ensp;&ensp;
+                                                <?php
+                                                    // Ensure sectors is always an array
+                                                    $selected_sectors = $_POST['sectors'] ?? ['all'];
+                                                    if (!is_array($selected_sectors)) {
+                                                        $selected_sectors = [$selected_sectors];
+                                                    }
+                                                ?>
+                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
+                                                <?php foreach($sector_code as $scode) { ?>
+                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
+                                                        <?php echo $sector_name[$scode]; ?>
+                                                    </option>
+                                                <?php } ?>
+                                            </select>&ensp;&ensp;
 										<label class="reportselectionlabel">Transaction Type</label>&nbsp;
 										<select name="tr_type" id="tr_type" class="form-control select2">
 											<option value="all" <?php if($tr_type == "all") { echo 'selected'; } ?> >-All-</option>

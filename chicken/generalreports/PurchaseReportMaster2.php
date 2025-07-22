@@ -553,7 +553,7 @@ if(in_array("link_trnum", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 																}
 															}
 															else if($field_details[$i.":".$active_flag] == "prate_flag"){ $prate_index = $sales_details[0]."@".$sales_details[7]; echo "<td>".number_format_ind($prates[$prate_index])."</td>"; }
-															else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td>".$sales_details[10]."</td>";
+															else if($field_details[$i.":".$active_flag] == "price_flag"){ echo "<td style='text-align:right;'>".number_format_ind($sales_details[10])."</td>";
 																
 																 }
 															else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($sales_details[11])."</td>"; }
@@ -608,9 +608,9 @@ if(in_array("link_trnum", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 															else if($field_details[$i.":".$active_flag] == "prate_flag"){ $prate_index = $sales_details[0]."@".$sales_details[7]; echo "<td>".number_format_ind($prates[$prate_index])."</td>"; }
 															else if($field_details[$i.":".$active_flag] == "price_flag"){
 																if($sales_details[10] == 1){
-																	 echo "<td style='color:red;'>".$sales_details[10]."</td>";
+																	 echo "<td style='color:red;text-align:right;padding: 0 5px;'>".number_format_ind($sales_details[10])."</td>";
 																}else{
-																	 echo "<td>".$sales_details[10]."</td>";
+																	 echo "<td style='text-align:right;padding: 0 5px;'>".number_format_ind($sales_details[10])."</td>";
 																}
 																 }
 															else if($field_details[$i.":".$active_flag] == "tamt_flag"){ echo "<td>".number_format_ind($sales_details[11])."</td>"; }
@@ -667,10 +667,10 @@ if(in_array("link_trnum", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE
 												else if($field_details[$i.":".$active_flag] == "prate_flag"){ echo "<td></td>"; }
 												else if($field_details[$i.":".$active_flag] == "price_flag"){
 													if($fst_famt > 0 && $tncount > 0){
-														echo "<td>".number_format_ind($fst_famt / $tncount)."</td>";
+														echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind($fst_famt / $tncount)."</td>";
 													}
 													else{
-														echo "<td>".number_format_ind(0)."</td>";
+														echo "<td style='padding: 0 5px;text-align:right;'>".number_format_ind(0)."</td>";
 													}
 													
 												}

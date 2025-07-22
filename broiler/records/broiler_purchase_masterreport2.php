@@ -7,12 +7,14 @@ $client = $_SESSION['client'];
 if($db == ''){
     $user_code = $_SESSION['userid'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Supplier Purchase Report";
     include "header_head.php";
     $form_path = "broiler_purchase_masterreport2.php";
 }
 else{
     $user_code = $_GET['userid'];
     include "APIconfig.php";
+    global $page_title; $page_title = "Supplier Purchase Report";
     include "header_head.php";
     $form_path = "broiler_purchase_masterreport2.php?db=$db&userid=".$user_code;
 }
@@ -421,6 +423,21 @@ else{
                 $tot_supplier_round_off = $tot_supplier_finl_amt = $tot_inet_amt = $tot_supplier_bag_count = 0;
 
                 $sql_record = "SELECT * FROM `broiler_purchases` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$vendor_filter."".$item_filter."".$gstamt_filter."".$sector_filter." AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
+                $result = mysqli_query($conn, $sql_record);
+                $rows = array();
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $rows[] = $row;
+                }
+                $trnum_counts = array();
+                foreach ($rows as $r) {
+                    $trnum = $r['trnum'];
+                    if (!isset($trnum_counts[$trnum])) {
+                        $trnum_counts[$trnum] = 0;
+                    }
+                    $trnum_counts[$trnum]++;
+                }
+
+                $sql_record = "SELECT * FROM `broiler_purchases` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$vendor_filter."".$item_filter."".$gstamt_filter."".$sector_filter." AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                 $query = mysqli_query($conn,$sql_record); $sl_no = $tot_bds = $tot_qty = $tot_amt = 0; $old_inv = "";
                 while($row = mysqli_fetch_assoc($query)){
                     $supplier_date = date('d.m.Y',strtotime($row['date']));
@@ -602,7 +619,14 @@ else{
                             else if($act_col_numbs[$key_id] == "supplier_freight_pay_acc"){ $html .= '<td title="Freight Pay Acc" style="text-align:left;">'.$supplier_freight_pay_acc.'</td>'; }
                             else if($act_col_numbs[$key_id] == "supplier_freight_acc"){ $html .= '<td title="Freight Acc" style="text-align:left;">'.$supplier_freight_acc.'</td>'; }
                             else if($act_col_numbs[$key_id] == "supplier_round_off"){ $html .= '<td title="Round Off" style="text-align:right;">'.number_format_ind($supplier_round_off).'</td>'; }
-                            else if($act_col_numbs[$key_id] == "supplier_finl_amt"){ $html .= '<td title="Final Total" style="text-align:right;">'.number_format_ind($supplier_finl_amt).'</td>'; }
+                            else if($act_col_numbs[$key_id] == "supplier_finl_amt"){
+                                if ($supplier_trnum !== $last_trnum) {
+                                    $rowspan = $trnum_counts[$supplier_trnum] ?? 1;
+                                    $html .= '<td title="Transaction No." rowspan="'.$rowspan.'" style="text-align:right;">'.number_format_ind($supplier_finl_amt).'</td>';
+                                    $last_trnum = $supplier_trnum;
+                                }
+                                // $html .= '<td title="Final Total" style="text-align:right;">'.number_format_ind($supplier_finl_amt).'</td>'; 
+                                }
                             else if($act_col_numbs[$key_id] == "supplier_remarks"){ $html .= '<td title="Remarks" style="text-align:left;">'.$supplier_remarks.'</td>'; }
                             else if($act_col_numbs[$key_id] == "supplier_warehouse"){ $html .= '<td title="Sector/Farm" style="text-align:left;">'.$supplier_warehouse.'</td>'; }
                             else if($act_col_numbs[$key_id] == "supplier_farm_batch"){ $html .= '<td title="Farm Batch" style="text-align:left;">'.$supplier_farm_batch.'</td>'; }

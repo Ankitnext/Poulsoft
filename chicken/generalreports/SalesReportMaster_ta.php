@@ -20,6 +20,7 @@
 		$users_code = $_GET['emp_code'];
         $form_reload_page = "SalesReportMaster_ta.php?db=".$db;
 	}
+    $file_name = "Sales Report";
 
 	$sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users_code'";
 	$query = mysqli_query($conn,$sql);
@@ -106,7 +107,6 @@
         $type = "type";
         $code = "code";
         $pattern = "pattern";
-        $field_details[$row['sl_flag']] = "sl_flag";
         $field_details[$row['date_flag']] = "date_flag";
         $field_details[$row['inv_flag']] = "inv_flag";
         $field_details[$row['binv_flag']] = "binv_flag";
@@ -145,7 +145,7 @@
         $col_count = $row['count'];
     }
 	$fdate = $tdate = date("Y-m-d"); $suppliers = $customers = $sectors = $item_cat = $items = $users = "all"; $billnos = $prices = "";
-    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1;
+    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 0; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
     $exports = "displaypage";
 	if(isset($_POST['submit']) == true){
 		$fdate = date("Y-m-d",strtotime($_POST['fdate']));
@@ -160,24 +160,36 @@
 		$prices = $_POST['prices'];
 		$exports = $_POST['exports'];
 
-        $sects = $groups = array(); $grp_all_flag = 0;
+        $groups = array();
         foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
-        $grp_list = implode("@",$groups);
-        foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
-        $sects_list = implode("','", array_map('addslashes', $sects));
+
+        $sectors = array(); $sec_list = "";
+        foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        $sects_list = implode("','", array_map('addslashes', $sectors));
+        $secct_fltr = "";
+        if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
+        else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
 	}
 	$url = "../PHPExcel/Examples/SalesReportMaster-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&billnos=".$billnos."&item_cat=".$item_cat."&items=".$items."&sectors=".$sectors."&users=".$users."&groups=".$grp_list."&prices=".$prices;
 	
 ?>
 <html>
 	<head>
-		<script>
-			var exptype = '<?php echo $exports; ?>';
-			var url = '<?php echo $url; ?>';
+		<!-- <script>
+			var exptype = '<?php //echo $exports; ?>';
+			var url = '<?php //echo $url; ?>';
 			if(exptype.match("exportexcel")){
 				window.open(url,'_BLANK');
 			}
-		</script>
+		</script> -->
+        <script>
+            var exptype = <?php echo json_encode($exports); ?>;
+            var url = <?php echo json_encode($url); ?>;
+            if(exptype.match("exportexcel")){
+                window.open(url, '_BLANK');
+            }
+        </script>
+
         <?php include "header_head2.php"; ?>
 	</head>
 	<body>
@@ -205,7 +217,7 @@
 		<section class="content" align="center">
 			<div class="col-md-12" align="center">
 				<form action="<?php echo $form_reload_page; ?>" method="post" onsubmit="return checkval()">
-				    <table class="main-table table-sm table-hover" id="main_table">
+				    <table class="main-table table-sm table-hover">
 						<?php if($exports == "displaypage" || $exports == "exportpdf") { ?>
 						<thead class="thead1">
 							<tr>
@@ -273,18 +285,11 @@
                                             </select>
                                         </div>
                                         <div class="form-group" style="width:190px;">
-                                            <label for="sectors[]">Warehouse</label>
+                                            <label for="sectors[0]">Warehouse</label>
                                             <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
-                                                <?php
-                                                    // Ensure sectors is always an array
-                                                    $selected_sectors = $_POST['sectors'] ?? [];
-                                                    if (!is_array($selected_sectors)) {
-                                                        $selected_sectors = [$selected_sectors];
-                                                    }
-                                                ?>
-                                                <option value="all" <?php if (in_array("all", $selected_sectors)) echo "selected"; ?>>All</option>
+                                                <option value="all" <?php if (in_array("all", $sectors)) echo "selected"; ?>>All</option>
                                                 <?php foreach($sector_code as $scode) { ?>
-                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $selected_sectors)) echo "selected"; ?>>
+                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $sectors)) echo "selected"; ?>>
                                                         <?php echo $sector_name[$scode]; ?>
                                                     </option>
                                                 <?php } ?>
@@ -300,11 +305,11 @@
                                             </select>
                                         </div>
                                         <div class="form-group" style="width:150px;">
-                                            <label for="exports">Export To</label>
-                                            <select name="exports" id="exports" class="form-control select2" style="width:140px;">
-                                                <option <?php if($exports == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
-                                                <option <?php if($exports == "exportexcel") { echo 'selected'; } ?> value="exportexcel">Excel</option>
-                                                <option <?php if($exports == "printerfriendly") { echo 'selected'; } ?> value="printerfriendly">Printer friendly</option>
+                                            <label>Export</label>
+                                            <select name="exports" id="exports" class="form-control select2" style="width:140px;" onchange="tableToExcel('main_table', '<?php echo $file_name; ?>','<?php echo $file_name; ?>', this.options[this.selectedIndex].value)">
+                                                <option value="displaypage" <?php if($exports == "displaypage"){ echo "selected"; } ?>>-Display-</option>
+                                                <option value="exportexcel" <?php if($exports == "exportexcel"){ echo "selected"; } ?>>-Excel-</option>
+                                                <option value="printerfriendly" <?php if($exports == "printerfriendly"){ echo "selected"; } ?>>-Print-</option>
                                             </select>
                                         </div>
                                         <div class="form-group" style="width: 160px;">
@@ -326,17 +331,20 @@
 								</td>
 							</tr>
 						</thead>
+                        </table>
+                        
 						<?php
+                        
                         }
+                        
                         if(isset($_POST['submit']) == true){
                             $bwtd_det_col = 0; $aflag = 1; $html = '';
-
-                            $html .= '<thead class="thead2">';
+                            $html .= '<table class="main-table table-sm table-hover" id="main_table">';
+                            $html .= '<thead class="thead2" id="head_names">';
                             $html .= '<tr>';
                             for($i = 1;$i <= $col_count;$i++){
                                 if(!empty($field_details[$i.":".$aflag])){
-                                    if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<th id="order">Sl&nbsp;No.</th>'; $bwtd_det_col++; }
-                                    else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
+                                    if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<th id="order_date">Date</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<th id="order">Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<th id="order">Book Invoice</th>'; $bwtd_det_col++; }
                                     else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<th id="order">Customer</th>'; $bwtd_det_col++; }
@@ -406,6 +414,7 @@
                                     }
                                 }
                                 $item_filter = " AND `itemcode` IN ('$icat_list')";
+                                $item_filter1 = " AND `code` IN ('$icat_list')";
                             }
                             
                             if($billnos == "") { $binv_filter = ""; } else { $binv_filter = " AND `bookinvoice` = '$billnos'"; }
@@ -413,7 +422,7 @@
                             if($users == "all"){ $user_filter = ""; } else{ $user_filter = " AND `addedemp` IN ('$users')"; }
 
                             // if($sectors == "all"){ $sec_list = implode("','",$sector_code); $sector_filter = " AND `warehouse` IN ('$sec_list')"; }
-                            // else{ $sector_filter = " AND `warehouse` IN ('$sects_list')"; }
+                            // else{ $sector_filter = " AND `warehouse` IN ('$sectors')"; }
 
                             // Ensure $sectors is always an array
                             $sectors = $_POST['sectors'] ?? ['all'];
@@ -425,12 +434,13 @@
                                 // All selected – use all sector codes
                                 $sec_list = implode("','", array_map('addslashes', $sector_code));
                                 $sector_filter = " AND `warehouse` IN ('$sec_list')";
+                                $sector_filter1 = " AND `fromwarehouse` IN ('$sec_list')";
                             } else {
                                 // Specific selections
                                 $sects_list = implode("','", array_map('addslashes', $sectors));
                                 $sector_filter = " AND `warehouse` IN ('$sects_list')";
+                                $sector_filter1 = " AND `fromwarehouse` IN ('$sects_list')";
                             }
-
 
                             if($_SESSION['dbase'] == "poulso6_chicken_tg_lsfi"){ $sector_filter = ""; }
 
@@ -438,7 +448,7 @@
 
                             $pur_fltr = "";
                             if($suppliers != "all"){
-                                $sql = "SELECT * FROM `pur_purchase` WHERE `vendorcode` IN ('$suppliers') ".$sector_filter." ORDER BY `date`,`invoice` ASC";
+                                $sql = "SELECT * FROM `pur_purchase` WHERE `vendorcode` IN ('$suppliers') ORDER BY `date`,`invoice` ASC";
                                 $query = mysqli_query($conn,$sql); $pur_alist = array();
                                 while($row = mysqli_fetch_assoc($query)){ $pur_alist[$row['invoice']] = $row['invoice']; }
                                 $ptrno_list = implode("','", $pur_alist);
@@ -462,8 +472,25 @@
                                 $query = mysqli_query($conn,$sql); $ltno_vname = array();
                                 while($row = mysqli_fetch_assoc($query)){ $ltno_vname[$row['invoice']] = $sup_name[$row['vendorcode']]; }
                             }
+                            $sql = "SELECT * FROM `item_category` WHERE `active` = '1' AND `description` LIKE '%Birds' ORDER BY `description` ASC";
+                            $query = mysqli_query($conn,$sql); $icat_code = $icat_name = array();
+                            while($row = mysqli_fetch_assoc($query)){ $icat_code[$row['code']] = $row['code']; $icat_name[$row['code']] = $row['description']; }
 
-                           
+                            $icat_list = implode("','",$icat_code);
+                            $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$icat_list') AND `active` = '1' ORDER BY `description` ASC";
+                            $query = mysqli_query($conn,$sql); $item_code = $item_name = $item_cat = array();
+                            while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; $item_cat[$row['code']] = $row['category']; }
+                            $item_list = implode("','",$item_code);
+
+                            $seq = "SELECT * FROM `item_stocktransfers` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `active` = '1' AND `code` IN ('$item_list')".$user_filter."".$sector_filter1." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`code`,`trnum` ASC "; $sql = $seq;
+                            $query = mysqli_query($conn,$sql); $ccount = mysqli_num_rows($query); $k = 0; $sales_st = array();
+                            while($row = mysqli_fetch_assoc($query)){
+                                  $iname = $item_name[$row['code']];
+                                $amt = $row['quantity'] * $row['price'];
+                               $sales_st[$row['date']."@".$k] = $row['date']."@".$row['trnum']."@".$row['jals']."@".$row['code']."@".$row['birds']."@".$row['quantity']."@".$row['price']."@".$amt."@".$row['dcno']."@".$row['fromwarehouse']."@".$row['towarehouse']."@".$row['remarks']."@".$row['addedemp']."@".$row['addedtime'];
+                              $k++;
+                            }
+                             $ccount1 = sizeof($sales_st);
 	
                             if($sltr_flag > 0 ){
                             $sql = "SELECT * FROM `customer_sales` WHERE `date` >= '$fdate' AND `trtype` NOT IN ('PST') AND `date` <= '$tdate'".$pur_fltr."".$cus_filter."".$binv_filter."".$rate_filter."".$item_filter."".$sector_filter."".$user_filter." AND `active` = '1' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date`,`invoice` ASC";
@@ -487,10 +514,11 @@
                                 }
                                 $i++;
                             }
-                            $ccount = sizeof($sales); $exi_inv = ""; $sl = 1;
-                            $rowred = 'style="background-color:red;"';
+                            $ccount = sizeof($sales); $exi_inv = ""; 
+                            $rowred = 'style="background-color:#ff00002b;"';
                             for($cdate = strtotime($fdate);$cdate <= strtotime($tdate);$cdate += (86400)){
                                 $adate = date('Y-m-d', $cdate);
+                            
                                 for($j = 0;$j <= $ccount;$j++){
                                     if($sales[$adate."@".$j] != ""){
                                         $sales_details = explode("@",$sales[$adate."@".$j]);
@@ -500,8 +528,8 @@
                                         } else {
                                             $html .= '<tr>';
                                         }
-                                        $tacount = $tacount + (float)$sales_details[11];
                                         
+                                        $tacount = $tacount + (float)$sales_details[11];
                                         if($exi_inv != $sales_details[1]){
                                             $exi_inv = $sales_details[1];
                                             if(number_format_ind($slc_finaltotal[$sales_details[1]]) == number_format_ind($rb_amt)){
@@ -514,10 +542,9 @@
                                             $ft_tcds = $ft_tcds + $slc_tcdsamt[$sales_details[1]];
                                             $ft_roundoff = $ft_roundoff + $slc_roundoff[$sales_details[1]];
                                             $fst_famt = $fst_famt + $slc_finaltotal[$sales_details[1]];
-                                            // $sl = 0;
+                                            
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
@@ -540,7 +567,7 @@
                                                 else if($field_details[$i.":".$aflag] == "prate_flag"){ $prate_index = $sales_details[0]."@".$cus_group[$sales_details[3]]."@".$sales_details[7]; $ppr_count++; $ppr_amt = $ppr_amt + $prates[$prate_index]; $html .= '<td class="text-right">'.number_format_ind($prates[$prate_index]).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "price_flag"){  $html .= '<td class="text-right">'.$sales_details[10].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "freightamt_flag"){ $html .= '<td class="text-right">'.$sales_details[24].'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[11]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($sales_details[11] ).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$sales_details[16]].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<td>'.$sales_details[20].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<td>'.$sales_details[21].'</td>'; }
@@ -558,8 +585,7 @@
                                         }
                                         else{
                                             for($i = 1;$i <= $col_count;$i++){
-                                                if($field_details[$i.":".$aflag] == "sl_flag"){ $html .= '<td>'.$sl++.'</td>'; }
-                                                else if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
+                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($sales_details[0])).'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$sales_details[1].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$sales_details[2].'</td>'; }
                                                 else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$cus_name[$sales_details[3]].'</td>'; }
@@ -616,6 +642,134 @@
                                         $html .= '</tr>';
                                     }
                                 }
+                                // Stock transfer -------------------------------------------------------------------------------------
+                                for($l = 0;$l <= $ccount1;$l++){
+                                    if($sales_st[$adate."@".$l] != ""){
+                                        $stock_details = explode("@",$sales_st[$adate."@".$l]);
+                                       // $html .= '<tr>';
+                                        if ($stock_details[5] == 1) {
+                                            $html .= '<tr ' . $rowred . '>';
+                                        } else {
+                                            $html .= '<tr>';
+                                        }
+                                         $itemcode = $stock_details[3];
+                                        //  $index = $adate . "@" . $itemcode;
+                                        // echo $qtt = isset($stock_qty_map[$index]) ? $stock_qty_map[$index] : 0;
+
+                                        $tacount = $tacount + (float)$stock_details[7];
+                                        if($exi_inv != $stock_details[1]){
+                                            $exi_inv = $stock_details[1];
+                                            if(number_format_ind($slc_finaltotal[$stock_details[1]]) == number_format_ind($rb_amt)){
+                                                $rb_amt = 0;
+                                            }
+                                            else{
+                                                $rb_amt = $rb_amt + $slc_finaltotal[$stock_details[1]];
+                                            }
+                                            $ft_jfrgt = (float)$ft_jfrgt + (float)$slc_freightamt[$stock_details[1]];
+                                            $ft_tcds = $ft_tcds + $slc_tcdsamt[$stock_details[1]];
+                                            $ft_roundoff = $ft_roundoff + $slc_roundoff[$stock_details[1]];
+                                            $fst_famt = $fst_famt + $slc_finaltotal[$stock_details[1]];
+                                            
+                                            for($i = 1;$i <= $col_count;$i++){
+                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($stock_details[0])).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$stock_details[1].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$stock_details[1].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$stock_details[10]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$ltno_vname[$stock_details[2]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$item_name[$stock_details[3]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "jals_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($stock_details[2])).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "birds_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($stock_details[4])).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "tweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[5]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "eweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[5]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "nweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[5]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "farm_weight"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[5]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "aweight_flag"){
+                                                    if($stock_details[9] > 0 && $stock_details[8] > 0){
+                                                        $html .= '<td class="text-right">'.number_format_ind($stock_details[9] / $stock_details[8]).'</td>';
+                                                    }
+                                                    else{
+                                                        $html .= '<td class="text-right">'.number_format_ind(0).'</td>';
+                                                    }
+                                                }
+                                                else if($field_details[$i.":".$aflag] == "prate_flag"){ $prate_index = $stock_details[0]."@".$cus_group[$stock_details[3]]."@".$stock_details[7]; $ppr_count++; $ppr_amt = $ppr_amt + $prates[$prate_index]; $html .= '<td class="text-right">'.number_format_ind($prates[$prate_index]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "price_flag"){  $html .= '<td class="text-right">'.$stock_details[6].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "freightamt_flag"){ $html .= '<td class="text-right">'.$stock_details[7].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[7] ).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$stock_details[9]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<td>'.$stock_details[11].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<td>'.$stock_details[2].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<td>'.$stock_details[2].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "discount_flag"){ $html .= '<td>'.$stock_details[1].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$user_name[$stock_details[1]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "atime_flag"){ $html .= '<td>'.date("d.m.Y H:i:s",strtotime($stock_details[1])).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "jfreight_flag"){ $html .= '<td class="text-right">'.number_format_ind($slc_freightamt[$stock_details[1]]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "tcds_flag"){ $html .= '<td class="text-right">'.number_format_ind($slc_tcdsamt[$stock_details[1]]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "cr_flag"){ $html .= '<td class="text-right">'.number_format_ind($slc_finaltotal[$stock_details[1]]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "dr_flag"){ $html .= '<td></td>'; }
+                                                else if($field_details[$i.":".$aflag] == "rb_flag"){ $html .= '<td class="text-right">'.number_format_ind($rb_amt).'</td>'; }
+                                                else{ }
+                                            }
+                                        }
+                                        else{
+                                            for($i = 1;$i <= $col_count;$i++){
+                                                if($field_details[$i.":".$aflag] == "date_flag"){ $html .= '<td>'.date("d.m.Y",strtotime($stock_details[0])).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "inv_flag"){ $html .= '<td>'.$stock_details[1].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "binv_flag"){ $html .= '<td>'.$stock_details[1].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "vendor_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$stock_details[10]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "salesup_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$ltno_vname[$stock_details[6]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "item_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$item_name[$stock_details[3]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "jals_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($stock_details[2])).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "birds_flag"){ $html .= '<td class="text-right">'.str_replace(".00","",number_format_ind($stock_details[8])).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "tweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[5]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "eweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[6]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "nweight_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[9]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "farm_weight"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[5]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "aweight_flag"){
+                                                    if(!empty($stock_details[9]) && $stock_details[9] > 0 && !empty($stock_details[8]) && $stock_details[8] > 0){
+                                                        $html .= '<td class="text-right">'.number_format_ind($stock_details[9] / $stock_details[8]).'</td>';
+                                                    }
+                                                    else{
+                                                        $html .= '<td class="text-right">'.number_format_ind(0).'</td>';
+                                                    }
+                                                }
+                                                else if($field_details[$i.":".$aflag] == "prate_flag"){ $prate_index = $stock_details[0]."@".$cus_group[$stock_details[3]]; $ppr_count++; $ppr_amt = $ppr_amt + $prates[$prate_index]; $html .= '<td class="text-right">'.number_format_ind($prates[$prate_index]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "price_flag"){ $html .= '<td class="text-right">'.$stock_details[6].'</td>'; }
+                                                
+                                                    
+                                                else if($field_details[$i.":".$aflag] == "freightamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[7]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "tamt_flag"){ $html .= '<td class="text-right">'.number_format_ind($stock_details[7]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "sector_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$sector_name[$stock_details[9]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "remarks_flag"){ $html .= '<td>'.$stock_details[11].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "vehicle_flag"){ $html .= '<td>'.$stock_details[1].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "driver_flag"){ $html .= '<td>'.$stock_details[2].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "discount_flag"){ $html .= '<td>'.$stock_details[8].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "user_flag"){ $html .= '<td style="font-family:Palatino, URW Palladio L, serif">'.$user_name[$stock_details[3]].'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "atime_flag"){ $html .= '<td>'.date("d.m.Y H:i:s",strtotime($stock_details[7])).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "jfreight_flag"){ $html .= '<td></td>'; }
+                                                else if($field_details[$i.":".$aflag] == "tcds_flag"){ $html .= '<td></td>'; }
+                                                else if($field_details[$i.":".$aflag] == "cr_flag"){ $html .= '<td class="text-right">'.number_format_ind($slc_finaltotal[$stock_details[1]]).'</td>'; }
+                                                else if($field_details[$i.":".$aflag] == "dr_flag"){ $html .= '<td></td>'; }
+                                                else if($field_details[$i.":".$aflag] == "rb_flag"){ $html .= '<td class="text-right">'.number_format_ind($rb_amt).'</td>'; }
+                                                else{ }
+                                            }
+                                        }
+                                            
+                                            $tot_farm_wt += (float)$stock_details[5];
+                                            $tot_net_wt += (float)$stock_details[5];
+
+                                            $tbcount = $tbcount + (float)$stock_details[4];
+                                            $tjcount = $tjcount + (float)$stock_details[2];
+                                            $tncount = $tncount + (float)$stock_details[5];
+                                            $twcount = $twcount + (float)$stock_details[5];
+                                            $tecount = $tecount + (float)$stock_details[5];
+                                            $tdcount = $tdcount + (float)$stock_details[1];
+                                            $ttcount = $ttcount + (float)$stock_details[1];
+                                            $tfritcount = $tfritcount + (float)$stock_details[4];
+                                            
+                                        $html .= '</tr>';
+                                    }
+                                }
+
 							}
                             $html .= '</tbody>';
                             $html .= '<tfoot class="tfoot1">';
@@ -646,7 +800,7 @@
                                 }
                                 else if($field_details[$i.":".$aflag] == "price_flag"){
                                     if($tncount > 0){
-                                        $html .= '<th class="text-right" title="'.$tacount.'--'.$tncount.'">'.number_format_ind(round(((((float)$tacount)) / $tncount),2)).'</th>';
+                                        $html .= '<th class="text-right" title="'.$tacount.'--'.$tncount.'">'.number_format_ind(round(((((float)$tacount)) / (float)$tncount),2)).'</th>';
                                     }
                                     else{
                                         $html .= '<th class="text-right">'.number_format_ind(0).'</th>';
@@ -784,6 +938,40 @@
                 }
             }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
+        </script>
+        <script type="text/javascript">
+            function tableToExcel(table, name, filename, chosen){
+                if(chosen === 'exportexcel'){
+                    document.getElementById("head_names").innerHTML = "";
+                    var html = '';
+                    html += '<?php echo $nhead_html; ?>';
+                    $('#head_names').append(html);
+
+                    var uri = 'data:application/vnd.ms-excel;base64,'
+                    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+                    //  return function(table, name, filename, chosen) {
+                
+                    if (!table.nodeType) table = document.getElementById(table)
+                    var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
+                    //window.location.href = uri + base64(format(template, ctx))
+                    var link = document.createElement("a");
+                    link.download = filename+".xls";
+                    link.href = uri + base64(format(template, ctx));
+                    link.click();
+                    //}
+                    
+                    document.getElementById("head_names").innerHTML = "";
+                    var html = '';
+                    html += '<?php echo $fhead_html; ?>';
+                    document.getElementById("head_names").innerHTML = html;
+                    table_sort();
+                    table_sort2();
+                    table_sort3();
+                }
+                else{ }
+            }
         </script>
         <script src="sort_table_columns.js"></script>
         <script src="searchbox.js"></script>

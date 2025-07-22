@@ -8,6 +8,7 @@ if($db == ''){
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Day Record Report";
     include "header_head.php";
     $form_path = "breeder_dayrecord_report1.php";
 }
@@ -15,6 +16,7 @@ else{
     $user_code = $_GET['userid'];
     $dbname = $db;
     include "APIconfig.php";
+    global $page_title; $page_title = "Day Record Report";
     include "header_head.php";
     $form_path = "breeder_dayrecord_report1.php?db=$db&userid=".$user_code;
 }

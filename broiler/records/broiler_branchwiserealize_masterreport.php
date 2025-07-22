@@ -12,13 +12,14 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+    global $page_title; $page_title = "Branch Wise Realization Report";
     include "header_head.php";
     $user_code = $_SESSION['userid'];
 }
 else{
     include "APIconfig.php";
     include "number_format_ind.php";
+    global $page_title; $page_title = "Branch Wise Realization Report";
     include "header_head.php";
     $user_code = $_GET['userid'];
 }
@@ -98,6 +99,13 @@ while($row = mysqli_fetch_assoc($query)){ $supervisor_code[$row['code']] = $row[
 $chick_code = "";
 $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Chick%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $chick_code = $row['code']; }
+
+/* admin cost include flag check*/
+$sql3 = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Farmwise Realization' AND `field_function` LIKE 'Include Admin Cost'  AND (`user_access` LIKE '%$addedemp%' OR `user_access` = 'all')";
+$query3 = mysqli_query($conn, $sql3); $ccount3 = mysqli_num_rows($query3);
+if($ccount3 > 0){ while($row3 = mysqli_fetch_assoc($query3)){ $admincost_include_flag = $row3['flag']; } }
+else{ mysqli_query($conn, "INSERT INTO `extra_access` ( `field_name`, `field_function`, `user_access`, `flag`) VALUES ( 'Farmwise Realization', 'Include Admin Cost', 'all', '1')"); $admincost_include_flag =  1; }
+if($admincost_include_flag == ''){ $admincost_include_flag =  0; }
 
 $fdate = $tdate = date("Y-m-d"); $regions = $branches = $lines = $supervisors = $farms = "all"; $excel_type = "display"; $report_view = "hd";
 if(isset($_REQUEST['submit_report']) == true){
@@ -522,13 +530,26 @@ if(isset($_POST['submit_report']) == true){
                 $act_samount = $std_chick_amt = $std_feed_amt = $std_medvac_amt = $std_admin_amt = $fmr_prod_amt = $std_gc_amt = $act_gc_amt = $fmr_incentive_amt = $fmr_decentive_amt = $rc_amt = 
                 $trc_amt = $fmr_tds_amt = $fmr_odeduct_amt = $fmr_pay_amt = $act_chick_amt = $act_feed_amt = $act_medvac_amt = $act_admin_amt = $fmr_gcpay_amt = $act_prod_amt = 
                 $pl_amt = $branch_batch_count = array();
-
+                $tot_placed_birds = $tot_mortality = $tot_sold_birds = $tot_sold_weight = $esyt_mean = $tfcr_val = array();
+                $tot_placed_birds2 = $tot_mortality2 = $tot_sold_birds2 = $tot_sold_weight2 = $esyt_mean2 = $tfcr_val2 = 0;
                 $sql = "SELECT * FROM `broiler_rearingcharge` WHERE `active` = '1'".$date_filter."".$farm_query." AND `dflag` = '0' ORDER BY `id` ASC";
                 $query = mysqli_query($conn,$sql); $fcount = 0; $supr_tap_amt = $pc_amt = $sal_inv_amt = $supr_lifteff_tval = array();
                 while($row = mysqli_fetch_assoc($query)){
                     $key = $row['branch_code']; $fcount++;
                     if(empty($farmcount[$key])){ $farmcount[$key] = 1; } else{ $farmcount[$key] += 1; }
                     $brch_arr_codes[$key] = $row['branch_code'];
+
+                    //Easyfoods EEF Calculations
+                    $tot_placed_birds[$key] += (float)$row['placed_birds'];     $tot_mortality[$key] += (float)$row['mortality'];
+                    $tot_sold_birds[$key] += (float)$row['sold_birds'];         $tot_sold_weight[$key] += (float)$row['sold_weight'];
+                    $esyt_mean[$key] += ((float)$row['mean_age'] * (float)$row['sold_birds']);
+                    $tfcr_val[$key] += ((float)$row['sold_weight'] * (float)$row['fcr']);
+
+                    $tot_placed_birds2 += (float)$row['placed_birds'];     $tot_mortality2 += (float)$row['mortality'];
+                    $tot_sold_birds2 += (float)$row['sold_birds'];         $tot_sold_weight2 += (float)$row['sold_weight'];
+                    $esyt_mean2 += ((float)$row['mean_age'] * (float)$row['sold_birds']);
+                    $tfcr_val2 += ((float)$row['sold_weight'] * (float)$row['fcr']);
+
                     if(empty($mage[$key])){ $mage[$key] = (float)$row['mean_age']; } else{ $mage[$key] += (float)$row['mean_age']; }
                     if(empty($chick_placed[$key])){ $chick_placed[$key] = (float)$row['placed_birds']; } else{ $chick_placed[$key] += (float)$row['placed_birds']; }
                     if(empty($morta_count[$key])){ $morta_count[$key] = (float)$row['mortality']; } else{ $morta_count[$key] += (float)$row['mortality']; }
@@ -585,7 +606,18 @@ if(isset($_POST['submit_report']) == true){
                     $supr_totfarm_cnt[$key] += 1;
 
                     $supr_tap_amt[$key] += (float)$row['total_amount_payable'];
-                    $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$row['total_amount_payable']; //+ (float)$row['farmer_payable'];
+                    if((float)$row['total_amount_payable'] > 0){
+                        $total_amount_payable = (float)$row['total_amount_payable'];
+                    }else{
+                        $total_amount_payable = 0;
+                    }
+                    if($admincost_include_flag == 1){
+                        $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    }
+                    else{
+                        $total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost']  + (float)$total_amount_payable; //(float)$row['farmer_payable'];
+                    }
+                    //$total_prod = (float)$row['actual_chick_cost'] + (float)$row['actual_feed_cost'] + (float)$row['actual_medicine_cost'] + (float)$row['admin_cost_amt'] + (float)$total_amount_payable; //+ (float)$row['farmer_payable'];
                     if(empty($act_prod_amt[$key])){ $act_prod_amt[$key] = (float)$total_prod; } else{ $act_prod_amt[$key] += (float)$total_prod; }
                     if(empty($pl_amt[$key])){ $pl_amt[$key] = ((float)$row['sale_amount'] - (float)$total_prod); } else{ $pl_amt[$key] += ((float)$row['sale_amount'] - (float)$total_prod); }
 
@@ -666,6 +698,15 @@ if(isset($_POST['submit_report']) == true){
                         $afcr = 0;
                         $acfcr = 0;
                     }
+                    //Easyfoods EEF
+                    if($_SESSION['dbase'] == "poulso6_broiler_hr_easyfoods"){
+                        $aeef = $tmean_age = $tmort_per = $tavg_wht = $tavg_fcr = 0;
+                        if((float)$tot_sold_birds[$key] != 0){ $tmean_age = (float)$esyt_mean[$key] / (float)$tot_sold_birds[$key]; }
+                        if((float)$tot_placed_birds[$key] != 0){ $tmort_per = (((float)$tot_mortality[$key] / (float)$tot_placed_birds[$key]) * 100); }
+                        if((float)$tot_sold_birds[$key] != 0){ $tavg_wht = (float)$tot_sold_weight[$key] / (float)$tot_sold_birds[$key]; }
+                        if((float)$tot_sold_weight[$key] != 0){ $tavg_fcr = (float)$tfcr_val[$key] / (float)$tot_sold_weight[$key]; }
+                        if(($tmean_age * $tavg_fcr) > 0){ $aeef = (((100 - $tmort_per) * $tavg_wht) / ($tmean_age * $tavg_fcr) * 100); }
+                    }
 
                     echo "<tr>";
                     for($i = 1;$i <= $col_count;$i++){
@@ -691,7 +732,7 @@ if(isset($_POST['submit_report']) == true){
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "fcr"){ echo "<td title='FCR'>".decimal_adjustments($afcr,3)."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "cfcr"){ echo "<td title='CFCR'>".decimal_adjustments($acfcr,3)."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "day_gain"){ echo "<td title='Day Gain'>".number_format_ind($adgain)."</td>"; }
-                        else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "eef"){ echo "<td title='EEF'>".number_format_ind($aeef)."</td>"; }
+                        else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "eef"){ echo "<td title='EEF'>".decimal_adjustments($aeef,3)."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birdsno"){ echo "<td title='Sold Birds'>".number_format_ind($act_sbirds[$key])."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birdswt"){ echo "<td title='Sold Weight'>".number_format_ind($act_sweight[$key])."</td>"; }
                         else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "avg_bodywt"){ echo "<td title='Avg. Body Wt'>".decimal_adjustments($avg_bwt,3)."</td>"; }
@@ -884,7 +925,16 @@ if(isset($_POST['submit_report']) == true){
                 else{
                     $ft_afcr = $ft_acfcr = 0;
                 }
-
+                
+                //Easyfoods EEF
+                if($_SESSION['dbase'] == "poulso6_broiler_hr_easyfoods"){
+                    $ft_aeef = $tmean_age = $tmort_per = $tavg_wht = $tavg_fcr = 0;
+                    if((float)$tot_sold_birds2 != 0){ $tmean_age = (float)$esyt_mean2 / (float)$tot_sold_birds2; }
+                    if((float)$tot_placed_birds2 != 0){ $tmort_per = (((float)$tot_mortality2 / (float)$tot_placed_birds2) * 100); }
+                    if((float)$tot_sold_birds2 != 0){ $tavg_wht = (float)$tot_sold_weight2 / (float)$tot_sold_birds2; }
+                    if((float)$tot_sold_weight2 != 0){ $tavg_fcr = (float)$tfcr_val2 / (float)$tot_sold_weight2; }
+                    if(($tmean_age * $tavg_fcr) > 0){ $ft_aeef = (((100 - $tmort_per) * $tavg_wht) / ($tmean_age * $tavg_fcr) * 100); }
+                }
                 echo "<tr class='thead4'>";
                 echo "<th colspan='".$theadc."' style='text-align:center;'>Total</th>";
                 for($i = $theadc + 1;$i <= $col_count;$i++){
@@ -908,7 +958,7 @@ if(isset($_POST['submit_report']) == true){
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "fcr"){ echo "<th>".decimal_adjustments($ft_afcr,3)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "cfcr"){ echo "<th>".decimal_adjustments($ft_acfcr,3)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "day_gain"){ echo "<th>".number_format_ind($ft_adgain)."</th>"; }
-                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "eef"){ echo "<th>".number_format_ind($ft_aeef)."</th>"; }
+                    else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "eef"){ echo "<th>".decimal_adjustments($ft_aeef,3)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birdsno"){ echo "<th>".number_format_ind($t_act_sbirds)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "sold_birdswt"){ echo "<th>".number_format_ind($t_act_sweight)."</th>"; }
                     else if(!empty($act_col_numbs[$key_id]) && $act_col_numbs[$key_id] == "avg_bodywt"){ echo "<th>".decimal_adjustments($t_avg_bwt,3)."</th>"; }

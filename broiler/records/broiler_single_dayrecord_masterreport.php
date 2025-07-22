@@ -6,6 +6,7 @@ if(!empty($_GET['db'])){ $db = $_SESSION['db'] = $_SESSION['dbase']  = $_GET['db
 if($db == ''){
     include "../newConfig.php";
     include "number_format_ind.php";
+    global $page_title; $page_title = "Single Day Record Report";
     include "header_head.php";
     $user_code = $_SESSION['userid'];
 }
@@ -13,6 +14,7 @@ else{
     //include "../newConfig.php";
     include "APIconfig.php";
     include "number_format_ind.php";
+    global $page_title; $page_title = "Single Day Record Report";
     include "header_head.php";
     $user_code = $_GET['userid'];
 }

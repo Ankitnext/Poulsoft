@@ -105,6 +105,8 @@ if($access_error_flag == 0){
                                         <th>Mode<b style="color:red;">&nbsp;*</b></th>
                                         <th>Code<b style="color:red;">&nbsp;*</b></th>
                                         <th>Amount<b style="color:red;">&nbsp;*</b></th>
+                                        <th <?php if((int)$dtcds_flag == 1){ echo 'style="visibility:visible;"'; } else{ echo 'style="visibility:hidden;"'; } ?>>TDS</th>
+                                        <?php if($hdcno_flag != 1) { echo "<th>Doc No</th>"; }    ?>
                                         <th>Remarks</th>
                                         <th style="visibility:hidden;">T%</th>
                                         <th style="visibility:hidden;">TA</th>
@@ -122,8 +124,9 @@ if($access_error_flag == 0){
                                                 <?php foreach($method_code as $scode){ if($mtype == $method_type[$scode]){ ?><option value="<?php echo $scode; ?>" <?php if($method == $scode){ echo "selected"; } ?>><?php echo $method_name[$scode]; ?></option><?php } } ?>
                                             </select>
                                         </td>
-                                        <td><input type="text" name="amount1" id="amount1" class="form-control text-right" value="<?php echo $amount; ?>" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" /></td>
-                                      
+                                        <td><input type="text" name="amount1" id="amount1" class="form-control text-right" value="<?php echo $amount; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_row_amt(this.id);" onchange="validate_amount(this.id);" /></td>
+                                        <td <?php if((int)$dtcds_flag == 1){ echo 'style="visibility:visible;text-align:center;"'; } else{ echo 'style="visibility:hidden;text-align:center;"'; } ?>><input type="checkbox" name="tcds_chk" id="tcds_chk" <?php if($tcds_amt > 0){ echo "checked"; } ?> onchange="calculate_row_amt();" /></td>
+                                        <?php if($hdcno_flag != 1) { ?> <td><input type="text" name="dcno" id="dcno" class="form-control" value="<?php echo $dcno; ?>" style="width:90px;" onkeyup="validate_name(this.id);" /></td> <?php  }    ?>
                                       
                                         <td><textarea name="remarks" id="remarks" class="form-control" style="height: 23px;"><?php echo $remarks; ?></textarea></td>
                                         <td style="visibility:hidden;"><input type="text" name="tcds_per" id="tcds_per" value="<?php echo $tcds_per; ?>" class="form-control text-right" style="width:60px;" readonly /></td>
@@ -227,19 +230,19 @@ if($access_error_flag == 0){
                         }
                     }
                 } fetch_tcds_per();
-                // function calculate_row_amt(){
-                //     var amount1 = document.getElementById("amount1").value; if(amount1 == ""){ amount1 = 0; }
-                //     var tcds_chk = document.getElementById("tcds_chk");
-                //     var tcds_per = tcds_amt = 0;
-                //     if(tcds_chk.checked == true){
-                //         tcds_per = document.getElementById("tcds_per").value; if(tcds_per == ""){ tcds_per = 0; }
-                //         tcds_amt = (parseFloat(amount1) * (parseFloat(tcds_per) / 100));
-                //     }
-                //     document.getElementById("tcds_amt").value = parseFloat(tcds_amt).toFixed(2);
+                function calculate_row_amt(){
+                    var amount1 = document.getElementById("amount1").value; if(amount1 == ""){ amount1 = 0; }
+                    var tcds_chk = document.getElementById("tcds_chk");
+                    var tcds_per = tcds_amt = 0;
+                    if(tcds_chk.checked == true){
+                        tcds_per = document.getElementById("tcds_per").value; if(tcds_per == ""){ tcds_per = 0; }
+                        tcds_amt = (parseFloat(amount1) * (parseFloat(tcds_per) / 100));
+                    }
+                    document.getElementById("tcds_amt").value = parseFloat(tcds_amt).toFixed(2);
 
-                //     var amount = parseFloat(amount1) - parseFloat(tcds_amt);
-                //     document.getElementById("amount").value = parseFloat(amount).toFixed(2);
-                // }
+                    var amount = parseFloat(amount1) - parseFloat(tcds_amt);
+                    document.getElementById("amount").value = parseFloat(amount).toFixed(2);
+                }
                 function update_coa_method(){
                     var b = document.getElementById("mode").value;
 

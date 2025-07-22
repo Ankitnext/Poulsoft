@@ -48,6 +48,10 @@ if($link_active_flag > 0){
             while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
             if(in_array("vmg_code", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `".$table_name."` ADD `vmg_code` VARCHAR(500) NULL DEFAULT NULL COMMENT 'Vendor Master Group Code' AFTER `dflag`"; mysqli_query($conn,$sql); }
 
+            //check and fetch date range
+            global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+            include "poulsoft_fetch_daterange_master.php";
+
             $gp_id = $gc_id = $gp_name = $gp_link = $gp_link = $p_id = $c_id = $p_name = $p_link = array();
             $sql = "SELECT * FROM `main_linkdetails` WHERE `parentid` = '$cid' AND `active` = '1' ORDER BY `sortorder` ASC"; $query = mysqli_query($conn,$sql);
             while($row = mysqli_fetch_assoc($query)){
@@ -94,10 +98,10 @@ if($link_active_flag > 0){
                         <form action="<?php echo $url; ?>" method="post">
                                 <div class="row">
                                     <div class="col-md-2">
-                                        <div class="form-group"><label for="fdate">From Date: </label><input type="text" class="form-control datepicker" name="fdate" id="fdate" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>"></div>
+                                        <div class="form-group"><label for="fdate">From Date: </label><input type="text" class="form-control rc_datepicker" name="fdate" id="fdate" value="<?php echo date("d.m.Y",strtotime($fdate)); ?>"></div>
                                     </div>
                                     <div class="col-md-2">
-                                        <div class="form-group"><label for="tdate">To Date: </label><input type="text" class="form-control datepicker" name="tdate" id="tdate" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>"></div>
+                                        <div class="form-group"><label for="tdate">To Date: </label><input type="text" class="form-control rc_datepicker" name="tdate" id="tdate" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>"></div>
                                     </div>
                                     <div class="col-md-2"><br/>
                                         <button type="submit" name="submit" id="submit" class="btn btn-success btn-sm">Submit</button>
@@ -121,6 +125,7 @@ if($link_active_flag > 0){
 										<th>Doc No.</th>
 										<th>Sector</th>
 										<th>Amount</th>
+										<th>Remarks</th>
 										<th>Action</th>
                                     </tr>
                                 </thead>
@@ -153,6 +158,7 @@ if($link_active_flag > 0){
 										<td><?php echo $row['dcno']; ?></td>
 										<td><?php echo $sector_name[$row['warehouse']]; ?></td>
 										<td><?php echo $row['amount']; ?></td>
+										<td><?php echo $row['remarks']; ?></td>
                                         <td style="width:15%;" align="left">
                                         <?php
                                             if($row['flag'] == 1){
@@ -160,6 +166,9 @@ if($link_active_flag > 0){
                                             }
                                             else if($row['gc_flag'] == 1){
                                                 echo "<i class='fa fa-lock' style='color:gray;' title='GC processed'></i></a>";
+                                            }
+                                            else if(strtotime($row['date']) < strtotime($rng_sdate) || strtotime($row['date']) > strtotime($rng_edate)){
+                                                echo "<i class='fa fa-check' style='color:green;' title='Date Entry Range Closed'></i></a>&ensp;&ensp;";
                                             }
                                             else {
                                                 if($edit_flag == 1){

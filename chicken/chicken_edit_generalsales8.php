@@ -48,6 +48,21 @@ if($access_error_flag == 0){
     $query = mysqli_query($conn,$sql); $tport_code = $tport_name = array();
     while($row = mysqli_fetch_assoc($query)){ $tport_code[$row['code']] = $row['code']; $tport_name[$row['code']] = $row['description']; }
 
+     $sql = "SELECT * FROM `main_groups` WHERE `gtype` LIKE '%C%' ORDER BY `description` ASC";
+    $query = mysqli_query($conn,$sql); $grp_code = $grp_name = array();
+    while($row = mysqli_fetch_assoc($query)){ $grp_code[$row['code']] = $row['code']; $grp_name[$row['code']] = $row['description']; }
+
+    $grp_list = implode("','",$grp_code);
+    $sql = "SELECT * FROM `main_contactdetails` WHERE `contacttype` LIKE '%C%' AND `groupcode` IN ('$grp_list') AND `active` = '1' ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
+    while($row = mysqli_fetch_assoc($query)){
+        // $cus_code[$row['code']] = $row['code'];
+        // $cus_name[$row['code']] = $row['name'];
+        $cus_group[$row['code']] = $row['groupcode'];
+    }
+    $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'chicken_display_generalsales8.php' AND `field_function` = 'Group Check' AND `flag` = '1' ORDER BY `id` ASC";
+    $query = mysqli_query($conn,$sql); $gr_flag = mysqli_num_rows($query);
+    // while($row = mysqli_fetch_assoc($query)){ $grp_code[$row['code']] = $row['code']; $grp_name[$row['code']] = $row['description']; }
+
     $sql = "SELECT * FROM `acc_coa` WHERE `ctype` IN ('Cash') AND `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $cash_code = $cash_name = array();
     while($row = mysqli_fetch_assoc($query)){ $cash_code[$row['code']] = $row['code']; $cash_name[$row['code']] = $row['description']; }
@@ -96,6 +111,7 @@ if($access_error_flag == 0){
                 $driver = $row['drivercode'];
                 $vehicle = $row['vehiclecode'];
                 $remarks = $row['remarks'];
+                $remarks2[$c] = $row['remarks2'];
                 $c++;
             } $c = $c - 1;
 
@@ -140,6 +156,15 @@ if($access_error_flag == 0){
                                     <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($warehouse == $scode){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
                                 </select>
                             </div>
+                            <!-- <?php //$groups = $_POST['groups'] ?? $_GET['groups'] ?? 'SCG-0017'; ?> -->
+                            <?php if($gr_flag > 0){ ?>
+                            <div class="form-group" style="width:290px;">
+                                <label for="groups">Groups<b style="color:red;">&nbsp;*</b></label>
+                                <select name="groups" id="groups" class="form-control select2" style="width:280px;" onchange="fetch_customer_groups(this.id);">
+                                    <option value="select">-select-</option>
+                                    <?php foreach($grp_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($cus_group[$vcode] == $scode){ echo "selected"; } ?>><?php echo $grp_name[$scode]; ?></option><?php } ?>
+                                </select>
+                            </div> <?php } ?>
                             <div class="form-group" style="width:110px;">
                                 <label for="bookinvoice">Book Invoice</label>
                                 <input type="text" name="bookinvoice" id="bookinvoice" class="form-control" value="<?php echo $bookinvoice; ?>" style="width:100px;" />
@@ -175,6 +200,9 @@ if($access_error_flag == 0){
                                         <th>N. Weight<b style="color:red;">&nbsp;*</b></th>
                                         <th>Price<b style="color:red;">&nbsp;*</b></th>
                                         <th>Amount</th>
+                                        <?php if($gr_flag > 0){?>
+                                            <th>Remarks2</th>
+                                        <?php } ?>
                                         <th style="width:70px;"></th>
                                     </tr>
                                 </thead>
@@ -192,6 +220,9 @@ if($access_error_flag == 0){
                                         <td><input type="text" name="nweight[]" id="nweight[<?php echo $c; ?>]" class="form-control text-right" data-row="<?php echo $c; ?>" data-col="<?php echo $colIndex++; ?>" value="<?php echo $netweight[$c]; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>
                                         <td><input type="text" name="price[]" id="price[<?php echo $c; ?>]" class="form-control text-right" data-row="<?php echo $c; ?>" data-col="<?php echo $colIndex++; ?>" value="<?php echo $price[$c]; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>
                                         <td><input type="text" name="amount[]" id="amount[<?php echo $c; ?>]" class="form-control text-right" data-row="<?php echo $c; ?>" data-col="<?php echo $colIndex++; ?>" value="<?php echo $amount[$c]; ?>" style="width:90px;" readonly /></td>
+                                        <?php if($gr_flag > 0){?>
+                                        <td><textarea name="remarks2[]" id="remarks2[<?php echo $c; ?>]" class="form-control" data-row="<?php echo $c; ?>" data-col="<?php echo $colIndex++; ?>" style="height:25px;width:100px;"></textarea></td>
+                                        <?php } ?>
                                         <?php
                                         if($c == $incr){ echo '<td id="action['.$c.']" style="padding-top: 5px;visibility:visible;">'; }
                                         else{ echo '<td id="action['.$c.']" style="padding-top: 5px;visibility:hidden;">'; }
@@ -528,6 +559,9 @@ if($access_error_flag == 0){
                     html += '<td><input type="text" name="nweight[]" id="nweight['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>';
                     html += '<td><input type="text" name="price[]" id="price['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>';
                     html += '<td><input type="text" name="amount[]" id="amount['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" readonly /></td>';
+                    if(gr_flag > 0){ 
+                        html += '<td><textarea name="remarks2[]" id="remarks2['+d+']" class="form-control" data-row="'+d+'" data-col="'+(colIndex++)+'" style="height:25px;width:100px;"></textarea></td>';
+                    }
                     html += '<td id="action['+d+']"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
                     html += '</tr>';
 
@@ -695,6 +729,24 @@ if($access_error_flag == 0){
                     else{
                         document.getElementById("out_balance").value = "";
                     }
+                }
+                // Call this on your <select id="groups"> change
+                function fetch_customer_groups() {
+                    var groups = document.getElementById('groups').value;
+                    var xhr    = new XMLHttpRequest();
+                    var url    = 'fetch_customer_groups.php?groups=' + encodeURIComponent(groups);
+
+                    xhr.open('GET', url, true);
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                        var cust = document.getElementById('vcode');
+                        // replace your <select> options
+                        cust.innerHTML = xhr.responseText;
+                        // refresh Select2 if you’re using it
+                        $(cust).trigger('change.select2');
+                        }
+                    };
+                    xhr.send();
                 }
                 function fetch_latest_customer_paperrate(a){
                     var b = a.split("["); var c = b[1].split("]"); var d = c[0];

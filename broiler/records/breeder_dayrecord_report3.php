@@ -2,12 +2,13 @@
 //breeder_dayrecord_report3.php
 $requested_data = json_decode(file_get_contents('php://input'),true);
 if(!isset($_SESSION)){ session_start(); }
-$db = $_SESSION['db'] = $_GET['db'];
+$db = ""; if(!empty($_GET['db']) && $_GET['db'] != ""){ $db = $_SESSION['db'] = $_GET['db']; }
 $client = $_SESSION['client'];
-if($db == ''){
+if($db == ""){
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Breeder Detailed Daily entry Report";
     include "header_head.php";
     $form_path = "breeder_dayrecord_report3.php";
 }
@@ -15,6 +16,7 @@ else{
     $user_code = $_GET['userid'];
     $dbname = $db;
     include "APIconfig.php";
+    global $page_title; $page_title = "Breeder Detailed Daily entry Report";
     include "header_head.php";
     $form_path = "breeder_dayrecord_report3.php?db=$db&userid=".$user_code;
 }
@@ -33,41 +35,47 @@ $query = mysqli_query($conn,$sql); $ffeed_2flag = mysqli_num_rows($query);
 $sql = "SELECT * FROM `breeder_extra_access` WHERE `field_name` = 'Breeder Daily Entry' AND `field_function` = 'Display 2nd Feed Entry For Male Birds' AND `user_access` = 'all' AND `flag` = '1'";
 $query = mysqli_query($conn,$sql); $mfeed_2flag = mysqli_num_rows($query);
 
-$sql = "SELECT * FROM `breeder_farms` WHERE `dflag` = '0' ORDER BY `description` ASC";
+/*Check for Column Availability*/
+$sql='SHOW COLUMNS FROM `main_access`'; $query = mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+if(in_array("bfarms_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bfarms_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Farms Access List' AFTER `cgroup_access`"; mysqli_query($conn,$sql); }
+if(in_array("bunits_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bunits_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Units Access List' AFTER `bfarms_list`"; mysqli_query($conn,$sql); }
+if(in_array("bsheds_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bsheds_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Sheds Access List' AFTER `bunits_list`"; mysqli_query($conn,$sql); }
+if(in_array("bbatch_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bbatch_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Batch Access List' AFTER `bsheds_list`"; mysqli_query($conn,$sql); }
+if(in_array("bflock_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bflock_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Flock Access List' AFTER `bbatch_list`"; mysqli_query($conn,$sql); }
+
+$sql='SHOW COLUMNS FROM `item_category`'; $query = mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+if(in_array("bfamf_flag", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `item_category` ADD `bfamf_flag` INT(100) NOT NULL DEFAULT '0' COMMENT 'Breeder Female And Male Feed Flag' AFTER `dflag`"; mysqli_query($conn,$sql); }
+
+$sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'";
+$query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $bfarms_list = $row['bfarms_list']; $bunits_list = $row['bunits_list']; $bsheds_list = $row['bsheds_list']; $bbatch_list = $row['bbatch_list']; $bflock_list = $row['bflock_list']; }
+if($bfarms_list == "all" || $bfarms_list == ""){ $bfarms_fltr1 = $bfarms_fltr2 = ""; } else{ $bfarms_list1 = implode("','", explode(",",$bfarms_list)); $bfarms_fltr1 = " AND `code` IN ('$bfarms_list1')"; $bfarms_fltr2 = " AND `farm_code` IN ('$bfarms_list1')"; }
+if($bunits_list == "all" || $bunits_list == ""){ $bunits_fltr1 = $bunits_fltr2 = ""; } else{ $bunits_list1 = implode("','", explode(",",$bunits_list)); $bunits_fltr1 = " AND `code` IN ('$bunits_list1')"; $bunits_fltr2 = " AND `unit_code` IN ('$bunits_list1')"; }
+if($bsheds_list == "all" || $bsheds_list == ""){ $bsheds_fltr1 = $bsheds_fltr2 = ""; } else{ $bsheds_list1 = implode("','", explode(",",$bsheds_list)); $bsheds_fltr1 = " AND `code` IN ('$bsheds_list1')"; $bsheds_fltr2 = " AND `shed_code` IN ('$bsheds_list1')"; }
+if($bbatch_list == "all" || $bbatch_list == ""){ $bbatch_fltr1 = $bbatch_fltr2 = ""; } else{ $bbatch_list1 = implode("','", explode(",",$bbatch_list)); $bbatch_fltr1 = " AND `code` IN ('$bbatch_list1')"; $bbatch_fltr2 = " AND `batch_code` IN ('$bbatch_list1')"; }
+if($bflock_list == "all" || $bflock_list == ""){ $bflock_fltr1 = $bflock_fltr2 = ""; } else{ $bflock_list1 = implode("','", explode(",",$bflock_list)); $bflock_fltr1 = " AND `code` IN ('$bflock_list1')"; $bflock_fltr2 = " AND `flock_code` IN ('$bflock_list1')"; }
+
+$sql = "SELECT * FROM `breeder_farms` WHERE `dflag` = '0'".$bfarms_fltr1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $farm_code = $farm_name = array();
 while($row = mysqli_fetch_assoc($query)){ $farm_code[$row['code']] = $row['code']; $farm_name[$row['code']] = $row['description']; }
 
-$sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
+$sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0'".$bunits_fltr1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $unit_code = $unit_name = array();
 while($row = mysqli_fetch_assoc($query)){ $unit_code[$row['code']] = $row['code']; $unit_name[$row['code']] = $row['description']; }
 
-$sql = "SELECT * FROM `breeder_sheds` WHERE `dflag` = '0' ORDER BY `description` ASC";
+$sql = "SELECT * FROM `breeder_sheds` WHERE `dflag` = '0'".$bsheds_fltr1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $shed_code = $shed_name = array();
 while($row = mysqli_fetch_assoc($query)){ $shed_code[$row['code']] = $row['code']; $shed_name[$row['code']] = $row['description']; }
 
-$sql = "SELECT * FROM `breeder_batch` WHERE `dflag` = '0' ORDER BY `description` ASC";
+$sql = "SELECT * FROM `breeder_batch` WHERE `dflag` = '0'".$bbatch_fltr1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $batch_code = $batch_name = $batch_breed = array();
 while($row = mysqli_fetch_assoc($query)){ $batch_code[$row['code']] = $row['code']; $batch_name[$row['code']] = $row['description']; $batch_breed[$row['code']] = $row['breed_code']; }
 
-$sql = "SELECT * FROM `breeder_shed_allocation` WHERE `dflag` = '0' ORDER BY `description` ASC";
-$query = mysqli_query($conn,$sql); $flock_code = $flock_name = array();
-while($row = mysqli_fetch_assoc($query)){ $flock_code[$row['code']] = $row['code']; $flock_name[$row['code']] = $row['description']; }
-
-//Breeder Breed Standards
-$sql = "SELECT * FROM `breeder_breed_standards` WHERE `dflag` = '0' ORDER BY `breed_code`,`breed_age` ASC";
-$query = mysqli_query($conn,$sql); $fstd_fpbird = $mstd_fpbird = $fstd_bweight = $mstd_bweight = $std_he_per = $std_hhe_pweek = $std_egg_wht = array();
-while($row = mysqli_fetch_assoc($query)){
-    $key1 = $row['breed_code']."@".$row['breed_age'];
-    $fstd_live[$key1] = $row['livability'];
-    $fstd_fpbird[$key1] = $row['ffeed_pbird'];
-    $fstd_bweight[$key1] = $row['fbird_bweight'];
-    $mstd_fpbird[$key1] = $row['mfeed_pbird'];
-    $mstd_bweight[$key1] = $row['mbird_bweight'];
-    $std_hd_per[$key1] = $row['hd_per'];
-    $std_he_per[$key1] = $row['he_per'];
-    $std_hhe_pweek[$key1] = $row['he_per'];
-    $std_egg_wht[$key1] = $row['egg_weight'];
-}
+$sql = "SELECT * FROM `breeder_shed_allocation` WHERE `dflag` = '0'".$bfarms_fltr2."".$bunits_fltr2."".$bsheds_fltr2."".$bbatch_fltr2."".$bflock_fltr1." ORDER BY `description` ASC";
+$query = mysqli_query($conn,$sql); $flock_code = $flock_name = $flock_sdate = $flock_sage = $flock_batch = array();
+while($row = mysqli_fetch_assoc($query)){ $flock_code[$row['code']] = $row['code']; $flock_name[$row['code']] = $row['description']; $flock_sdate[$row['code']] = $row['start_date']; $flock_sage[$row['code']] = $row['start_age']; $flock_batch[$row['code']] = $row['batch_code']; }
 
 //Breeder Egg Details
 $sql = "SELECT * FROM `item_category` WHERE `dflag` = '0' AND `begg_flag` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $cegg_code = $icat_iac = array();
@@ -76,22 +84,7 @@ $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$egg_list') AND `dfla
 while($row = mysqli_fetch_assoc($query)){ $egg_code[$row['code']] = $row['code']; $egg_name[$row['code']] = $row['description']; }
 $e_cnt = sizeof($egg_code);
 
-//Breeder Bird Details
-$sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%Breeder Birds%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $cbird_code = array();
-while($row = mysqli_fetch_assoc($query)){ $cbird_code[$row['code']] = $row['code']; $icat_iac[$row['code']] = $row['iac']; } $bird_list = implode("','", $cbird_code);
-$sql = "SELECT * FROM `item_details` WHERE `category` IN ('$bird_list') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $fbird_code = $mbird_code = "";
-while($row = mysqli_fetch_assoc($query)){ if($row['description'] == "Female birds"){ $fbird_code = $row['code']; } else if($row['description'] == "Male birds"){ $mbird_code = $row['code']; } }
-
-$sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%Hatch Egg%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $hegg_ccode = array();
-while($row = mysqli_fetch_assoc($query)){ $hegg_ccode[$row['code']] = $row['code']; } $hegg_clist = implode("','", $hegg_ccode);
-$sql = "SELECT * FROM `item_details` WHERE `category` IN ('$hegg_clist') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC";
-$query = mysqli_query($conn,$sql); $hegg_code = array();
-while($row = mysqli_fetch_assoc($query)){ $hegg_code[$row['code']] = $row['code']; }
-
-$sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $item_name = array();
-while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; }
-
-$fdate = $tdate = date("Y-m-d"); $farms = $units = $sheds = $batches = "all"; $flocks = "select"; $excel_type = "display"; $slno_flag = 0;
+$fdate = $tdate = date("Y-m-d"); $farms = $units = $sheds = $flocks = "all"; $batches = "select"; $excel_type = "display"; $slno_flag = 0;
 if(isset($_POST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
     $tdate = date("Y-m-d",strtotime($_POST['tdate']));
@@ -162,7 +155,7 @@ if(isset($_POST['submit_report']) == true){
                                 <div class="m-2 form-group" style="width:230px;">
                                     <label for="batches">Batch</label>
                                     <select name="batches" id="batches" class="form-control select2" style="width:220px;" onchange="fetch_flock_details(this.id);">
-                                        <option value="all" <?php if($batches == "all"){ echo "selected"; } ?>>-All-</option>
+                                        <option value="select" <?php if($batches == "select"){ echo "selected"; } ?>>-select-</option>
                                         <?php foreach($batch_code as $bcode){ if($batch_name[$bcode] != ""){ ?>
                                         <option value="<?php echo $bcode; ?>" <?php if($batches == $bcode){ echo "selected"; } ?>><?php echo $batch_name[$bcode]; ?></option>
                                         <?php } } ?>
@@ -203,7 +196,7 @@ if(isset($_POST['submit_report']) == true){
         </table>
         <table id="main_table" class="tbl" align="center">
             <?php
-            $html = $nhtml = $fhtml = ''; $e_cnt = $e_cnt + 5; $ffcon_cnt = $mfcon_cnt = 4; if((int)$ffeed_2flag == 1){  $ffcon_cnt += 2; } if((int)$mfeed_2flag == 1){  $mfcon_cnt += 2; }
+            $html = $nhtml = $fhtml = ''; $ffcon_cnt = $mfcon_cnt = 4; if((int)$ffeed_2flag == 1){  $ffcon_cnt += 2; } if((int)$mfeed_2flag == 1){  $mfcon_cnt += 2; }
             $html .= '<thead class="thead3" id="head_names">';
 
             $nhtml .= '<tr style="text-align:center;" align="center">';
@@ -216,20 +209,19 @@ if(isset($_POST['submit_report']) == true){
             $nhtml .= '<th colspan="1"></th>'; $fhtml .= '<th colspan="1"></th>';
             $nhtml .= '<th colspan="1"></th>'; $fhtml .= '<th colspan="1"></th>';
             $nhtml .= '<th colspan="1"></th>'; $fhtml .= '<th colspan="1"></th>';
-            $nhtml .= '<th colspan="1"></th>'; $fhtml .= '<th colspan="1"></th>';
             $nhtml .= '<th colspan="2">Opening Birds</th>'; $fhtml .= '<th colspan="2">Opening Birds</th>';
             $nhtml .= '<th colspan="2">Mortality</th>'; $fhtml .= '<th colspan="2">Mortality</th>';
             $nhtml .= '<th colspan="2">Culls</th>'; $fhtml .= '<th colspan="2">Culls</th>';
-            $nhtml .= '<th colspan="2">Sales</th>'; $fhtml .= '<th colspan="2">Sales</th>';
             $nhtml .= '<th colspan="2">Transfer In</th>'; $fhtml .= '<th colspan="2">Transfer In</th>';
             $nhtml .= '<th colspan="2">Transfer Out</th>'; $fhtml .= '<th colspan="2">Transfer Out</th>';
+            $nhtml .= '<th colspan="2">Sales</th>'; $fhtml .= '<th colspan="2">Sales</th>';
             $nhtml .= '<th colspan="2">Closing Birds</th>'; $fhtml .= '<th colspan="2">Closing Birds</th>';
-            $nhtml .= '<th colspan="4">Body Weight</th>'; $fhtml .= '<th colspan="4">Body Weight</th>';
-            $nhtml .= '<th colspan="2">Egg Weight</th>'; $fhtml .= '<th colspan="2">Egg Weight</th>';
-            $nhtml .= '<th colspan="'.$ffcon_cnt.'">Female Feed Consumption</th>'; $fhtml .= '<th colspan="'.$ffcon_cnt.'">Female Feed Consumption</th>';
-            $nhtml .= '<th colspan="'.$mfcon_cnt.'">Male Feed Consumption</th>'; $fhtml .= '<th colspan="'.$mfcon_cnt.'">Male Feed Consumption</th>';
+            $nhtml .= '<th colspan="2">Std. B.Wt</th>'; $fhtml .= '<th colspan="2">Std. B.Wt</th>';
+            $nhtml .= '<th colspan="2">Actual B.Wt</th>'; $fhtml .= '<th colspan="2">Actual B.Wt</th>';
+            $nhtml .= '<th colspan="2">Feed Consumption</th>'; $fhtml .= '<th colspan="2">Feed Consumption</th>';
+            $nhtml .= '<th colspan="4">Feed / Bird Gms</th>'; $fhtml .= '<th colspan="4">Feed / Bird Gms</th>';
             $nhtml .= '<th colspan="'.$e_cnt.'">Production</th>'; $fhtml .= '<th colspan="'.$e_cnt.'">Production</th>';
-            $nhtml .= '<th colspan="1"></th>'; $fhtml .= '<th colspan="1"></th>';
+            $nhtml .= '<th></th>'; $fhtml .= '<th></th>';
 
             $nhtml .= '</tr>';
             $fhtml .= '</tr>';
@@ -237,13 +229,12 @@ if(isset($_POST['submit_report']) == true){
             $nhtml .= '<tr style="text-align:center;" align="center">';
             $fhtml .= '<tr style="text-align:center;" align="center">';
 
-            $nhtml .= '<th>Sl.No</th>'; $fhtml .= '<th id="order_num">Sl.No</th>';
             $nhtml .= '<th>Farm</th>'; $fhtml .= '<th id="order">Farm</th>';
             $nhtml .= '<th>Unit</th>'; $fhtml .= '<th id="order">Unit</th>';
             $nhtml .= '<th>Shed</th>'; $fhtml .= '<th id="order">Shed</th>';
             $nhtml .= '<th>Batch</th>'; $fhtml .= '<th id="order">Batch</th>';
             $nhtml .= '<th>Flock No.</th>'; $fhtml .= '<th id="order">Flock No.</th>';
-            $nhtml .= '<th>Date</th>'; $fhtml .= '<th id="order_num">Date</th>';
+            $nhtml .= '<th>Date</th>'; $fhtml .= '<th id="order_date">Date</th>';
             $nhtml .= '<th>Age</th>'; $fhtml .= '<th id="order_num">Age</th>';
             $nhtml .= '<th>F</th>'; $fhtml .= '<th id="order_num">F</th>';
             $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">M</th>';
@@ -259,38 +250,20 @@ if(isset($_POST['submit_report']) == true){
             $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">M</th>';
             $nhtml .= '<th>F</th>'; $fhtml .= '<th id="order_num">F</th>';
             $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">M</th>';
-            $nhtml .= '<th>F.Std</th>'; $fhtml .= '<th id="order_num">F.Std</th>';
-            $nhtml .= '<th>F.Act</th>'; $fhtml .= '<th id="order_num">F.Act</th>';
-            $nhtml .= '<th>M.Std</th>'; $fhtml .= '<th id="order_num">M.Std</th>';
-            $nhtml .= '<th>M.Act</th>'; $fhtml .= '<th id="order_num">M.Act</th>';
-            $nhtml .= '<th>Standard</th>'; $fhtml .= '<th id="order_num">Standard</th>';
-            $nhtml .= '<th>Actual</th>'; $fhtml .= '<th id="order_num">Actual</th>';
-            $nhtml .= '<th>F.Feed</th>'; $fhtml .= '<th id="order_num">F.Feed</th>';
-            $nhtml .= '<th>Qty</th>'; $fhtml .= '<th id="order_num">Qty</th>';
-            if((int)$ffeed_2flag == 1){
-                $nhtml .= '<th>F</th>'; $fhtml .= '<th id="order_num">F.Feed-2</th>';
-                $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">Qty-2</th>';
-            }
-            $nhtml .= '<th>Std. Feed / Bird</th>'; $fhtml .= '<th id="order_num">Std. Feed / Bird</th>';
-            $nhtml .= '<th>Act. Feed / Bird</th>'; $fhtml .= '<th id="order_num">Act. Feed / Bird</th>';
-
-            $nhtml .= '<th>F</th>'; $fhtml .= '<th id="order_num">M.Feed</th>';
-            $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">Qty</th>';
-            if((int)$mfeed_2flag == 1){
-                $nhtml .= '<th>F</th>'; $fhtml .= '<th id="order_num">M.Feed-2</th>';
-                $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">Qty</th>';
-            }
-            $nhtml .= '<th>Std. Feed / Bird</th>'; $fhtml .= '<th id="order_num">Std. Feed / Bird</th>';
-            $nhtml .= '<th>Act. Feed / Bird</th>'; $fhtml .= '<th id="order_num">Act. Feed / Bird</th>';
+            $nhtml .= '<th>F</th>'; $fhtml .= '<th id="order_num">F</th>';
+            $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">M</th>';
+            $nhtml .= '<th>F</th>'; $fhtml .= '<th id="order_num">F</th>';
+            $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">M</th>';
+            $nhtml .= '<th>F</th>'; $fhtml .= '<th id="order_num">F</th>';
+            $nhtml .= '<th>M</th>'; $fhtml .= '<th id="order_num">M</th>';
+            $nhtml .= '<th>Std. F</th>'; $fhtml .= '<th id="order_num">Std. F</th>';
+            $nhtml .= '<th>Actual F</th>'; $fhtml .= '<th id="order_num">Actual F</th>';
+            $nhtml .= '<th>Std. M</th>'; $fhtml .= '<th id="order_num">Std. M</th>';
+            $nhtml .= '<th>Actual M</th>'; $fhtml .= '<th id="order_num">Actual M</th>';
             foreach($egg_code as $eggs){
                 $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>';
             }
-            $nhtml .= '<th>Total Eggs</th>'; $fhtml .= '<th id="order_num">Total Eggs</th>';
-            $nhtml .= '<th>Std. Prod %</th>'; $fhtml .= '<th id="order_num">Std. Prod %</th>';
-            $nhtml .= '<th>Prod. %</th>'; $fhtml .= '<th id="order_num">Prod. %</th>';
-            $nhtml .= '<th>Std. HE %</th>'; $fhtml .= '<th id="order_num">Std. HE %</th>';
-            $nhtml .= '<th>HE %</th>'; $fhtml .= '<th id="order_num">HE %</th>';
-            $nhtml .= '<th>Remarks</th>'; $fhtml .= '<th id="order">Remarks</th>';
+            $nhtml .= '<th>Egg Weight</th>'; $fhtml .= '<th id="order_num">Egg Weight</th>';
 
             $nhtml .= '</tr>';
             $fhtml .= '</tr>';
@@ -298,106 +271,592 @@ if(isset($_POST['submit_report']) == true){
             $html .= '</thead>';
             $html .= '<tbody class="tbody1" id="tbody1">';
             if(isset($_POST['submit_report']) == true){
-                //if(sizeof($flock_alist) > 0){
-                    //$flock_list = implode("','",$flock_alist);
-                    $sql = "SELECT * FROM `breeder_dayentry_consumed` WHERE `date` >= '$fdate' AND `date` <= '$tdate' AND `flock_code` IN ('$flocks') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                //Fetch Flock Details
+                $flk_list = implode("','",$flock_code);
+                $flk_fltr = ""; if($flocks != "all"){ $flk_fltr = " AND `code` IN ('$flocks')"; }
+                $sql = "WITH group_assignment AS (SELECT code AS flock_code, batch_code, start_age, CONCAT('grp_', DENSE_RANK() OVER (ORDER BY batch_code, start_age)) AS group_name FROM breeder_shed_allocation WHERE `code` IN ('$flk_list') AND `start_age` > '0'".$flk_fltr." AND `dflag` = '0') SELECT * FROM group_assignment ORDER BY start_age;";
+                $query = mysqli_query($conn,$sql); $flk_glist = $flk_keys = $flk_alist = $grp_alist = array();
+                while($row = mysqli_fetch_assoc($query)){
+                    if(empty($flk_glist[$row['group_name']]) || $flk_glist[$row['group_name']] == ""){ $flk_glist[$row['group_name']] = $row['flock_code']; } else{ $flk_glist[$row['group_name']] .= ",".$row['flock_code']; }
+                    $flk_keys[$row['flock_code']] = $row['group_name'];
+                    $flk_alist[$row['flock_code']] = $row['flock_code'];
+                    $grp_alist[$row['group_name']] = $row['group_name'];
+                    //echo "<br/>".$row['flock_code']."->".$row['group_name']."->".$row['start_age'];
+                }
+                if(sizeof($flk_alist) > 0){
+                    $flk_list = implode("','",$flk_alist);
+                    $sql = "SELECT * FROM `breeder_shed_allocation` WHERE `code` IN ('$flk_list') AND `batch_code` = '$batches'".$flk_fltr." AND `dflag` = '0' ORDER BY `start_date` ASC";
                     $query = mysqli_query($conn,$sql);
-                    $fmort_qty = $fcull_qty = $fbody_weight = $ffeed_code1 = $ffeed_qty1 = $ffeed_code2 = $ffeed_qty2 = $mfeed_code1 = $mfeed_qty1 = $mfeed_code2 = $mfeed_qty2 = $mmort_qty = $mcull_qty = 
-                    $mbody_weight = $egg_weight = $flock_alist = array();
+                    $placed_fbirds = $placed_mbirds = $opn_fbirds = $opn_mbirds = $breed_code = $flk_alist = array();
+                    $flk_farm = $flk_unit = $flk_shed = $flk_batch = $flk_name = array();
                     while($row = mysqli_fetch_assoc($query)){
-                        $key1 = $row['flock_code'];
-                        $fmort_qty[$key1] += (float)$row['fmort_qty'];
-                        $fcull_qty[$key1] += (float)$row['fcull_qty'];
-                        $fbody_weight[$key1] = (float)$row['fbody_weight'];
-                        $ffeed_code1[$key1] = $row['ffeed_code1'];
-                        $ffeed_qty1[$key1] = (float)$row['ffeed_qty1'];
-                        $ffeed_code2[$key1] = $row['ffeed_code2'];
-                        $ffeed_qty2[$key1] = (float)$row['ffeed_qty2'];
-                        $mfeed_code1[$key1] = $row['mfeed_code1'];
-                        $mfeed_qty1[$key1] = (float)$row['mfeed_qty1'];
-                        $mfeed_code2[$key1] = $row['mfeed_code2'];
-                        $mfeed_qty2[$key1] = (float)$row['mfeed_qty2'];
-                        $mmort_qty[$key1] += (float)$row['mmort_qty'];
-                        $mcull_qty[$key1] += (float)$row['mcull_qty'];
-                        $mbody_weight[$key1] = (float)$row['mbody_weight'];
-                        $egg_weight[$key1] = (float)$row['egg_weight'];
-                        $breed_wage[$key1] = $row['breed_wage'];
-                        $breed_age[$key1] = $row['breed_age'];
-                        $de_remarks[$key1] = $row['remarks'];
+                        $key1 =  $flk_keys[$row['code']];
+                        $bird_wage[$key1] = age_in_weeks($row['start_age']); //$weeks = fetch_cweek($bird_wage);
+                        $placed_fbirds[$key1] += (float)$row['opn_fbirds'];
+                        $placed_mbirds[$key1] += (float)$row['opn_mbirds'];
+                        $opn_fbirds[$key1] += (float)$row['opn_fbirds'];
+                        $opn_mbirds[$key1] += (float)$row['opn_mbirds'];
+                        $breed_code[$row['code']] = $batch_breed[$row['batch_code']];
+                        $flk_alist[$row['code']] = $row['code'];
+                        $flk_farm[$row['code']] = $row['farm_code'];
+                        $flk_unit[$row['code']] = $row['unit_code'];
+                        $flk_shed[$row['code']] = $row['shed_code'];
+                        $flk_batch[$row['code']] = $row['batch_code'];
+                        $flk_name[$row['code']] = $row['description'];
+                    }
+                    $flk_list = implode("','",$flk_alist);
 
-                        $flock_alist[$key1] = $key1;
+                    //Breeder Breed Standards
+                    $sql = "SELECT * FROM `breeder_breed_standards` WHERE `dflag` = '0' ORDER BY `breed_code`,`breed_age` ASC";
+                    $query = mysqli_query($conn,$sql); $fstd_live = $fstd_fpbird = $mstd_fpbird = $fstd_bweight = $mstd_bweight = $std_hd_per = $std_he_per = $std_hhe_pweek = $std_egg_wht = array();
+                    while($row = mysqli_fetch_assoc($query)){
+                        $key1 = $row['breed_code']."@".$row['breed_age'];
+                        $fstd_live[$key1] = $row['livability']; $fstd_fpbird[$key1] = $row['ffeed_pbird']; $fstd_bweight[$key1] = $row['fbird_bweight'];
+                        $mstd_fpbird[$key1] = $row['mfeed_pbird']; $mstd_bweight[$key1] = $row['mbird_bweight']; $std_hd_per[$key1] = $row['hd_per'];
+                        $std_he_per[$key1] = $row['he_per']; $std_hhe_pweek[$key1] = $row['he_per']; $std_egg_wht[$key1] = $row['egg_weight'];
+                    }
+
+                    //Hatch Egg Details
+                    $sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%Hatch Egg%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $hegg_ccode = array();
+                    while($row = mysqli_fetch_assoc($query)){ $hegg_ccode[$row['code']] = $row['code']; } $hegg_clist = implode("','", $hegg_ccode);
+                    $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$hegg_clist') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $hegg_code = array();
+                    while($row = mysqli_fetch_assoc($query)){ $hegg_code[$row['code']] = $row['code']; }
+
+                    //Breeder Bird Details
+                    $sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%Breeder Birds%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $cbird_code = array();
+                    while($row = mysqli_fetch_assoc($query)){ $cbird_code[$row['code']] = $row['code']; $icat_iac[$row['code']] = $row['iac']; } $bird_list = implode("','", $cbird_code);
+                    $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$bird_list') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $fbird_code = $mbird_code = "";
+                    while($row = mysqli_fetch_assoc($query)){ if($row['description'] == "Female birds"){ $fbird_code = $row['code']; } else if($row['description'] == "Male birds"){ $mbird_code = $row['code']; } }
+
+                    //Female Feed Details
+                    $sql = "SELECT * FROM `item_category` WHERE (`bffeed_flag` = '1' OR `bfamf_flag` = '1') AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $ffcat_alist = array();
+                    while($row = mysqli_fetch_assoc($query)){ $ffcat_alist[$row['code']] = $row['code']; } $ffcat_list = implode("','", $ffcat_alist);
+                    $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$ffcat_list') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $ffeed_code = array();
+                    while($row = mysqli_fetch_assoc($query)){ $ffeed_code[$row['code']] = $row['code']; }
+
+                    //Male Feed Details
+                    $sql = "SELECT * FROM `item_category` WHERE (`bmfeed_flag` = '1' OR `bfamf_flag` = '1') AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $mfcat_alist = array();
+                    while($row = mysqli_fetch_assoc($query)){ $mfcat_alist[$row['code']] = $row['code']; } $mfcat_list = implode("','", $mfcat_alist);
+                    $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$mfcat_list') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $mfeed_code = array();
+                    while($row = mysqli_fetch_assoc($query)){ $mfeed_code[$row['code']] = $row['code']; }
+
+                    //MedVac Items
+                    $sql = "SELECT * FROM `item_category` WHERE `bmv_flag` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $medvac_acat = array();
+                    while($row = mysqli_fetch_assoc($query)){ $medvac_acat[$row['code']] = $row['code']; } $medvac_list = implode("','",$medvac_acat);
+                    $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$medvac_list') AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $medvac_code = array();
+                    while($row = mysqli_fetch_assoc($query)){ $medvac_code[$row['code']] = $row['code']; }
+
+                    $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `sort_order`,`description` ASC";
+                    $query = mysqli_query($conn,$sql); $item_name = array();
+                    while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; }
+
+                    //Purchases
+                    $sql1 = "SELECT * FROM `broiler_purchases` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                    $query1 = mysqli_query($conn,$sql1); $opur_fbds = $opur_mbds = $opur_ffeed = $opur_mfeed = $opur_medvac = $bpur_fbds = $bpur_mbds = $bpur_ffeed = $bpur_mfeed = $bpur_medvac = array();
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){
+                            $key1 = $flk_keys[$row1['flock_code']];
+                            if($row1['icode'] == $fbird_code){
+                                $opur_fbds[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if($row1['icode'] == $mbird_code){
+                                $opur_mbds[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $ffeed_code) || in_array($row1['icode'], $ffeed_code)){
+                                $opur_ffeed[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $mfeed_code) || in_array($row1['icode'], $mfeed_code)){
+                                $opur_mfeed[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $medvac_code) || in_array($row1['icode'], $medvac_code)){
+                                $opur_medvac[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else{ }
+                        }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row1['flock_code']];
+                            if($row1['icode'] == $fbird_code){
+                                $bpur_fbds[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if($row1['icode'] == $mbird_code){
+                                $bpur_mbds[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $ffeed_code) || in_array($row1['icode'], $ffeed_code)){
+                                $bpur_ffeed[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $mfeed_code) || in_array($row1['icode'], $mfeed_code)){
+                                $bpur_mfeed[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $medvac_code) || in_array($row1['icode'], $medvac_code)){
+                                $bpur_medvac[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else{ }
+                        }
+                    }
+                    //Transfer-In
+                    $sql1 = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `to_flock` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`to_flock` ASC";
+                    $query1 = mysqli_query($conn,$sql1); $otin_fbds = $otin_mbds = $otin_ffeed = $otin_mfeed = $otin_medvac = $btin_fbds = $btin_mbds = $btin_ffeed = $btin_mfeed = $btin_medvac = array();
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){
+                            $key1 = $flk_keys[$row['to_flock']];
+                            if($row1['code'] == $fbird_code){
+                                $otin_fbds[$key1] += (float)$row1['quantity'];
+                            }
+                            else if($row1['code'] == $mbird_code){
+                                $otin_mbds[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $ffeed_code) || in_array($row1['code'], $ffeed_code)){
+                                $otin_ffeed[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $mfeed_code) || in_array($row1['code'], $mfeed_code)){
+                                $otin_mfeed[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $medvac_code) || in_array($row1['code'], $medvac_code)){
+                                $otin_medvac[$key1] += (float)$row1['quantity'];
+                            }
+                            else{ }
+                        }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row['to_flock']];
+                            if($row1['code'] == $fbird_code){
+                                $btin_fbds[$key1] += (float)$row1['quantity'];
+                            }
+                            else if($row1['code'] == $mbird_code){
+                                $btin_mbds[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $ffeed_code) || in_array($row1['code'], $ffeed_code)){
+                                $btin_ffeed[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $mfeed_code) || in_array($row1['code'], $mfeed_code)){
+                                $btin_mfeed[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $medvac_code) || in_array($row1['code'], $medvac_code)){
+                                $btin_medvac[$key1] += (float)$row1['quantity'];
+                            }
+                            else{ }
+                        }
+                    }
+                    //Bird Transfer-In
+                    $sql1 = "SELECT * FROM `breeder_bird_transfer` WHERE `date` <= '$tdate' AND `to_flock` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`to_flock` ASC";
+                    $query1 = mysqli_query($conn,$sql1);
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){
+                            $key1 = $flk_keys[$row['to_flock']];
+                            if($row1['female_bcode'] == $fbird_code){
+                                $otin_fbds[$key1] += (float)$row1['female_bqty'];
+                            }
+                            else if($row1['male_bcode'] == $mbird_code){
+                                $otin_mbds[$key1] += (float)$row1['male_bqty'];
+                            }
+                            else{ }
+                        }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row['to_flock']];
+                            if($row1['female_bcode'] == $fbird_code){
+                                $btin_fbds[$key1] += (float)$row1['female_bqty'];
+                            }
+                            else if($row1['male_bcode'] == $mbird_code){
+                                $btin_mbds[$key1] += (float)$row1['male_bqty'];
+                            }
+                            else{ }
+                        }
+                    }
+                    //Sales
+                    $sql1 = "SELECT * FROM `broiler_sales` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                    $query1 = mysqli_query($conn,$sql1); $osale_fbds = $osale_mbds = $osale_ffeed = $osale_mfeed = $osale_medvac = $bsale_fbds = $bsale_mbds = $bsale_ffeed = $bsale_mfeed = $bsale_medvac = array();
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){
+                            $key1 = $flk_keys[$row1['flock_code']];
+                            if($row1['icode'] == $fbird_code){
+                                $osale_fbds[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if($row1['icode'] == $mbird_code){
+                                $osale_mbds[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $ffeed_code) || in_array($row1['icode'], $ffeed_code)){
+                                $osale_ffeed[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $mfeed_code) || in_array($row1['icode'], $mfeed_code)){
+                                $osale_mfeed[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $medvac_code) || in_array($row1['icode'], $medvac_code)){
+                                $osale_medvac[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else{ }
+                        }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row1['flock_code']];
+                            if($row1['icode'] == $fbird_code){
+                                $bsale_fbds[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if($row1['icode'] == $mbird_code){
+                                $bsale_mbds[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $ffeed_code) || in_array($row1['icode'], $ffeed_code)){
+                                $bsale_ffeed[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $mfeed_code) || in_array($row1['icode'], $mfeed_code)){
+                                $bsale_mfeed[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else if(array_key_exists($row1['icode'], $medvac_code) || in_array($row1['icode'], $medvac_code)){
+                                $bsale_medvac[$key1] += ((float)$row1['rcd_qty'] + (float)$row1['fre_qty']);
+                            }
+                            else{ }
+                        }
+                    }
+                    //Transfer-Out
+                    $sql1 = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `from_flock` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`from_flock` ASC";
+                    $query1 = mysqli_query($conn,$sql1); $otout_fbds = $otout_mbds = $otout_ffeed = $otout_mfeed = $otout_medvac = $btout_fbds = $btout_mbds = $btout_ffeed = $btout_mfeed = $btout_medvac = array();
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){
+                            $key1 = $flk_keys[$row['from_flock']];
+                            if($row1['code'] == $fbird_code){
+                                $otout_fbds[$key1] += (float)$row1['quantity'];
+                            }
+                            else if($row1['code'] == $mbird_code){
+                                $otout_mbds[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $ffeed_code) || in_array($row1['code'], $ffeed_code)){
+                                $otout_ffeed[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $mfeed_code) || in_array($row1['code'], $mfeed_code)){
+                                $otout_mfeed[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $medvac_code) || in_array($row1['code'], $medvac_code)){
+                                $otout_medvac[$key1] += (float)$row1['quantity'];
+                            }
+                            else{ }
+                        }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row['from_flock']];
+                            if($row1['code'] == $fbird_code){
+                                $btout_fbds[$key1] += (float)$row1['quantity'];
+                            }
+                            else if($row1['code'] == $mbird_code){
+                                $btout_mbds[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $ffeed_code) || in_array($row1['code'], $ffeed_code)){
+                                $btout_ffeed[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $mfeed_code) || in_array($row1['code'], $mfeed_code)){
+                                $btout_mfeed[$key1] += (float)$row1['quantity'];
+                            }
+                            else if(array_key_exists($row1['code'], $medvac_code) || in_array($row1['code'], $medvac_code)){
+                                $btout_medvac[$key1] += (float)$row1['quantity'];
+                            }
+                            else{ }
+                        }
+                    }
+                    //Bird Transfer-Out
+                    $sql1 = "SELECT * FROM `breeder_bird_transfer` WHERE `date` <= '$tdate' AND `from_flock` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`from_flock` ASC";
+                    $query1 = mysqli_query($conn,$sql1);
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){
+                            $key1 = $flk_keys[$row['from_flock']];
+                            if($row1['female_bcode'] == $fbird_code){
+                                $otout_fbds[$key1] += (float)$row1['female_bqty'];
+                            }
+                            else if($row1['male_bcode'] == $mbird_code){
+                                $otout_mbds[$key1] += (float)$row1['male_bqty'];
+                            }
+                            else{ }
+                        }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row['from_flock']];
+                            if($row1['female_bcode'] == $fbird_code){
+                                $btout_fbds[$key1] += (float)$row1['female_bqty'];
+                            }
+                            else if($row1['male_bcode'] == $mbird_code){
+                                $btout_mbds[$key1] += (float)$row1['male_bqty'];
+                            }
+                            else{ }
+                        }
+                    }
+                    //Daily Entry
+                    $sql1 = "SELECT * FROM `breeder_dayentry_consumed` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                    $query1 = mysqli_query($conn,$sql1); $omort_fbds = $ocull_fbds = $ocons_ffeed = $omort_mbds = $ocull_mbds = $ocons_mfeed = $bmort_fbds = $bcull_fbds = $bcons_ffeed = $bmort_mbds = $bcull_mbds = $bcons_mfeed = $bfbds_wht = $bmbds_wht = $begg_wht = $bdentry_date = $bage_fbds = $bwage_fbds = array();
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){
+                            $key1 = $flk_keys[$row1['flock_code']];
+                            $omort_fbds[$key1] += (float)$row1['fmort_qty'];
+                            $ocull_fbds[$key1] += (float)$row1['fcull_qty'];
+                            $ocons_ffeed[$key1] += ((float)$row1['ffeed_qty1'] + (float)$row1['ffeed_qty2']);
+                            $omort_mbds[$key1] += (float)$row1['mmort_qty'];
+                            $ocull_mbds[$key1] += (float)$row1['mcull_qty'];
+                            $ocons_mfeed[$key1] += ((float)$row1['mfeed_qty1'] + (float)$row1['mfeed_qty2']);
+                        }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row1['flock_code']];
+                            $bmort_fbds[$key1] += (float)$row1['fmort_qty'];
+                            $bcull_fbds[$key1] += (float)$row1['fcull_qty'];
+                            $bcons_ffeed[$key1] += ((float)$row1['ffeed_qty1'] + (float)$row1['ffeed_qty2']);
+                            $bmort_mbds[$key1] += (float)$row1['mmort_qty'];
+                            $bcull_mbds[$key1] += (float)$row1['mcull_qty'];
+                            $bcons_mfeed[$key1] += ((float)$row1['mfeed_qty1'] + (float)$row1['mfeed_qty2']);
+                            $bfbds_wht[$key1] = (float)$row1['fbody_weight'];
+                            $bmbds_wht[$key1] = (float)$row1['mbody_weight'];
+                            $begg_wht[$key1] = (float)$row1['egg_weight'];
+                            $bdentry_date[$key1] = $row1['date'];
+                            $bage_fbds[$key1] = $row1['breed_age'];
+                            $bwage_fbds[$key1] = $row1['breed_wage'];
+                        }
+                    }
+                    $sql1 = "SELECT * FROM `breeder_dayentry_produced` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                    $query1 = mysqli_query($conn,$sql1); $pegg_qty = array();
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){ }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row1['flock_code']]."@".$row1['item_code'];
+                            $pegg_qty[$key1] += (float)$row1['quantity'];
+                        }
+                    }
+                    //MedVac Consumed
+                    $sql1 = "SELECT * FROM `breeder_medicine_consumed` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flk_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`flock_code` ASC";
+                    $query1 = mysqli_query($conn,$sql1); $omv_qty = $bmv_qty = array();
+                    while($row1 = mysqli_fetch_assoc($query1)){
+                        if(strtotime($row1['date']) < strtotime($fdate)){
+                            $key1 = $flk_keys[$row1['flock_code']];
+                            if(array_key_exists($row1['item_code'], $medvac_code) || in_array($row1['item_code'], $medvac_code)){
+                                $omv_qty[$key1] += (float)$row1['quantity'];
+                            }
+                            else{ }
+                        }
+                        else{
+                            $key1 = $row1['date']."@".$flk_keys[$row1['flock_code']];
+                            if(array_key_exists($row1['item_code'], $medvac_code) || in_array($row1['item_code'], $medvac_code)){
+                                $bmv_qty[$key1] += (float)$row1['quantity'];
+                            }
+                            else{ }
+                        }
+                    }
+                    $slno = $o_fbds = $o_mbds = $c_fbds = $c_mbds = $to_fbds = $to_mbds = $tb_fmb = $tb_mmb = $tb_fcb = $tb_mcb = $tb_fib = $tb_mib = $tb_fob = $tb_mob = $tb_fsb = $tb_msb = $tb_ffc = $tb_mfc = 0;
+                    $o_flks = ""; $tpegg_qty = array();
+                    foreach($grp_alist as $flks){
+                        $flist = array(); $fk_name = "";
+                        if(!empty($flk_glist[$flks]) && $flk_glist[$flks] != ""){
+                            $flist = explode(",",$flk_glist[$flks]);
+                            foreach($flist as $f1){ if($fk_name == ""){ $fk_name = $flk_name[$f1]; } else{ $fk_name .= ", ".$flk_name[$f1]; } }
+                        }
+
+                        for($cdate = strtotime($fdate); $cdate <= strtotime($tdate); $cdate += (86400)){
+                            $adate = date("Y-m-d",$cdate); $key1 = $adate."@".$flks;
+                            if(!empty($bdentry_date[$key1]) && strtotime($bdentry_date[$key1]) == strtotime($adate)){
+                                if($o_flks != $flks){ $o_flks = $flks; $slno = 0; } $slno++;
+                                if($slno == 1){
+                                    //Flock Details
+                                    $fcode = $flk_farm[$flist[0]]; $fname = $farm_name[$fcode];
+                                    $ucode = $flk_unit[$flist[0]]; $uname = $unit_name[$ucode];
+                                    $scode = $flk_shed[$flist[0]]; $sname = $shed_name[$scode];
+                                    $bcode = $flk_batch[$flist[0]]; $bname = $batch_name[$bcode];
+                                    //Opening Female Bird Calculations
+                                    $o_it1 = 0; if(!empty($opn_fbirds[$flks]) && (float)$opn_fbirds[$flks] > 0){ $o_it1 = (float)$opn_fbirds[$flks]; }
+                                    $o_it2 = 0; if(!empty($opur_fbds[$flks]) && (float)$opur_fbds[$flks] > 0){ $o_it2 = (float)$opur_fbds[$flks]; }
+                                    $o_it3 = 0; if(!empty($otin_fbds[$flks]) && (float)$otin_fbds[$flks] > 0){ $o_it3 = (float)$otin_fbds[$flks]; }
+                                    $o_ot1 = 0; if(!empty($osale_fbds[$flks]) && (float)$osale_fbds[$flks] > 0){ $o_ot1 = (float)$osale_fbds[$flks]; }
+                                    $o_ot2 = 0; if(!empty($otout_fbds[$flks]) && (float)$otout_fbds[$flks] > 0){ $o_ot2 = (float)$otout_fbds[$flks]; }
+                                    $o_ot3 = 0; if(!empty($omort_fbds[$flks]) && (float)$omort_fbds[$flks] > 0){ $o_ot3 = (float)$omort_fbds[$flks]; }
+                                    $o_ot4 = 0; if(!empty($ocull_fbds[$flks]) && (float)$ocull_fbds[$flks] > 0){ $o_ot4 = (float)$ocull_fbds[$flks]; }
+                                    $o_fbds = ((float)$o_it1 + (float)$o_it2 + (float)$o_it3) - ((float)$o_ot1 + (float)$o_ot2 + (float)$o_ot3 + (float)$o_ot4);
+                                    //Opening Male Bird Calculations
+                                    $o_it1 = 0; if(!empty($opn_mbirds[$flks]) && (float)$opn_mbirds[$flks] > 0){ $o_it1 = (float)$opn_mbirds[$flks]; }
+                                    $o_it2 = 0; if(!empty($opur_mbds[$flks]) && (float)$opur_mbds[$flks] > 0){ $o_it2 = (float)$opur_mbds[$flks]; }
+                                    $o_it3 = 0; if(!empty($otin_mbds[$flks]) && (float)$otin_mbds[$flks] > 0){ $o_it3 = (float)$otin_mbds[$flks]; }
+                                    $o_ot1 = 0; if(!empty($osale_mbds[$flks]) && (float)$osale_mbds[$flks] > 0){ $o_ot1 = (float)$osale_mbds[$flks]; }
+                                    $o_ot2 = 0; if(!empty($otout_mbds[$flks]) && (float)$otout_mbds[$flks] > 0){ $o_ot2 = (float)$otout_mbds[$flks]; }
+                                    $o_ot3 = 0; if(!empty($omort_mbds[$flks]) && (float)$omort_mbds[$flks] > 0){ $o_ot3 = (float)$omort_mbds[$flks]; }
+                                    $o_ot4 = 0; if(!empty($ocull_mbds[$flks]) && (float)$ocull_mbds[$flks] > 0){ $o_ot4 = (float)$ocull_mbds[$flks]; }
+                                    $o_mbds = ((float)$o_it1 + (float)$o_it2 + (float)$o_it3) - ((float)$o_ot1 + (float)$o_ot2 + (float)$o_ot3 + (float)$o_ot4);
+                                    
+                                    $to_fbds += (float)$o_fbds;
+                                    $to_mbds += (float)$o_mbds;
+                                }
+                                else{
+                                    $o_fbds = $c_fbds;
+                                    $o_mbds = $c_mbds;
+                                }
+                                $b_age = 0; if(!empty($bage_fbds[$key1]) && (float)$bage_fbds[$key1] > 0){ $b_age = (float)$bage_fbds[$key1]; }
+                                $b_wage = 0; if(!empty($bwage_fbds[$key1]) && (float)$bwage_fbds[$key1] > 0){ $b_wage = (float)$bwage_fbds[$key1]; }
+                                //Mortality
+                                $b_fmb = 0; if(!empty($bmort_fbds[$key1]) && (float)$bmort_fbds[$key1] > 0){ $b_fmb = (float)$bmort_fbds[$key1]; }
+                                $b_mmb = 0; if(!empty($bmort_mbds[$key1]) && (float)$bmort_mbds[$key1] > 0){ $b_mmb = (float)$bmort_mbds[$key1]; }
+                                //Culls
+                                $b_fcb = 0; if(!empty($bcull_fbds[$key1]) && (float)$bcull_fbds[$key1] > 0){ $b_fcb = (float)$bcull_fbds[$key1]; }
+                                $b_mcb = 0; if(!empty($bcull_mbds[$key1]) && (float)$bcull_mbds[$key1] > 0){ $b_mcb = (float)$bcull_mbds[$key1]; }
+                                //Purchase-in Birds
+                                $b_fpb = 0; if(!empty($bpur_fbds[$key1]) && (float)$bpur_fbds[$key1] > 0){ $b_fpb = (float)$bpur_fbds[$key1]; }
+                                $b_mpb = 0; if(!empty($bpur_mbds[$key1]) && (float)$bpur_mbds[$key1] > 0){ $b_mpb = (float)$bpur_mbds[$key1]; }
+                                //Transfer-in Birds
+                                $b_fib = 0; if(!empty($btin_fbds[$key1]) && (float)$btin_fbds[$key1] > 0){ $b_fib = (float)$btin_fbds[$key1]; }
+                                $b_mib = 0; if(!empty($btin_mbds[$key1]) && (float)$btin_mbds[$key1] > 0){ $b_mib = (float)$btin_mbds[$key1]; }
+                                //Transfer-Out Birds
+                                $b_fob = 0; if(!empty($btout_fbds[$key1]) && (float)$btout_fbds[$key1] > 0){ $b_fob = (float)$btout_fbds[$key1]; }
+                                $b_mob = 0; if(!empty($btout_mbds[$key1]) && (float)$btout_mbds[$key1] > 0){ $b_mob = (float)$btout_mbds[$key1]; }
+                                //sale Birds
+                                $b_fsb = 0; if(!empty($bsale_fbds[$key1]) && (float)$bsale_fbds[$key1] > 0){ $b_fsb = (float)$bsale_fbds[$key1]; }
+                                $b_msb = 0; if(!empty($bsale_mbds[$key1]) && (float)$bsale_mbds[$key1] > 0){ $b_msb = (float)$bsale_mbds[$key1]; }
+                                //Closing Birds
+                                $c_fbds = ((float)$o_fbds + (float)$b_fpb + (float)$b_fib) - ((float)$b_fob + (float)$b_fsb + (float)$b_fmb + (float)$b_fcb);
+                                $c_mbds = ((float)$o_mbds + (float)$b_mpb + (float)$b_mib) - ((float)$b_mob + (float)$b_msb + (float)$b_mmb + (float)$b_mcb);
+                                //Weight
+                                $sbwt_fbds = $sbwt_mbds = $abwt_fbds = $abwt_mbds = "";
+                                if((int)$b_age > 0){
+                                    if((float)$fstd_bweight[(int)$b_age] > 0){ $sbwt_fbds = decimal_adjustments((float)$fstd_bweight[(int)$b_age],2); }
+                                    if((float)$mstd_bweight[(int)$b_age] > 0){ $sbwt_mbds = decimal_adjustments((float)$mstd_bweight[(int)$b_age],2); }
+                                    if((float)$bfbds_wht[$key1] > 0){ $abwt_fbds = decimal_adjustments((float)$bfbds_wht[$key1],2); }
+                                    if((float)$bmbds_wht[$key1] > 0){ $abwt_mbds = decimal_adjustments((float)$bmbds_wht[$key1],2); }
+                                }
+                                //Feed Consumed
+                                $b_ffc = 0; if(!empty($bcons_ffeed[$key1]) && (float)$bcons_ffeed[$key1] > 0){ $b_ffc = (float)$bcons_ffeed[$key1]; }
+                                $b_mfc = 0; if(!empty($bcons_mfeed[$key1]) && (float)$bcons_mfeed[$key1] > 0){ $b_mfc = (float)$bcons_mfeed[$key1]; }
+                                //Feed Per Bird
+                                $ba_fpbfc = 0; if((float)$o_fbds > 0){ $ba_fpbfc = (((float)$b_ffc / (float)$o_fbds) * 1000); }
+                                $ba_mpbfc = 0; if((float)$o_mbds > 0){ $ba_mpbfc = (((float)$b_mfc / (float)$o_mbds) * 1000); }
+                                $bs_fpbfc = $bs_mpbfc = 0;
+                                if((int)$b_age > 0){
+                                    if((float)$fstd_fpbird[(int)$b_age] > 0){ $bs_fpbfc = decimal_adjustments((float)$fstd_fpbird[(int)$b_age],2); }
+                                    if((float)$mstd_fpbird[(int)$b_age] > 0){ $bs_mpbfc = decimal_adjustments((float)$mstd_fpbird[(int)$b_age],2); }
+                                }
+                                //Egg Weight
+                                $b_ewt = 0; if(!empty($begg_wht[$key1]) && (float)$begg_wht[$key1] > 0){ $b_ewt = (float)$begg_wht[$key1]; }
+
+                                $html .= '<tr>';
+                                $html .= '<td>'.$fname.'</td>';
+                                $html .= '<td>'.$uname.'</td>';
+                                $html .= '<td>'.$sname.'</td>';
+                                $html .= '<td>'.$bname.'</td>';
+                                $html .= '<td title="'.$flks.'">'.$fk_name.'</td>';
+                                $html .= '<td>'.date("d.m.Y",strtotime($adate)).'</td>';
+                                $html .= '<td style="text-align:center;">'.decimal_adjustments($b_wage,1).'</td>';
+                                //Opening Birds
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($o_fbds,5))).'</td>';
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($o_mbds,5))).'</td>';
+                                //Mortality
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_fmb,5))).'</td>';
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_mmb,5))).'</td>';
+                                //Culls
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_fcb,5))).'</td>';
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_mcb,5))).'</td>';
+                                //Transfer-In Birds
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round(((float)$b_fib + (float)$b_fpb),5))).'</td>';
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round(((float)$b_mib + (float)$b_fpb),5))).'</td>';
+                                //Transfer-Out Birds
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_fob,5))).'</td>';
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_mob,5))).'</td>';
+                                //sale Birds
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_fsb,5))).'</td>';
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_msb,5))).'</td>';
+                                //Closing Birds
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($c_fbds,5))).'</td>';
+                                $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($c_mbds,5))).'</td>';
+                                //Std. Body Weight
+                                $html .= '<td style="text-align:center;">'.$sbwt_fbds.'</td>';
+                                $html .= '<td style="text-align:center;">'.$sbwt_mbds.'</td>';
+                                //Actual Body Weight
+                                $html .= '<td style="text-align:center;">'.$abwt_fbds.'</td>';
+                                $html .= '<td style="text-align:center;">'.$abwt_mbds.'</td>';
+                                //Feed Consumed
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($b_ffc,2)).'</td>';
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($b_mfc,2)).'</td>';
+                                //Feed Per Bird
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($bs_fpbfc,2)).'</td>';
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($ba_fpbfc,2)).'</td>';
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($bs_mpbfc,2)).'</td>';
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($ba_mpbfc,2)).'</td>';
+                                //Egg Production
+                                foreach($egg_code as $eggs){
+                                    $key2 = $key1."@".$eggs;
+                                    $b_epq = 0; if(!empty($pegg_qty[$key2]) && (float)$pegg_qty[$key2] > 0){ $b_epq = (float)$pegg_qty[$key2]; }
+                                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($b_epq,2))).'</td>';
+                                    $tpegg_qty[$eggs] += (float)$b_epq;
+                                }
+                                $html .= '<td style="text-align:right;">'.number_format_ind(round($b_ewt,2)).'</td>';
+                                $html .= '</tr>';
+                                $tb_fmb += (float)$b_fmb;
+                                $tb_mmb += (float)$b_mmb;
+                                $tb_fcb += (float)$b_fcb;
+                                $tb_mcb += (float)$b_mcb;
+                                $tb_fib += ((float)$b_fib + (float)$b_fpb);
+                                $tb_mib += ((float)$b_mib + (float)$b_fpb);
+                                $tb_fob += (float)$b_fob;
+                                $tb_mob += (float)$b_mob;
+                                $tb_fsb += (float)$b_fsb;
+                                $tb_msb += (float)$b_msb;
+                                $tb_ffc += (float)$b_ffc;
+                                $tb_mfc += (float)$b_mfc;
+                            }
+                        }
                     }
                 }
-                $html .= '</tbody>';
-                $html .= '<tfoot class="thead3">';
-                $html .= '<tr>';
-                $html .= '<th style="text-align:left;" colspan="3">Total</th>';
-                //Opening Birds
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tfopn_birds,5))).'</th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmopn_birds,5))).'</th>';
-                //Mortality
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tfmort_birds,5))).'</th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmmort_birds,5))).'</th>';
-                //Culls
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tfcull_birds,5))).'</th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmcull_birds,5))).'</th>';
-                //Transfer-In
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tftrin_birds,5))).'</th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmtrin_birds,5))).'</th>';
-                //transfer-out
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tftrout_birds,5))).'</th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmtrout_birds,5))).'</th>';
-                //Closing Birds
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tfflk_cbirds,5))).'</th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tmflk_cbirds,5))).'</th>';
-                //Feed Consumed Details
-                $html .= '<th style="text-align:right;"></th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($ff_qty1,5))).'</th>';
-                if((int)$ffeed_2flag == 1){
-                    $html .= '<th style="text-align:right;"></th>';
-                    $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($ff_qty2,5))).'</th>';
-                }
-                $html .= '<th style="text-align:right;"></th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mf_qty1,5))).'</th>';
-                if((int)$mfeed_2flag == 1){
-                    $html .= '<th style="text-align:right;"></th>';
-                    $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($mf_qty2,5))).'</th>';
-                }
-                //Feed per Bird
-                $act_ffpbird = 0; if((float)$tfopn_birds != 0){ $act_ffpbird = round((((float)$tff_qty / (float)$tfopn_birds) * 1000),2); }
-                $html .= '<th style="text-align:right;">'.number_format_ind(round($act_ffpbird,5)).'</th>';
-                $act_mfpbird = 0; if((float)$tmopn_birds != 0){ $act_mfpbird = round((((float)$tmf_qty / (float)$tmopn_birds) * 1000),2); }
-                $html .= '<th style="text-align:right;">'.number_format_ind(round($act_mfpbird,5)).'</th>';
+                    
+            }
+            //Closing Birds
+            $tc_fbds = ((float)$to_fbds + (float)$tb_fib) - ((float)$tb_fob + (float)$tb_fsb + (float)$tb_fmb + (float)$tb_fcb);
+            $tc_mbds = ((float)$to_mbds + (float)$tb_mib) - ((float)$tb_mob + (float)$tb_msb + (float)$tb_mmb + (float)$tb_mcb);
+            //Feed Per Bird
+            $tba_fpbfc = 0; if((float)$to_fbds > 0){ $tba_fpbfc = (((float)$tb_ffc / (float)$to_fbds) * 1000); }
+            $tba_mpbfc = 0; if((float)$to_mbds > 0){ $tba_mpbfc = (((float)$tb_mfc / (float)$to_mbds) * 1000); }
 
-                //Egg Prod Details
-                $avg_sdeper = 0; if((float)$slno != 0){ $avg_sdeper = round((((float)$tstd_egg_pper / (float)$slno)),2); }
-                $tot_hdper = 0; if((float)$tfopn_birds != 0){ $tot_hdper = round((((float)$tegg_rqty / (float)$tfopn_birds) * 100),2); }
-                foreach($egg_code as $eggs){
-                    if($hegg_code == $eggs){
-                        $hegg_per = 0; if((float)$tegg_rqty != 0){ $hegg_per = (((float)$egg_cqty[$eggs] / (float)$tegg_rqty) * 100); }
-                        $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($egg_cqty[$eggs],5))).'</th>';
-                        $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($hegg_per,5))).'</th>';
-                    }
-                    else{
-                        $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($egg_cqty[$eggs],5))).'</th>';
-                    }
-                }
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tegg_rqty,5))).'</th>';
-                $html .= '<th style="text-align:right;"></th>';
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tot_hdper,5))).'</th>';
-                $html .= '<th style="text-align:right;"></th>';
-
-                $html .= '</tr>';
-                $html .= '</tfoot>';
-            //}
+            $html .= '</tbody>';
+            $html .= '<tfoot class="thead3">';
+            $html .= '<tr>';
+            $html .= '<th style="text-align:left;" colspan="7">Total</th>';
+            //Opening Birds
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($to_fbds,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($to_mbds,5))).'</th>';
+            //Mortality
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_fmb,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_mmb,5))).'</th>';
+            //Culls
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_fcb,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_mcb,5))).'</th>';
+            //Transfer-in Birds
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_fib,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_mib,5))).'</th>';
+            //Transfer-Out Birds
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_fob,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_mob,5))).'</th>';
+            //sale Birds
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_fsb,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_msb,5))).'</th>';
+            //Closing Birds
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tc_fbds,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tc_mbds,5))).'</th>';
+            //Std. Body Weight
+            $html .= '<th style="text-align:right;"></th>';
+            $html .= '<th style="text-align:right;"></th>';
+            //Actual Body Weight
+            $html .= '<th style="text-align:right;"></th>';
+            $html .= '<th style="text-align:right;"></th>';
+            //Feed Consumed
+            $html .= '<th style="text-align:right;">'.number_format_ind(round($tb_ffc,2)).'</th>';
+            $html .= '<th style="text-align:right;">'.number_format_ind(round($tb_mfc,2)).'</th>';
+            //Feed Per Bird
+            $html .= '<th style="text-align:right;"></th>';
+            $html .= '<th style="text-align:right;">'.number_format_ind(round($tba_fpbfc,2)).'</th>';
+            $html .= '<th style="text-align:right;"></th>';
+            $html .= '<th style="text-align:right;">'.number_format_ind(round($tba_mpbfc,2)).'</th>';
+            //Egg Production
+            foreach($egg_code as $eggs){
+                $tb_epq = 0; if(!empty($tpegg_qty[$eggs]) && (float)$tpegg_qty[$eggs] > 0){ $tb_epq = (float)$tpegg_qty[$eggs]; }
+                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tb_epq,2))).'</th>';
+            }
+            $html .= '<th style="text-align:right;"></th>';
+            $html .= '</tr>';
+            $html .= '</tfoot>';
             echo $html;
         ?>
         </table><br/><br/><br/>
         <script>
             function checkval(){
+                var batches = document.getElementById("batches").value;
                 var flocks = document.getElementById("flocks").value;
                 var l = true;
-                if(flocks == "select"){
+                if(batches == "select"){
+                    alert("Please select Batch");
+                    document.getElementById("batches").focus();
+                    l = false;
+                }
+                else if(flocks == "select"){
                     alert("Please select Flock");
                     document.getElementById("flocks").focus();
                     l = false;
@@ -675,7 +1134,7 @@ if(isset($_POST['submit_report']) == true){
 
                 var fetch_fltrs = new XMLHttpRequest();
                 var method = "GET";
-                var url = "breeder_fetch_flock_filter_master.php?farms="+farms+"&units="+units+"&sheds="+sheds+"&batches="+batches+"&flocks="+flocks+"&fetch_type=single&flock_type=select";
+                var url = "breeder_fetch_flock_filter_master.php?farms="+farms+"&units="+units+"&sheds="+sheds+"&batches="+batches+"&flocks="+flocks+"&fetch_type=single&batch_type=select&flock_type=all";
                 //window.open(url);
                 var asynchronous = true;
                 fetch_fltrs.open(method, url, asynchronous);

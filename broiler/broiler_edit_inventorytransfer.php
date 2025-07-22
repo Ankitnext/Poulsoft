@@ -75,6 +75,9 @@ if($link_active_flag > 0){
 		$sql = "SELECT * FROM `broiler_employee` WHERE `desig_code` IN ('$desig_code') AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql); $jcount = mysqli_num_rows($query);
 		while($row = mysqli_fetch_assoc($query)){ $emp_code[$row['code']] = $row['code']; $emp_name[$row['code']] = $row['name']; }
         
+        $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'broiler_display_inventorytransfer.php' AND `field_function` LIKE 'Vehicle and Driver'"; $query = mysqli_query($conn,$sql);  
+        $vd_flag = mysqli_num_rows($query);
+
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Item Transfer' AND `field_function` LIKE 'Stock Check'"; $query = mysqli_query($conn,$sql); $stockcheck_flag = 0; $sccount = mysqli_num_rows($query);
         if($sccount > 0){ while($row = mysqli_fetch_assoc($query)){ $stockcheck_flag = $row['flag']; } } else{ $stockcheck_flag = 0; } if($stockcheck_flag == "" || $stockcheck_flag == 0){ $stockcheck_flag = 0; }
         //echo $stockcheck_flag;
@@ -252,6 +255,16 @@ if($link_active_flag > 0){
                                             <label>Batch</label>
                                             <td><input readonly type="text" name="batch" id="batch"  value="<?php echo $rename_batch; ?>" class="form-control" style="width:180px;" /></td>
                                         </div>
+                                        <?php if($vd_flag > 0) { ?>
+                                        <div class="form-group">
+                                            <label>Vehicle</label>
+                                            <td><input type="text" name="vehicle_code" id="vehicle_code"  value="<?php echo $vcode; ?>" class="form-control" style="width:180px;" /></td>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Driver</label>
+                                            <td><input type="text" name="driver_code" id="driver_code"  value="<?php echo $driver_code; ?>" class="form-control" style="width:180px;" /></td>
+                                        </div>
+                                        <?php } else {  ?>
                                         <div class="form-group" style="width:130px;">
                                             <label>Vehicle</label>
 							                <select name="vehicle_code" id="vehicle_code" class="form-control select2" style="width:180px;">
@@ -266,6 +279,7 @@ if($link_active_flag > 0){
                                                 <?php foreach($emp_code as $dcode){ ?><option value="<?php echo $dcode; ?>" <?php if($driver_code == $dcode){ echo "selected"; } ?>><?php echo $emp_name[$dcode]; ?></option><?php } ?>
                                             </select>
                                         </div>
+                                        <?php } ?>
                                         <!--- <div class="form-group" style="width:130px;">
                                             <label>Driver Mobile</label>
 							                <input type="text" name="driver_mobile" id="driver_mobile" class="form-control" value="<?php echo $driver_mobile; ?>" style="width:120px;" onkeyup="validatemobile(this.id);" />

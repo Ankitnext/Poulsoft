@@ -22,7 +22,7 @@ if($access_error_flag == 0){
     while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; if($sector_name[$row['code']] == "StockPoint"){$st_code = $row['code'];} }
 
     $sql = "SELECT * FROM `acc_modes` WHERE `active` = '1' ORDER BY `description` ASC";
-    $query = mysqli_query($conn,$sql); $mode_code = $mode_name = array(); 
+    $query = mysqli_query($conn,$sql); $mode_code = $mode_name = array();
     while($row = mysqli_fetch_assoc($query)){ $mode_code[$row['code']] = $row['code']; $mode_name[$row['code']] = $row['description']; }
 
     $sql = "SELECT * FROM `acc_coa` WHERE `ctype` LIKE 'Cash' AND `active` = '1' ORDER BY `description` ASC";
@@ -34,10 +34,6 @@ if($access_error_flag == 0){
 
     $sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Customer Receipt' AND `field_function` = 'Hide DocNo' AND `flag` = '1'";
     $query = mysqli_query($conn,$sql); $hdcno_flag = mysqli_num_rows($query);
-
-    //check and fetch date range
-    global $drng_cday; $drng_cday = 0; global $drng_furl; $drng_furl = str_replace("_add_","_display_",basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)));
-    include "poulsoft_fetch_daterange_master.php";
 ?>
     <html>
         <head>
@@ -70,7 +66,7 @@ if($access_error_flag == 0){
                                 </thead>
                                 <tbody id="row_body">
                                     <tr style="margin:5px 0px 5px 0px;">
-                                        <td><input type="text" name="date[]" id="date[0]" class="form-control range_picker" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly /></td>
+                                        <td><input type="text" name="date[]" id="date[0]" class="form-control rct_datepickers" value="<?php echo date("d.m.Y",strtotime($date)); ?>" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly /></td>
                                         <td><select name="ccode[]" id="ccode[0]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $cus_name[$scode]; ?></option><?php } ?></select></td>
                                         <td><select name="mode[]" id="mode[0]" class="form-control select2" style="width:180px;" onchange="update_coa_method(this.id);"><option value="select">-select-</option><?php foreach($mode_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $mode_name[$scode]; ?></option><?php } ?></select></td>
                                         <td><select name="code[]" id="code[0]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($method_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $method_name[$scode]; ?></option><?php } ?></select></td>
@@ -118,8 +114,6 @@ if($access_error_flag == 0){
                 </form>
             </div>
             <script>
-                //Date Range selection
-                var s_date = '<?php echo $rng_sdate; ?>'; var e_date = '<?php echo $rng_edate; ?>';
                 function return_back(){
                     window.location.href = "chicken_display_customerreceipt2.php";
                 }
@@ -224,14 +218,13 @@ if($access_error_flag == 0){
                     document.getElementById("incr").value = d;
                     var dtcds_flag = '<?php echo (int)$dtcds_flag; ?>';
                     html += '<tr id="row_no['+d+']">';
-                    html += '<td><input type="text" name="date[]" id="date['+d+']" class="form-control range_picker" value="'+date+'" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly /></td>';
+                    html += '<td><input type="text" name="date[]" id="date['+d+']" class="form-control rct_datepickers" value="'+date+'" style="width:100px;" onchange="fetch_tcds_per(this.id);" readonly /></td>';
                     html += '<td><select name="ccode[]" id="ccode['+d+']" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $cus_name[$scode]; ?></option><?php } ?></select></td>';
                     html += '<td><select name="mode[]" id="mode['+d+']" class="form-control select2" style="width:180px;" onchange="update_coa_method(this.id);"><option value="select">-select-</option><?php foreach($mode_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $mode_name[$scode]; ?></option><?php } ?></select></td>';
                     html += '<td><select name="code[]" id="code['+d+']" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($method_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $method_name[$scode]; ?></option><?php } ?></select></td>';
                     html += '<td><input type="text" name="amount1[]" id="amount1['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_row_amt(this.id);get_final_total();" onchange="validate_amount(this.id);" /></td>';
                     if(parseInt(dtcds_flag) == 1){ html += '<td style="visibility:visible;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_row_amt(this.id);" /></td>'; }
                     else{ html += '<td style="visibility:hidden;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_row_amt(this.id);" /></td>'; }
-                    
                     <?php if($hdcno_flag != 1) { ?> html += '<td><input type="text" name="dcno[]" id="dcno['+d+']" class="form-control" style="width:90px;" onkeyup="validate_name(this.id);" /></td>'; <?php  }    ?>
                     
                  
@@ -246,10 +239,9 @@ if($access_error_flag == 0){
                     html += '</tr>';
                     $('#row_body').append(html);
                     $('.select2').select2();
-                    // var rng_mdate = '<?php echo $rng_mdate; ?>';
-                    // var today = '<?php echo $today; ?>';
-                    // $('.rct_datepickers').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true,minDate: rng_mdate,maxDate: today,autoclose: true });
-                    $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
+                    var rng_mdate = '<?php echo $rng_mdate; ?>';
+                    var today = '<?php echo $today; ?>';
+                    $('.rct_datepickers').datepicker({ dateFormat:'dd.mm.yy',changeMonth:true,changeYear:true,minDate: rng_mdate,maxDate: today,autoclose: true });
 
                     $('#mode\\[' + d + '\\]').select2(); document.getElementById('mode['+d+']').value = pmode; $('#mode\\[' + d + '\\]').select2();
                     var pfx = 'mode['+d+']';
@@ -333,10 +325,6 @@ if($access_error_flag == 0){
 		    <script src="chick_validate_basicfields.js"></script>
             <?php include "header_foot1.php"; ?>
             <script src="handle_ebtn_as_tbtn.js"></script>
-             <script>
-            //Date Range selection
-            $( ".range_picker" ).datepicker({ inline: true, showButtonPanel: false, changeMonth: true, changeYear: true, dateFormat: "dd.mm.yy", minDate: s_date, maxDate: e_date, beforeShow: function(){ $(".ui-datepicker").css('font-size', 12) } });
-            </script>
         </body>
     </html>
 <?php

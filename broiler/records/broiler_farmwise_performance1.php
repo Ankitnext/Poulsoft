@@ -118,6 +118,9 @@ $sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Bird%' A
 $query = mysqli_query($conn,$sql); $bird_code = "";
 while($row = mysqli_fetch_assoc($query)){ $bird_code = $row['code']; }
 
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'poulso6_broiler_wb_motipoultry.php' AND `field_function` = 'Mortality' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $mort_flag = mysqli_num_rows($query);
+
 $fdate = $tdate = date("Y-m-d"); $regions = $branches = $lines = $supervisors = $farms = "all"; $batch_type = "1"; $excel_type = "display"; $lot_nos = "";
 if(isset($_POST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));
@@ -376,6 +379,7 @@ if(isset($_POST['submit_report']) == true){
                     while($row = mysqli_fetch_assoc($query)){
                         if((int)$row['lb_flag'] == 1){
                             $lame_sbds[$row['farm_batch']] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
+                            $lmbird += (float)$row['birds'];
                         }
                     }
                     
@@ -395,7 +399,10 @@ if(isset($_POST['submit_report']) == true){
                         $l_bdsp = 0; if((float)$l_bird > 0){ $l_bdsp = (((float)$p_bird / (float)$l_bird) * 100); }
                         $mort_qty = $row['mortality'];
                         $mort_per = $row['total_mort'];
+                        $avg_wt = $row['avg_wt'];
                         $remarks = $row['remarks'];
+
+                        $lm_per = ($lmbird / ($lmbird * $avg_wt)) * 100; 
 
                         $rl_bird += (float)$l_bird;
                         $rp_bird += (float)$p_bird;
@@ -416,8 +423,11 @@ if(isset($_POST['submit_report']) == true){
                         $html .= '<td style="text-align:left;">'.$batch_lotno[$bcode].'</td>';
                         $html .= '<td style="text-align:right;">'.decimal_adjustments($fcr,3).'</td>';
                         $html .= '<td style="text-align:left;">'.$sector_name[$vcode].'</td>';
-                        
-                        $html .= '<td style="text-align:right;">'.decimal_adjustments($l_bdsp,2).'</td>';
+                        if($mort_flag > 0){
+                        $html .= '<td style="text-align:right;">'.decimal_adjustments($lm_per,2).'</td>';
+                         } else {
+                            $html .= '<td style="text-align:right;">'.decimal_adjustments($l_bdsp,2).'</td>';
+                        }
                         $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind($l_bird)).'</td>';
                         
                         $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(0)).'</td>';
@@ -436,13 +446,19 @@ if(isset($_POST['submit_report']) == true){
                             $html .= '<th style="text-align:left;" colspan="5">Total</th>';
                             $html .= '<th style="text-align:right;">'.decimal_adjustments($avg_fcr,3).'</th>';
                             $html .= '<th style="text-align:right;"></th>';
+                            if($mort_flag > 0){
+                            $html .= '<th style="text-align:right;">'.decimal_adjustments($lm_per,2).'</th>';
+                             } else { 
                             $html .= '<th style="text-align:right;">'.decimal_adjustments($rl_bdsp,2).'</th>';
+                             }
                             $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind($rl_bird)).'</th>';
-                            
                             $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(0)).'</th>';
                             $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(0)).'</th>';
-
-                            $html .= '<th style="text-align:right;">'.decimal_adjustments($rmort_per,2).'</th>';
+                          if($mort_flag > 0){ 
+                              $html .= '<th style="text-align:right;">'.decimal_adjustments($mort_per,2).'</th>';
+                          } else {
+                              $html .= '<th style="text-align:right;">'.decimal_adjustments($rmort_per,2).'</th>';
+                          }
                             $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind($rmort_qty)).'</th>';
                             $html .= '<th style="text-align:right;"></th>';
                             $html .= '</tr>';

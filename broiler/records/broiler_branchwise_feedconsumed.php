@@ -8,6 +8,7 @@ if($db == ''){
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Feed Consumed Report";
     include "header_head.php";
     $form_path = "broiler_branchwise_feedconsumed.php";
 }
@@ -15,6 +16,7 @@ else{
     $user_code = $_GET['userid'];
     $dbname = $db;
     include "APIconfig.php";
+    global $page_title; $page_title = "Feed Consumed Report";
     include "header_head.php";
     $form_path = "broiler_branchwise_feedconsumed.php?db=$db&userid=".$user_code;
 }
@@ -36,6 +38,9 @@ if(in_array("broiler_medicine_record", $exist_tbl_names, TRUE) == ""){ $sql1 = "
 if(in_array("broiler_itemreturns", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_itemreturns LIKE poulso6_admin_broiler_broilermaster.broiler_itemreturns;"; mysqli_query($conn,$sql1); }
 if(in_array("broiler_inv_intermediate_issued", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_inv_intermediate_issued LIKE poulso6_admin_broiler_broilermaster.broiler_inv_intermediate_issued;"; mysqli_query($conn,$sql1); }
 if(in_array("broiler_inv_intermediate_received", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TABLE $database_name.broiler_inv_intermediate_received LIKE poulso6_admin_broiler_broilermaster.broiler_inv_intermediate_received;"; mysqli_query($conn,$sql1); }
+
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'broiler_branchwise_feedconsumed.php' AND `field_function` = 'ShowFeed'";
+$query = mysqli_query($conn,$sql); $showfeedflag = mysqli_num_rows($query);
 
 /*Check User access Locations*/
 $sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'";
@@ -269,16 +274,18 @@ if(isset($_POST['submit_report']) == true){
                     $query = mysqli_query($conn,$sql); $osale_fqty = $bsale_fqty = array();
                     while($row = mysqli_fetch_array($query)){
                         $key = $row['farm_batch']; $items = $row['icode'];
-                        if(empty($feed_code[$items]) || $feed_code[$items] == ""){ }
-                        else{
-                            if(strtotime($row['date']) < strtotime($fdate)){
-                                $osale_fqty[$key] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
-                            }
+                        if(!empty($farm_alist[$row['warehouse']]) && $farm_alist[$row['warehouse']] != ""){
+                            if(empty($feed_code[$items]) || $feed_code[$items] == ""){ }
                             else{
-                                $bsale_fqty[$key] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
+                                if(strtotime($row['date']) < strtotime($fdate)){
+                                    $osale_fqty[$key] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
+                                }
+                                else{
+                                    $bsale_fqty[$key] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']);
+                                }
                             }
+                            $act_batch[$key] = $key;
                         }
-                        $act_batch[$key] = $key;
                     }
                     //Stock-Out
                     $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `code` IN ('$item_list') AND `from_batch` IN ('$batch_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`from_batch` ASC";
@@ -313,10 +320,28 @@ if(isset($_POST['submit_report']) == true){
                         $act_batch[$key] = $key;
                     }
                     //Day Record
+                    $feeddata = [];
+                    $feed1data = [];
+                    $feed1kgs = [];
+                    $feed2data = [];
+                    $feed2kgs = [];
                     $sql = "SELECT * FROM `broiler_daily_record` WHERE `date` <= '$tdate' AND `batch_code` IN ('$batch_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`batch_code` ASC";
                     $query = mysqli_query($conn,$sql); $ocon_fqty = $bcon_fqty = array();
                     while($row = mysqli_fetch_assoc($query)){
                         $key1 = $row['batch_code']; $key2 = $row['date']."@".$row['batch_code'];
+                        if (!isset($feed1data[$key2]) || !isset($feed2data[$key2])) {
+
+                            if($row['item_code1'] != ""){
+                                $feed1data[$key2] = $feed_name[$row['item_code1']];
+                                $feed1kgs[$key2] = $row['kgs1'];
+                            }
+                            if($row['item_code2'] != ""){
+                                
+                                $feed2data[$key2] = $feed_name[$row['item_code2']];
+                                $feed2kgs[$key2] = $row['kgs2'];
+                            }        
+                        }
+
                         if(strtotime($row['date']) < strtotime($fdate)){
                             $ocon_fqty[$key1] += ((float)$row['kgs1'] + (float)$row['kgs2']);
                         }
@@ -326,6 +351,7 @@ if(isset($_POST['submit_report']) == true){
                         if(empty($brood_age[$key1]) || $brood_age[$key1] == ""){ $brood_age[$key1] = $row['brood_age']; } else if((int)$brood_age[$key1] < $row['brood_age']){ $brood_age[$key1] = $row['brood_age']; } else{ }
                         $act_batch[$key1] = $key1;
                     }
+
                     $sql = "SELECT * FROM `broiler_batch` WHERE `code` IN ('$batch_list') AND `farm_code` IN ('$farm_list') AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
                     $query = mysqli_query($conn,$sql); $batch_code = $batch_name = $batch_book = $batch_farm = array();
                     while($row = mysqli_fetch_assoc($query)){ $batch_code[$row['code']] = $row['code']; $batch_name[$row['code']] = $row['description']; $batch_book[$row['code']] = $row['book_num']; $batch_farm[$row['farm_code']] .= $row['code'].","; }
@@ -358,6 +384,7 @@ if(isset($_POST['submit_report']) == true){
                         
                         //Opening Feed
                         $ofeeds = (((float)$opur_fqty[$key] +(float)$otrin_fqty[$key]) - ((float)$osale_fqty[$key] + (float)$otrout_fqty[$key] + (float)$ocon_fqty[$key]));
+                        //echo "<br/>$ofeeds = (((float)$opur_fqty[$key] +(float)$otrin_fqty[$key]) - ((float)$osale_fqty[$key] + (float)$otrout_fqty[$key] + (float)$ocon_fqty[$key]));";
                         $opn_feed[$key2] += (float)$ofeeds;
 
                         //Feed Purchase
@@ -404,7 +431,7 @@ if(isset($_POST['submit_report']) == true){
                         $nhead_html .= '<th>Branch</th><th>Line</th><th>Supervisor</th><th>Farm Code</th><th>Farm</th><th>Batch</th>';
                         $fhead_html .= '<th id="order">Branch</th><th id="order">Line</th><th id="order">Supervisor</th><th id="order">Farm Code</th><th id="order">Farm</th><th id="order">Batch</th>';
                         $nhead_html .= '<th style="text-align:center;">Date of Placement</th>';
-                        $fhead_html .= '<th style="text-align:center;" id="order_num">Date of Placement</th>';
+                        $fhead_html .= '<th style="text-align:center;" id="order_date">Date of Placement</th>';
                         $nhead_html .= '<th style="text-align:center;">Age</th>';
                         $fhead_html .= '<th style="text-align:center;" id="order_num">Age</th>';
                     }
@@ -426,6 +453,14 @@ if(isset($_POST['submit_report']) == true){
                     for($cdate = strtotime($fdate); $cdate <= strtotime($tdate); $cdate += (86400)){
                         $nhead_html .= '<th style="text-align:center;">'.date("d.m.Y",$cdate).'</th>';
                         $fhead_html .= '<th style="text-align:center;" id="order_num">'.date("d.m.Y",$cdate).'</th>';
+                        if($showfeedflag > 0){
+                        $nhead_html .= '<th style="text-align:center;">feed1 '.date("d.m.Y",$cdate).'</th>';
+                        $fhead_html .= '<th style="text-align:center;" id="order_num">feed1 '.date("d.m.Y",$cdate).'</th>';
+                        $fhead_html .= '<th style="text-align:center;" id="order_num">feed1 qty '.date("d.m.Y",$cdate).'</th>';
+                        $nhead_html .= '<th style="text-align:center;">feed2 '.date("d.m.Y",$cdate).'</th>';
+                        $fhead_html .= '<th style="text-align:center;" id="order_num">feed2 '.date("d.m.Y",$cdate).'</th>';
+                        $fhead_html .= '<th style="text-align:center;" id="order_num">feed2 qty '.date("d.m.Y",$cdate).'</th>';
+                        }
                     }
                     $nhead_html .= '<th style="text-align:center;">Total Consumption</th>';
                     $nhead_html .= '<th style="text-align:center;">Closing Feed</th>';
@@ -467,6 +502,16 @@ if(isset($_POST['submit_report']) == true){
                                         if(empty($bday_feed[$key3]) || $bday_feed[$key3] == ""){ $bday_feed[$key3] = 0; }
                                         $html .= '<td style="text-align:right;">'.number_format_ind($bday_feed[$key3]).'</td>';
                                         $row_cons += (float)$bday_feed[$key3];
+                                        if($showfeedflag > 0){      
+                                            $fedata1 = $feed1data[$key3];
+                                            $fedata2 = $feed2data[$key3];
+                                            $feed1qty = $feed1kgs[$key3];
+                                            $feed2qty = $feed2kgs[$key3];
+                                            $html .= '<td style="text-align:right;">'.$fedata1.'</td>';
+                                            $html .= '<td style="text-align:right;">'.number_format_ind($feed1qty).'</td>';
+                                            $html .= '<td style="text-align:right;">'.$fedata2.'</td>';
+                                            $html .= '<td style="text-align:right;">'.number_format_ind($feed2qty).'</td>';
+                                        }
                                     }
                                     $cls_feed = (float)$tavl_feed[$key2] - (float)$row_cons;
                                     $html .= '<td style="text-align:right;">'.number_format_ind($row_cons).'</td>';
@@ -506,6 +551,16 @@ if(isset($_POST['submit_report']) == true){
                                         if(empty($bday_feed[$key3]) || $bday_feed[$key3] == ""){ $bday_feed[$key3] = 0; }
                                         $html .= '<td style="text-align:right;">'.number_format_ind($bday_feed[$key3]).'</td>';
                                         $row_cons += (float)$bday_feed[$key3];
+                                        if($showfeedflag > 0){
+                                            $fedata1 = $feed1data[$key3];
+                                            $fedata2 = $feed2data[$key3];
+                                            $feed1qty = $feed1kgs[$key3];
+                                            $feed2qty = $feed2kgs[$key3];
+                                            $html .= '<td style="text-align:right;">'.$fedata1.'</td>';
+                                            $html .= '<td style="text-align:right;">'.number_format_ind($feed1qty).'</td>';
+                                            $html .= '<td style="text-align:right;">'.$fedata2.'</td>';
+                                            $html .= '<td style="text-align:right;">'.number_format_ind($feed2qty).'</td>';
+                                        }
                                     }
                                     $cls_feed = (float)$tavl_feed[$key2] - (float)$row_cons;
                                     $html .= '<td style="text-align:right;">'.number_format_ind($row_cons).'</td>';
@@ -545,6 +600,16 @@ if(isset($_POST['submit_report']) == true){
                                         if(empty($bday_feed[$key3]) || $bday_feed[$key3] == ""){ $bday_feed[$key3] = 0; }
                                         $html .= '<td style="text-align:right;">'.number_format_ind($bday_feed[$key3]).'</td>';
                                         $row_cons += (float)$bday_feed[$key3];
+                                        if($showfeedflag > 0){
+                                            $fedata1 = $feed1data[$key3];
+                                            $fedata2 = $feed2data[$key3];
+                                            $feed1qty = $feed1kgs[$key3];
+                                            $feed2qty = $feed2kgs[$key3];
+                                            $html .= '<td style="text-align:right;">'.$fedata1.'</td>';
+                                            $html .= '<td style="text-align:right;">'.number_format_ind($feed1qty).'</td>';
+                                            $html .= '<td style="text-align:right;">'.$fedata2.'</td>';
+                                            $html .= '<td style="text-align:right;">'.number_format_ind($feed2qty).'</td>';
+                                        }
                                     }
                                     $cls_feed = (float)$tavl_feed[$key2] - (float)$row_cons;
                                     $html .= '<td style="text-align:right;">'.number_format_ind($row_cons).'</td>';
@@ -595,6 +660,16 @@ if(isset($_POST['submit_report']) == true){
                                             if(empty($bday_feed[$key3]) || $bday_feed[$key3] == ""){ $bday_feed[$key3] = 0; }
                                             $html .= '<td style="text-align:right;">'.number_format_ind($bday_feed[$key3]).'</td>';
                                             $row_cons += (float)$bday_feed[$key3];
+                                            if($showfeedflag > 0){
+                                                $fedata1 = $feed1data[$key3];
+                                                $fedata2 = $feed2data[$key3];
+                                                $feed1qty = $feed1kgs[$key3];
+                                                $feed2qty = $feed2kgs[$key3];
+                                                $html .= '<td style="text-align:right;">'.$fedata1.'</td>';
+                                                $html .= '<td style="text-align:right;">'.number_format_ind($feed1qty).'</td>';
+                                                $html .= '<td style="text-align:right;">'.$fedata2.'</td>';
+                                                $html .= '<td style="text-align:right;">'.number_format_ind($feed2qty).'</td>';
+                                            }
                                         }
                                         $cls_feed = (float)$tavl_feed[$key2] - (float)$row_cons;
                                         $html .= '<td style="text-align:right;">'.number_format_ind($row_cons).'</td>';
@@ -624,6 +699,16 @@ if(isset($_POST['submit_report']) == true){
                         if(empty($bday_cfeed[$key3]) || $bday_cfeed[$key3] == ""){ $bday_cfeed[$key3] = 0; }
                         $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind($bday_cfeed[$key3])).'</th>';
                         $trow_cons += (float)$bday_cfeed[$key3];
+                        if($showfeedflag > 0){
+                            $fedata1 = $feed1data[$key3];
+                                            $fedata2 = $feed2data[$key3];
+                                            $feed1qty = $feed1kgs[$key3];
+                                            $feed2qty = $feed2kgs[$key3];
+                                            $html .= '<td style="text-align:right;">'.$fedata1.'</td>';
+                                            $html .= '<td style="text-align:right;">'.number_format_ind($feed1qty).'</td>';
+                                            $html .= '<td style="text-align:right;">'.$fedata2.'</td>';
+                                            $html .= '<td style="text-align:right;">'.number_format_ind($feed2qty).'</td>';
+                        }
                     }
                     $tcls_feed = (float)$tta_feed - (float)$trow_cons;
                     $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind($trow_cons)).'</th>';
@@ -1046,7 +1131,6 @@ if(isset($_POST['submit_report']) == true){
                 }
                 else{ }
             }
-        
         </script>
         <script>
             function table_sort() {

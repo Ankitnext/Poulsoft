@@ -28,13 +28,22 @@ if($db == ''){
 			$coa_cat = $coa_cat."','".$row['code'];
 		}
 	}
-	$sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' AND `type` IN ('COA-0003') AND `categories` IN ('CAT-0008') ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $allCoA = "";
-	while($row = mysqli_fetch_assoc($query)){ $coaname[$row['code']] = $row['description']; $coacode[$row['code']] = $row['code']; if($allCoA == "") { $allCoA = $row['code']; } else { $allCoA = $allCoA."','".$row['code']; } }
-	
+	$sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' AND `type` IN ('COA-0003') AND `categories` IN ('CAT-0008') ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $allCoA = array();
+	// while($row = mysqli_fetch_assoc($query)){ $coaname[$row['code']] = $row['description']; $coacode[$row['code']] = $row['code']; if($allCoA == "") { $allCoA = $row['code']; } else { $allCoA = $allCoA."','".$row['code']; } }
+	while ($row = mysqli_fetch_assoc($query)) {
+		$coaname[$row['code']] = $row['description'];
+		$coacode[$row['code']] = $row['code'];
+		$allCoA[] = $row['code']; // push into array
+	}
 	// Logo Flag
 	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Reports' AND `field_function` LIKE 'Fetch Logo Dynamically' AND `user_access` LIKE 'all' AND `flag` = '1'";
 	$query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
 	if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
+	
+	// COA Flag
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'acc_expenseLedgerSmart.php' AND `field_function` LIKE 'COA and Type' AND `user_access` LIKE 'all' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $coa_flag = mysqli_num_rows($query); //$avou_flag = 1;
+	// if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
 
 	$sql = "SELECT * FROM `acc_coa` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $coaname[$row['code']] = $row['description']; }
@@ -46,15 +55,17 @@ if($db == ''){
 	while($row = mysqli_fetch_assoc($query)){ $whname[$row['code']] = $row['description']; $whcode[$row['code']] = $row['code']; }
 	$sql = "SELECT * FROM `main_contactdetails` WHERE `active` = '1' ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
 	while($row = mysqli_fetch_assoc($query)){ $cpname[$row['code']] = $row['name']; $cpcode[$row['code']] = $row['code']; }
-	$fromdate = $_POST['fromdate']; $todate = $_POST['todate']; $pcoa = $_POST['coa']; $pwhname = $_POST['whname'];
+	$fromdate = $_POST['fromdate']; $todate = $_POST['todate']; 
+	// $pcoa = $_POST['coa'];
+	 $pwhname = $_POST['whname'];
 	if($fromdate == ""){ $fromdate = $todate = $today; } else { $fromdate = $_POST['fromdate']; $todate = $_POST['todate']; }
-	if($pcoa == ""){ $pcoa = "all"; } else { $pcoa = $_POST['coa']; }
+	// if($pcoa == ""){ $pcoa = "all"; } else { $pcoa = $_POST['coa']; }
 	if($pwhname == ""){ $pwhname = "all"; } else { $pwhname = $_POST['whname']; }
 		
 	$exoption = "displaypage"; $tr_type = "all";
 	if(isset($_POST['submit'])) { $excel_type = $_POST['export']; if($excel_type == "exportexcel"){ $exoption = "displaypage"; } else{ $exoption = $_POST['export']; } } else{ $excel_type = "displaypage"; }
 	if(isset($_POST['submit']) == true){
-		$tr_type = $_POST['tr_type'];
+		// $tr_type = $_POST['tr_type'];
 		$exl_fdate = $_POST['fromdate']; $exl_tdate = $_POST['todate']; $exl_coa = $_POST['coa']; 
         // $exl_whname = $_POST['whname'];
 
@@ -62,6 +73,17 @@ if($db == ''){
 		foreach($_POST['sectors'] as $scts){ $sects[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
         $sects_list = implode("','", array_map('addslashes', $sects));
         $secct_fltr = ""; if($sec_all_flag == 1 ){ $secct_fltr = ""; } else { $secct_fltr = "AND `warehouse` IN ('$sects_list')";}
+
+		 if($coa_flag > 0){ 
+		$tr_types = array(); $tr_all_flag = 0;
+		foreach ($_POST['tr_type'] as $ttype) { $tr_types[$ttype] = $ttype; if ($ttype == "all") { $tr_all_flag = 1; } }
+		$tr_list = implode("','", array_map('addslashes', $tr_types));
+		$prx_fltr = ""; if ($tr_all_flag != 1) { $prx_fltr = "AND `prefix` IN ('$tr_list')"; }
+		 } else { 
+			 $tr_type = $_POST['tr_type'];
+			 $prx_fltr = ""; if($tr_type != "all"){ $prx_fltr = " AND `prefix` = '$tr_type'"; }
+		 }
+
 	}
 	else{
 		$exl_fdate = $exl_tdate = $today; $exl_sname =  $exl_coa = $exl_whname = "all";
@@ -123,7 +145,7 @@ if($db == ''){
 						<h3>Expense Ledger</h3>
 						<label class="reportheaderlabel"><b style="color: green;">From Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($fromdate)); ?></label>&ensp;&ensp;&ensp;&ensp;
 						<label class="reportheaderlabel"><b style="color: green;">To Date:</b>&nbsp;<?php echo date("d.m.Y",strtotime($todate)); ?></label><br/>
-						<label class="reportheaderlabel"><b style="color: green;">CoA:</b>&nbsp;<?php if($pcoa == "all") { echo $pcoa; } else { echo $coaname[$pcoa]; } ?></label><br/>
+						<!-- <label class="reportheaderlabel"><b style="color: green;">CoA:</b>&nbsp;<?php //if($pcoa == "all") { echo $pcoa; } else { echo $coaname[$pcoa]; } ?></label><br/> -->
 						<label class="reportheaderlabel"><b style="color: green;">Warehouse:</b>&nbsp;<?php if($pwhname == "all") { echo $pwhname; } else { echo $whname[$pwhname]; }?></label>
 					</td>
 					<td>
@@ -152,7 +174,45 @@ if($db == ''){
 										<label class="reportselectionlabel">To Date</label>&nbsp;
 										<input type="text" name="todate" id="datepickers1" class="formcontrol" value="<?php echo date("d.m.Y",strtotime($todate)); ?>"/>
 									&ensp;&ensp;
+										<!-- <label class="reportselectionlabel">CoA</label>&nbsp;
+										<?php
+											// Ensure CoA is always an array
+											//$selected_coa = $_POST['coa'] ?? ['all'];
+											//if (!is_array($selected_coa)) {
+												//$selected_coa = [$selected_coa];
+											//}
+										?>
+										<select name="coa[]" id="coa[0]" class="form-control select2" multiple>
+											<option value="all" <?php //if (in_array("all", $selected_coa)) echo 'selected'; ?> >-All-</option>
+											<?php
+												//foreach($coacode as $accode){
+											?>
+													<option <?php //if($pcoa == $coacode[$accode]) { echo 'selected'; } ?> <?php //if (in_array($pcoa, $$coacode[$accode])) echo "selected"; ?> value="<?php //echo $coacode[$accode]; ?>"><?php //echo $coaname[$accode]; ?></option>
+											<?php
+												//}
+											?>
+										</select>&ensp;&ensp; -->
+										<?php if($coa_flag > 0){ ?>
 										<label class="reportselectionlabel">CoA</label>&nbsp;
+										<select name="coa[]" id="coa[0]" class="form-control select2" multiple>
+											<?php
+												// Ensure CoA is always an array
+												$selected_coa = $_POST['coa'] ?? ['all'];
+												if (!is_array($selected_coa)) {
+													$selected_coa = [$selected_coa];
+												}
+											?>
+											<option value="all" <?php if (in_array("all", $selected_coa)) echo 'selected'; ?>>-All-</option>
+											<?php
+												foreach ($coacode as $accode) {
+													$code_value = $coacode[$accode];
+													$selected = in_array($code_value, $selected_coa) ? 'selected' : '';
+													echo "<option value=\"$code_value\" $selected>{$coaname[$accode]}</option>";
+												}
+											?>
+										</select>&ensp;&ensp;
+										<?php } else {  ?>
+											<label class="reportselectionlabel">CoA</label>&nbsp;
 										<select name="coa" id="coa" class="form-control select2">
 											<option value="all" <?php if($pcoa == "all") { echo 'selected'; } ?> >-All-</option>
 											<?php
@@ -163,6 +223,9 @@ if($db == ''){
 												}
 											?>
 										</select>&ensp;&ensp;
+
+										<?php } ?>
+
 										<!-- <label class="reportselectionlabel">Warehouse</label>&nbsp;
 										<select name="whname" id="whname" class="form-control select2">
 											<option value="all" <?php //if($pwhname == "all") { echo 'selected'; } ?> >-All-</option>
@@ -190,15 +253,32 @@ if($db == ''){
                                                     </option>
                                                 <?php } ?>
                                             </select>&ensp;&ensp;
+											<?php if($coa_flag > 0){ ?>
 										<label class="reportselectionlabel">Transaction Type</label>&nbsp;
-										<select name="tr_type" id="tr_type" class="form-control select2">
+										<select name="tr_type[]" id="tr_type[0]" class="form-control select2" multiple>
+											<?php
+												// Ensure tr_type is always an array
+												$selected_types = $_POST['tr_type'] ?? ['all'];
+												if (!is_array($selected_types)) {
+													$selected_types = [$selected_types];
+												}
+											?>
+											<option value="all" <?php if (in_array("all", $selected_types)) echo "selected"; ?>>-All-</option>
+											<option value="pv" <?php if (in_array("pv", $selected_types)) echo "selected"; ?>>Payments</option>
+											<option value="rv" <?php if (in_array("rv", $selected_types)) echo "selected"; ?>>Receipt</option>
+											<option value="jv" <?php if (in_array("jv", $selected_types)) echo "selected"; ?>>Journal</option>
+										</select>&ensp;&ensp;
+										<?php } else {  ?>
+											<label class="reportselectionlabel">Transaction Type</label>&nbsp;
+										<select name="tr_type" id="tr_type" class="form-control select2" >
 											<option value="all" <?php if($tr_type == "all") { echo 'selected'; } ?> >-All-</option>
 											<option value="pv" <?php if($tr_type == "pv") { echo 'selected'; } ?> >Payments</option>
 											<option value="rv" <?php if($tr_type == "rv") { echo 'selected'; } ?> >Receipt</option>
 											<option value="jv" <?php if($tr_type == "jv") { echo 'selected'; } ?> >Journal</option>
-											
 										</select>&ensp;&ensp;
-										
+
+										<?php } ?>
+
 										<label class="reportselectionlabel">Export To</label>&nbsp;
 										<select name="export" id="export" class="form-control select2">
 											<option <?php if($exoption == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
@@ -213,7 +293,7 @@ if($db == ''){
 						if(isset($_POST['submit']) == true){
 							$sub_coa = $_POST['coa'];
 							$sub_whn = $_POST['whname'];
-							$prx_fltr = ""; if($tr_type != "all"){ $prx_fltr = " AND `prefix` = '$tr_type'"; }
+							// $prx_fltr = ""; if($tr_type != "all"){ $prx_fltr = " AND `prefix` = '$tr_type'"; }
 							//echo "<script> alert('$sub_coa'); </script>";
 							//echo $allCoA;
 							if($_POST['coa'] == "all"){
@@ -513,7 +593,27 @@ if($db == ''){
 							else if($_POST['coa'] != "all" && $_POST['whname'] == "all"){
 								$fdate = date("Y-m-d",strtotime($_POST['fromdate']));
 								$tdate = date("Y-m-d",strtotime($_POST['todate']));
-								if($_POST['coa'] == "all"){ $coa = $allCoA; } else{ $coa = $_POST['coa']; } $wname = $_POST['whname'];
+								// if($_POST['coa'] == "all"){ $coa = $allCoA; } else{ $coa = $_POST['coa']; } 
+								$wname = $_POST['whname'];
+								
+								 if($coa_flag > 0){ 
+								$selected_coa = $_POST['coa'] ?? ['all'];
+								if (!is_array($selected_coa)) {
+									$selected_coa = [$selected_coa];
+								}
+
+								if (in_array("all", $selected_coa)) {
+									$coa_array = $allCoA;
+								} else {
+									$coa_array = $selected_coa;
+								}
+
+								$coa_array_safe = array_map('addslashes', $coa_array);
+								$coa = implode("','", $coa_array_safe);
+							} else { 
+								 if($_POST['coa'] == "all"){ $coa = $allCoA; } else{ $coa = $_POST['coa']; }
+							}
+
 								/*$sql = "SELECT SUM(amount) as tamt FROM `pur_payments` WHERE `date` < '$fdate' AND `active` = '1' AND `method` IN ('$coa') ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){ $pre_pur_pay_amt = $row['tamt']; }
 								$sql = "SELECT SUM(amount) as tamt FROM `customer_receipts` WHERE `date` < '$fdate' AND `active` = '1' AND `method` IN ('$coa') ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
@@ -1069,7 +1169,27 @@ if($db == ''){
 							else if($_POST['coa'] != "all" AND $_POST['whname'] != "all"){
 								$fdate = date("Y-m-d",strtotime($_POST['fromdate']));
 								$tdate = date("Y-m-d",strtotime($_POST['todate']));
-								if($_POST['coa'] == "all"){ $coa = $allCoA; } else{ $coa = $_POST['coa']; } $wname = $_POST['whname'];
+								// if($_POST['coa'] == "all"){ $coa = $allCoA; } else{ $coa = $_POST['coa']; } 
+								$wname = $_POST['whname'];
+
+								if($coa_flag > 0){ 
+								$selected_coa = $_POST['coa'] ?? ['all'];
+								if (!is_array($selected_coa)) {
+									$selected_coa = [$selected_coa];
+								}
+
+								if (in_array("all", $selected_coa)) {
+									$coa_array = $allCoA;
+								} else {
+									$coa_array = $selected_coa;
+								}
+
+								$coa_array_safe = array_map('addslashes', $coa_array);
+								$coa = implode("','", $coa_array_safe);
+							} else { 
+								 if($_POST['coa'] == "all"){ $coa = $allCoA; } else{ $coa = $_POST['coa']; } 
+							}
+
 								/*$sql = "SELECT SUM(amount) as tamt FROM `pur_payments` WHERE `date` < '$fdate' AND `active` = '1' AND `method` IN ('$coa') AND `warehouse` = '$wname' ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){ $pre_pur_pay_amt = $row['tamt']; }
 								$sql = "SELECT SUM(amount) as tamt FROM `customer_receipts` WHERE `date` < '$fdate' AND `active` = '1' AND `method` IN ('$coa') AND `warehouse` = '$wname' ORDER BY `ccode` ASC"; $query = mysqli_query($conn,$sql);

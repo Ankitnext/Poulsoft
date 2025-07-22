@@ -8,6 +8,7 @@ if($db == ''){
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Cold Room Stock Report";
     include "header_head.php";
     $form_path = "breeder_coldroom_stocks1.php";
 }
@@ -15,6 +16,7 @@ else{
     $user_code = $_GET['userid'];
     $dbname = $db;
     include "APIconfig.php";
+    global $page_title; $page_title = "Cold Room Stock Report";
     include "header_head.php";
     $form_path = "breeder_coldroom_stocks1.php?db=$db&userid=".$user_code;
 }
@@ -42,11 +44,11 @@ if(in_array("broiler_sales", $exist_tbl_names, TRUE) == ""){ $sql1 = "CREATE TAB
 //Breeder Egg Details
 $sql = "SELECT * FROM `item_category` WHERE `dflag` = '0' AND `begg_flag` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $cegg_code = $icat_iac = array();
 while($row = mysqli_fetch_assoc($query)){ $cegg_code[$row['code']] = $row['code']; $icat_iac[$row['code']] = $row['iac']; } $egg_list = implode("','", $cegg_code);
-$sql = "SELECT * FROM `item_details` WHERE `category` IN ('$egg_list') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $egg_code = $egg_name = array();
+$sql = "SELECT * FROM `item_details` WHERE `category` IN ('$egg_list') AND `description` NOT IN ('JU') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $egg_code = $egg_name = array();
 while($row = mysqli_fetch_assoc($query)){ $egg_code[$row['code']] = $row['code']; $egg_name[$row['code']] = $row['description']; }
 $e_cnt = sizeof($egg_code);
 
-$sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Hatch Egg%' AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC";
+$sql = "SELECT * FROM `item_details` WHERE (`description` LIKE '%Hatch Egg%' OR `description` LIKE 'HE') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC";
 $query = mysqli_query($conn,$sql); $hegg_code = "";
 while($row = mysqli_fetch_assoc($query)){ $hegg_code = $row['code']; }
 
@@ -131,9 +133,9 @@ if(isset($_POST['submit_report']) == true){
             $nhtml .= '<th>Sl.No.</th>'; $fhtml .= '<th id="order_num">Sl.No.</th>';
             $nhtml .= '<th>Flock</th>'; $fhtml .= '<th id="order">Flock</th>';
             $nhtml .= '<th>Age</th>'; $fhtml .= '<th id="order">Age</th>';
-            $nhtml .= '<th>Opening</th>'; $fhtml .= '<th id="order_num">Opening</th>';
-            foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; }
             $nhtml .= '<th>T. Eggs</th>'; $fhtml .= '<th id="order_num">T. Eggs</th>';
+            foreach($egg_code as $eggs){ $nhtml .= '<th>'.$egg_name[$eggs].'</th>'; $fhtml .= '<th id="order_num">'.$egg_name[$eggs].'</th>'; }
+            $nhtml .= '<th>Opening</th>'; $fhtml .= '<th id="order_num">Opening</th>';
             $nhtml .= '<th>Setting</th>'; $fhtml .= '<th id="order_num">Setting</th>';
             $nhtml .= '<th>Sales</th>'; $fhtml .= '<th id="order_num">Sales</th>';
             $nhtml .= '<th>Balance</th>'; $fhtml .= '<th id="order_num">Balance</th>';
@@ -147,28 +149,35 @@ if(isset($_POST['submit_report']) == true){
             if(isset($_POST['submit_report']) == true){
                 $sec_fltr = ""; if($sectors != "all"){ $sec_fltr = " AND `sector_code` IN ('$sectors')"; }
 
-                $sql = "SELECT * FROM `broiler_secunit_mapping` WHERE `active` = '1' AND `dflag` = '0'".$sec_fltr."";
+                $sql = "SELECT * FROM `broiler_secunit_mapping` WHERE `dflag` = '0'".$sec_fltr."";
                 $query = mysqli_query($conn,$sql); $unit_alist = array();
-                while($row = mysqli_fetch_array($query)){ $unit_alist[$row['code']] = $row['unit_code']; }
+                while($row = mysqli_fetch_array($query)){ $unit_alist[$row['unit_code']] = $row['unit_code']; }
                 $unit_list = implode("','", $unit_alist);
 
-                $sql = "SELECT * FROM `breeder_shed_allocation` WHERE `active` = '1' AND `dflag` = '0' AND `unit_code` IN ('$unit_list')";
+                $sql = "SELECT * FROM `breeder_shed_allocation` WHERE `dflag` = '0' AND `unit_code` IN ('$unit_list')";
                 $query = mysqli_query($conn,$sql); $flock_name = $flock_alist = array();
                 while($row = mysqli_fetch_array($query)){ $flock_alist[$row['code']] = $row['code'];$flock_name[$row['code']] = $row['description']; $flock_code[$row['code']] = $row['code']; }
                 $flock_list = implode("','",$flock_alist);
 
-               $sql = "SELECT * FROM `breeder_dayentry_produced` WHERE `active` = '1' AND `dflag` = '0' AND `flock_code` IN ('$flock_list')";
+                $sql = "SELECT * FROM `breeder_dayentry_produced` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0'";
                 $query = mysqli_query($conn,$sql); $odep_qty = $bdep_qty = $breed_wage = array();
                 while($row = mysqli_fetch_array($query)){
                     $key1 = $row['flock_code']."@".$row['item_code'];  $flk = $row['flock_code'];
-                    if(strtotime($row['date']) < strtotime($tdate)){ $odep_qty[$flk] += (float)$row['quantity']; } 
-                    else{ 
-                        $bdep_qty[$key1] += (float)$row['quantity'];
-                        if(empty($breed_wage[$flk]) || $breed_wage[$flk] == ""){ $breed_wage[$flk] = decimal_adjustments($row['breed_wage'],2); }
+                    if(strtotime($row['date']) < strtotime($tdate)){ if($row['item_code'] == $hegg_code){ $odep_qty[$flk] += (float)$row['quantity']; } } 
+                    else{
+                        if($row['item_code'] == $hegg_code){ $bdep_qty[$key1] += (float)$row['quantity']; }
+                        if(empty($breed_wage[$flk]) || $breed_wage[$flk] == ""){ $breed_wage[$flk] = decimal_adjustments($row['breed_wage'],1); }
                     }
                 }
 
-                $sql = "SELECT * FROM `item_stocktransfers` WHERE `active` = '1' AND `dflag` = '0' AND `from_flock` IN ('$flock_list')";
+                $sql = "SELECT flock_code,MAX(breed_wage) as breed_wage FROM `breeder_dayentry_consumed` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0' GROUP BY `flock_code` ORDER BY `flock_code` ASC";
+                $query = mysqli_query($conn,$sql); //$breed_wage = array();
+                while($row = mysqli_fetch_array($query)){
+                    $flk = $row['flock_code'];
+                    if(empty($breed_wage[$flk]) || $breed_wage[$flk] == ""){ $breed_wage[$flk] = decimal_adjustments($row['breed_wage'],1); }
+                }
+
+                $sql = "SELECT * FROM `item_stocktransfers` WHERE `date` <= '$tdate' AND `from_flock` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0'";
                 $query = mysqli_query($conn,$sql); $oetr_qty = $betr_qty = array();
                 while($row = mysqli_fetch_array($query)){
                     $key1 = $row['from_flock']; 
@@ -176,7 +185,7 @@ if(isset($_POST['submit_report']) == true){
                     else{ $betr_qty[$key1] += (float)$row['quantity']; }
                 }
 
-                $sql = "SELECT * FROM `broiler_sales` WHERE `active` = '1' AND `dflag` = '0' AND `flock_code` IN ('$flock_list')";
+                $sql = "SELECT * FROM `broiler_sales` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0'";
                 $query = mysqli_query($conn,$sql); $osal_qty = $bsal_qty = array();
                 while($row = mysqli_fetch_array($query)){
                     $key1 = $row['flock_code'];
@@ -184,67 +193,89 @@ if(isset($_POST['submit_report']) == true){
                     else{ $bsal_qty[$key1] += ((float)$row['rcd_qty'] + (float)$row['fre_qty']); }
                 }
 
-                $sql = "SELECT * FROM `breeder_egg_conversion` WHERE `active` = '1' AND `dflag` = '0' AND `flock_code` IN ('$flock_list')";
+                $sql = "SELECT * FROM `breeder_egg_conversion` WHERE `date` <= '$tdate' AND `flock_code` IN ('$flock_list') AND `active` = '1' AND `dflag` = '0'";
                 $query = mysqli_query($conn,$sql); $otegc_qty = $odegc_qty = $ofegc_qty = $btegc_qty = $bfegc_qty = $bdegc_qty = array();
                 while($row = mysqli_fetch_array($query)){
-                    $key1 = $row['flock_code'];
+                    $key1 = $row['flock_code']."@".$row['from_item'];
+                    $key2 = $row['flock_code']."@".$row['to_item'];
+                    $key3 = $row['flock_code'];
                     if(strtotime($row['date']) < strtotime($tdate)){ 
-                        $otegc_qty[$key1] += (float)$row['to_qty'];
-                        $odegc_qty[$key1] += (float)$row['disposed_qty'];
-                        $ofegc_qty[$key1] += (float)$row['to_qty'] + (float)$row['disposed_qty']; 
+                        $otegc_qty[$key3] += (float)$row['to_qty'];
+                        $odegc_qty[$key3] += (float)$row['disposed_qty'];
+                        $ofegc_qty[$key3] += (float)$row['to_qty'] + (float)$row['disposed_qty']; 
                     }
                     else{ 
-                        $btegc_qty[$key1] += (float)$row['to_qty'];
-                        $bdegc_qty[$key1] += (float)$row['disposed_qty'];
-                        $bfegc_qty[$key1] += (float)$row['to_qty'] + (float)$row['disposed_qty']; 
+                        $btegc_qty[$key2] += (float)$row['to_qty'];
+                        $bdegc_qty[$key2] += (float)$row['disposed_qty'];
+                        $bfegc_qty[$key1] += (float)$row['to_qty'] + (float)$row['disposed_qty'];
+                        /*if($row['flock_code'] == "BFLK-0009"){
+                            echo "<br/>".$row['to_qty']."@".$row['disposed_qty']."@".$bfegc_qty[$key1];
+                        }*/
                     }
                 }
 
-                $slno = 0;
+                $slno = 0; $tegg_qty = array();
                 foreach($flock_code as $key){
-                    $slno++;
-                    $opn_qty = (float)$odep_qty[$key] - (float)$oetr_qty[$key] - (float)$osal_qty[$key] - (float)$ofegc_qty[$key] + (float)$otegc_qty[$key];
-                   
-                    $html .= '<tr>';
-                    $html .= '<td style="text-align:center;">'.$slno.'</td>';
-                    $html .= '<td style="text-align:center;">'.$flock_name[$key].'</td>';
-                    $html .= '<td style="text-align:center;">'.$breed_wage[$key].'</td>';
-                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($opn_qty,5))).'</td>';
-                    $tot_eggs = 0;
-                    foreach($egg_code as $eggs){
-                        $key2 = $key."@".$eggs;
-                        if(empty($bdep_qty[$key2]) || $bdep_qty[$key2] == ""){ $egg_qty = 0; } else{ $egg_qty = $bdep_qty[$key2]; $tot_eggs += $bdep_qty[$key2]; }
-                        $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($egg_qty,5))).'</td>';
-                        $egg_cqty[$eggs] += (float)$egg_qty;
-                    }
-                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tot_eggs,5))).'</td>';
-                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($oetr_qty[$key],5))).'</td>';
-                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($bsal_qty[$key],5))).'</td>';
+                    //if(!empty($breed_wage[$key]) && $breed_wage[$key] != ""){
+                        $opn_qty = (float)$odep_qty[$key] - (float)$oetr_qty[$key] - (float)$osal_qty[$key] - (float)$ofegc_qty[$key];
+                        $rhe_qty = $teg_qty = 0;
+                        foreach($egg_code as $eggs){
+                            $key2 = $key."@".$eggs;
+                            if($eggs == $hegg_code){
+                                if(empty($bdep_qty[$key2]) || $bdep_qty[$key2] == ""){ } else{ $rhe_qty += (float)$bdep_qty[$key2]; $teg_qty += (float)$bdep_qty[$key2]; }
+                                if(empty($bfegc_qty[$key2]) || $bfegc_qty[$key2] == ""){ } else{ $rhe_qty -= (float)$bfegc_qty[$key2]; }
+                            }
+                        }
+                        $fbal_qty = 0; $fbal_qty = ((float)$opn_qty + (float)$rhe_qty - ((float)$betr_qty[$key] + (float)$bsal_qty[$key]));
+                        //echo "<br/>$flock_name[$key]@((float)$opn_qty + (float)$rhe_qty - ((float)$betr_qty[$key] + (float)$bsal_qty[$key]))";
+                        if((float)$opn_qty > 0 || (float)$betr_qty[$key] > 0 || (float)$bsal_qty[$key] > 0 || (float)$fbal_qty > 0 || (float)$teg_qty > 0){
+                            $slno++;
+                            $html .= '<tr>';
+                            $html .= '<td style="text-align:center;">'.$slno.'</td>';
+                            $html .= '<td style="text-align:center;">'.$flock_name[$key].'</td>';
+                            $html .= '<td style="text-align:center;">'.$breed_wage[$key].'</td>';
+                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($teg_qty,5))).'</td>';
+                            foreach($egg_code as $eggs){
+                                $key2 = $key."@".$eggs;
+                                if($eggs == $hegg_code){
+                                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($rhe_qty,5))).'</td>';
+                                    $tegg_qty[$eggs] += (float)$rhe_qty;
+                                }
+                                else{
+                                    if(empty($btegc_qty[$key2]) || $btegc_qty[$key2] == ""){ $egg_qty = 0; } else{ $egg_qty = $btegc_qty[$key2]; }
+                                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($egg_qty,5))).'</td>';
+                                    $tegg_qty[$eggs] += (float)$egg_qty;
+                                }
+                            }
+                            
+                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($opn_qty,5))).'</td>';
+                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($betr_qty[$key],5))).'</td>';
+                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($bsal_qty[$key],5))).'</td>';
 
-                    $fbal_qty = 0; $fbal_qty = ((float)$opn_qty + (float)$tot_eggs - ((float)$oetr_qty[$key] + (float)$bsal_qty[$key]));
-                    $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($fbal_qty,5))).'</td>';
-                    $html .= '</tr>';
+                            $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($fbal_qty,5))).'</td>';
+                            $html .= '</tr>';
 
-                    $topn_qty += (float)$opn_qty;
-                    $ttot_eggs += (float)$tot_eggs;
-                    $toetr_qty += (float)$oetr_qty[$key];
-                    $tbsal_qty += (float)$bsal_qty[$key];
-                    $tfbal_qty += (float)$fbal_qty;
-
+                            $topn_qty += (float)$opn_qty;
+                            $tteg_qty += (float)$teg_qty;
+                            $tbetr_qty += (float)$betr_qty[$key];
+                            $tbsal_qty += (float)$bsal_qty[$key];
+                            $tfbal_qty += (float)$fbal_qty;
+                        }
+                    //}
                 }
             }
+            $html .= '</tbody>';
             $html .= '<tr class="thead2">';
             $html .= '<th colspan="3">Total</th>';
-            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($topn_qty,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tteg_qty,5))).'</th>';
             foreach($egg_code as $eggs){
-                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($egg_cqty[$eggs],5))).'</th>';
+                $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tegg_qty[$eggs],5))).'</th>';
             }
-            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($ttot_eggs,5))).'</th>';
-            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($toetr_qty,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($topn_qty,5))).'</th>';
+            $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tbetr_qty,5))).'</th>';
             $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tbsal_qty,5))).'</th>';
             $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tfbal_qty,5))).'</th>';
             $html .= '</tr>';
-            $html .= '</tbody>';
 
             echo $html;
         ?>
@@ -253,7 +284,6 @@ if(isset($_POST['submit_report']) == true){
         <script type="text/javascript" src="table_search_fields.js"></script>
         <script type="text/javascript" src="table_download_excel.js"></script>
         <script type="text/javascript" src="table_column_date_format_change.js"></script>
-        <script src="table_column_date_format_change.js"></script>
         <script type="text/javascript">
             function table_file_details1(){
                 var dbname = '<?php echo $dbname; ?>';

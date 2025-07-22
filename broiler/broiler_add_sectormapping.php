@@ -60,7 +60,7 @@ if($link_active_flag > 0){
                                 <form action="broiler_save_sectormapping.php" method="post" role="form" onsubmit="return checkval()">
                                     <div class="row">
                                         <div class="col-md-4"></div>
-                                        <div class="col-md-6"> 
+                                        <div class="col-md-6">
                                             <table style="width:auto;">
                                                 <thead>
                                                     <tr>

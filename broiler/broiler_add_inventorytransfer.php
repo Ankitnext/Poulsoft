@@ -70,6 +70,9 @@ if($link_active_flag > 0){
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Item Transfer' AND `field_function` LIKE 'Stock Check'"; $query = mysqli_query($conn,$sql); $stockcheck_flag = 0; $sccount = mysqli_num_rows($query);
         if($sccount > 0){ while($row = mysqli_fetch_assoc($query)){ $stockcheck_flag = $row['flag']; } } else{ $stockcheck_flag = 0; } if($stockcheck_flag == "" || $stockcheck_flag == 0){ $stockcheck_flag = 0; }
         
+        $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'broiler_display_inventorytransfer.php' AND `field_function` LIKE 'Vehicle and Driver'"; $query = mysqli_query($conn,$sql);  
+        $vd_flag = mysqli_num_rows($query);
+        
         $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Item Transfer' AND `field_function` LIKE 'Auto Avg Price'"; $query = mysqli_query($conn,$sql); $autoavgprice_flag = 0; $aapcount = mysqli_num_rows($query);
         if($aapcount > 0){ while($row = mysqli_fetch_assoc($query)){ $autoavgprice_flag = $row['flag']; } } else{ $autoavgprice_flag = 0; } if($autoavgprice_flag == "" || $autoavgprice_flag == 0){ $autoavgprice_flag = 0; }
         
@@ -171,8 +174,13 @@ if($link_active_flag > 0){
                                                 <td><select name="fromwarehouse[]" id="fromwarehouse[0]" class="form-control select2" style="width:200px;" onchange="fetch_stock_master(this.id);check_medvac_masterprices(this.id);" ><option value="select">select</option><?php foreach($from_sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo str_replace("()","",$from_sector_name[$whouse_code]."(".$farm_code[$whouse_code].")"); ?></option><?php } ?></select></td>
                                                 <td><select name="towarehouse[]" id="towarehouse[0]" class="form-control select2" style="width:200px;" onchange="checkfarm(this.id);fetch_batch(this.id);" ><option value="select">select</option><?php foreach($to_sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo str_replace("()","",$to_sector_name[$whouse_code]."(". $farm_code[$whouse_code].")"); ?></option><?php } ?></select></td>
                                                 <td><input readonly type="text" name="batch[]" id="batch[0]" class="form-control" style="width:180px;" /></td>
+                                                <?php if($vd_flag > 0) { ?>
+                                                    <td><input type="text" name="vehicle_code[]" id="vehicle_code[0]" class="form-control" style="width:80px;"  /></td>
+                                                    <td><input type="text" name="driver_code[]" id="driver_code[0]" class="form-control" style="width:80px;"  /></td>
+                                               <?php } else { ?>
                                                 <td><select name="vehicle_code[]" id="vehicle_code[0]" class="form-control select2" style="width:180px;"><option value="select">select</option><?php foreach($vehicle_code as $truck_code){ ?><option value="<?php echo $truck_code; ?>"><?php echo $vehicle_name[$truck_code]; ?></option><?php } ?></select></td>
                                                 <td><select name="driver_code[]" id="driver_code[0]" class="form-control select2" style="width:110px;"><option value="select">select</option><?php foreach($emp_code as $driver_code){ ?><option value="<?php echo $driver_code; ?>"><?php echo $emp_name[$driver_code]; ?></option><?php } ?></select></td>
+                                                <?php } ?>
                                                 <!--<td><input type="text" name="driver_mobile[]" id="driver_mobile[0]" class="form-control" style="width:110px;" onkeyup="validatemobile(this.id);" /></td> --->
                                                 <td><textarea name="remarks[]" id="remarks[0]" class="form-control" style="width:100px;height:25px;"></textarea></td>
                                                 <?php
@@ -343,8 +351,13 @@ if($link_active_flag > 0){
                 html += '<td><select name="fromwarehouse[]" id="fromwarehouse['+d+']" class="form-control select2" style="width:200px;" onchange="fetch_stock_master(this.id);check_medvac_masterprices(this.id);" ><option value="select">select</option><?php foreach($from_sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo str_replace("()","", $from_sector_name[$whouse_code]."(".$farm_code[$whouse_code].")"); ?></option><?php } ?></select></td>';
                 html += '<td><select name="towarehouse[]" id="towarehouse['+d+']" class="form-control select2" style="width:200px;" onchange="checkfarm(this.id);fetch_batch(this.id);" ><option value="select">select</option><?php foreach($to_sector_code as $whouse_code){ ?><option value="<?php echo $whouse_code; ?>"><?php echo str_replace("()","",$to_sector_name[$whouse_code]."(".$farm_code[$whouse_code].")"); ?></option><?php } ?></select></td>';
                 html += '<td><input readonly type="text" name="batch[]" id="batch['+d+']" class="form-control" style="width:180px;" /></td>';
+                <?php if($vd_flag > 0) { ?>
+                    html += '<td><input type="text" name="vehicle_code[]" id="vehicle_code['+d+']" class="form-control" style="width:80px;"  /></td>';
+                    html += '<td><input type="text" name="driver_code[]" id="driver_code['+d+']" class="form-control" style="width:80px;" /></td>';
+                <?php } else { ?>
                 html += '<td><select name="vehicle_code[]" id="vehicle_code['+d+']" class="form-control select2" style="width:180px;"><option value="select">select</option><?php foreach($vehicle_code as $truck_code){ ?><option value="<?php echo $truck_code; ?>"><?php echo $vehicle_name[$truck_code]; ?></option><?php } ?></select></td>';
                 html += '<td><select name="driver_code[]" id="driver_code['+d+']" class="form-control select2" style="width:110px;"><option value="select">select</option><?php foreach($emp_code as $driver_code){ ?><option value="<?php echo $driver_code; ?>"><?php echo $emp_name[$driver_code]; ?></option><?php } ?></select></td>';
+                <?php } ?>
                 //html += '<td><input type="text" name="driver_mobile[]" id="driver_mobile['+d+']" class="form-control" style="width:110px;" onkeyup="validatemobile(this.id);" /></td>';
                 html += '<td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="width:100px;height:25px;"></textarea></td>';
                 if(parseInt(este_flag) == 1){

@@ -85,6 +85,7 @@ if($link_active_flag > 0){
 
         $sql = "SELECT * FROM `broiler_feed_formula` WHERE `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 		while($row = mysqli_fetch_assoc($query)){ $formula_code[$row['code']] = $row['code']; $formula_name[$row['code']] = $row['description']; $formula_total_qty[$row['code']] = $row['total_qty']; $formula_item[$row['code']] = $row['formula_item_code']; $formula_mill[$row['code']] = $row['mill_code']; }
+        //foreach($formula_code as $fcode){ echo "<br/>".$fcode."@".$formula_name[$fcode]."@".$formula_total_qty[$fcode]."@".$formula_item[$fcode]."@".$formula_mill[$fcode]; }
         $feedmill_type_code = "";
         $sql = "SELECT * FROM `main_officetypes` WHERE `description` LIKE '%Feedmill%' AND `active` = '1' AND `dflag` = '0' OR `description` LIKE '%mill%' AND `active` = '1' AND `dflag` = '0' OR `description` LIKE '%feed mill%' AND `active` = '1' AND `dflag` = '0'"; $query = mysqli_query($conn,$sql);
         while($row = mysqli_fetch_assoc($query)){
@@ -831,6 +832,7 @@ if($link_active_flag > 0){
                     ?>
                         theOption1=document.createElement("OPTION"); theText1=document.createTextNode("<?php echo $item_name[$fcode]; ?>"); theOption1.value = "<?php echo $item_code[$fcode]; ?>"; theOption1.appendChild(theText1); myselect.appendChild(theOption1);
                     <?php
+                    $iname = $item_code[$fcode]."@".$item_name[$fcode];
                     }
                     ?>
                 }

@@ -52,7 +52,7 @@ $sql1 = "SHOW TABLES WHERE ".$table_head." LIKE 'location_branch';"; $query1 = m
 if($tcount > 0){ } else{ $sql1 = "CREATE TABLE $database_name.location_branch LIKE poulso6_admin_broiler_broilermaster.location_branch;"; mysqli_query($conn,$sql1); }
 
 include $num_format_file;
-
+global $page_title; $page_title = "Account Ledger Report";
 include "header_head.php";
 $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ".$sector_access_filter1." ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $sector_code[$row['code']] = $row['code']; $sector_name[$row['code']] = $row['description']; }
@@ -71,7 +71,12 @@ while($row = mysqli_fetch_assoc($query)){ $vehicle_code[$row['code']] = $row['co
 $sql = "SELECT * FROM `main_contactdetails` ORDER BY `name` ASC"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){ $ven_code[$row['code']] = $row['code']; $ven_name[$row['code']] = $row['name']; }
 
-$fdate = $tdate = date("Y-m-d"); $coas = "select"; $sectors = "all"; $excel_type = "display";
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); $href = basename($path);
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE '$href' AND `field_function` LIKE 'From Date Auto Selection' AND `user_access` LIKE 'all' AND `flag` = '1'";
+$query = mysqli_query($conn,$sql); $d_cnt = mysqli_num_rows($query); $fdate = date("Y-m-d");
+while($row = mysqli_fetch_assoc($query)){ if($row['field_value'] != ""){ $fdate = date("Y-m-d",strtotime($row['field_value'])); } }
+
+$tdate = date("Y-m-d"); $coas = "select"; $sectors = "all"; $excel_type = "display";
 $font_stype = ""; $font_size = "11px";
 if(isset($_POST['submit_report']) == true){
     $fdate = date("Y-m-d",strtotime($_POST['fdate']));

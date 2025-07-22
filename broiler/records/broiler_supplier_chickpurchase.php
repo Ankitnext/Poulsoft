@@ -7,12 +7,14 @@ $client = $_SESSION['client'];
 if($db == ''){
     $user_code = $_SESSION['userid'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Supplier Chick Purchase";
     include "header_head.php";
     $form_path = "broiler_supplier_chickpurchase.php";
 }
 else{
     $user_code = $_GET['userid'];
     include "APIconfig.php";
+    global $page_title; $page_title = "Supplier Chick Purchase";
     include "header_head.php";
     $form_path = "broiler_supplier_chickpurchase.php?db=$db&userid=".$user_code;
 }

@@ -114,6 +114,9 @@
 	  $sql = "SELECT *  FROM `extra_access` WHERE `field_name` LIKE 'Multiple Sales' AND `field_function` LIKE 'calculate birds from jals' AND `user_access` LIKE 'all' AND `flag` = '1'";
 	$query = mysqli_query($conn,$sql); $jbird_cflag = mysqli_num_rows($query);
 
+	$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'Rename to vehicleno' AND `field_function` = 'Vehicle No' AND `flag` = '1'";
+	$query = mysqli_query($conn,$sql); $vhlno = mysqli_num_rows($query);
+
 	$sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Broiler Bird%' AND `active` = '1'";
 	$query = mysqli_query($conn,$sql); $bird_code = "";
 	while($row = mysqli_fetch_assoc($query)){ $bird_code = $row['code']; }
@@ -172,7 +175,7 @@
 					$itypes[$row['code']] = $row['description'];
 				}
 				$sql = "SELECT * FROM `main_officetypes` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
-				while($row = mysqli_fetch_assoc($query)){ if($row['description'] == "Warehouse"){ if($branches == ""){ $branches = $row['code']; } else{ $branches = $branches."','".$row['code']; } } }
+				while($row = mysqli_fetch_assoc($query)){ if($row['description'] == "Warehouse" || $row['description'] == "Shop"){ if($branches == ""){ $branches = $row['code']; } else{ $branches = $branches."','".$row['code']; } } }
 				$sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1'".$warehouse_codes." AND `type` IN ('$branches') ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql);
 				while($row = mysqli_fetch_assoc($query)){
 					$wcode[$row['code']] = $row['code'];
@@ -315,7 +318,7 @@
 												<th  style="width: 100px;padding-right:10px;"><label>Amount</label></th>
 												<?php if((int)$tcdr_flag > 0){ echo '<th  style="width: 100px;padding-right:10px;"><label>T. Cost</label></th>'; } ?>
 												<?php if($vehicle_row_flag == 1){ echo "<th  style= 'width: 80px;padding-right:10px;'><label>Vehicle</label></th>"; } ?>
-												<th  style="width: 80px;padding-right:10px;"> <label>Remarks</label></th>
+												<th  style="width: 80px;padding-right:10px;"><?php echo ($vhlno > 0) ? '<label>Vehicle No</label>' : '<label>Remarks</label>' ?> </th>
 												<th></th>
 												<!--<th><label>Outstanding<b style="color:red;">&nbsp;*</b></label</th>>-->
 											</tr>
@@ -879,6 +882,7 @@
 						event.preventDefault();
 					}
 					else{
+						console.log("1");
 						$(":submit").click(function () {
 							$('#submittrans').click();
 						});
@@ -1362,6 +1366,9 @@
 							var pur_dt2 = pur_dt1.split("[@$&]");
 							var birds = pur_dt2[0];
 							var weight = pur_dt2[1];
+							if(birds < 0 || birds < "0"){
+								alert("Stock Available for selected item is: "+birds);
+							}
 							document.getElementById("avl_birds").value = parseFloat(birds).toFixed(0);
 							document.getElementById("avl_weight").value = parseFloat(weight).toFixed(2);
                         }

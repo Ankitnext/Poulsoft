@@ -20,6 +20,7 @@
 		$users_code = $_GET['emp_code'];
         $form_reload_page = "SalesReportMaster.php?db=".$db;
 	}
+    $file_name = "Sales Report";
 
 	$sql = "SELECT * FROM `main_access` WHERE `empcode` = '$users_code'";
 	$query = mysqli_query($conn,$sql);
@@ -144,7 +145,7 @@
         $col_count = $row['count'];
     }
 	$fdate = $tdate = date("Y-m-d"); $suppliers = $customers = $sectors = $item_cat = $items = $users = "all"; $billnos = $prices = "";
-    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1;
+    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 0; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
     $exports = "displaypage";
 	if(isset($_POST['submit']) == true){
 		$fdate = date("Y-m-d",strtotime($_POST['fdate']));
@@ -152,16 +153,22 @@
 		$suppliers = $_POST['suppliers'];
 		$customers = $_POST['customers'];
 		$billnos = $_POST['billnos'];
-		$sectors = $_POST['sectors'];
+		// $sectors = $_POST['sectors'];
 		$item_cat = $_POST['item_cat'];
 		$items = $_POST['items'];
 		$users = $_POST['users'];
 		$prices = $_POST['prices'];
 		$exports = $_POST['exports'];
 
-        $groups = array(); $grp_all_flag = 0;
+        $groups = array();
         foreach($_POST['groups'] as $grps){ $groups[$grps] = $grps; if($grps == "all"){ $grp_all_flag = 1; } }
-        $grp_list = implode("@",$groups);
+
+        $sectors = array(); $sec_list = "";
+        foreach($_POST['sectors'] as $scts){ $sectors[$scts] = $scts; if($scts == "all"){ $sec_all_flag = 1; } }
+        $sects_list = implode("','", array_map('addslashes', $sectors));
+        $secct_fltr = "";
+        if($sec_all_flag == 1 ){ $secct_fltr = ""; $sec_list = "all"; }
+        else { $secct_fltr = "AND `warehouse` IN ('$sects_list')"; $sec_list = implode(",",$sectors); }
 	}
 	$url = "../PHPExcel/Examples/SalesReportMaster-Excel.php?fdate=".$fdate."&tdate=".$tdate."&customers=".$customers."&billnos=".$billnos."&item_cat=".$item_cat."&items=".$items."&sectors=".$sectors."&users=".$users."&groups=".$grp_list."&prices=".$prices;
 	
@@ -202,7 +209,7 @@
 		<section class="content" align="center">
 			<div class="col-md-12" align="center">
 				<form action="<?php echo $form_reload_page; ?>" method="post" onsubmit="return checkval()">
-				    <table class="main-table table-sm table-hover" id="main_table">
+				    <table class="main-table table-sm table-hover">
 						<?php if($exports == "displaypage" || $exports == "exportpdf") { ?>
 						<thead class="thead1">
 							<tr>
@@ -270,10 +277,14 @@
                                             </select>
                                         </div>
                                         <div class="form-group" style="width:190px;">
-                                            <label for="sectors">Warehouse</label>
-                                            <select name="sectors" id="sectors" class="form-control select2" style="width:180px;">
-                                                <option value="all" <?php if($sectors == "all"){ echo "selected"; } ?>>All</option>
-											    <?php foreach($sector_code as $scode){ ?><option value="<?php echo $scode; ?>" <?php if($sectors == $scode){ echo "selected"; } ?>><?php echo $sector_name[$scode]; ?></option><?php } ?>
+                                            <label for="sectors[0]">Warehouse</label>
+                                            <select name="sectors[]" id="sectors[0]" class="form-control select2" style="width:180px;" multiple>
+                                                <option value="all" <?php if (in_array("all", $sectors)) echo "selected"; ?>>All</option>
+                                                <?php foreach($sector_code as $scode) { ?>
+                                                    <option value="<?php echo $scode; ?>" <?php if (in_array($scode, $sectors)) echo "selected"; ?>>
+                                                        <?php echo $sector_name[$scode]; ?>
+                                                    </option>
+                                                <?php } ?>
                                             </select>
                                         </div>
                                     </div>
@@ -286,11 +297,11 @@
                                             </select>
                                         </div>
                                         <div class="form-group" style="width:150px;">
-                                            <label for="exports">Export To</label>
-                                            <select name="exports" id="exports" class="form-control select2" style="width:140px;">
-                                                <option <?php if($exports == "displaypage") { echo 'selected'; } ?> value="displaypage">Display</option>
-                                                <option <?php if($exports == "exportexcel") { echo 'selected'; } ?> value="exportexcel">Excel</option>
-                                                <option <?php if($exports == "printerfriendly") { echo 'selected'; } ?> value="printerfriendly">Printer friendly</option>
+                                            <label>Export</label>
+                                            <select name="exports" id="exports" class="form-control select2" style="width:140px;" onchange="tableToExcel('main_table', '<?php echo $file_name; ?>','<?php echo $file_name; ?>', this.options[this.selectedIndex].value)">
+                                                <option value="displaypage" <?php if($exports == "displaypage"){ echo "selected"; } ?>>-Display-</option>
+                                                <option value="exportexcel" <?php if($exports == "exportexcel"){ echo "selected"; } ?>>-Excel-</option>
+                                                <option value="printerfriendly" <?php if($exports == "printerfriendly"){ echo "selected"; } ?>>-Print-</option>
                                             </select>
                                         </div>
                                         <div class="form-group" style="width: 160px;">
@@ -312,12 +323,16 @@
 								</td>
 							</tr>
 						</thead>
+                        </table>
+                        
 						<?php
+                        
                         }
+                        
                         if(isset($_POST['submit']) == true){
                             $bwtd_det_col = 0; $aflag = 1; $html = '';
-
-                            $html .= '<thead class="thead2">';
+                            $html .= '<table class="main-table table-sm table-hover" id="main_table">';
+                            $html .= '<thead class="thead2" id="head_names">';
                             $html .= '<tr>';
                             for($i = 1;$i <= $col_count;$i++){
                                 if(!empty($field_details[$i.":".$aflag])){
@@ -397,8 +412,25 @@
                             if($prices == "") { $rate_filter = ""; } else { $rate_filter = " AND `itemprice` = '$prices'"; }
                             if($users == "all"){ $user_filter = ""; } else{ $user_filter = " AND `addedemp` IN ('$users')"; }
 
-                            if($sectors == "all"){ $sec_list = implode("','",$sector_code); $sector_filter = " AND `warehouse` IN ('$sec_list')"; }
-                            else{ $sector_filter = " AND `warehouse` IN ('$sectors')"; }
+                            // if($sectors == "all"){ $sec_list = implode("','",$sector_code); $sector_filter = " AND `warehouse` IN ('$sec_list')"; }
+                            // else{ $sector_filter = " AND `warehouse` IN ('$sectors')"; }
+
+                            // Ensure $sectors is always an array
+                            $sectors = $_POST['sectors'] ?? ['all'];
+                            if (!is_array($sectors)) {
+                                $sectors = [$sectors];
+                            }
+
+                            if (in_array("all", $sectors)) {
+                                // All selected – use all sector codes
+                                $sec_list = implode("','", array_map('addslashes', $sector_code));
+                                $sector_filter = " AND `warehouse` IN ('$sec_list')";
+                            } else {
+                                // Specific selections
+                                $sects_list = implode("','", array_map('addslashes', $sectors));
+                                $sector_filter = " AND `warehouse` IN ('$sects_list')";
+                            }
+
                             if($_SESSION['dbase'] == "poulso6_chicken_tg_lsfi"){ $sector_filter = ""; }
 
                             $html .= '<tbody class="tbody1">';
@@ -748,6 +780,40 @@
                 }
             }
 			function removeAllOptions(selectbox){ var i; for(i=selectbox.options.length-1;i>=0;i--){ selectbox.remove(i); } }
+        </script>
+        <script type="text/javascript">
+            function tableToExcel(table, name, filename, chosen){
+                if(chosen === 'exportexcel'){
+                    document.getElementById("head_names").innerHTML = "";
+                    var html = '';
+                    html += '<?php echo $nhead_html; ?>';
+                    $('#head_names').append(html);
+
+                    var uri = 'data:application/vnd.ms-excel;base64,'
+                    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+                    //  return function(table, name, filename, chosen) {
+                
+                    if (!table.nodeType) table = document.getElementById(table)
+                    var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
+                    //window.location.href = uri + base64(format(template, ctx))
+                    var link = document.createElement("a");
+                    link.download = filename+".xls";
+                    link.href = uri + base64(format(template, ctx));
+                    link.click();
+                    //}
+                    
+                    document.getElementById("head_names").innerHTML = "";
+                    var html = '';
+                    html += '<?php echo $fhead_html; ?>';
+                    document.getElementById("head_names").innerHTML = html;
+                    table_sort();
+                    table_sort2();
+                    table_sort3();
+                }
+                else{ }
+            }
         </script>
         <script src="sort_table_columns.js"></script>
         <script src="searchbox.js"></script>

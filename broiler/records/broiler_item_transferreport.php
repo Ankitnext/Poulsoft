@@ -6,7 +6,7 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+global $page_title; $page_title = "Stock Transfer Report";
 include "header_head.php";
 $user_code = $_SESSION['userid'];
 $sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'"; $query = mysqli_query($conn,$sql);
@@ -362,8 +362,10 @@ if(isset($_REQUEST['submit_report']) == true){
                     <th>Transaction No.</th>
                     <th>Dc No.</th>
                     <th>From Warehouse</th>
+                    <th>Farm Code</th>
                     <th>From Batch</th>
                     <th>To Warehouse</th>
+                    <th>Farm Code</th>
                     <th>To Batch</th>
                     <th>Item Code</th>
                     <th>Item</th>
@@ -385,6 +387,12 @@ if(isset($_REQUEST['submit_report']) == true){
             ?>
             <tbody class="tbody1">
                 <?php
+
+                $sql = "SELECT * FROM `broiler_batch` WHERE `active` = '1'";
+                $query = mysqli_query($conn,$sql); $farmbatch = array();
+                while($row = mysqli_fetch_assoc($query)){
+                    $farmbatch[$row['code']] = $row['farm_code'];
+                }
                 $sql_record = "SELECT * FROM `item_stocktransfers` WHERE `date` >= '$fdate' AND `date` <= '$tdate'".$fromfltr."".$tofltr."".$vehicle_filter."".$driver_filter."".$item_filter." AND `active` = '1' AND `dflag` = '0' ORDER BY `date`,`trnum` ASC";
                 $query = mysqli_query($conn,$sql_record); $tot_qty = $tot_amt = $tot_bags = 0;
                 while($row = mysqli_fetch_assoc($query)){
@@ -411,14 +419,16 @@ if(isset($_REQUEST['submit_report']) == true){
                     }
                     if($bok_amt == ""){ $bok_amt = 0; }
                 ?>
-                <tr>
+                <tr> 
                     <td title="Date"><?php echo date("d.m.Y",strtotime($row['date'])); ?></td>
                     <td title="Branch"><?php echo $brch_name; ?></td>
                     <td title="Transaction No."><?php echo $row['trnum']; ?></td>
                     <td title="Dc No."><?php echo $row['dcno']; ?></td>
                     <td title="From Warehouse"><?php echo $sector_name[$row['fromwarehouse']]; ?></td>
+                    <td title="Farm Code"><?php echo $farmbatch[$row['from_batch']]; ?></td>
                     <td title="From Batch"><?php echo $fbch_name; ?></td>
                     <td title="To Warehouse"><?php echo $sector_name[$row['towarehouse']]; ?></td>
+                    <td title="Farm Code"><?php echo $farmbatch[$row['to_batch']]; ?></td>
                     <td title="To Batch"><?php echo $tbch_name; ?></td>
                     <td title="Item"><?php echo $row['code']; ?></td>
                     <td title="Item"><?php echo $item_name[$row['code']]; ?></td>
@@ -465,7 +475,7 @@ if(isset($_REQUEST['submit_report']) == true){
                 ?>
             </tbody>
             <tr class="thead4">
-                <th colspan="10" style="text-align:center;">Total</th>
+                <th colspan="12" style="text-align:center;">Total</th>
                 <th style="text-align:right;"><?php echo number_format_ind(round($tot_qty,2)); ?></th>
                 <th style="text-align:right;"><?php echo str_replace(".00","",number_format_ind(round($tot_bags,2))); ?></th>
                 <th style="text-align:right;"><?php echo number_format_ind(round($avg_price,2)); ?></th>

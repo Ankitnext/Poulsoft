@@ -12,8 +12,10 @@
     $query = mysqli_query($conn,$sql); $dlogo_flag = mysqli_num_rows($query); //$avou_flag = 1;
 	if($dlogo_flag > 0) { while($row = mysqli_fetch_assoc($query)){ $logo1 = $row['field_value']; } }
 
-	$sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); //`category` IN ('$cat_codes') AND 
+	$sql = "SELECT * FROM `item_details` WHERE (`description` LIKE '%Live Birds%') AND `active` = '1' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); //`category` IN ('$cat_codes') AND 
 	while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_name[$row['code']] = $row['description']; }
+	$item_list = implode("','",$item_code);
+
 	if(isset($_POST['submit']) == true){
 		$fromdate = date("Y-m-d",strtotime($_POST['fromdate'])); $todate = date("Y-m-d",strtotime($_POST['todate']));
 		$grp_codes = $_POST['gcodes'];
@@ -123,16 +125,34 @@
 							if(isset($_POST['submit']) == true){
 								$sql = "SELECT * FROM `main_dailypaperrate` WHERE `date` >= '$fromdate' AND `date` <= '$todate' AND `cgroup` LIKE '$grp_codes' AND `active` = '1' AND `dflag` = '0' ORDER BY `date` DESC"; $query = mysqli_query($conn,$sql);
 								while($row = mysqli_fetch_assoc($query)){
+									if($row['code'] == 'EGG-0001') {
+										$egg_rate_by_date[$row['date']] = $row['new_price']; // store egg price separately
+										continue; // skip adding to paper rate
+									}
+
 									$pitem_code[$row['code']] = $row['code'];
 									$pdate_code[$row['date']] = $row['date'];
 									$paper_rate[$row['date']."@".$row['code']] = $row['new_price'];
+								}														
+								// $item_list = implode("','",$pitem_code);
+								$sql = "SELECT * FROM `pur_purchase` WHERE `itemcode` IN ('$item_list') AND `date` >= '$fromdate' AND `date` <= '$todate' AND `tdflag` = '0' AND `pdflag` = '0' ORDER BY `date` DESC"; $query = mysqli_query($conn,$sql);
+								while($row = mysqli_fetch_assoc($query)){
+									$pur_item_code[$row['itemcode']] = $row['itemcode'];
+									$pur_date_code[$row['date']] = $row['date'];
+									// $pur_rate_by_date[$row['date']."@".$row['itemcode']] = $row['itemprice'];
+									 $pur_rate_by_date[$row['date']][] = $row['itemprice'];
+									
 								}
 						?>
 							<thead class="thead2" style="background-color: #98fb98;">
 								<tr>
 									<th>Sl.No.</th>
 									<th>Dates</th>
-									<?php foreach($pitem_code as $ic){ echo "<th>".$item_name[$ic]."</th>"; } ?>
+									<th>Avg Rate</th>
+									<?php //foreach($pitem_code as $ic){ echo "<th>".$item_name[$ic]."</th>"; } ?>
+									<th>Paper Rate</th>
+									<th>Egg Price</th>
+									<th>Difference</th>
 								</tr>
 							</thead>
 							<tbody class="tbody1" id="myTable" style="background-color: #f4f0ec;">
@@ -143,10 +163,34 @@
 								foreach($pdate_code as $currentDate){
 									$present_date = date('Y-m-d', strtotime($currentDate));
 									$c++;
+
 									echo "<tr>";
 									echo "<td style='text-align:center;'>".$c."</td>";
 									echo "<td style='padding-left:5px;text-align:left;'>".date("d.m.Y",strtotime($present_date))."</td>";
-									foreach($pitem_code as $ic){ echo "<td>".number_format_ind($paper_rate[$present_date."@".$ic])."</td>"; }
+
+									// Avg Purchase Rate
+									$avg_rate = isset($pur_rate_by_date[$present_date]) 
+										? array_sum($pur_rate_by_date[$present_date]) / count($pur_rate_by_date[$present_date]) 
+										: 0;
+									echo "<td style='text-align:right;'>".number_format_ind($avg_rate, 2)."</td>";
+
+									// Paper Rate (excluding egg)
+									$paper_rates = [];
+									foreach($pitem_code as $ic){
+										$rate = isset($paper_rate[$present_date."@".$ic]) ? $paper_rate[$present_date."@".$ic] : 0;
+										echo "<td>".number_format_ind($rate, 2)."</td>";
+										$paper_rates[] = $rate;
+									}
+									$paper_avg = count($paper_rates) > 0 ? array_sum($paper_rates) / count($paper_rates) : 0;
+
+									// Egg Price
+									$egg_price = isset($egg_rate_by_date[$present_date]) ? $egg_rate_by_date[$present_date] : 0;
+									echo "<td style='text-align:right;'>".number_format_ind($egg_price, 2)."</td>";
+
+									// Difference = Paper Rate - Avg Rate
+									$diff = $paper_avg - $avg_rate;
+									echo "<td style='text-align:right;'>".number_format_ind($diff, 2)."</td>";
+
 									echo "</tr>";
 								}
 							?>

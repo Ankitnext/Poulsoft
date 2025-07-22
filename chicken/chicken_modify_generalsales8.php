@@ -8,6 +8,16 @@ $client = $_SESSION['client'];
 include "chicken_generate_trnum_details.php";
 
 $ids = $_POST['idvalue']; $incr = $prefix = $invoice = $aemp = $atime = "";
+
+include_once("poulsoft_store_chngmaster.php");
+$chng_type = "Edit";
+$edit_file = "chicken_modify_generalsales8.php";
+$mtbl_name = "customer_sales";
+$tno_cname = "invoice";
+$msg1 = array("file"=>$edit_file, "trnum"=>$ids, "tno_cname"=>$tno_cname, "edit_emp"=>$addedemp, "edit_time"=>$addedtime, "chng_type"=>$chng_type, "mtbl_name"=>$mtbl_name);
+$message = json_encode($msg1);
+store_modified_details($message);
+
 $sql = "SELECT * FROM `customer_sales` WHERE `invoice` = '$ids' AND `tdflag` = '0' AND `pdflag` = '0'"; $query = mysqli_query($conn,$sql);
 while($row = mysqli_fetch_assoc($query)){
     if($invoice == ""){ $incr = $row['incr']; $prefix = $row['prefix']; $invoice = $row['invoice']; $aemp = $row['addedemp']; $atime = $row['addedtime']; }
@@ -38,6 +48,12 @@ $i = 0; foreach($_POST['eweight'] as $eweights){ $eweight[$i] = $eweights; $i++;
 $i = 0; foreach($_POST['nweight'] as $nweights){ $nweight[$i] = $nweights; $i++; }
 $i = 0; foreach($_POST['price'] as $prices){ $price[$i] = $prices; $i++; }
 $i = 0; foreach($_POST['amount'] as $amounts){ $amount[$i] = $amounts; $i++; }
+
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` = 'chicken_display_generalsales8.php' AND `field_function` = 'Group Check' AND `flag` = '1' ORDER BY `id` ASC";
+$query = mysqli_query($conn,$sql); $gr_flag = mysqli_num_rows($query);
+if($gr_flag > 0){ 
+    $i = 0; foreach($_POST['remarks2'] as $remarks2s){ $remarks2[$i] = $remarks2s; $i++; }
+}
 
 $tcds_chk = $_POST['tcds_chk'];
 $tcds_per = $_POST['tcds_per'];
@@ -75,9 +91,10 @@ for($i = 0;$i < $dsize;$i++){
     if($dressing_charge == ""){ $dressing_charge = 0; }
     if($roundoff_amt == ""){ $roundoff_amt = 0; }
     if($finaltotal == ""){ $finaltotal = 0; }
+    
 
-    $sql = "INSERT INTO `customer_sales` (`incr`,`d`,`m`,`y`,`fy`,`date`,`invoice`,`jali_no`,`bookinvoice`,`customercode`,`itemcode`,`jals`,`birds`,`totalweight`,`emptyweight`,`netweight`,`itemprice`,`totalamt`,`transporter_code`,`freight_amount`,`tcdsper`,`tcds_type1`,`tcds_type2`,`tcdsamt`,`dressing_charge`,`roundoff_type1`,`roundoff_type2`,`roundoff`,`finaltotal`,`balance`,`drivercode`,`vehiclecode`,`warehouse`,`remarks`,`flag`,`active`,`tdflag`,`pdflag`,`trtype`,`trlink`,`addedemp`,`addedtime`,`updatedemp`,`updated`) 
-    VALUES ('$incr','$d','$m','$y','$pfx','$date','$invoice','$jali_no','$bookinvoice','$vcode','$itemcode[$i]','$jals[$i]','$birds[$i]','$tweight[$i]','$eweight[$i]','$nweight[$i]','$price[$i]','$amount[$i]','$transporter_code','$freight_amt','$tcds_per','$tcds_type1','$tcds_type2','$tcds_amt','$dressing_charge','$roundoff_type1','$roundoff_type2','$roundoff_amt','$finaltotal','$finaltotal','$driver','$vehicle','$warehouse','$remarks','$flag','$active','$tdflag','$pdflag','$trtype','$trlink','$aemp','$atime','$addedemp','$addedtime')";
+    $sql = "INSERT INTO `customer_sales` (`incr`,`d`,`m`,`y`,`fy`,`date`,`invoice`,`jali_no`,`bookinvoice`,`customercode`,`itemcode`,`jals`,`birds`,`totalweight`,`emptyweight`,`netweight`,`itemprice`,`totalamt`,`transporter_code`,`freight_amount`,`tcdsper`,`tcds_type1`,`tcds_type2`,`tcdsamt`,`dressing_charge`,`roundoff_type1`,`roundoff_type2`,`roundoff`,`finaltotal`,`balance`,`drivercode`,`vehiclecode`,`warehouse`,`remarks`,`remarks2`,`flag`,`active`,`tdflag`,`pdflag`,`trtype`,`trlink`,`addedemp`,`addedtime`,`updatedemp`,`updated`) 
+    VALUES ('$incr','$d','$m','$y','$pfx','$date','$invoice','$jali_no','$bookinvoice','$vcode','$itemcode[$i]','$jals[$i]','$birds[$i]','$tweight[$i]','$eweight[$i]','$nweight[$i]','$price[$i]','$amount[$i]','$transporter_code','$freight_amt','$tcds_per','$tcds_type1','$tcds_type2','$tcds_amt','$dressing_charge','$roundoff_type1','$roundoff_type2','$roundoff_amt','$finaltotal','$finaltotal','$driver','$vehicle','$warehouse','$remarks','$remarks2[$i]','$flag','$active','$tdflag','$pdflag','$trtype','$trlink','$aemp','$atime','$addedemp','$addedtime')";
     if(!mysqli_query($conn,$sql)){ die("Error:-".mysqli_error($conn)); } else { }
 }
 

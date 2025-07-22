@@ -99,6 +99,8 @@ if($access_error_flag == 0){
                                         <th>Mode<b style="color:red;">&nbsp;*</b></th>
                                         <th>Cash / Bank<b style="color:red;">&nbsp;*</b></th>
                                         <th>Amount<b style="color:red;">&nbsp;*</b></th>
+                                        <th <?php if((int)$dtcds_flag == 1){ echo 'style="visibility:visible;"'; } else{ echo 'style="visibility:hidden;"'; } ?>>TDS</th>
+                                        <?php if($hdcno_flag != 1) { echo "<th>Doc No</th>"; }    ?>
                                         <th>Remarks</th>
                                         <th>Action</th>
                                         <th style="visibility:hidden;">Sector<b >&nbsp;*</b></th>
@@ -114,7 +116,9 @@ if($access_error_flag == 0){
                                         <td><select name="ccode[]" id="ccode[0]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($cus_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $cus_name[$scode]; ?></option><?php } ?></select></td>
                                         <td><select name="mode[]" id="mode[0]" class="form-control select2" style="width:180px;" onchange="update_coa_method(this.id);"><option value="select">-select-</option><?php foreach($mode_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $mode_name[$scode]; ?></option><?php } ?></select></td>
                                         <td><select name="code[]" id="code[0]" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($method_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $method_name[$scode]; ?></option><?php } ?></select></td>
-                                        <td><input type="text" name="amount1[]" id="amount1[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);check_nrow(this.id);" onchange="validate_amount(this.id);" data-row="0" data-col="<?php echo $colIndex++; ?>" /></td>
+                                        <td><input type="text" name="amount1[]" id="amount1[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);check_nrow(this.id);calculate_row_amt(this.id);" onchange="validate_amount(this.id);" data-row="0" data-col="<?php echo $colIndex++; ?>" /></td>
+                                        <td <?php if((int)$dtcds_flag == 1){ echo 'style="visibility:visible;text-align:center;"'; } else{ echo 'style="visibility:hidden;text-align:center;"'; } ?>><input type="checkbox" name="tcds_chk[]" id="tcds_chk[0]" onchange="calculate_row_amt(this.id);" /></td>
+                                        <?php if($hdcno_flag != 1) { ?> <td><input type="text" name="dcno[]" id="dcno[0]" class="form-control" style="width:90px;" onkeyup="validate_name(this.id);" /></td> <?php  }    ?>
                                         <td><textarea name="remarks[]" id="remarks[0]" class="form-control" style="height: 23px;"></textarea></td>
                                         <td id="action[0]"><a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
                                        
@@ -338,9 +342,11 @@ if($access_error_flag == 0){
                     
                     html += '<td><select name="mode[]" id="mode['+d+']" class="form-control select2" style="width:180px;" onchange="update_coa_method(this.id);"><option value="select">-select-</option><?php foreach($mode_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $mode_name[$scode]; ?></option><?php } ?></select></td>';
                     html += '<td><select name="code[]" id="code['+d+']" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($method_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $method_name[$scode]; ?></option><?php } ?></select></td>';
-                   
+                    html += '<td><input type="text" name="amount1[]" id="amount1['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);check_nrow(this.id);calculate_row_amt(this.id);" onchange="validate_amount(this.id);" data-row="'+d+'" data-col="'+(colIndex++)+'" /></td>';
+                    if(parseInt(dtcds_flag) == 1){ html += '<td style="visibility:visible;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_row_amt(this.id);" /></td>'; }
+                    else{ html += '<td style="visibility:hidden;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_row_amt(this.id);" /></td>'; }
+                    <?php if($hdcno_flag != 1) { ?> html += '<td><input type="text" name="dcno[]" id="dcno['+d+']" class="form-control" style="width:90px;" onkeyup="validate_name(this.id);" /></td>'; <?php  }    ?>
 
-                    html += '<td><input type="text" name="amount1[]" id="amount1['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);check_nrow(this.id);" onchange="validate_amount(this.id);" data-row="'+d+'" data-col="'+(colIndex++)+'" /></td>';
                     html += '<td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="height: 23px;"></textarea></td>';
                     html += '<td id="action['+d+']"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
                    
@@ -374,9 +380,11 @@ if($access_error_flag == 0){
                     
                     html += '<td><select name="mode[]" id="mode['+d+']" class="form-control select2" style="width:180px;" onchange="update_coa_method(this.id);"><option value="select">-select-</option><?php foreach($mode_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $mode_name[$scode]; ?></option><?php } ?></select></td>';
                     html += '<td><select name="code[]" id="code['+d+']" class="form-control select2" style="width:180px;"><option value="select">-select-</option><?php foreach($method_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $method_name[$scode]; ?></option><?php } ?></select></td>';
-                   
+                    html += '<td><input type="text" name="amount1[]" id="amount1['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);check_nrow(this.id);calculate_row_amt(this.id);" onchange="validate_amount(this.id);" /></td>';
+                    if(parseInt(dtcds_flag) == 1){ html += '<td style="visibility:visible;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_row_amt(this.id);" /></td>'; }
+                    else{ html += '<td style="visibility:hidden;text-align:center;"><input type="checkbox" name="tcds_chk[]" id="tcds_chk['+d+']" onchange="calculate_row_amt(this.id);" /></td>'; }
+                    <?php if($hdcno_flag != 1) { ?> html += '<td><input type="text" name="dcno[]" id="dcno['+d+']" class="form-control" style="width:90px;" onkeyup="validate_name(this.id);" /></td>'; <?php  }    ?>
 
-                    html += '<td><input type="text" name="amount1[]" id="amount1['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);check_nrow(this.id);" onchange="validate_amount(this.id);" /></td>';
                     html += '<td><textarea name="remarks[]" id="remarks['+d+']" class="form-control" style="height: 23px;"></textarea></td>';
                     html += '<td id="action['+d+']"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
                    

@@ -11,8 +11,11 @@ if($branch_access_code == "all"){ $branch_access_filter1 = ""; } else{ $branch_a
 if($line_access_code == "all"){ $line_access_filter1 = ""; } else{ $line_access_list = implode("','", explode(",",$line_access_code)); $line_access_filter1 = " AND `code` IN ('$line_access_list')"; $line_access_filter2 = " AND `line_code` IN ('$line_access_list')"; }
 if($farm_access_code == "all"){ $farm_access_filter1 = ""; } else{ $farm_access_list = implode("','", explode(",",$farm_access_code)); $farm_access_filter1 = " AND `code` IN ('$farm_access_list')"; }
 
+$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Dashboard' AND `field_function` LIKE 'Culls and mort farms redirect'"; $query = mysqli_query($conn,$sql); $redirectflag = mysqli_num_rows($query);
+
 $chick_placement_details = $feed_stock_details = $opening_bird_details = $mortality_bird_details = $lifting_bird_details = $yesterday_lifting_bird_details = $closing_bird_details = $total_mortality_bird_details = 
 $agewise_available_birds = $agewise_abirds_details = $bird_bal_details = $week_wise_mort_details = $feed_bal_details = $branch_wise_weekly_mort_details = $branch_wise_weekly_mortper_details = $branch_wise_total_mort_details = $branch_wise_single_date_mort_details = $branch_wise_cur_mort_details = 0;
+$farm1a = $farm2a = $farm3a = $farm4a = array();
 $sql1 = "SELECT * FROM `master_dashboard_links` WHERE `field_name` LIKE 'Broiler' AND `user_code` = '$user_code' ORDER BY `sort_order` ASC";
 $query1 = mysqli_query($conn,$sql1); $dcount1 = mysqli_num_rows($query1); $dboard_flag = 0;
 if($dcount1 > 0){
@@ -151,7 +154,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
     $farm_list = ""; $farm_list = implode("','", $farm_alist); $gc_fltr = " AND `gc_flag` = '0'";
     $sql = "SELECT * FROM `broiler_batch` WHERE `farm_code` IN ('$farm_list')".$gc_fltr." AND `active` = '1' AND `dflag` = '0' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $batch_alist = array();
-    while($row = mysqli_fetch_assoc($query)){ $batch_alist[$row['code']] = $row['code']; }
+    while($row = mysqli_fetch_assoc($query)){ $batch_alist[$row['code']] = $row['code']; $batchfarm[$row['code']] = $row['farm_code']; }
 
     $sql = "SELECT * FROM `item_category` WHERE `dflag` = '0' AND (`description` LIKE '%Broiler Bird%' OR `description` LIKE '%Broiler Chick%')";
     $query = mysqli_query($conn,$sql); $birds_acats = array();
@@ -360,6 +363,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
     $fetch_type = "branch_wise";
     $branch_mort_birds = $branch_cull_birds = $bwopn_fqty = $bwpur_fqty = $bwtrin_fqty = $bwcon_fqty = $bwtout_fqty = $baw_abds_7 = $baw_abds_14 = $baw_abds_21 = $baw_abds_28 = $baw_abds_35 = $baw_abds_42 = $baw_abds_49 = array();
     $bwmort_w1 = $bwmort_w2 = $bwmort_w3 = $bwmort_w4 = $bwmort_w5 = $bwmort_w6 = $bwmort_w7 = $bwmort_w8 = $chkpcd_bdate = $bwtc_oqty = array();
+    $bwmort_w1f = $bwmort_w2f = $bwmort_w3f = $bwmort_w4f = $bwmort_w5f = $bwmort_w6f = $bwmort_w7f = $bwmort_w8f = array();
     $cmort_qty = 0;
     foreach($batch_alist as $bcode){
         $fcode = $batch_farm[$bcode]; $bhcode = $farm_branch[$fcode]; $lcode = $farm_line[$fcode]; $scode = $farm_supervisor[$fcode];
@@ -414,6 +418,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
 
         /*Opening Birds Calculations*/
         $opening_birds = 0; $opening_birds = (($opur_cbirds[$bcode] + $otrin_cbirds[$bcode]) - ($omort_cbirds[$bcode] + $osale_cbirds[$bcode] + $otout_cbirds[$bcode] + $obout_cbirds[$bcode]));
+        //echo "<br/>$batch_name[$bcode]@$opening_birds = 0; $opening_birds = (($opur_cbirds[$bcode] + $otrin_cbirds[$bcode]) - ($omort_cbirds[$bcode] + $osale_cbirds[$bcode] + $otout_cbirds[$bcode] + $obout_cbirds[$bcode]));";
         $branch_opening_birds[$key1] += (int)$opening_birds;
         $total_opn_birds += (int)$opening_birds;
 
@@ -469,21 +474,25 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                 $tm_farm1 = $tm_farm1 + $cur_mortality;
                 $tm_per1 .= "-".$t_mort;
                 $farm1++;
+                array_push($farm1a,$batchfarm[$bcode]);
             }
             else if((float)$t_mort > 0.25 && (float)$t_mort <= 0.50){
                 $tm_farm2 = $tm_farm2 + $cur_mortality;
                 $tm_per2 .= "-".$t_mort;
                 $farm2++;
+                array_push($farm2a,$batchfarm[$bcode]);
             }
             else if((float)$t_mort > 0.50 && (float)$t_mort <= 1){
                 $tm_farm3 = $tm_farm3 + $cur_mortality;
                 $tm_per3 .= "-".$t_mort;
                 $farm3++;
+                array_push($farm3a,$batchfarm[$bcode]);
             }
             else if((float)$t_mort > 1){
                 $tm_farm4 = $tm_farm4 + $cur_mortality;
                 $tm_per4 .= "-".$t_mort."(".$cur_mortality."-".$opening_birds.")&";
                 $farm4++;
+                array_push($farm4a,$batchfarm[$bcode]);
             }
             else{ }
         }
@@ -549,14 +558,14 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
         $bwsd_tmc_qty[$key1] += (float)$bchk_mqty[$bcode];
 
         /*Week Wise Mortality Details*/
-        if($brood_curage[$bcode] >= 1 &&  $brood_curage[$bcode] <= 7){ $farm1_mort++; $week1_mort += (float)$cur_mortality; $week1_opnb += (float)$opening_birds; }
-        else if($brood_curage[$bcode] >= 8 &&  $brood_curage[$bcode] <= 14){ $farm2_mort++; $week2_mort += (float)$cur_mortality; $week2_opnb += (float)$opening_birds; }
-        else if($brood_curage[$bcode] >= 15 &&  $brood_curage[$bcode] <= 21){ $farm3_mort++; $week3_mort += (float)$cur_mortality; $week3_opnb += (float)$opening_birds; }
-        else if($brood_curage[$bcode] >= 22 &&  $brood_curage[$bcode] <= 28){ $farm4_mort++; $week4_mort += (float)$cur_mortality; $week4_opnb += (float)$opening_birds; }
-        else if($brood_curage[$bcode] >= 29 &&  $brood_curage[$bcode] <= 35){ $farm5_mort++; $week5_mort += (float)$cur_mortality; $week5_opnb += (float)$opening_birds; }
-        else if($brood_curage[$bcode] >= 36 &&  $brood_curage[$bcode] <= 42){ $farm6_mort++; $week6_mort += (float)$cur_mortality; $week6_opnb += (float)$opening_birds; }
-        else if($brood_curage[$bcode] >= 43 &&  $brood_curage[$bcode] <= 49){ $farm7_mort++; $week7_mort += (float)$cur_mortality; $week7_opnb += (float)$opening_birds; }
-        else if($brood_curage[$bcode] > 49){ $farm8_mort++; $week8_mort += (float)$cur_mortality; $week8_opnb += (float)$opening_birds; }
+        if($brood_curage[$bcode] >= 1 &&  $brood_curage[$bcode] <= 7){ $farm1_mort++; $week1_mort += (float)$cur_mortality; $week1_opnb += (float)$opening_birds; array_push($bwmort_w1f,$batchfarm[$bcode]);  }
+        else if($brood_curage[$bcode] >= 8 &&  $brood_curage[$bcode] <= 14){ $farm2_mort++; $week2_mort += (float)$cur_mortality; $week2_opnb += (float)$opening_birds; array_push($bwmort_w2f,$batchfarm[$bcode]); }
+        else if($brood_curage[$bcode] >= 15 &&  $brood_curage[$bcode] <= 21){ $farm3_mort++; $week3_mort += (float)$cur_mortality; $week3_opnb += (float)$opening_birds; array_push($bwmort_w3f,$batchfarm[$bcode]); }
+        else if($brood_curage[$bcode] >= 22 &&  $brood_curage[$bcode] <= 28){ $farm4_mort++; $week4_mort += (float)$cur_mortality; $week4_opnb += (float)$opening_birds; array_push($bwmort_w4f,$batchfarm[$bcode]); }
+        else if($brood_curage[$bcode] >= 29 &&  $brood_curage[$bcode] <= 35){ $farm5_mort++; $week5_mort += (float)$cur_mortality; $week5_opnb += (float)$opening_birds; array_push($bwmort_w5f,$batchfarm[$bcode]); }
+        else if($brood_curage[$bcode] >= 36 &&  $brood_curage[$bcode] <= 42){ $farm6_mort++; $week6_mort += (float)$cur_mortality; $week6_opnb += (float)$opening_birds; array_push($bwmort_w6f,$batchfarm[$bcode]); }
+        else if($brood_curage[$bcode] >= 43 &&  $brood_curage[$bcode] <= 49){ $farm7_mort++; $week7_mort += (float)$cur_mortality; $week7_opnb += (float)$opening_birds; array_push($bwmort_w7f,$batchfarm[$bcode]); }
+        else if($brood_curage[$bcode] > 49){ $farm8_mort++; $week8_mort += (float)$cur_mortality; $week8_opnb += (float)$opening_birds; array_push($bwmort_w8f,$batchfarm[$bcode]); }
         
         if(!empty($brood_age[$bcode]) && $brood_age[$bcode] > 42){
             $age_grt42 = $age_grt42 + $closing_birds;
@@ -1166,6 +1175,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                         ?>
                                                         <tr style="width:100%;border-top: 0.1vh dashed black;">
                                                             <th colspan="2" style="text-align:left;color:brown;"><h6><b>Total:</b></h6></th>
+                                                            
                                                             <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($mwk_1)); ?></b></h6></th>
                                                             <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($mwk_2)); ?></b></h6></th>
                                                             <th style="text-align:center;color:brown;"><h6><b><?php echo str_replace(".00","",number_format_ind($mwk_3)); ?></b></h6></th>
@@ -1597,29 +1607,85 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                     <tr style="text-align:center;">
                                                         <th colspan="3" style="text-align:center;"><label for="">Total Mortality + Culls</label></th>
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $farm1a));
+                                                        $linka1 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[0].";'></button> 0.00 - 0.25%"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($tm_farm1)); ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $tm_per1; ?>">
+                                                            <h6>
+                                                                <a href="<?php echo $linka1; ?>" target="_blank">
+                                                                    <?php echo str_replace(".00", "", number_format_ind(round($farm1, 2))) . " Farms"; ?>
+                                                                </a>
+                                                            </h6>
+                                                        </td>
+                                                        <?php }else{ ?>
                                                         <td style="text-align:center;" title="<?php echo $tm_per1; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm1,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[1].";'></button> 0.25 - 0.50%"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <th style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($tm_farm2)); ?></th>
+                                                        <?php 
+                                                        $farmParam = urlencode(implode(",", $farm2a));
+                                                        $linka2 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
+                                                         <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $tm_per2; ?>">
+                                                            <h6>
+                                                                <a href="<?php echo $linka2; ?>" target="_blank">
+                                                                    <?php echo str_replace(".00", "", number_format_ind(round($farm2, 2))) . " Farms"; ?>
+                                                                </a>
+                                                            </h6>
+                                                        </td>
+                                                        <?php }else{ ?>
                                                         <td style="text-align:center;" title="<?php echo $tm_per2; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm2,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[2].";'></button> 0.50 - 1.00%"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($tm_farm3)); ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $tm_per3; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm3,2)))." Farms"; ?></h6></td>
+                                                        <?php 
+                                                        $farmParam = urlencode(implode(",", $farm3a));
+                                                        $linka3 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $tm_per2; ?>">
+                                                            <h6>
+                                                                <a href="<?php echo $linka2; ?>" target="_blank">
+                                                                    <?php echo str_replace(".00", "", number_format_ind(round($farm2, 2))) . " Farms"; ?>
+                                                                </a>
+                                                            </h6>
+                                                        </td>
+                                                        <?php }else{ ?>
+                                                        <td style="text-align:center;" title="<?php echo $tm_per2; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm2,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[3].";'></button> > 1.00%"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($tm_farm4)); ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $tm_per4; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm4,2)))." Farms"; ?></h6></td>
+                                                        <?php 
+                                                        $farmParam = urlencode(implode(",", $farm4a));
+                                                        $linka4 = "records/broiler_dayrecord_masterreport_ty.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $tm_per3; ?>">
+                                                            <h6>
+                                                                <a href="<?php echo $linka3; ?>" target="_blank">
+                                                                    <?php echo str_replace(".00", "", number_format_ind(round($farm3, 2))) . " Farms"; ?>
+                                                                </a>
+                                                            </h6>
+                                                        </td>
+                                                        <?php }else{ ?>
+                                                        <td style="text-align:center;" title="<?php echo $tm_per3; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm3,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
                                                 
                                                     <tr style="width:100%;border-top: 0.1vh dashed black;">
@@ -1730,7 +1796,7 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                         <th colspan="2" style="text-align:center;"><label for="">Customer & Supplier Balances</label></th>
                                                     </tr>
                                                     <tr style="width:100%;border-bottom:none;">
-                                                        <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[0].";'></button>Total Receivables"; ?></h6></th>
+                                                        <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[0].";'></button>Total Receivable"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo number_format_ind($tot_cus_bal); ?></h6></td>
                                                     </tr>
@@ -1777,53 +1843,118 @@ if((int)$display_dashboard_flag == 1 && (int)$dboard_flag == 1){
                                                     <tr style="text-align:center;">
                                                         <th colspan="3" style="text-align:center;"><label for="">Week Wise Mortality</label></th>
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $bwmort_w1f));
+                                                        $linka1 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[0].";'></button> 1st week"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($week1_mort)); if($week1_opnb != 0){ $t1 = 0; $t1 = round((($week1_mort / $week1_opnb) * 100),2); echo " (<b>".$t1."%</b>)"; } else{ echo " ( 0.00 )";} ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $week1_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm1_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week1_mort; ?>"><h6><a href="<?php echo $linka1; ?>" target="_blank"><?php echo str_replace(".00","",number_format_ind(round($farm1_mort,2)))." Farms"; ?></a></h6></td>
+                                                        <?php }else{ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week1_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm1_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
+                                                        
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $bwmort_w2f));
+                                                        $linka2 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[1].";'></button> 2nd week"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <th style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($week2_mort)); if($week2_opnb != 0){ $t1 = 0; $t1 = round((($week2_mort / $week2_opnb) * 100),2); echo " (<b>".$t1."%</b>)"; } else{ echo " ( 0.00 )";} ?></th>
-                                                        <td style="text-align:center;" title="<?php echo $week2_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm2_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week2_mort; ?>"><h6><a href="<?php echo $linka2; ?>" target="_blank"><?php echo str_replace(".00","",number_format_ind(round($farm2_mort,2)))." Farms"; ?></a></h6></td>
+                                                        <?php }else{ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week2_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm2_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $bwmort_w3f));
+                                                        $linka3 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[2].";'></button> 3rd week"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($week3_mort)); if($week3_opnb != 0){ $t1 = 0; $t1 = round((($week3_mort / $week3_opnb) * 100),2); echo " (<b>".$t1."%</b>)"; } else{ echo " ( 0.00 )";} ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $week3_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm3_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week3_mort; ?>"><h6><a href="<?php echo $linka3; ?>" target="_blank"><?php echo str_replace(".00","",number_format_ind(round($farm3_mort,2)))." Farms"; ?></a></h6></td>
+                                                        <?php }else{ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week3_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm3_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $bwmort_w4f));
+                                                        $linka4 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[3].";'></button> 4th week"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($week4_mort)); if($week4_opnb != 0){ $t1 = 0; $t1 = round((($week4_mort / $week4_opnb) * 100),2); echo " (<b>".$t1."%</b>)"; } else{ echo " ( 0.00 )";} ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $week4_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm4_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week4_mort; ?>"><h6><a href="<?php echo $linka4; ?>" target="_blank"><?php echo str_replace(".00","",number_format_ind(round($farm4_mort,2)))." Farms"; ?></a></h6></td>
+                                                        <?php }else{ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week4_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm4_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $bwmort_w5f));
+                                                        $linka5 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[4].";'></button> 5th week"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($week5_mort)); if($week5_opnb != 0){ $t1 = 0; $t1 = round((($week5_mort / $week5_opnb) * 100),2); echo " (<b>".$t1."%</b>)"; } else{ echo " ( 0.00 )";} ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $week5_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm5_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week5_mort; ?>"><h6><a href="<?php echo $linka5; ?>" target="_blank"><?php echo str_replace(".00","",number_format_ind(round($farm5_mort,2)))." Farms"; ?></a></h6></td>
+                                                        <?php }else{ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week5_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm5_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $bwmort_w6f));
+                                                        $linka6 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[5].";'></button> 6th week"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($week6_mort)); if($week6_opnb != 0){ $t1 = 0; $t1 = round((($week6_mort / $week6_opnb) * 100),2); echo " (<b>".$t1."%</b>)"; } else{ echo " ( 0.00 )";} ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $week6_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm6_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week6_mort; ?>"><h6><a href="<?php echo $linka6; ?>" target="_blank"><?php echo str_replace(".00","",number_format_ind(round($farm6_mort,2)))." Farms"; ?></a></h6></td>
+                                                        <?php }else{ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week6_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm6_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $bwmort_w7f));
+                                                        $linka7 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[6].";'></button> 7th week"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($week7_mort)); if($week7_opnb != 0){ $t1 = 0; $t1 = round((($week7_mort / $week7_opnb) * 100),2); echo " (<b>".$t1."%</b>)"; } else{ echo " ( 0.00 )";} ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $week7_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm7_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week7_mort; ?>"><h6><a href="<?php echo $linka7; ?>" target="_blank"><?php echo str_replace(".00","",number_format_ind(round($farm7_mort,2)))." Farms"; ?></a></h6></td>
+                                                        <?php }else{ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week7_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm7_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
+                                                    <?php 
+                                                        $farmParam = urlencode(implode(",", $bwmort_w8f));
+                                                        $linka8 = "records/broiler_dayrecord_masterreport_new.php?farms=" . $farmParam."&fdate=".$fdate;
+                                                    ?>
                                                     <tr style="width:100%;border-bottom:none;">
                                                         <th style="text-align:left;"><h6><?php echo "<button type='button' class='btn' style='width:30px;height:10px;border-radius:none;background-color:".$colors[7].";'></button> > 7th week"; ?></h6></th>
                                                         <th style="text-align:left;"><h6>:</th>
                                                         <td style="text-align:left;"><h6><?php echo str_replace(".00","",number_format_ind($week8_mort)); if($week8_opnb != 0){ $t1 = 0; $t1 = round((($week8_mort / $week8_opnb) * 100),2); echo " (<b>".$t1."%</b>)"; } else{ echo " ( 0.00 )";} ?></h6></td>
-                                                        <td style="text-align:center;" title="<?php echo $week8_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm8_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php if($redirectflag > 0){ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week8_mort; ?>"><h6><a href="<?php echo $linka8; ?>" target="_blank"><?php echo str_replace(".00","",number_format_ind(round($farm8_mort,2)))." Farms"; ?></a></h6></td>
+                                                        <?php }else{ ?>
+                                                            <td style="text-align:center;" title="<?php echo $week8_mort; ?>"><h6><?php echo str_replace(".00","",number_format_ind(round($farm8_mort,2)))." Farms"; ?></h6></td>
+                                                        <?php } ?>
                                                     </tr>
                                                 
                                                     <tr style="width:100%;border-top: 0.1vh dashed black;">

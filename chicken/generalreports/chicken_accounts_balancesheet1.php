@@ -296,6 +296,13 @@ if(isset($_POST['submit']) == true){
         if(empty($coa_cr_amt[$acode]) || $coa_cr_amt[$acode] == ""){ $coa_cr_amt[$acode] = 0; }
         if(empty($coa_dr_amt[$acode]) || $coa_dr_amt[$acode] == ""){ $coa_dr_amt[$acode] = 0; }
         $bal_amt = 0; $bal_amt = (float)$coa_dr_amt[$acode] - (float)$coa_cr_amt[$acode];
+        $scode = $coa_schd[$acode]; $atypes = $aschd_type[$scode];
+        if(!empty($ltype_code[$atypes]) && $ltype_code[$atypes] != ""){
+            $bal_amt = 0; $bal_amt = (float)$coa_cr_amt[$acode] - (float)$coa_dr_amt[$acode];
+        }
+        else{
+            $bal_amt = 0; $bal_amt = (float)$coa_dr_amt[$acode] - (float)$coa_cr_amt[$acode];
+        }
         /*CoA Account Wise Balance*/ $coa_amt[$acode] += (float)$bal_amt;
         /*CoA Schedule Wise Balance*/ $scode = $coa_schd[$acode]; $cschd_amt[$scode] += (float)$bal_amt;
     }
@@ -371,16 +378,35 @@ if(isset($_POST['submit']) == true){
     else{ }
     
     if((float)$ldiff_amt > 0){
+        // $lrow++; $arow++;
+        // $tot_lamt += (float)$ldiff_amt;
+        // $l_col1[$i] .= '<td></td>'; $l_col2[$i] .= '<td>Difference In Opening Balances</td>'; $l_col3[$i] .= '<td style="text-align:right;">'.number_format_ind(round($ldiff_amt,2)).'</td>';
+        // $a_col1[$i] .= '<td></td>'; $a_col2[$i] .= '<td></td>'; $a_col3[$i] .= '<td></td>';
+
         $lrow++; $arow++;
         $tot_lamt += (float)$ldiff_amt;
-        $l_col1[$i] .= '<td></td>'; $l_col2[$i] .= '<td>Difference In Opening Balances</td>'; $l_col3[$i] .= '<td style="text-align:right;">'.number_format_ind(round($ldiff_amt,2)).'</td>';
-        $a_col1[$i] .= '<td></td>'; $a_col2[$i] .= '<td></td>'; $a_col3[$i] .= '<td></td>';
+        $l_col1[$lrow] .= '<td></td>'; 
+        $l_col2[$lrow] .= '<td>Difference In Opening Balances</td>'; 
+        $l_col3[$lrow] .= '<td style="text-align:right;">'.number_format_ind(round($ldiff_amt,2)).'</td>';
+        $a_col1[$arow] .= '<td></td>'; 
+        $a_col2[$arow] .= '<td></td>'; 
+        $a_col3[$arow] .= '<td></td>';
+
     }
     else if((float)$adiff_amt > 0){
-        $lrow++; $arow++;
+        // $lrow++; $arow++;
+        // $tot_aamt += (float)$adiff_amt;
+        // $l_col1[$i] .= '<td></td>'; $l_col2[$i] .= '<td></td>'; $l_col3[$i] .= '<td></td>';
+        // $a_col1[$i] .= '<td></td>'; $a_col2[$i] .= '<td>Difference In Opening Balances</td>'; $a_col3[$i] .= '<td style="text-align:right;">'.number_format_ind(round($adiff_amt,2)).'</td>';
+        $arow++; $lrow++;
         $tot_aamt += (float)$adiff_amt;
-        $l_col1[$i] .= '<td></td>'; $l_col2[$i] .= '<td></td>'; $l_col3[$i] .= '<td></td>';
-        $a_col1[$i] .= '<td></td>'; $a_col2[$i] .= '<td>Difference In Opening Balances</td>'; $a_col3[$i] .= '<td style="text-align:right;">'.number_format_ind(round($adiff_amt,2)).'</td>';
+        $a_col1[$arow] .= '<td></td>'; 
+        $a_col2[$arow] .= '<td>Difference In Opening Balances</td>'; 
+        $a_col3[$arow] .= '<td style="text-align:right;">'.number_format_ind(round($adiff_amt,2)).'</td>';
+        $l_col1[$lrow] .= '<td></td>'; 
+        $l_col2[$lrow] .= '<td></td>'; 
+        $l_col3[$lrow] .= '<td></td>';
+ 
     }
 }
 ?>

@@ -137,7 +137,7 @@ if ($sector_access_code == "all") {
 }
 
 include $num_format_file;
-
+global $page_title; $page_title = "Account Ledger Report";
 include "header_head.php";
 $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' " . $sector_access_filter1 . " ORDER BY `description` ASC";
 $query = mysqli_query($conn, $sql);

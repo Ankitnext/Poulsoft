@@ -313,6 +313,12 @@ if($link_active_flag > 0){
                                                 <textarea name="bank_details" id="bank_details" class="form-control"></textarea>
                                             </div>
                                         </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Terms</label>
+                                                <textarea name="cterms" id="cterms" class="form-control"></textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                     <?php if((int)$updoc_flag == 1){ ?>
                                     <div class="row justify-content-center align-items-center">

@@ -6,8 +6,16 @@ $sql = "SELECT * FROM `main_companyprofile` WHERE `active` = '1' AND `dflag` = '
 while($row = mysqli_fetch_assoc($query)){ $num_format_file = $row['num_format_file']; }
 if($num_format_file == ""){ $num_format_file = "number_format_ind.php"; }
 include $num_format_file;
-
+global $page_title; $page_title = "Synchronize Nisan Sales";
 include "header_head.php";
+$empcode = $_SESSION['userid'];
+/*Check for Column Availability*/
+$sql='SHOW COLUMNS FROM `main_access`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+if(in_array("nisan_submit_sales", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `nisan_submit_sales` INT(100) NOT NULL DEFAULT '1' COMMENT 'Nisan fetch weightment Save Button Visible'"; mysqli_query($conn,$sql); }
+
+$sql = "SELECT * FROM `main_access` WHERE `empcode` LIKE '$empcode' AND `active` = '1'"; $query = mysqli_query($conn,$sql); $nisan_submit_sales = 1;
+while($row = mysqli_fetch_assoc($query)){ $nisan_submit_sales = $row['nisan_submit_sales']; } if($nisan_submit_sales == ""){ $nisan_submit_sales = 1; }
 
 $sql='SHOW COLUMNS FROM `broiler_sales`'; $query=mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
 while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
@@ -98,9 +106,18 @@ if(isset($_POST['submit_report']) == true){
                                     <input type="text" name="tdate" id="tdate" class="form-control datepicker" style="width:110px;" value="<?php echo date("d.m.Y",strtotime($tdate)); ?>" readonly />
                                 </div>
                                 <div class="m-2 form-group">
+                                    <label for="status">Status</label>
+                                    <select name="status" id="status" class="form-control select2">
+                                        <option value="" <?php if($status == ""){ echo "selected"; } ?>>All</option>
+                                        <option value="exist" <?php if($status == "exist"){ echo "selected"; } ?>>Exist</option>
+                                        <option value="notexist" <?php if($status == "notexist"){ echo "selected"; } ?>>Not Exist</option>
+                                    </select>
+                                </div>
+                                <div class="m-2 form-group">
                                     <br/>
                                     <button type="submit" name="submit_report" id="submit_report" class="btn btn-sm btn-success">Fetch</button>
                                 </div>
+                               
                             </div>
                         </th>
                     </tr>
@@ -333,7 +350,7 @@ if(isset($_POST['submit_report']) == true){
                                         $ReturnCode = $r5['trsc_schedule']['ReturnCode'];
 
                                         $key = ""; $key = date("Y-m-d",strtotime($startdate))."@".$slipno."@".$noofbirds."@".$totalweight;
-
+                                        if((!empty($exist_dt[$key]) && $exist_dt[$key] == $key && $status == 'exist') || (empty($exist_dt[$key]) && $exist_dt[$key] != $key && $status == 'notexist') || ($status == '')){
                                         $i++;
                                         if(!empty($exist_rate[$key]) && $exist_rate[$key] != ""){ $rate = $exist_rate[$key]; $amount = $exist_amount[$key]; }
 
@@ -461,6 +478,7 @@ if(isset($_POST['submit_report']) == true){
                                             }
                                         }*/
                                     }
+                                    }
                                 }
                             }
                         }
@@ -512,11 +530,13 @@ if(isset($_POST['submit_report']) == true){
                     <th colspan="10" style="text-align:right;"></th>
                     
                 </tr>
+                <?php if((int)$nisan_submit_sales > 0){ ?>
                 <tr>
                     <td><input type="text" name="ebtncount" id="ebtncount" class="form-control" value="0" style="padding:0;padding-left:2px;width:50px;" readonly /></td>
                     <td colspan="15"><button type="button" name="submit" id="submit" class="btn btn-sm btn-success" onclick="checkval()">Submit</button></td>
                     <td><input type="text" name="incr" id="incr" class="form-control" value="<?php echo $i; ?>" style="padding:0;padding-left:2px;width:50px;" readonly /></td>
                 </tr>
+                <?php } ?>
             </tbody>
             <?php
             }

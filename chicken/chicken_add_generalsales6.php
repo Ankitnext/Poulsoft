@@ -28,9 +28,13 @@ if($access_error_flag == 0){
 	$sql = "SELECT * FROM `extra_access` WHERE `field_name` LIKE 'Item Master' AND `field_function` LIKE 'Short-Name' AND `user_access` LIKE 'all' AND `flag` = '1'";
 	$query = mysqli_query($conn,$sql); $sname_flag = mysqli_num_rows($query);
 
+    $sql = "SELECT * FROM `item_category` WHERE `active` = '1' ORDER BY `description` ASC";
+    $query = mysqli_query($conn,$sql); $icat_code = $icat_name = array();
+    while($row = mysqli_fetch_assoc($query)){ $icat_code[$row['code']] = $row['code']; $icat_name[$row['code']] = $row['description']; }
+
     $sql = "SELECT * FROM `item_details` WHERE `active` = '1' ORDER BY `description` ASC";
-    $query = mysqli_query($conn,$sql); $item_code = $item_name = array();
-    while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; if((int)$disn_flag > 0 && (int)$sname_flag > 0){ $item_name[$row['code']] = $row['short_name'].". ".$row['description']; } else{ $item_name[$row['code']] = $row['description']; } }
+    $query = mysqli_query($conn,$sql); $item_code = $item_name = $item_cats = array();
+    while($row = mysqli_fetch_assoc($query)){ $item_code[$row['code']] = $row['code']; $item_cats[$row['code']] = $row['category']; if((int)$disn_flag > 0 && (int)$sname_flag > 0){ $item_name[$row['code']] = $row['short_name'].". ".$row['description']; } else{ $item_name[$row['code']] = $row['description']; } }
 
     $sql = "SELECT * FROM `inv_sectors` WHERE `active` = '1' ORDER BY `description` ASC";
     $query = mysqli_query($conn,$sql); $sector_code = $sector_name = array();
@@ -147,47 +151,33 @@ if($access_error_flag == 0){
                                     </tr>
                                 </thead>
                                 <tbody id="row_body">
-                                    <?php /*
-                                    <tr style="margin:5px 0px 5px 0px;">
-                                        <td><select name="itemcode[]" id="itemcode[0]" class="form-control select2" data-row="0" data-col="0" style="width:180px;" onchange="update_row_fields(this.id);fetch_latest_customer_paperrate(this.id);"><option value="select">-select-</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>
-                                        <?php
-                                        if((int)$jals_flag == 1){ echo '<td><input type="text" name="jals[]" id="jals[0]" class="form-control text-right" data-row="0" data-col="0" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                                        if((int)$birds_flag == 1){ echo '<td><input type="text" name="birds[]" id="birds[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                                        if((int)$tweight_flag == 1){ echo '<td><input type="text" name="tweight[]" id="tweight[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                                        if((int)$eweight_flag == 1){ echo '<td><input type="text" name="eweight[]" id="eweight[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                                        ?>
-                                        <td><input type="text" name="nweight[]" id="nweight[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>
-                                        <td><input type="text" name="price[]" id="price[0]" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>
-                                        <td><input type="text" name="amount[]" id="amount[0]" class="form-control text-right" style="width:90px;" onkeyup="" onchange="validate_amount(this.id);" readonly /></td>
-                                        <td id="action[0]"><a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
-                                    </tr>*/ ?>
-                                    <tr style="margin:5px 0px 5px 0px;">
+                                    <tr style="margin:5px 0px 5px 0px;font-weight:bold;">
                                         <td><select name="itemcode[]" id="itemcode[0]" class="form-control select2" data-row="0" data-col="0" style="width:180px;" onchange="update_row_fields(this.id);fetch_latest_customer_paperrate(this.id);"><option value="select">-select-</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>
                                         <?php $colIndex = 1; ?>
-                                        <?php if((int)$jals_flag == 1){ ?><td><input type="text" name="jals[]" id="jals[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td><?php } ?>
-                                        <?php if((int)$birds_flag == 1){ ?><td><input type="text" name="birds[]" id="birds[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td><?php } ?>
-                                        <?php if((int)$tweight_flag == 1){ ?><td><input type="text" name="tweight[]" id="tweight[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td><?php } ?>
-                                        <?php if((int)$eweight_flag == 1){ ?><td><input type="text" name="eweight[]" id="eweight[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td><?php } ?>
-                                        <td><input type="text" name="nweight[]" id="nweight[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>
-                                        <td><input type="text" name="price[]" id="price[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>
-                                        <td><input type="text" name="amount[]" id="amount[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;" onkeyup="" onchange="validate_amount(this.id);" readonly /></td>
-                                        <td id="action[0]"><a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;"></i></a></td>
+                                        <?php if((int)$jals_flag == 1){ ?><td><input type="text" name="jals[]" id="jals[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;font-weight:bold;" onkeyup="validate_count(this.id);calculate_final_totalamt();" /></td><?php } ?>
+                                        <?php if((int)$birds_flag == 1){ ?><td><input type="text" name="birds[]" id="birds[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;font-weight:bold;" onkeyup="validate_count(this.id);calculate_final_totalamt();" /></td><?php } ?>
+                                        <?php if((int)$tweight_flag == 1){ ?><td><input type="text" name="tweight[]" id="tweight[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td><?php } ?>
+                                        <?php if((int)$eweight_flag == 1){ ?><td><input type="text" name="eweight[]" id="eweight[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td><?php } ?>
+                                        <td><input type="text" name="nweight[]" id="nweight[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>
+                                        <td><input type="text" name="price[]" id="price[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);calculate_final_totalamt();check_nrow(this.id);" onchange="validate_amount(this.id);" /></td>
+                                        <td><input type="text" name="amount[]" id="amount[0]" class="form-control text-right" data-row="0" data-col="<?php echo $colIndex++; ?>" style="width:90px;font-weight:bold;" onkeyup="" onchange="validate_amount(this.id);" readonly /></td>
+                                        <td id="action[0]"><a href="javascript:void(0);" id="addrow[0]" onclick="create_row(this.id)" class="form-control" style="width:15px; height:15px;border:none;"><i class="fa fa-plus" style="color:green;font-weight:bold;"></i></a></td>
                                     </tr>
                                 </tbody>
                                 
                                 <tfoot>
                                     <tr>
-                                        <th style="text-align:right;">Total</th>
+                                        <th style="text-align:right;font-weight:bold;">Total</th>
                                         <?php
                                         $colspan = 3;
-                                        if((int)$jals_flag == 1){ $colspan++; echo '<th><input type="text" name="tot_jals" id="tot_jals" class="form-control text-right" style="width:90px;" readonly /></th>'; }
-                                        if((int)$birds_flag == 1){ $colspan++; echo '<th><input type="text" name="tot_birds" id="tot_birds" class="form-control text-right" style="width:90px;" readonly /></th>'; }
-                                        if((int)$tweight_flag == 1){ $colspan++; echo '<th><input type="text" name="tot_tweight" id="tot_tweight" class="form-control text-right" style="width:90px;" readonly /></th>'; }
-                                        if((int)$eweight_flag == 1){ $colspan++; echo '<th><input type="text" name="tot_eweight" id="tot_eweight" class="form-control text-right" style="width:90px;" readonly /></th>'; }
+                                        if((int)$jals_flag == 1){ $colspan++; echo '<th><input type="text" name="tot_jals" id="tot_jals" class="form-control text-right" style="width:90px;font-weight:bold;" readonly /></th>'; }
+                                        if((int)$birds_flag == 1){ $colspan++; echo '<th><input type="text" name="tot_birds" id="tot_birds" class="form-control text-right" style="width:90px;font-weight:bold;" readonly /></th>'; }
+                                        if((int)$tweight_flag == 1){ $colspan++; echo '<th><input type="text" name="tot_tweight" id="tot_tweight" class="form-control text-right" style="width:90px;font-weight:bold;" readonly /></th>'; }
+                                        if((int)$eweight_flag == 1){ $colspan++; echo '<th><input type="text" name="tot_eweight" id="tot_eweight" class="form-control text-right" style="width:90px;font-weight:bold;" readonly /></th>'; }
                                         ?>
-                                        <th><input type="text" name="tot_nweight" id="tot_nweight" class="form-control text-right" style="width:90px;" readonly /></th>
+                                        <th><input type="text" name="tot_nweight" id="tot_nweight" class="form-control text-right" style="width:90px;font-weight:bold;" readonly /></th>
                                         <th></th>
-                                        <th><input type="text" name="tot_amount" id="tot_amount" class="form-control text-right" style="width:90px;" readonly /></th>
+                                        <th><input type="text" name="tot_amount" id="tot_amount" class="form-control text-right" style="width:90px;font-weight:bold;" readonly /></th>
                                         <th></th>
                                     </tr>
                                     <tr>
@@ -208,6 +198,47 @@ if($access_error_flag == 0){
                                         <th><input type="text" name="freight_amt" id="freight_amt" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></th>
                                     </tr>
                                     <tr>
+                                        <th colspan="<?php echo $colspan - 1; ?>"></th>
+                                        <th>Net Amount</th>
+                                        <th><input type="text" name="finaltotal" id="finaltotal" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" readonly /></th>
+                                    </tr>
+                                    <tr style="">
+                                        <th colspan="3" style="padding-top:0px;text-align:center;">
+                                            <table align="right">
+                                                <tr>
+                                                    <th >
+                                                        <div class="row" style="margin-bottom:3px;">
+                                                           
+                                                            <div class="form-group">
+                                                                <label>Remarks</label>
+                                                                <textarea name="remarks" id="remarks" class="form-control" style="height:75px;width:300px;"></textarea>
+                                                            </div>
+                                                            
+                                                        </div>
+                                                    </th>
+                                                </tr>
+
+                                                <tr>
+                                                   
+                                                    <th >
+                                                        <div class="row" style="margin-bottom:3px;">
+                                                           
+                                                        <div class="col-12">
+                                                            <div class="form-group" align="center">
+                                                            <button type="submit" name="sub_pt" id="sub_pt" class="btn btn-sm text-white bg-success">Submit & Print</button>&ensp;
+                                                            <button type="submit" name="submit" id="submit" class="btn btn-sm text-white bg-success">Submit</button>&ensp;
+                                                            <button type="button" name="cancel" id="cancel" class="btn btn-sm text-white bg-danger" onclick="return_back()">Cancel</button>
+                                                            </div>
+                                                         </div>
+                                                            
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                            </table>
+                                        </th>
+                                       
+                                    </tr>
+                                    <tr style="visibility:hidden;">
                                         <th colspan="<?php echo $colspan; ?>" style="padding-top:0px;text-align:right;">
                                             <table align="right">
                                                 <tr>
@@ -225,7 +256,7 @@ if($access_error_flag == 0){
                                         </th>
                                         <th><input type="text" name="cash_ramt" id="cash_ramt" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></th>
                                     </tr>
-                                    <tr>
+                                    <tr style="visibility:hidden;">
                                         <th colspan="<?php echo $colspan; ?>" style="padding-top:0px;text-align:right;">
                                             <table align="right">
                                                 <tr>
@@ -243,16 +274,11 @@ if($access_error_flag == 0){
                                         </th>
                                         <th><input type="text" name="bank_ramt" id="bank_ramt" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></th>
                                     </tr>
-                                    <tr>
+                                    <tr style="visibility:hidden;">
                                         <th colspan="<?php echo $colspan; ?>" style="padding-top:0px;text-align:right;">
                                             <label>Dressing Charges</label>
                                         </th>
                                         <th><input type="text" name="dressing_charge" id="dressing_charge" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="<?php echo $colspan - 1; ?>"></th>
-                                        <th>Net Amount</th>
-                                        <th><input type="text" name="finaltotal" id="finaltotal" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" readonly /></th>
                                     </tr>
                                     <tr style="visibility:hidden;">
                                         <th colspan="<?php echo $colspan; ?>" style="padding-top:0px;text-align:right;">
@@ -320,8 +346,8 @@ if($access_error_flag == 0){
                         <div class="row" style="margin-bottom:3px;">
                             <div class="col-md-4 form-group"></div>
                             <div class="col-md-4 form-group">
-                                <label>Remarks</label>
-                                <textarea name="remarks" id="remarks" class="form-control" style="height:75px;"></textarea>
+                                <!-- <label>Remarks</label>
+                                <textarea name="remarks" id="remarks" class="form-control" style="height:75px;"></textarea> -->
                             </div>
                             <div class="col-md-4 form-group"></div>
                         </div>
@@ -337,9 +363,9 @@ if($access_error_flag == 0){
                         </div>
                         <div class="col-12">
                             <div class="form-group" align="center">
-                                <button type="submit" name="sub_pt" id="sub_pt" class="btn btn-sm text-white bg-success">Submit & Print</button>&ensp;
+                                <!-- <button type="submit" name="sub_pt" id="sub_pt" class="btn btn-sm text-white bg-success">Submit & Print</button>&ensp;
                                 <button type="submit" name="submit" id="submit" class="btn btn-sm text-white bg-success">Submit</button>&ensp;
-                                <button type="button" name="cancel" id="cancel" class="btn btn-sm text-white bg-danger" onclick="return_back()">Cancel</button>
+                                <button type="button" name="cancel" id="cancel" class="btn btn-sm text-white bg-danger" onclick="return_back()">Cancel</button> -->
                             </div>
                         </div>
                     </div>
@@ -359,7 +385,8 @@ if($access_error_flag == 0){
             </div>
             <?php include "header_foot1.php"; ?>
             <script>
-                
+                var item_cats = <?php echo json_encode($item_cats); ?>;
+                var icat_name = <?php echo json_encode($icat_name); ?>;
                 function popup_jalientry() {
                     // Show custom popup
                     document.getElementById("popup_jalino").value = "";
@@ -433,28 +460,30 @@ if($access_error_flag == 0){
                                 price = document.getElementById("price["+d+"]").value; if(price == ""){ price = 0; }
                                 amount = document.getElementById("amount["+d+"]").value; if(amount == ""){ amount = 0; }
                                 
-
-                                if(itemcode == "select"){
-                                    alert("Please select Item in row: "+c);
-                                    document.getElementById("itemcode["+d+"]").focus();
-                                    l = false;
+                                if(d > 0 && d == incr && itemcode == "select" && parseFloat(nweight) == 0 && parseFloat(price) == 0){ destroy_row("amount["+d+"]"); }
+                                else{
+                                    if(itemcode == "select"){
+                                        alert("Please select Item in row: "+c);
+                                        document.getElementById("itemcode["+d+"]").focus();
+                                        l = false;
+                                    }
+                                    else if(parseFloat(nweight) == 0){
+                                        alert("Please enter net weight in row: "+c);
+                                        document.getElementById("nweight["+d+"]").focus();
+                                        l = false;
+                                    }
+                                    else if(parseFloat(price) == 0){
+                                        alert("Please enter price in row: "+c);
+                                        document.getElementById("price["+d+"]").focus();
+                                        l = false;
+                                    }
+                                    else if(parseFloat(amount) == 0){
+                                        alert("Please enter price/Weight in row: "+c);
+                                        document.getElementById("amount["+d+"]").focus();
+                                        l = false;
+                                    }
+                                    else{ }
                                 }
-                                else if(parseFloat(nweight) == 0){
-                                    alert("Please enter net weight in row: "+c);
-                                    document.getElementById("nweight["+d+"]").focus();
-                                    l = false;
-                                }
-                                else if(parseFloat(price) == 0){
-                                    alert("Please enter price in row: "+c);
-                                    document.getElementById("price["+d+"]").focus();
-                                    l = false;
-                                }
-                                else if(parseFloat(amount) == 0){
-                                    alert("Please enter price/Weight in row: "+c);
-                                    document.getElementById("amount["+d+"]").focus();
-                                    l = false;
-                                }
-                                else{ }
                             }
                         }
                     }
@@ -509,31 +538,16 @@ if($access_error_flag == 0){
                         }
                     }
                 }
-                /*function create_row(a){
+                function check_nrow(a){
                     var b = a.split("["); var c = b[1].split("]"); var d = c[0];
-                    document.getElementById("action["+d+"]").style.visibility = "hidden";
-                    d++; var html = '';
-                    document.getElementById("incr").value = d;
-
-                    var jals_flag = '<?php //echo $jals_flag; ?>';
-                    var birds_flag = '<?php //echo $birds_flag; ?>';
-                    var tweight_flag = '<?php //echo $tweight_flag; ?>';
-                    var eweight_flag = '<?php //echo $eweight_flag; ?>';
-
-                    html += '<tr id="row_no['+d+']">';
-                    html += '<td><select name="itemcode[]" id="itemcode['+d+']" class="form-control select2" style="width:180px;" onchange="update_row_fields(this.id);fetch_latest_customer_paperrate(this.id);"><option value="select">-select-</option><?php /*foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php }*/ ?></select></td>';
-                    if(parseInt(jals_flag) == 1){ html += '<td><input type="text" name="jals[]" id="jals['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                    if(parseInt(birds_flag) == 1){ html += '<td><input type="text" name="birds[]" id="birds['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                    if(parseInt(tweight_flag) == 1){ html += '<td><input type="text" name="tweight[]" id="tweight['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                    if(parseInt(eweight_flag) == 1){ html += '<td><input type="text" name="eweight[]" id="eweight['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                    html += '<td><input type="text" name="nweight[]" id="nweight['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>';
-                    html += '<td><input type="text" name="price[]" id="price['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>';
-                    html += '<td><input type="text" name="amount[]" id="amount['+d+']" class="form-control text-right" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" readonly /></td>';
-                    html += '<td id="action['+d+']"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
-                    html += '</tr>';
-                    $('#row_body').append(html);
-                    $('.select2').select2();
-                }*/
+                    var incr = document.getElementById("incr").value; if(incr == ""){ incr = 0; }
+                    if(d == incr){
+                        var itemcode = document.getElementById("itemcode["+d+"]").value;
+                        var nweight = document.getElementById("nweight["+d+"]").value; if(nweight == ""){ nweight = 0; }
+                        var price = document.getElementById("price["+d+"]").value; if(price == ""){ price = 0; }
+                        if(itemcode != "select" && itemcode != "" && parseFloat(nweight) > 0 && parseFloat(price) > 0){ create_row(a); }
+                    }
+                }
                 function create_row(a){
                     var b = a.split("["); var c = b[1].split("]"); var d = c[0];
                     document.getElementById("action["+d+"]").style.visibility = "hidden";
@@ -545,23 +559,22 @@ if($access_error_flag == 0){
                     var tweight_flag = '<?php echo $tweight_flag; ?>';
                     var eweight_flag = '<?php echo $eweight_flag; ?>';
 
-                    html += '<tr id="row_no['+d+']">';
-                    html += '<td><select name="itemcode[]" id="itemcode['+d+']" class="form-control select2" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:180px;" onchange="update_row_fields(this.id);fetch_latest_customer_paperrate(this.id);"><option value="select">-select-</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>';
-                    if(parseInt(jals_flag) == 1){ html += '<td><input type="text" name="jals[]" id="jals['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                    if(parseInt(birds_flag) == 1){ html += '<td><input type="text" name="birds[]" id="birds['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                    if(parseInt(tweight_flag) == 1){ html += '<td><input type="text" name="tweight[]" id="tweight['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
-                    if(parseInt(eweight_flag) == 1){ html += '<td><input type="text" name="eweight[]" id="eweight['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
+                    html += '<tr style="font-weight:bold;" id="row_no['+d+']">';
+                    html += '<td><select name="itemcode[]" id="itemcode['+d+']" class="form-control select2" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:180px;font-weight:bold;" onchange="update_row_fields(this.id);fetch_latest_customer_paperrate(this.id);"><option value="select">-select-</option><?php foreach($item_code as $scode){ ?><option value="<?php echo $scode; ?>"><?php echo $item_name[$scode]; ?></option><?php } ?></select></td>';
+                    if(parseInt(jals_flag) == 1){ html += '<td><input type="text" name="jals[]" id="jals['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;font-weight:bold;" onkeyup="validate_count(this.id);calculate_final_totalamt();" /></td>'; }
+                    if(parseInt(birds_flag) == 1){ html += '<td><input type="text" name="birds[]" id="birds['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;font-weight:bold;" onkeyup="validate_count(this.id);calculate_final_totalamt();" /></td>'; }
+                    if(parseInt(tweight_flag) == 1){ html += '<td><input type="text" name="tweight[]" id="tweight['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
+                    if(parseInt(eweight_flag) == 1){ html += '<td><input type="text" name="eweight[]" id="eweight['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>'; }
 
-                    html += '<td><input type="text" name="nweight[]" id="nweight['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>';
-                    html += '<td><input type="text" name="price[]" id="price['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>';
-                    html += '<td><input type="text" name="amount[]" id="amount['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" readonly /></td>';
-                    html += '<td id="action['+d+']"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;"></i></a></td>';
+                    html += '<td><input type="text" name="nweight[]" id="nweight['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);calculate_final_totalamt();" onchange="validate_amount(this.id);" /></td>';
+                    html += '<td><input type="text" name="price[]" id="price['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);calculate_final_totalamt();check_nrow(this.id);" onchange="validate_amount(this.id);" /></td>';
+                    html += '<td><input type="text" name="amount[]" id="amount['+d+']" class="form-control text-right" data-row="'+d+'" data-col="'+(colIndex++)+'" style="width:90px;font-weight:bold;" onkeyup="validate_num(this.id);" onchange="validate_amount(this.id);" readonly /></td>';
+                    html += '<td id="action['+d+']"><a href="javascript:void(0);" id="addrow['+d+']" onclick="create_row(this.id)"><i class="fa fa-plus"></i></a>&ensp;<a href="javascript:void(0);" id="deductrow['+d+']" onclick="destroy_row(this.id)"><i class="fa fa-minus" style="color:red;font-weight:bold;"></i></a></td>';
                     html += '</tr>';
 
                     $('#row_body').append(html);
                     $('.select2').select2();
                 }
-
                 function destroy_row(a){
                     var b = a.split("["); var c = b[1].split("]"); var d = c[0];
                     document.getElementById("row_no["+d+"]").remove();
@@ -580,12 +593,17 @@ if($access_error_flag == 0){
 
                     var jals = birds = tweight = eweight = nweight = price = amount = bird_flag = 0;
                     var tot_jals = tot_birds = tot_tweight = tot_eweight = tot_nweight = tot_amount = bird_flag = 0;
-                    var icode = iname = "";
+                    var icode = iname = iccode = icname = "";
                     for(var d = 0;d <= incr;d++){
-                        jals = birds = tweight = eweight = nweight = price = amount = bird_flag = 0;
-                        icode = document.getElementById("itemcode["+d+"]");
-                        iname = icode.options[icode.selectedIndex].text;
-                        bird_flag = iname.search(/Birds/i);
+                        jals = birds = tweight = eweight = nweight = price = amount = bird_flag = 0; icode = iname = iccode = icname = "";
+                        //icode = document.getElementById("itemcode["+d+"]");
+                        //iname = icode.options[icode.selectedIndex].text;
+                        //bird_flag = iname.search(/Birds/i);
+
+                        icode = document.getElementById("itemcode["+d+"]").value;
+                        iccode = item_cats[icode];
+                        icname = icat_name[iccode] || "";
+                        bird_flag = icname.search(/Birds/i);
 
                         if(parseInt(jals_flag) == 1){ jals = document.getElementById("jals["+d+"]").value; } if(jals == ""){ jals = 0; }
                         if(parseInt(birds_flag) == 1){ birds = document.getElementById("birds["+d+"]").value; } if(birds == ""){ birds = 0; }
@@ -678,9 +696,14 @@ if($access_error_flag == 0){
                 }
                 function update_row_fields(a){
                     var b = a.split("["); var c = b[1].split("]"); var d = c[0];
-                    var icode = document.getElementById("itemcode["+d+"]");
-                    var iname = icode.options[icode.selectedIndex].text;
-                    var bird_flag = iname.search(/Birds/i);
+                    //var icode = document.getElementById("itemcode["+d+"]");
+                    //var iname = icode.options[icode.selectedIndex].text;
+                    //var bird_flag = iname.search(/Birds/i);
+
+                    var icode = document.getElementById("itemcode["+d+"]").value;
+                    var iccode = item_cats[icode];
+                    var icname = icat_name[iccode] || "";
+                    var bird_flag = icname.search(/Birds/i);
 
                     var jals_flag = '<?php echo $jals_flag; ?>';
                     var birds_flag = '<?php echo $birds_flag; ?>';
@@ -767,6 +790,23 @@ if($access_error_flag == 0){
             </script>
 		    <script src="chick_validate_basicfields.js"></script>
 		    <script src="handle_ebtn_as_tbtn.js"></script>
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    let tried = 0;
+                    const interval = setInterval(() => {
+                        const vcode = document.getElementById('vcode');
+                        if(vcode && $(vcode).hasClass('select2-hidden-accessible')){
+                            $(vcode).select2('open');
+                            setTimeout(() => {
+                                const searchBox = document.querySelector('.select2-search__field');
+                                if (searchBox) searchBox.focus();
+                            }, 50);
+                            clearInterval(interval);
+                        }
+                        if(++tried > 10) clearInterval(interval);
+                    }, 100);
+                });
+            </script>
         </body>
     </html>
 <?php

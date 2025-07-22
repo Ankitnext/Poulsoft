@@ -8,6 +8,7 @@ if($db == ''){
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Flock Report";
     include "header_head.php";
     $form_path = "breeder_flock_details.php";
 }
@@ -15,6 +16,7 @@ else{
     $user_code = $_GET['userid'];
     $dbname = $db;
     include "APIconfig.php";
+    global $page_title; $page_title = "Flock Report";
     include "header_head.php";
     $form_path = "breeder_flock_details.php?db=$db&userid=".$user_code;
 }
@@ -53,7 +55,7 @@ if(isset($_POST['submit_report']) == true){
     $sheds = $_POST['sheds'];
     $excel_type = $_POST['export'];
 }
-?>  
+?> 
 <html>
     <head>
         <title>Poulsoft Solutions</title>

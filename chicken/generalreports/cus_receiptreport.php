@@ -84,8 +84,8 @@
 		//$addedemp = " AND `addedemp` LIKE '$users_code'";
 	}
 	
-	$fdate = $tdate = date("Y-m-d"); $customers = $modes = $coas = $users = "all"; $sectors = array(); $sectors["all"] = "all"; $sec_all_flag = 0;
-    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1; 
+	$fdate = $tdate = date("Y-m-d"); $customers = $modes = $coas = $users = "all"; $sectors = array(); $sectors["all"] = "all";
+    $groups = array(); $groups['all'] = "all"; $grp_all_flag = 1; $sec_all_flag = 0;
     $exports = "displaypage";
 	if(isset($_POST['submit']) == true){
 		$fdate = date("Y-m-d",strtotime($_POST['fdate']));

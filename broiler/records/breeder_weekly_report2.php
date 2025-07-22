@@ -8,6 +8,7 @@ if($db == ''){
     $user_code = $_SESSION['userid'];
     $dbname = $_SESSION['dbase'];
     include "../newConfig.php";
+    global $page_title; $page_title = "Breeder Weekly Report";
     include "header_head.php";
     $form_path = "breeder_weekly_report2.php";
 }
@@ -15,6 +16,7 @@ else{
     $user_code = $_GET['userid'];
     $dbname = $db;
     include "APIconfig.php";
+    global $page_title; $page_title = "Breeder Weekly Report";
     include "header_head.php";
     $form_path = "breeder_weekly_report2.php?db=$db&userid=".$user_code;
 }
@@ -33,25 +35,43 @@ $query = mysqli_query($conn,$sql); $ffeed_2flag = mysqli_num_rows($query);
 $sql = "SELECT * FROM `breeder_extra_access` WHERE `field_name` = 'Breeder Daily Entry' AND `field_function` = 'Display 2nd Feed Entry For Male Birds' AND `user_access` = 'all' AND `flag` = '1'";
 $query = mysqli_query($conn,$sql); $mfeed_2flag = mysqli_num_rows($query);
 
-$sql = "SELECT * FROM `breeder_farms` WHERE `dflag` = '0' ORDER BY `description` ASC";
+/*Check for Column Availability*/
+$sql='SHOW COLUMNS FROM `main_access`'; $query = mysqli_query($conn,$sql); $existing_col_names = array(); $i = 0;
+while($row = mysqli_fetch_assoc($query)){ $existing_col_names[$i] = $row['Field']; $i++; }
+if(in_array("bfarms_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bfarms_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Farms Access List' AFTER `cgroup_access`"; mysqli_query($conn,$sql); }
+if(in_array("bunits_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bunits_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Units Access List' AFTER `bfarms_list`"; mysqli_query($conn,$sql); }
+if(in_array("bsheds_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bsheds_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Sheds Access List' AFTER `bunits_list`"; mysqli_query($conn,$sql); }
+if(in_array("bbatch_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bbatch_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Batch Access List' AFTER `bsheds_list`"; mysqli_query($conn,$sql); }
+if(in_array("bflock_list", $existing_col_names, TRUE) == ""){ $sql = "ALTER TABLE `main_access` ADD `bflock_list` VARCHAR(1500) NULL DEFAULT NULL COMMENT 'Breeder Flock Access List' AFTER `bbatch_list`"; mysqli_query($conn,$sql); }
+
+$sql = "SELECT * FROM `main_access` WHERE `active` = '1' AND `empcode` = '$user_code'";
+$query = mysqli_query($conn,$sql);
+while($row = mysqli_fetch_assoc($query)){ $bfarms_list = $row['bfarms_list']; $bunits_list = $row['bunits_list']; $bsheds_list = $row['bsheds_list']; $bbatch_list = $row['bbatch_list']; $bflock_list = $row['bflock_list']; }
+if($bfarms_list == "all" || $bfarms_list == ""){ $bfarms_fltr1 = $bfarms_fltr2 = ""; } else{ $bfarms_list1 = implode("','", explode(",",$bfarms_list)); $bfarms_fltr1 = " AND `code` IN ('$bfarms_list1')"; $bfarms_fltr2 = " AND `farm_code` IN ('$bfarms_list1')"; }
+if($bunits_list == "all" || $bunits_list == ""){ $bunits_fltr1 = $bunits_fltr2 = ""; } else{ $bunits_list1 = implode("','", explode(",",$bunits_list)); $bunits_fltr1 = " AND `code` IN ('$bunits_list1')"; $bunits_fltr2 = " AND `unit_code` IN ('$bunits_list1')"; }
+if($bsheds_list == "all" || $bsheds_list == ""){ $bsheds_fltr1 = $bsheds_fltr2 = ""; } else{ $bsheds_list1 = implode("','", explode(",",$bsheds_list)); $bsheds_fltr1 = " AND `code` IN ('$bsheds_list1')"; $bsheds_fltr2 = " AND `shed_code` IN ('$bsheds_list1')"; }
+if($bbatch_list == "all" || $bbatch_list == ""){ $bbatch_fltr1 = $bbatch_fltr2 = ""; } else{ $bbatch_list1 = implode("','", explode(",",$bbatch_list)); $bbatch_fltr1 = " AND `code` IN ('$bbatch_list1')"; $bbatch_fltr2 = " AND `batch_code` IN ('$bbatch_list1')"; }
+if($bflock_list == "all" || $bflock_list == ""){ $bflock_fltr1 = $bflock_fltr2 = ""; } else{ $bflock_list1 = implode("','", explode(",",$bflock_list)); $bflock_fltr1 = " AND `code` IN ('$bflock_list1')"; $bflock_fltr2 = " AND `flock_code` IN ('$bflock_list1')"; }
+
+$sql = "SELECT * FROM `breeder_farms` WHERE `dflag` = '0'".$bfarms_fltr1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $farm_code = $farm_name = array();
 while($row = mysqli_fetch_assoc($query)){ $farm_code[$row['code']] = $row['code']; $farm_name[$row['code']] = $row['description']; }
 
-$sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0' ORDER BY `description` ASC";
+$sql = "SELECT * FROM `breeder_units` WHERE `dflag` = '0'".$bunits_fltr1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $unit_code = $unit_name = array();
 while($row = mysqli_fetch_assoc($query)){ $unit_code[$row['code']] = $row['code']; $unit_name[$row['code']] = $row['description']; }
 
-$sql = "SELECT * FROM `breeder_sheds` WHERE `dflag` = '0' ORDER BY `description` ASC";
+$sql = "SELECT * FROM `breeder_sheds` WHERE `dflag` = '0'".$bsheds_fltr1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $shed_code = $shed_name = array();
 while($row = mysqli_fetch_assoc($query)){ $shed_code[$row['code']] = $row['code']; $shed_name[$row['code']] = $row['description']; }
 
-$sql = "SELECT * FROM `breeder_batch` WHERE `dflag` = '0' ORDER BY `description` ASC";
+$sql = "SELECT * FROM `breeder_batch` WHERE `dflag` = '0'".$bbatch_fltr1." ORDER BY `description` ASC";
 $query = mysqli_query($conn,$sql); $batch_code = $batch_name = $batch_breed = array();
 while($row = mysqli_fetch_assoc($query)){ $batch_code[$row['code']] = $row['code']; $batch_name[$row['code']] = $row['description']; $batch_breed[$row['code']] = $row['breed_code']; }
 
-$sql = "SELECT * FROM `breeder_shed_allocation` WHERE `dflag` = '0' ORDER BY `description` ASC";
-$query = mysqli_query($conn,$sql); $flock_code = $flock_name = array();
-while($row = mysqli_fetch_assoc($query)){ $flock_code[$row['code']] = $row['code']; $flock_name[$row['code']] = $row['description']; }
+$sql = "SELECT * FROM `breeder_shed_allocation` WHERE `dflag` = '0'".$bfarms_fltr2."".$bunits_fltr2."".$bsheds_fltr2."".$bbatch_fltr2."".$bflock_fltr1." ORDER BY `description` ASC";
+$query = mysqli_query($conn,$sql); $flock_code = $flock_name = $flock_sdate = $flock_sage = $flock_batch = array();
+while($row = mysqli_fetch_assoc($query)){ $flock_code[$row['code']] = $row['code']; $flock_name[$row['code']] = $row['description']; $flock_sdate[$row['code']] = $row['start_date']; $flock_sage[$row['code']] = $row['start_age']; $flock_batch[$row['code']] = $row['batch_code']; }
 
 //Breeder Breed Standards
 $sql = "SELECT * FROM `breeder_breed_standards` WHERE `dflag` = '0' ORDER BY `breed_code`,`breed_age` ASC";
@@ -82,9 +102,11 @@ while($row = mysqli_fetch_assoc($query)){ $cbird_code[$row['code']] = $row['code
 $sql = "SELECT * FROM `item_details` WHERE `category` IN ('$bird_list') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $fbird_code = $mbird_code = "";
 while($row = mysqli_fetch_assoc($query)){ if($row['description'] == "Female birds"){ $fbird_code = $row['code']; } else if($row['description'] == "Male birds"){ $mbird_code = $row['code']; } }
 
-$sql = "SELECT * FROM `item_details` WHERE `description` LIKE '%Hatch Egg%' AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC";
-$query = mysqli_query($conn,$sql); $hegg_code = "";
-while($row = mysqli_fetch_assoc($query)){ $hegg_code = $row['code']; }
+$sql = "SELECT * FROM `item_category` WHERE `description` LIKE '%Hatch Egg%' AND `dflag` = '0' ORDER BY `description` ASC"; $query = mysqli_query($conn,$sql); $hegg_ccode = array();
+while($row = mysqli_fetch_assoc($query)){ $hegg_ccode[$row['code']] = $row['code']; } $hegg_clist = implode("','", $hegg_ccode);
+$sql = "SELECT * FROM `item_details` WHERE `category` IN ('$hegg_clist') AND `dflag` = '0' ORDER BY `sort_order`,`description` ASC";
+$query = mysqli_query($conn,$sql); $hegg_code = array();
+while($row = mysqli_fetch_assoc($query)){ $hegg_code[$row['code']] = $row['code']; }
 
 $sql = "SELECT * FROM `item_details` WHERE `dflag` = '0' ORDER BY `sort_order`,`description` ASC"; $query = mysqli_query($conn,$sql); $item_name = array();
 while($row = mysqli_fetch_assoc($query)){ $item_name[$row['code']] = $row['description']; }
@@ -457,7 +479,7 @@ if(isset($_POST['submit_report']) == true){
                             if(empty($egg_pqty[$key1]) || $egg_pqty[$key1] == ""){ $egg_qty = 0; } else{ $egg_qty = $egg_pqty[$key1]; }
                             $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($egg_qty,5))).'</td>';
                             $egg_rqty += (float)$egg_qty;
-                            if($hegg_code == $eggs){ $hegg_rqty += (float)$egg_qty; $hegg_cqty += (float)$egg_qty; }
+                            if(!empty($hegg_code[$eggs]) && $hegg_code[$eggs] == $eggs){ $hegg_rqty += (float)$egg_qty; $hegg_cqty += (float)$egg_qty; }
                             $egg_cqty[$eggs] += (float)$egg_qty;
                             $tegg_cqty += (float)$egg_qty;
                         }
@@ -466,7 +488,9 @@ if(isset($_POST['submit_report']) == true){
                         $html .= '<td style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tegg_cqty,5))).'</td>';
                         
                         $std_egg_pper = $std_hd_per[$breed_code."@".$weeks];
-                        $act_egg_pper = 0; if((float)$f_obirds != 0){ $act_egg_pper = round((((float)$egg_rqty / (float)$f_obirds) * 100),2); }
+                        $bstk_qty = 0;
+                        $bstk_qty = ((((((float)$f_obirds + (float)$f_tibirds) - ((float)$f_mbirds + (float)$f_cbirds + (float)$f_tobirds)) + (float)$f_obirds) / 2) * 7);
+                        $act_egg_pper = 0; if((float)$bstk_qty != 0){ $act_egg_pper = round((((float)$egg_rqty / (float)$bstk_qty) * 100),2); }
                         $html .= '<td style="text-align:right;" class="std">'.number_format_ind($std_egg_pper).'</td>';
                         $html .= '<td style="text-align:right;" class="act">'.number_format_ind($act_egg_pper).'</td>';
 
@@ -574,7 +598,9 @@ if(isset($_POST['submit_report']) == true){
                     $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tegg_rqty,5))).'</th>';
                     $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($hegg_cqty,5))).'</th>';
                     $html .= '<th style="text-align:right;">'.str_replace(".00","",number_format_ind(round($tegg_cqty,5))).'</th>';
-                    $act_egg_pper = 0; if((float)$opn_fbirds != 0){ $act_egg_pper = round((((float)$tegg_rqty / (float)$opn_fbirds) * 100),2); }
+                    $bstk_qty = 0;
+                    $bstk_qty = ((((((float)$opn_fbirds + (float)$tf_tibirds) - ((float)$tf_mbirds + (float)$tf_cbirds + (float)$tf_tobirds)) + (float)$opn_fbirds) / 2) * (7 * $slno));
+                    $act_egg_pper = 0; if((float)$bstk_qty != 0){ $act_egg_pper = round((((float)$tegg_rqty / (float)$bstk_qty) * 100),2); }
                     $html .= '<th style="text-align:right;" class="std"></th>';
                     $html .= '<th style="text-align:right;" class="act">'.str_replace(".00","",number_format_ind(round($act_egg_pper,5))).'</th>';
                     $act_hep = 0; if((float)$tegg_cqty != 0){ $act_hep = round((((float)$hegg_cqty / (float)$tegg_cqty) * 100),2); }
